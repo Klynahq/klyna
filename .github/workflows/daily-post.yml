@@ -1,0 +1,84 @@
+name: Daily blog post
+
+on:
+  schedule:
+    # 13:00 UTC every day — adjust as you like
+    - cron: '0 13 * * *'
+  workflow_dispatch:
+    inputs:
+      topic_index:
+        description: 'Optional: pick a specific topic index from daily-prompt.json (0-based)'
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Pick today's topic
+        id: topic
+        run: |
+          # rotate through the topics list by day-of-year
+          INDEX="${{ github.event.inputs.topic_index }}"
+          if [ -z "$INDEX" ]; then
+            DOY=$(date -u +%j)
+            INDEX=$(node -e "const j=require('./apps/website/scripts/daily-prompt.json'); process.stdout.write(String(($DOY-1) % j.topics.length));")
+          fi
+          PAYLOAD=$(node -e "
+            const j = require('./apps/website/scripts/daily-prompt.json');
+            const t = j.topics[$INDEX];
+            const today = new Date().toISOString().slice(0,10);
+            const slug = t.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 70);
+            t.slug = today + '-' + slug;
+            t.publishedAt = today;
+            t.description = 'Auto-generated stub for: ' + t.title + '. Awaiting body.';
+            t.draft = true;  // safe default — never publishes blank
+            process.stdout.write(JSON.stringify(t));
+          ")
+          echo "payload=$PAYLOAD" >> $GITHUB_OUTPUT
+          echo "Generated payload for: $(echo $PAYLOAD | node -e 'process.stdin.on(\"data\", d => console.log(JSON.parse(d.toString()).title))')"
+
+      # OPTIONAL: replace this step with your content engine (Ollama / OpenAI / Anthropic / Groq).
+      # The default just scaffolds an empty draft so a human can fill it in.
+      - name: Generate body (placeholder — swap with your engine)
+        id: body
+        run: |
+          # Default: no body generation — just scaffold a draft.
+          # When you wire an LLM, this step should:
+          #   1. Read the topic from steps.topic.outputs.payload
+          #   2. Generate a markdown body
+          #   3. Merge it into the JSON: { ...topic, body: "<markdown>", draft: false }
+          #   4. Re-emit as PAYLOAD for the next step.
+          echo "payload=${{ steps.topic.outputs.payload }}" >> $GITHUB_OUTPUT
+
+      - name: Create draft post
+        run: |
+          echo '${{ steps.body.outputs.payload }}' | node apps/website/scripts/new-post.mjs --stdin
+
+      - name: Commit
+        run: |
+          git config user.name "klyna-bot"
+          git config user.email "bot@klyna.dev"
+          git add apps/website/src/content/blog/
+          if git diff --cached --quiet; then
+            echo "No new post generated."
+            exit 0
+          fi
+          git commit -m "blog: daily draft $(date -u +%Y-%m-%d)"
+          git push

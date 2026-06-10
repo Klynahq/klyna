@@ -1,0 +1,87 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getPublishedPosts, getAllTags, formatDate } from '../../utils/blog.ts';
+
+const posts = await getPublishedPosts();
+const tags = (await getAllTags()).slice(0, 12);
+---
+
+<BaseLayout
+  title="Blog — Klyna"
+  description="Notes on SEO, GEO, indie product building, and the open tools we are building at Klyna. New posts most days."
+>
+  <section class="max-w-4xl mx-auto px-6 pt-20 pb-12">
+    <div class="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-accent)] mb-3">
+      Blog
+    </div>
+    <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-4">
+      Notes on growing organically.
+    </h1>
+    <p class="text-[color:var(--color-text-muted)] leading-relaxed text-lg max-w-2xl">
+      SEO, GEO, internal linking, schema, and indie product-building lessons.
+      Long-form posts, most days, no AI-generated filler.
+    </p>
+
+    {
+      tags.length > 0 && (
+        <div class="mt-8 flex flex-wrap gap-2">
+          {tags.map(({ tag, count }) => (
+            <a
+              href={`/blog/tags/${tag}`}
+              class="text-xs px-3 py-1.5 rounded-full border border-[color:var(--color-border)] text-[color:var(--color-text-muted)] hover:border-[color:var(--color-accent)] hover:text-white transition-colors"
+            >
+              #{tag} <span class="text-[color:var(--color-text-dim)]">·{count}</span>
+            </a>
+          ))}
+        </div>
+      )
+    }
+  </section>
+
+  <section class="max-w-4xl mx-auto px-6 pb-24">
+    <ul class="divide-y divide-[color:var(--color-border)]/50 border-y border-[color:var(--color-border)]/50">
+      {
+        posts.map((post) => (
+          <li>
+            <a
+              href={`/blog/${post.id}`}
+              class="group block py-6 px-4 -mx-4 rounded-xl hover:bg-white/5 transition-colors"
+            >
+              <div class="flex items-center gap-3 mb-2 text-xs">
+                <time
+                  datetime={post.data.publishedAt.toISOString()}
+                  class="text-[color:var(--color-text-dim)] font-medium"
+                >
+                  {formatDate(post.data.publishedAt)}
+                </time>
+                <span class="text-[color:var(--color-text-dim)]">·</span>
+                <span class="text-[color:var(--color-accent)] font-medium uppercase tracking-wider">
+                  {post.data.category}
+                </span>
+                {post.data.featured && (
+                  <span class="text-[color:var(--color-warning)] font-medium uppercase tracking-wider">
+                    Featured
+                  </span>
+                )}
+              </div>
+              <h2 class="text-xl md:text-2xl font-semibold mb-2 group-hover:text-[color:var(--color-accent)] transition-colors">
+                {post.data.title}
+              </h2>
+              <p class="text-[color:var(--color-text-muted)] leading-relaxed">
+                {post.data.description}
+              </p>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+
+    {
+      posts.length === 0 && (
+        <p class="text-center text-[color:var(--color-text-muted)] py-16">
+          The first post is coming soon.
+        </p>
+      )
+    }
+  </section>
+</BaseLayout>

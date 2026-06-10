@@ -1,0 +1,40 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ProductCard from '../components/ProductCard.astro';
+import { products } from '@klyna/utils';
+---
+
+<BaseLayout
+  title="Products — Klyna"
+  description="The full Klyna lineup. SEO and growth tools for WordPress, Shopify, and the browser. More on the way."
+>
+  <section class="max-w-7xl mx-auto px-6 pt-20 pb-12">
+    <div class="max-w-2xl">
+      <div class="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-accent)] mb-3">
+        The lineup
+      </div>
+      <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-4">Products</h1>
+      <p class="text-[color:var(--color-text-muted)] leading-relaxed">
+        Every Klyna tool runs on the same shared engine. That means the lineup grows fast,
+        and improvements in one place lift everything.
+      </p>
+    </div>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-6 pb-20">
+    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {products.map((p) => <ProductCard product={p} />)}
+    </div>
+  </section>
+
+  <section class="max-w-3xl mx-auto px-6 pb-24">
+    <div class="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] p-8">
+      <h2 class="text-xl font-semibold mb-2">More on the roadmap</h2>
+      <p class="text-sm text-[color:var(--color-text-muted)] leading-relaxed">
+        A self-hosted analytics tool, a sitemap-driven content auditor, an open-graph image
+        generator, a privacy-first heatmap, and an indie-friendly link-in-bio. We'll publish the
+        full roadmap once the first three products are live.
+      </p>
+    </div>
+  </section>
+</BaseLayout>

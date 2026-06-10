@@ -1,0 +1,44 @@
+{
+  "topics": [
+    {
+      "title": "How to add FAQ schema to WordPress without a plugin",
+      "category": "Tutorials",
+      "tags": ["wordpress", "schema", "faq", "structured-data"]
+    },
+    {
+      "title": "Programmatic SEO for Shopify stores: a beginner's guide",
+      "category": "SEO",
+      "tags": ["shopify", "programmatic-seo", "ecommerce"]
+    },
+    {
+      "title": "What `llms.txt` is and why every indie site should ship one",
+      "category": "GEO",
+      "tags": ["geo", "llms-txt", "indie"]
+    },
+    {
+      "title": "Reading the Search Console performance tab the right way",
+      "category": "SEO",
+      "tags": ["search-console", "analytics", "ctr"]
+    },
+    {
+      "title": "The five schema types every blog post should ship with",
+      "category": "SEO",
+      "tags": ["schema", "structured-data", "blog"]
+    },
+    {
+      "title": "How to find and fix orphan pages on a 500-page site",
+      "category": "SEO",
+      "tags": ["internal-linking", "orphan-pages", "audit"]
+    },
+    {
+      "title": "Citation share: the GEO metric you should be tracking weekly",
+      "category": "GEO",
+      "tags": ["geo", "citation-share", "metrics"]
+    },
+    {
+      "title": "Why most AI content tools stopped working in 2025",
+      "category": "Tools",
+      "tags": ["ai", "content", "helpful-content-update"]
+    }
+  ]
+}

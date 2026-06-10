@@ -1,0 +1,33 @@
+{
+  "name": "extension",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Klyna Inspector — one-click on-page SEO + GEO audit, in your browser.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "zip": "cd dist && zip -r ../klyna-inspector.zip . && cd .. && echo 'Built: apps/extension/klyna-inspector.zip'",
+    "clean": "rm -rf dist klyna-inspector.zip"
+  },
+  "dependencies": {
+    "@klyna/core": "workspace:*",
+    "@klyna/ui": "workspace:*",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "^2.2.0",
+    "@klyna/tsconfig": "workspace:*",
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/chrome": "^0.0.299",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.2",
+    "vite": "^7.0.0"
+  }
+}

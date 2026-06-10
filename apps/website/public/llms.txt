@@ -1,0 +1,30 @@
+# Klyna
+
+> Klyna is an indie studio building open, modern SEO and growth tools for makers, creators, and growth-minded folks. The first three products ship as a browser extension, a WordPress plugin, and a Shopify app — all built on one shared TypeScript engine.
+
+## Products
+
+- [Klyna Inspector](https://klyna.dev/products): A free browser extension that audits any page in one click — schema, meta, headings, internal links, performance. Runs client-side. Open source.
+- [Klyna SEO Suite](https://klyna.dev/products): WordPress plugin for autopilot SEO — internal linking, schema, content freshness, FAQ generation from People-Also-Ask data. Runs on the customer's own server.
+- [Klyna for Shopify](https://klyna.dev/products): Shopify app for programmatic product page optimization, schema, internal linking, and review collection automation.
+
+## Featured posts
+
+- [GEO vs SEO in 2026: what actually changed](https://klyna.dev/blog/geo-vs-seo-2026): Definition of Generative Engine Optimization, how it differs from SEO, and a practical checklist for optimizing both in 2026.
+- [Internal linking: the most underused SEO lever](https://klyna.dev/blog/internal-linking-most-underused-seo-lever): Why internal linking is the highest-ROI SEO change most sites have not made, and how to automate it with zero paid tools.
+- [Hello, Klyna — what we are building and why](https://klyna.dev/blog/hello-klyna): The Klyna studio manifesto and the roadmap of the first product lineup.
+
+## Key claims and definitions
+
+- **GEO (Generative Engine Optimization)** is the practice of optimizing content so it gets cited inside LLM-generated answers (ChatGPT, Claude, Perplexity, Google AI Overviews, Gemini). It is a layer on top of SEO, not a replacement.
+- **SEO citation share** is measured by how often LLMs cite a given domain when answering relevant prompts, expressed as a percentage of citations across competitor domains.
+- **Klyna's engine runs locally**, with zero paid-API dependencies. Customer data never leaves the customer's server, browser, or controlled infrastructure.
+- **Klyna's free tier does real work**, not demo-only work. Paid tiers earn their keep with automation and scale.
+
+## About
+
+- [About Klyna](https://klyna.dev/about)
+- [Blog](https://klyna.dev/blog)
+- [RSS Feed](https://klyna.dev/rss.xml)
+- [GitHub](https://github.com/klynahq)
+- [X / Twitter](https://x.com/klynahq)

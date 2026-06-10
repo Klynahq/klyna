@@ -1,0 +1,46 @@
+---
+const features = [
+  {
+    title: 'One shared engine',
+    body: 'Every Klyna tool — extension, plugin, app — runs the same TypeScript core. Fix once, ship everywhere.',
+  },
+  {
+    title: 'Free where it counts',
+    body: 'Free tiers that actually do the work. Paid tiers earn their keep with automation and scale, not lock-in.',
+  },
+  {
+    title: 'No paid APIs in your stack',
+    body: 'Everything we build runs on your server, in your browser, or on free infrastructure. Your data never leaves you.',
+  },
+  {
+    title: 'Open by default',
+    body: 'Source available where it can be. Honest changelog. Real humans reading your support emails.',
+  },
+];
+---
+
+<section class="max-w-7xl mx-auto px-6 py-20 md:py-28">
+  <div class="max-w-2xl mb-16">
+    <div class="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-accent)] mb-4">
+      What we believe
+    </div>
+    <h2 class="text-3xl md:text-4xl font-bold tracking-tight mb-4">
+      Tools you can actually trust to leave running.
+    </h2>
+    <p class="text-[color:var(--color-text-muted)] leading-relaxed">
+      Growth tools are full of dark patterns, hidden upsells, and AI-generated noise.
+      Klyna is built the other way — every feature has to earn its place.
+    </p>
+  </div>
+
+  <div class="grid gap-px bg-[color:var(--color-border)]/50 rounded-2xl overflow-hidden border border-[color:var(--color-border)] md:grid-cols-2">
+    {
+      features.map((f) => (
+        <div class="bg-[color:var(--color-bg-elevated)] p-8">
+          <h3 class="text-lg font-semibold mb-2">{f.title}</h3>
+          <p class="text-sm text-[color:var(--color-text-muted)] leading-relaxed">{f.body}</p>
+        </div>
+      ))
+    }
+  </div>
+</section>

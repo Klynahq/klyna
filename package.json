@@ -1,0 +1,30 @@
+{
+  "name": "klyna",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Klyna — indie studio building tools for makers, creators, and growth-minded folks.",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "check": "biome check --write .",
+    "typecheck": "turbo run typecheck",
+    "clean": "turbo run clean && rm -rf node_modules .turbo"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "^18.3.12",
+      "@types/react-dom": "^18.3.1"
+    }
+  }
+}

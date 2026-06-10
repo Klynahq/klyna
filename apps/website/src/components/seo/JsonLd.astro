@@ -1,0 +1,16 @@
+---
+interface Props {
+  data: Record<string, unknown> | Array<Record<string, unknown>>;
+}
+
+const { data } = Astro.props;
+const payload = Array.isArray(data)
+  ? { '@context': 'https://schema.org', '@graph': data }
+  : { '@context': 'https://schema.org', ...data };
+---
+
+<script
+  is:inline
+  type="application/ld+json"
+  set:html={JSON.stringify(payload)}
+/>

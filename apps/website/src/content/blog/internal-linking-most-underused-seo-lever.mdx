@@ -1,0 +1,101 @@
+---
+title: 'Internal linking: the most underused SEO lever (and how to automate it)'
+description: 'Internal linking is the single highest-ROI SEO change most sites have left on the table. Here is how it works, why it is underused, and how to automate it without a paid tool.'
+publishedAt: 2026-06-09
+author: 'Klyna'
+category: 'SEO'
+tags: ['internal-linking', 'seo', 'wordpress', 'automation', 'on-page']
+featured: true
+---
+
+If you only have time to fix one thing on your site this quarter, fix internal linking. It is the cheapest, fastest, most reliable SEO improvement available — and the one most sites have not touched in years.
+
+This post explains why internal linking matters, why it is so often ignored, and how to automate it with $0 in tools.
+
+## What internal linking actually does
+
+Every page on your site is a node in a graph. The edges are the links between them. Search engines crawl that graph to discover pages and to understand which pages are most important.
+
+Three things happen when you internally link well:
+
+1. **Crawl coverage improves.** Orphan pages — pages with zero internal links — often go un-indexed. A single internal link can move a page from invisible to indexed within a week.
+2. **Authority flows.** Your highest-authority pages (typically the homepage and a few popular posts) pass ranking signals to whatever they link to. Linking from those pages to important-but-weak pages is one of the strongest on-page levers there is.
+3. **Topical relevance compounds.** When you link multiple pages on the same topic to each other with descriptive anchor text, you signal to Google and to LLMs that your site has *depth* on that topic. Topical authority is one of the strongest ranking factors in 2026.
+
+## Why most sites have not done this
+
+Three reasons:
+
+- **It is boring.** Identifying which pages should link to which is tedious manual work.
+- **It scales badly.** A 50-page site can be linked manually. A 500-page site cannot.
+- **The biggest gains are on the largest sites** — but those are the ones where manual linking is most impractical.
+
+This is exactly the kind of problem automation was made for.
+
+## How to automate internal linking yourself
+
+You do not need a paid tool. You need three things:
+
+### 1. A list of every URL on your site
+
+For most sites, your sitemap.xml is good enough. Pull it:
+
+```bash
+curl -s https://yoursite.com/sitemap.xml \
+  | grep -oP '(?<=<loc>)[^<]+'
+```
+
+### 2. The main keyword for each page
+
+The simplest approximation: the `<h1>` or `<title>` tag. Fetch each URL and extract.
+
+For more accuracy, use a local keyword extractor like [RAKE](https://pypi.org/project/rake-nltk/) or [YAKE](https://github.com/LIAAD/yake). Both are free, run on your machine, and produce ranked keyword lists per page in seconds.
+
+### 3. A way to find missing links
+
+For each `(source_page, target_page)` pair:
+
+- Does `source_page` mention the keyword of `target_page` somewhere in its body?
+- If yes — does it link to `target_page`?
+- If yes/no — flag the missed opportunity.
+
+Even a basic version of this will surface dozens of links you should add. A good version uses semantic similarity (small embedding models, free, run locally) to find related pages that do not share exact keywords.
+
+## A worked example
+
+Take a recipe site with these pages:
+
+- `/recipes/sourdough-bread`
+- `/guides/sourdough-starter`
+- `/guides/hydration-percentages`
+- `/equipment/dutch-ovens`
+
+The sourdough bread recipe should almost certainly link to all three of the others. If it does not, the recipe page has just lost three opportunities to deepen topical authority *and* keep readers on the site longer. Across hundreds of recipes, that pattern compounds into measurable traffic.
+
+## Common mistakes
+
+- **Linking with generic anchor text.** "Click here" or "this guide" is wasted. Use descriptive anchors that name the destination page's topic.
+- **Linking to the same page from every other page.** Authority concentrates on the few destinations that need it most — not every link is equal.
+- **Forgetting to remove broken internal links.** When you delete or rename a post, the links pointing to it become 404s. Fix or redirect.
+- **Linking only inside body content.** Sidebars, related-post widgets, and footers also count — and are easier to automate.
+
+## The Klyna approach
+
+The WordPress plugin we are building (Klyna SEO Suite) automates exactly this:
+
+- Crawls your site to build a topical graph
+- Uses local embeddings (zero API calls, zero cost) to score related pages
+- Suggests or auto-applies internal links during your weekly schedule
+- Re-checks on every publish so new posts get linked from the start
+
+For Shopify merchants, the same engine surfaces missing "complete the look" and "more from this collection" links between products and collection pages.
+
+## What to do this week
+
+Even without our plugin, you can do these three things right now:
+
+1. **Pull your sitemap and list every URL.** 30 minutes.
+2. **For your top 20 highest-traffic pages, find 3 internal links each you could add.** A few hours, once.
+3. **Schedule a quarterly re-audit.** The work compounds — every new post is another node in the graph.
+
+The plugin will do all of this in one click. Internal linking is the lever; automation makes it sustainable.

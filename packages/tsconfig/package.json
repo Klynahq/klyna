@@ -1,0 +1,6 @@
+{
+  "name": "@klyna/tsconfig",
+  "version": "0.0.0",
+  "private": true,
+  "files": ["base.json", "astro.json", "library.json"]
+}

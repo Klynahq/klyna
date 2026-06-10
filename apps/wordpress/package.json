@@ -1,0 +1,10 @@
+{
+  "name": "wordpress",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Klyna SEO Suite — WordPress plugin. Plain PHP, no build step.",
+  "scripts": {
+    "package": "rm -rf klyna-seo-suite klyna-seo-suite.zip && mkdir klyna-seo-suite && cp -R klyna-seo-suite.php uninstall.php readme.txt includes assets languages klyna-seo-suite/ && zip -r klyna-seo-suite.zip klyna-seo-suite >/dev/null && rm -rf klyna-seo-suite && echo 'Built: apps/wordpress/klyna-seo-suite.zip'",
+    "clean": "rm -f klyna-seo-suite.zip"
+  }
+}

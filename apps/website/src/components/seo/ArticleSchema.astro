@@ -1,0 +1,72 @@
+---
+/**
+ * BlogPosting schema for a single blog post.
+ * Includes the Article, the BreadcrumbList, and the Author.
+ * This is the structured data LLMs lean on for citations — keep it accurate.
+ */
+import JsonLd from './JsonLd.astro';
+import { siteAuthor, siteOrg, isoDate } from '../../utils/blog.ts';
+
+interface Props {
+  title: string;
+  description: string;
+  url: string;
+  publishedAt: Date;
+  updatedAt?: Date;
+  tags?: string[];
+  category?: string;
+  image?: string;
+  readingTimeMinutes?: number;
+}
+
+const {
+  title,
+  description,
+  url,
+  publishedAt,
+  updatedAt,
+  tags = [],
+  category,
+  image,
+  readingTimeMinutes,
+} = Astro.props;
+
+const graph = [
+  {
+    '@type': 'BlogPosting',
+    '@id': `${url}#article`,
+    headline: title,
+    description,
+    url,
+    datePublished: isoDate(publishedAt),
+    dateModified: isoDate(updatedAt ?? publishedAt),
+    author: {
+      '@type': 'Organization',
+      name: siteAuthor.name,
+      url: siteAuthor.url,
+      sameAs: siteAuthor.sameAs,
+    },
+    publisher: { '@id': `${siteOrg.url}#organization` },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+    inLanguage: 'en-US',
+    keywords: tags.join(', '),
+    articleSection: category,
+    ...(image ? { image } : {}),
+    ...(readingTimeMinutes
+      ? {
+          timeRequired: `PT${readingTimeMinutes}M`,
+        }
+      : {}),
+  },
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: siteOrg.url },
+      { '@type': 'ListItem', position: 2, name: 'Blog', item: `${siteOrg.url}/blog` },
+      { '@type': 'ListItem', position: 3, name: title, item: url },
+    ],
+  },
+];
+---
+
+<JsonLd data={graph} />

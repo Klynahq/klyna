@@ -1,0 +1,31 @@
+---
+/**
+ * Site-wide schema.org graph: Organization + WebSite.
+ * Inject this on every page (BaseLayout). Per-page schema (Article, BlogPosting,
+ * BreadcrumbList) is added in addition, on the relevant page.
+ */
+import JsonLd from './JsonLd.astro';
+import { siteOrg } from '../../utils/blog.ts';
+
+const graph = [
+  {
+    '@type': 'Organization',
+    '@id': `${siteOrg.url}#organization`,
+    name: siteOrg.name,
+    url: siteOrg.url,
+    logo: siteOrg.logo,
+    description: siteOrg.description,
+    sameAs: siteOrg.sameAs,
+  },
+  {
+    '@type': 'WebSite',
+    '@id': `${siteOrg.url}#website`,
+    url: siteOrg.url,
+    name: siteOrg.name,
+    publisher: { '@id': `${siteOrg.url}#organization` },
+    inLanguage: 'en-US',
+  },
+];
+---
+
+<JsonLd data={graph} />

@@ -1,0 +1,43 @@
+---
+import { type Product, statusLabel } from '@klyna/utils';
+
+interface Props {
+  product: Product;
+}
+
+const { product } = Astro.props;
+
+const surfaceLabel: Record<Product['surface'], string> = {
+  extension: 'Browser Extension',
+  wordpress: 'WordPress Plugin',
+  shopify: 'Shopify App',
+  web: 'Web App',
+};
+
+const statusColor = {
+  live: 'text-[color:var(--color-success)] bg-[color:var(--color-success)]/10 border-[color:var(--color-success)]/30',
+  beta: 'text-[color:var(--color-warning)] bg-[color:var(--color-warning)]/10 border-[color:var(--color-warning)]/30',
+  soon: 'text-[color:var(--color-accent)] bg-[color:var(--color-accent-muted)] border-[color:var(--color-accent)]/30',
+  planning:
+    'text-[color:var(--color-text-muted)] bg-white/5 border-[color:var(--color-border)]',
+}[product.status];
+---
+
+<article
+  class="group relative rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] p-6 hover:border-[color:var(--color-accent)]/50 transition-colors"
+>
+  <div class="flex items-start justify-between mb-4">
+    <div class="text-xs font-medium text-[color:var(--color-text-dim)] uppercase tracking-wider">
+      {surfaceLabel[product.surface]}
+    </div>
+    <span class={`text-[10px] uppercase tracking-wider font-semibold px-2 py-1 rounded-full border ${statusColor}`}>
+      {statusLabel(product.status)}
+    </span>
+  </div>
+
+  <h3 class="text-xl font-semibold mb-1 group-hover:text-[color:var(--color-accent)] transition-colors">
+    {product.name}
+  </h3>
+  <p class="text-sm text-[color:var(--color-text)] font-medium mb-3">{product.tagline}</p>
+  <p class="text-sm text-[color:var(--color-text-muted)] leading-relaxed">{product.description}</p>
+</article>

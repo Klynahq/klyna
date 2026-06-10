@@ -1,0 +1,115 @@
+---
+const links = [
+  { href: '/', label: 'Home' },
+  { href: '/products', label: 'Products' },
+  { href: '/blog', label: 'Blog' },
+  { href: '/about', label: 'About' },
+];
+
+const path = Astro.url.pathname;
+const isActive = (href: string) =>
+  href === '/' ? path === '/' : path === href || path.startsWith(`${href}/`);
+---
+
+<header
+  class="sticky top-0 z-50 backdrop-blur-md bg-[color:var(--color-bg)]/70 border-b border-[color:var(--color-border)]/50"
+>
+  <nav class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+    <a href="/" class="flex items-center gap-2 font-semibold tracking-tight text-lg">
+      <span
+        class="inline-block w-7 h-7 rounded-lg bg-gradient-to-br from-[color:var(--color-accent)] to-[#5b3df0] shadow-[0_0_24px_-4px_var(--color-accent)]"
+      ></span>
+      <span>Klyna</span>
+    </a>
+
+    <div class="hidden md:flex items-center gap-1">
+      {
+        links.map((link) => (
+          <a
+            href={link.href}
+            class={`px-3 py-1.5 rounded-md text-sm transition-colors ${
+              isActive(link.href)
+                ? 'text-white bg-white/5'
+                : 'text-[color:var(--color-text-muted)] hover:text-white hover:bg-white/5'
+            }`}
+          >
+            {link.label}
+          </a>
+        ))
+      }
+    </div>
+
+    <a
+      href="https://github.com/klynahq"
+      class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border border-[color:var(--color-border)] hover:border-[color:var(--color-accent)] hover:text-white text-[color:var(--color-text-muted)] transition-colors"
+    >
+      GitHub →
+    </a>
+
+    <button
+      type="button"
+      id="mobile-nav-toggle"
+      class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-md border border-[color:var(--color-border)] text-[color:var(--color-text-muted)] hover:text-white hover:border-[color:var(--color-accent)] transition-colors"
+      aria-label="Open menu"
+      aria-controls="mobile-nav-panel"
+      aria-expanded="false"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+  </nav>
+
+  <div
+    id="mobile-nav-panel"
+    class="md:hidden hidden border-t border-[color:var(--color-border)]/50 bg-[color:var(--color-bg)]/95 backdrop-blur"
+  >
+    <div class="max-w-7xl mx-auto px-6 py-4 flex flex-col gap-1">
+      {
+        links.map((link) => (
+          <a
+            href={link.href}
+            class={`px-3 py-3 rounded-md text-base ${
+              isActive(link.href)
+                ? 'text-white bg-white/5'
+                : 'text-[color:var(--color-text-muted)] hover:text-white hover:bg-white/5'
+            }`}
+          >
+            {link.label}
+          </a>
+        ))
+      }
+      <a
+        href="https://github.com/klynahq"
+        class="mt-2 px-3 py-3 rounded-md text-base text-[color:var(--color-text-muted)] hover:text-white border border-[color:var(--color-border)]"
+      >
+        GitHub →
+      </a>
+    </div>
+  </div>
+</header>
+
+<script is:inline>
+  (() => {
+    const btn = document.getElementById('mobile-nav-toggle');
+    const panel = document.getElementById('mobile-nav-panel');
+    if (!btn || !panel) return;
+    btn.addEventListener('click', () => {
+      const open = panel.classList.toggle('hidden');
+      btn.setAttribute('aria-expanded', String(!open));
+    });
+  })();
+</script>

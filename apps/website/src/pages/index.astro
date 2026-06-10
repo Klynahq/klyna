@@ -1,0 +1,101 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from '../components/Hero.astro';
+import ProductCard from '../components/ProductCard.astro';
+import FeatureList from '../components/FeatureList.astro';
+import { products } from '@klyna/utils';
+import { getPublishedPosts, formatDate } from '../utils/blog.ts';
+
+const latestPosts = (await getPublishedPosts()).slice(0, 3);
+---
+
+<BaseLayout>
+  <Hero />
+
+  <section class="max-w-7xl mx-auto px-6 pb-12">
+    <div class="flex items-end justify-between mb-8">
+      <div>
+        <div class="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-accent)] mb-2">
+          The lineup
+        </div>
+        <h2 class="text-3xl md:text-4xl font-bold tracking-tight">First three products in build.</h2>
+      </div>
+      <a
+        href="/products"
+        class="hidden md:inline-flex text-sm text-[color:var(--color-text-muted)] hover:text-white"
+      >
+        See full roadmap →
+      </a>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-3">
+      {products.map((p) => <ProductCard product={p} />)}
+    </div>
+  </section>
+
+  <FeatureList />
+
+  {
+    latestPosts.length > 0 && (
+      <section class="max-w-7xl mx-auto px-6 py-20">
+        <div class="flex items-end justify-between mb-8">
+          <div>
+            <div class="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-accent)] mb-2">
+              From the blog
+            </div>
+            <h2 class="text-3xl md:text-4xl font-bold tracking-tight">
+              Notes on growing organically.
+            </h2>
+          </div>
+          <a
+            href="/blog"
+            class="hidden md:inline-flex text-sm text-[color:var(--color-text-muted)] hover:text-white"
+          >
+            All posts →
+          </a>
+        </div>
+
+        <div class="grid gap-4 md:grid-cols-3">
+          {latestPosts.map((post) => (
+            <a
+              href={`/blog/${post.id}`}
+              class="group block p-6 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] hover:border-[color:var(--color-accent)]/50 transition-colors"
+            >
+              <div class="flex items-center gap-2 mb-3 text-xs">
+                <span class="text-[color:var(--color-accent)] font-semibold uppercase tracking-wider">
+                  {post.data.category}
+                </span>
+                <span class="text-[color:var(--color-text-dim)]">·</span>
+                <time class="text-[color:var(--color-text-dim)]">
+                  {formatDate(post.data.publishedAt)}
+                </time>
+              </div>
+              <h3 class="text-lg font-semibold mb-2 group-hover:text-[color:var(--color-accent)] transition-colors">
+                {post.data.title}
+              </h3>
+              <p class="text-sm text-[color:var(--color-text-muted)] line-clamp-3 leading-relaxed">
+                {post.data.description}
+              </p>
+            </a>
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  <section class="max-w-3xl mx-auto px-6 py-20 text-center">
+    <h2 class="text-3xl md:text-4xl font-bold tracking-tight mb-4">
+      Get notified when the first product ships.
+    </h2>
+    <p class="text-[color:var(--color-text-muted)] mb-8">
+      No spam, no drip campaigns. One email when Klyna Inspector hits the Chrome Web Store.
+    </p>
+    <a
+      href="https://github.com/klynahq"
+      class="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-[color:var(--color-accent)] hover:bg-[color:var(--color-accent-hover)] text-white font-medium transition-colors"
+    >
+      Watch the GitHub org
+      <span aria-hidden="true">→</span>
+    </a>
+  </section>
+</BaseLayout>

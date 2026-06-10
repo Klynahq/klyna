@@ -1,0 +1,22 @@
+{
+  "name": "@klyna/core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Klyna shared SEO/analysis engine. Pure-TS, no network or paid APIs.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@klyna/tsconfig": "workspace:*",
+    "typescript": "^5.7.2"
+  }
+}

@@ -1,0 +1,238 @@
+---
+import { render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArticleSchema from '../../components/seo/ArticleSchema.astro';
+import {
+  getPublishedPosts,
+  formatDate,
+  estimateReadingTime,
+} from '../../utils/blog.ts';
+
+export async function getStaticPaths() {
+  const posts = await getPublishedPosts();
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content, headings } = await render(post);
+
+const url = new URL(`/blog/${post.id}`, Astro.site).toString();
+const readingMinutes = estimateReadingTime(post.body ?? '');
+const allPosts = await getPublishedPosts();
+const related = allPosts
+  .filter((p) => p.id !== post.id)
+  .filter((p) => p.data.tags.some((t) => post.data.tags.includes(t)))
+  .slice(0, 3);
+
+const tocItems = headings.filter((h) => h.depth === 2 || h.depth === 3);
+---
+
+<BaseLayout
+  title={`${post.data.title} — Klyna`}
+  description={post.data.description}
+  canonical={url}
+  ogType="article"
+  ogImage={post.data.ogImage}
+>
+  <ArticleSchema
+    slot="head"
+    title={post.data.title}
+    description={post.data.description}
+    url={url}
+    publishedAt={post.data.publishedAt}
+    updatedAt={post.data.updatedAt}
+    tags={post.data.tags}
+    category={post.data.category}
+    image={post.data.ogImage}
+    readingTimeMinutes={readingMinutes}
+  />
+
+  <article class="max-w-3xl mx-auto px-6 pt-16 pb-24">
+    <nav class="mb-8 text-sm text-[color:var(--color-text-dim)]">
+      <a href="/blog" class="hover:text-white">← All posts</a>
+    </nav>
+
+    <header class="mb-10">
+      <div class="flex items-center gap-3 mb-4 text-xs">
+        <span class="text-[color:var(--color-accent)] font-semibold uppercase tracking-wider">
+          {post.data.category}
+        </span>
+        <span class="text-[color:var(--color-text-dim)]">·</span>
+        <time
+          datetime={post.data.publishedAt.toISOString()}
+          class="text-[color:var(--color-text-dim)]"
+        >
+          {formatDate(post.data.publishedAt)}
+        </time>
+        <span class="text-[color:var(--color-text-dim)]">·</span>
+        <span class="text-[color:var(--color-text-dim)]">{readingMinutes} min read</span>
+      </div>
+      <h1 class="text-4xl md:text-5xl font-bold tracking-tight leading-tight mb-6">
+        {post.data.title}
+      </h1>
+      <p class="text-lg text-[color:var(--color-text-muted)] leading-relaxed">
+        {post.data.description}
+      </p>
+    </header>
+
+    {
+      tocItems.length >= 3 && (
+        <aside class="mb-12 p-5 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)]">
+          <div class="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-text-dim)] mb-3">
+            Contents
+          </div>
+          <ol class="space-y-1.5 text-sm">
+            {tocItems.map((h) => (
+              <li class={h.depth === 3 ? 'pl-4' : ''}>
+                <a
+                  href={`#${h.slug}`}
+                  class="text-[color:var(--color-text-muted)] hover:text-[color:var(--color-accent)] transition-colors"
+                >
+                  {h.text}
+                </a>
+              </li>
+            ))}
+          </ol>
+        </aside>
+      )
+    }
+
+    <div class="prose-klyna">
+      <Content />
+    </div>
+
+    {
+      post.data.tags.length > 0 && (
+        <div class="mt-12 pt-8 border-t border-[color:var(--color-border)]/50 flex flex-wrap gap-2">
+          {post.data.tags.map((tag) => (
+            <a
+              href={`/blog/tags/${tag}`}
+              class="text-xs px-3 py-1.5 rounded-full border border-[color:var(--color-border)] text-[color:var(--color-text-muted)] hover:border-[color:var(--color-accent)] hover:text-white transition-colors"
+            >
+              #{tag}
+            </a>
+          ))}
+        </div>
+      )
+    }
+
+    {
+      related.length > 0 && (
+        <section class="mt-16 pt-10 border-t border-[color:var(--color-border)]/50">
+          <h2 class="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-text-dim)] mb-6">
+            Keep reading
+          </h2>
+          <ul class="space-y-4">
+            {related.map((r) => (
+              <li>
+                <a
+                  href={`/blog/${r.id}`}
+                  class="block p-4 rounded-xl border border-[color:var(--color-border)] hover:border-[color:var(--color-accent)]/50 hover:bg-white/5 transition-colors"
+                >
+                  <div class="text-xs text-[color:var(--color-accent)] font-semibold uppercase tracking-wider mb-1">
+                    {r.data.category}
+                  </div>
+                  <div class="font-medium mb-1">{r.data.title}</div>
+                  <div class="text-sm text-[color:var(--color-text-muted)] line-clamp-2">
+                    {r.data.description}
+                  </div>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+  </article>
+</BaseLayout>
+
+<style is:global>
+  /* Prose styles for blog body content */
+  .prose-klyna {
+    color: var(--color-text);
+    line-height: 1.75;
+    font-size: 17px;
+  }
+  .prose-klyna > * + * {
+    margin-top: 1.25em;
+  }
+  .prose-klyna h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-top: 2.5em;
+    margin-bottom: 0.6em;
+    scroll-margin-top: 5rem;
+  }
+  .prose-klyna h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-top: 2em;
+    margin-bottom: 0.5em;
+    scroll-margin-top: 5rem;
+  }
+  .prose-klyna p {
+    color: var(--color-text-muted);
+  }
+  .prose-klyna a {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-decoration-color: rgba(124, 92, 255, 0.4);
+    text-underline-offset: 3px;
+  }
+  .prose-klyna a:hover {
+    text-decoration-color: var(--color-accent);
+  }
+  .prose-klyna ul,
+  .prose-klyna ol {
+    color: var(--color-text-muted);
+    padding-left: 1.5em;
+  }
+  .prose-klyna ul {
+    list-style: disc;
+  }
+  .prose-klyna ol {
+    list-style: decimal;
+  }
+  .prose-klyna li {
+    margin-top: 0.5em;
+  }
+  .prose-klyna strong {
+    color: var(--color-text);
+    font-weight: 600;
+  }
+  .prose-klyna code {
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-border);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+  }
+  .prose-klyna pre {
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    padding: 1em 1.25em;
+    overflow-x: auto;
+    font-size: 0.875em;
+  }
+  .prose-klyna pre code {
+    background: transparent;
+    border: none;
+    padding: 0;
+  }
+  .prose-klyna blockquote {
+    border-left: 3px solid var(--color-accent);
+    padding-left: 1em;
+    color: var(--color-text-muted);
+    font-style: italic;
+  }
+  .prose-klyna hr {
+    border-color: var(--color-border);
+    margin: 2.5em 0;
+  }
+</style>

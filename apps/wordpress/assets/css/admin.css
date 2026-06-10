@@ -1,0 +1,94 @@
+/**
+ * Klyna admin styles. Scoped to .klyna-wrap so we never bleed into core WP styles.
+ */
+.klyna-wrap {
+  --klyna-accent: #7c5cff;
+  --klyna-accent-hover: #9277ff;
+  --klyna-border: #e5e5e9;
+  --klyna-text-dim: #71717a;
+}
+
+.klyna-wrap h1 {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.klyna-wrap .klyna-tagline {
+  color: var(--klyna-text-dim);
+  font-size: 14px;
+  margin: 4px 0 24px;
+  max-width: 640px;
+}
+
+.klyna-wrap .klyna-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  max-width: 1200px;
+}
+
+.klyna-wrap .klyna-card {
+  background: #fff;
+  border: 1px solid var(--klyna-border);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.klyna-wrap .klyna-card h2 {
+  font-size: 16px;
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.klyna-wrap .klyna-card p {
+  font-size: 13px;
+  color: var(--klyna-text-dim);
+  line-height: 1.5;
+  margin-top: 0;
+}
+
+.klyna-wrap .klyna-card .button {
+  margin-top: 8px;
+}
+
+#klyna-links-output .klyna-link-group {
+  background: #fff;
+  border: 1px solid var(--klyna-border);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+}
+
+#klyna-links-output .klyna-link-group h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+#klyna-links-output ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#klyna-links-output li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-top: 1px solid var(--klyna-border);
+  font-size: 13px;
+}
+
+#klyna-links-output li:first-child {
+  border-top: none;
+}
+
+#klyna-links-output .klyna-sim {
+  color: var(--klyna-accent);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: 12px;
+}
