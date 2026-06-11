@@ -10,6 +10,7 @@ api_version = "2025-01"
 [[extensions]]
 name = "Klyna Capture"
 handle = "capture-widget"
+uid = "a63f0a70-9118-8f51-81a7-33877dc91fc733d0d6d2"
 type = "theme"
 
   [extensions.capabilities]

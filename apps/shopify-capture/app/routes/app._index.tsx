@@ -14,12 +14,16 @@ import {
 import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
 import { conversionRate } from '../lib/popups';
+import { getShopAiSettings } from '../lib/ai.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
   const shop = session.shop;
 
   const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+  const ai = await getShopAiSettings(shop);
+  const aiEnabled = ai.provider !== 'off' && !!ai.apiKey;
 
   const [activePopups, totalPopups, subscribers, impressions, conversions] =
     await Promise.all([
@@ -36,6 +40,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   return {
     shop,
+    aiEnabled,
+    aiProvider: ai.provider,
     stats: {
       activePopups,
       totalPopups,
@@ -48,7 +54,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export default function Dashboard() {
-  const { shop, stats } = useLoaderData<typeof loader>();
+  const { shop, stats, aiEnabled, aiProvider } = useLoaderData<typeof loader>();
 
   const metrics = [
     { label: 'Active popups', value: String(stats.activePopups) },
@@ -57,11 +63,17 @@ export default function Dashboard() {
     { label: 'Conversion rate · 30d', value: `${stats.rate}%` },
   ];
 
-  const tiles = [
+  const tiles: Array<{ title: string; body: string; to: string; ai?: boolean }> = [
     {
       title: 'Build a popup',
-      body: 'Email/SMS capture, spin-to-win, exit-intent — with scroll and time triggers and per-page targeting.',
+      body: 'Email/SMS capture, spin-to-win, exit-intent. Scroll and time triggers, per-page targeting.',
       to: '/app/popups',
+    },
+    {
+      title: 'AI personalized copy',
+      body: 'Generate a generic headline for first-time visitors and a product-aware nudge for returning ones. Preview both side by side.',
+      to: '/app/ai-copy',
+      ai: true,
     },
     {
       title: 'Subscribers',
@@ -70,7 +82,7 @@ export default function Dashboard() {
     },
     {
       title: 'Conversion analytics',
-      body: 'Impressions, conversions, and rate per campaign — see which popup actually grows your list.',
+      body: 'Impressions, conversions, and rate per campaign. See which popup actually grows your list.',
       to: '/app/analytics',
     },
   ];
@@ -82,7 +94,14 @@ export default function Dashboard() {
           <Card>
             <BlockStack gap="200">
               <InlineStack align="space-between" blockAlign="center">
-                <Text as="h2" variant="headingMd">Grow your list, the honest way.</Text>
+                <InlineStack gap="200" blockAlign="center">
+                  <Text as="h2" variant="headingMd">Grow your list, the honest way.</Text>
+                  {aiEnabled ? (
+                    <Badge tone="success">{`AI · ${aiProvider}`}</Badge>
+                  ) : (
+                    <Badge tone="info">No AI key set</Badge>
+                  )}
+                </InlineStack>
                 <Badge tone={stats.activePopups > 0 ? 'success' : 'attention'}>
                   {stats.activePopups > 0 ? 'Live' : 'No live popups'}
                 </Badge>
@@ -110,11 +129,14 @@ export default function Dashboard() {
         </Layout.Section>
 
         <Layout.Section>
-          <InlineGrid columns={{ xs: 1, md: 3 }} gap="300">
+          <InlineGrid columns={{ xs: 1, md: 2 }} gap="300">
             {tiles.map((t) => (
               <Card key={t.to}>
                 <BlockStack gap="200">
-                  <Text as="h3" variant="headingSm">{t.title}</Text>
+                  <InlineStack gap="200" blockAlign="center">
+                    <Text as="h3" variant="headingSm">{t.title}</Text>
+                    {t.ai ? <Badge tone="info">AI</Badge> : null}
+                  </InlineStack>
                   <Text as="p" variant="bodyMd" tone="subdued">{t.body}</Text>
                   <Link to={t.to}>Open →</Link>
                 </BlockStack>

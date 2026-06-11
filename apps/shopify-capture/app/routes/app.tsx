@@ -23,6 +23,8 @@ export default function App() {
         <Link to="/app/popups">Popups</Link>
         <Link to="/app/subscribers">Subscribers</Link>
         <Link to="/app/analytics">Analytics</Link>
+        <Link to="/app/ai-copy">AI copy</Link>
+        <Link to="/app/settings">Settings</Link>
       </NavMenu>
       <Outlet />
     </AppProvider>

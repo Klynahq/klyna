@@ -123,6 +123,13 @@ export default function PopupEditor() {
   const [buttonLabel, setButtonLabel] = useState(popup.buttonLabel);
   const [triggerSeconds, setTriggerSeconds] = useState(popup.triggerSeconds);
   const [triggerScroll, setTriggerScroll] = useState(popup.triggerScroll);
+  const [name, setName] = useState(popup.name);
+  const [body, setBody] = useState(popup.body);
+  const [successMessage, setSuccessMessage] = useState(popup.successMessage);
+  const [discountCode, setDiscountCode] = useState(popup.discountCode ?? '');
+  const [targetDevice, setTargetDevice] = useState(popup.targetDevice);
+  const [targetAudience, setTargetAudience] = useState(popup.targetAudience);
+  const [frequencyDays, setFrequencyDays] = useState(String(popup.frequencyDays));
   const [wheel, setWheel] = useState<WheelSegment[]>(() => {
     const parsed = parseWheel(popup.wheelSegments);
     return parsed.length > 0 ? parsed : DEFAULT_WHEEL;
@@ -181,7 +188,8 @@ export default function PopupEditor() {
                     label="Name"
                     name="name"
                     autoComplete="off"
-                    defaultValue={popup.name}
+                    value={name}
+                    onChange={setName}
                   />
                   <Select
                     label="Format"
@@ -211,7 +219,8 @@ export default function PopupEditor() {
                     name="body"
                     autoComplete="off"
                     multiline={3}
-                    defaultValue={popup.body}
+                    value={body}
+                    onChange={setBody}
                   />
                   <InlineGrid columns={{ xs: 1, sm: 2 }} gap="300">
                     <TextField
@@ -234,14 +243,16 @@ export default function PopupEditor() {
                     label="Success message"
                     name="successMessage"
                     autoComplete="off"
-                    defaultValue={popup.successMessage}
+                    value={successMessage}
+                    onChange={setSuccessMessage}
                   />
                   {!isSpin && (
                     <TextField
                       label="Discount code (revealed on signup)"
                       name="discountCode"
                       autoComplete="off"
-                      defaultValue={popup.discountCode ?? ''}
+                      value={discountCode}
+                      onChange={setDiscountCode}
                       helpText="Optional. Create the code in Shopify Discounts first."
                     />
                   )}
@@ -257,7 +268,7 @@ export default function PopupEditor() {
                     </InlineStack>
                     <Text as="p" tone="subdued" variant="bodySm">
                       Each spin lands on a segment weighted by its odds. Leave the
-                      code empty for a “no win” segment.
+                      code empty for a "no win" segment.
                     </Text>
                     {wheel.map((seg, i) => (
                       <Box key={i} padding="300" background="bg-surface-secondary" borderRadius="200">
@@ -377,7 +388,8 @@ export default function PopupEditor() {
                           { label: 'Desktop only', value: 'desktop' },
                           { label: 'Mobile only', value: 'mobile' },
                         ]}
-                        defaultValue={popup.targetDevice}
+                        value={targetDevice}
+                        onChange={setTargetDevice}
                       />
                       <Select
                         label="Audience"
@@ -387,14 +399,16 @@ export default function PopupEditor() {
                           { label: 'New visitors', value: 'new' },
                           { label: 'Returning visitors', value: 'returning' },
                         ]}
-                        defaultValue={popup.targetAudience}
+                        value={targetAudience}
+                        onChange={setTargetAudience}
                       />
                       <TextField
                         label="Re-show cooldown (days)"
                         name="frequencyDays"
                         type="number"
                         autoComplete="off"
-                        defaultValue={String(popup.frequencyDays)}
+                        value={frequencyDays}
+                        onChange={setFrequencyDays}
                         helpText="Don't show again to the same visitor for this many days."
                       />
                     </BlockStack>
