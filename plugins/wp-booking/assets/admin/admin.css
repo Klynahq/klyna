@@ -1,0 +1,325 @@
+/**
+ * Klyna Booking — admin styles.
+ *
+ * A dark, branded surface dropped into the WordPress admin. Tokens mirror
+ * packages/ui/src/tokens.ts: violet accent #7c5cff on a near-black surface.
+ * Scoped under .klyna-wrap so it never bleeds into the rest of wp-admin.
+ */
+
+.klyna-wrap {
+	--kb-bg: #0b0b0f;
+	--kb-elevated: #13131a;
+	--kb-surface: #1a1a23;
+	--kb-border: #2a2a35;
+	--kb-text: #f4f4f5;
+	--kb-muted: #a1a1aa;
+	--kb-dim: #71717a;
+	--kb-accent: #7c5cff;
+	--kb-accent-hover: #9277ff;
+	--kb-accent-deep: #5b3df0;
+	--kb-success: #34d399;
+	--kb-warning: #fbbf24;
+	--kb-danger: #f87171;
+	--kb-radius: 12px;
+	--kb-radius-sm: 8px;
+
+	margin: 20px 20px 0 2px;
+	max-width: 1100px;
+	color: var( --kb-text );
+}
+
+.klyna-wrap .klyna-head {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin: 0 0 4px;
+	color: var( --kb-text );
+	font-size: 23px;
+	font-weight: 650;
+}
+
+.klyna-wrap .klyna-logo {
+	display: inline-flex;
+}
+
+.klyna-wrap .klyna-tagline {
+	margin: 0 0 20px;
+	color: var( --kb-muted );
+	font-size: 14px;
+}
+
+/* Stat tiles */
+.klyna-wrap .klyna-stats {
+	display: grid;
+	grid-template-columns: repeat( 3, minmax( 0, 1fr ) );
+	gap: 14px;
+	margin-bottom: 20px;
+}
+
+.klyna-wrap .klyna-stat {
+	padding: 18px 20px;
+	border: 1px solid var( --kb-border );
+	border-radius: var( --kb-radius );
+	background: linear-gradient( 180deg, var( --kb-elevated ), var( --kb-surface ) );
+}
+
+.klyna-wrap .klyna-stat__num {
+	display: block;
+	font-size: 30px;
+	font-weight: 700;
+	line-height: 1.1;
+	color: var( --kb-text );
+}
+
+.klyna-wrap .klyna-stat__label {
+	display: block;
+	margin-top: 2px;
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var( --kb-dim );
+}
+
+/* Cards */
+.klyna-wrap .klyna-card {
+	margin-bottom: 18px;
+	padding: 20px 22px;
+	border: 1px solid var( --kb-border );
+	border-radius: var( --kb-radius );
+	background: var( --kb-elevated );
+}
+
+.klyna-wrap .klyna-card h2 {
+	margin: 0 0 14px;
+	font-size: 16px;
+	font-weight: 650;
+	color: var( --kb-text );
+}
+
+.klyna-wrap .klyna-card__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+.klyna-wrap .klyna-card__head h2 {
+	margin: 0;
+}
+
+/* Filter chips */
+.klyna-wrap .klyna-filters {
+	display: flex;
+	gap: 6px;
+	flex-wrap: wrap;
+}
+
+.klyna-wrap .klyna-chip {
+	padding: 5px 12px;
+	border: 1px solid var( --kb-border );
+	border-radius: 999px;
+	background: var( --kb-surface );
+	color: var( --kb-muted );
+	font-size: 12px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.klyna-wrap .klyna-chip:hover {
+	border-color: var( --kb-accent );
+	color: var( --kb-text );
+}
+
+.klyna-wrap .klyna-chip.is-active {
+	background: linear-gradient( 135deg, var( --kb-accent-hover ), var( --kb-accent-deep ) );
+	border-color: transparent;
+	color: #fff;
+}
+
+/* Bookings table */
+.klyna-wrap .klyna-table {
+	width: 100%;
+	margin-top: 14px;
+	border-collapse: collapse;
+	font-size: 14px;
+}
+
+.klyna-wrap .klyna-table th {
+	text-align: left;
+	padding: 10px 12px;
+	border-bottom: 1px solid var( --kb-border );
+	color: var( --kb-dim );
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+}
+
+.klyna-wrap .klyna-table td {
+	padding: 12px;
+	border-bottom: 1px solid var( --kb-border );
+	color: var( --kb-text );
+	vertical-align: top;
+}
+
+.klyna-wrap .klyna-table tr:last-child td {
+	border-bottom: 0;
+}
+
+.klyna-wrap .klyna-actions {
+	white-space: nowrap;
+	text-align: right;
+}
+
+.klyna-wrap .klyna-muted {
+	color: var( --kb-muted );
+}
+
+/* Status tags */
+.klyna-wrap .klyna-tag {
+	display: inline-block;
+	padding: 2px 10px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 650;
+	line-height: 1.6;
+}
+
+.klyna-wrap .klyna-tag--pending {
+	background: rgba( 251, 191, 36, 0.16 );
+	color: var( --kb-warning );
+}
+
+.klyna-wrap .klyna-tag--confirmed {
+	background: rgba( 52, 211, 153, 0.16 );
+	color: var( --kb-success );
+}
+
+.klyna-wrap .klyna-tag--cancelled {
+	background: rgba( 248, 113, 113, 0.16 );
+	color: var( --kb-danger );
+}
+
+/* Buttons inside the dark surface */
+.klyna-wrap .klyna-actions .button {
+	border-color: var( --kb-border );
+	background: var( --kb-surface );
+	color: var( --kb-text );
+}
+
+.klyna-wrap .klyna-actions .button:hover {
+	border-color: var( --kb-accent );
+	color: #fff;
+}
+
+.klyna-wrap .klyna-actions .button-primary {
+	background: linear-gradient( 135deg, var( --kb-accent-hover ), var( --kb-accent-deep ) );
+	border-color: transparent;
+	color: #fff;
+}
+
+.klyna-wrap .klyna-actions .button-primary:hover {
+	filter: brightness( 1.08 );
+	border-color: transparent;
+}
+
+/* Pager */
+.klyna-wrap .klyna-pager {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-top: 14px;
+}
+
+.klyna-wrap .klyna-pager__info {
+	color: var( --kb-muted );
+	font-size: 13px;
+}
+
+.klyna-wrap .klyna-hint {
+	color: var( --kb-muted );
+	font-size: 13px;
+}
+
+.klyna-wrap .klyna-hint code {
+	padding: 2px 6px;
+	border-radius: 4px;
+	background: var( --kb-surface );
+	color: var( --kb-accent-hover );
+}
+
+/* Forms (availability + settings) */
+.klyna-wrap .klyna-form .form-table th,
+.klyna-wrap .klyna-form .form-table td {
+	color: var( --kb-text );
+}
+
+.klyna-wrap .klyna-form .description {
+	color: var( --kb-dim );
+}
+
+.klyna-wrap .klyna-form input[type="text"],
+.klyna-wrap .klyna-form input[type="email"],
+.klyna-wrap .klyna-form input[type="url"],
+.klyna-wrap .klyna-form input[type="number"],
+.klyna-wrap .klyna-form input[type="time"],
+.klyna-wrap .klyna-form select,
+.klyna-wrap .klyna-form textarea {
+	background: var( --kb-surface );
+	border: 1px solid var( --kb-border );
+	color: var( --kb-text );
+	border-radius: var( --kb-radius-sm );
+}
+
+.klyna-wrap .klyna-form input:focus,
+.klyna-wrap .klyna-form select:focus,
+.klyna-wrap .klyna-form textarea:focus {
+	border-color: var( --kb-accent );
+	box-shadow: 0 0 0 2px rgba( 124, 92, 255, 0.25 );
+	outline: none;
+}
+
+.klyna-wrap .klyna-hours {
+	width: 100%;
+	max-width: 560px;
+	border-collapse: collapse;
+}
+
+.klyna-wrap .klyna-hours th {
+	text-align: left;
+	padding: 10px 12px 10px 0;
+	font-weight: 600;
+	color: var( --kb-text );
+	width: 180px;
+}
+
+.klyna-wrap .klyna-hours td {
+	padding: 10px 0;
+}
+
+.klyna-wrap .klyna-to {
+	margin: 0 8px;
+	color: var( --kb-muted );
+}
+
+.klyna-wrap .klyna-toggle {
+	display: block;
+	margin-bottom: 10px;
+	color: var( --kb-text );
+}
+
+/* Submit button styling for branded surface */
+.klyna-wrap .klyna-form .button-primary {
+	background: linear-gradient( 135deg, var( --kb-accent-hover ), var( --kb-accent-deep ) );
+	border-color: transparent;
+	color: #fff;
+	box-shadow: none;
+	text-shadow: none;
+}
+
+.klyna-wrap .klyna-form .button-primary:hover {
+	filter: brightness( 1.08 );
+	border-color: transparent;
+}

@@ -1,0 +1,490 @@
+# Copyright (C) 2026 Klyna
+# This file is distributed under the GPL-2.0-or-later license.
+msgid ""
+msgstr ""
+"Project-Id-Version: Klyna Booking 0.1.0\n"
+"Report-Msgid-Bugs-To: https://klyna.dev\n"
+"POT-Creation-Date: 2026-06-11T00:00:00+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: \n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Domain: wp-booking\n"
+
+#. Plugin Name of the plugin
+msgid "Klyna Booking"
+msgstr ""
+
+#. Description of the plugin
+msgid "Tools that help your work get found."
+msgstr ""
+
+#. Author of the plugin
+msgid "Klyna"
+msgstr ""
+
+#: includes/class-services.php
+msgid "Services"
+msgstr ""
+
+#: includes/class-services.php
+msgid "Service"
+msgstr ""
+
+#: includes/class-services.php
+msgid "Add service"
+msgstr ""
+
+#: includes/class-services.php
+msgid "Add new service"
+msgstr ""
+
+#: includes/class-services.php
+msgid "Edit service"
+msgstr ""
+
+#: includes/class-services.php
+msgid "New service"
+msgstr ""
+
+#: includes/class-services.php
+msgid "View service"
+msgstr ""
+
+#: includes/class-services.php
+msgid "Search services"
+msgstr ""
+
+#: includes/class-services.php
+msgid "No services found."
+msgstr ""
+
+#: includes/class-services.php
+msgid "No services found in trash."
+msgstr ""
+
+#: includes/class-services.php
+msgid "Booking details"
+msgstr ""
+
+#: includes/class-services.php
+msgid "Duration (minutes)"
+msgstr ""
+
+#: includes/class-services.php
+msgid "Price"
+msgstr ""
+
+#: includes/class-services.php
+msgid "Leave 0 for free."
+msgstr ""
+
+#: includes/class-services.php
+msgid "Capacity per slot"
+msgstr ""
+
+#: includes/class-services.php
+msgid "How many bookings one slot can hold."
+msgstr ""
+
+#: includes/class-services.php
+msgid "Duration"
+msgstr ""
+
+#. translators: %d: minutes.
+#: includes/class-services.php includes/class-frontend.php
+msgid "%d min"
+msgid_plural "%d min"
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/class-services.php
+msgid "Free"
+msgstr ""
+
+#: includes/class-bookings.php
+msgid "Bookings"
+msgstr ""
+
+#: includes/class-bookings.php
+msgid "Booking"
+msgstr ""
+
+#: includes/class-bookings.php includes/class-admin.php
+msgid "Pending"
+msgstr ""
+
+#: includes/class-bookings.php includes/class-admin.php
+msgid "Confirmed"
+msgstr ""
+
+#: includes/class-bookings.php includes/class-admin.php
+msgid "Cancelled"
+msgstr ""
+
+#. translators: 1: customer name, 2: service title, 3: date/time.
+#: includes/class-bookings.php
+msgid "%1$s — %2$s — %3$s"
+msgstr ""
+
+#: includes/class-bookings.php includes/class-availability.php
+msgid "That service is no longer available."
+msgstr ""
+
+#: includes/class-bookings.php
+msgid "Unknown booking status."
+msgstr ""
+
+#: includes/class-bookings.php
+msgid "Booking not found."
+msgstr ""
+
+#: includes/class-availability.php
+msgid "Monday"
+msgstr ""
+
+#: includes/class-availability.php
+msgid "Tuesday"
+msgstr ""
+
+#: includes/class-availability.php
+msgid "Wednesday"
+msgstr ""
+
+#: includes/class-availability.php
+msgid "Thursday"
+msgstr ""
+
+#: includes/class-availability.php
+msgid "Friday"
+msgstr ""
+
+#: includes/class-availability.php
+msgid "Saturday"
+msgstr ""
+
+#: includes/class-availability.php
+msgid "Sunday"
+msgstr ""
+
+#: includes/class-availability.php
+msgid "That time could not be read."
+msgstr ""
+
+#: includes/class-availability.php
+msgid "Sorry, that time is no longer available. Please pick another slot."
+msgstr ""
+
+#: includes/class-rest.php
+msgid "Too many booking attempts. Please try again later."
+msgstr ""
+
+#: includes/class-rest.php
+msgid "Please enter your name."
+msgstr ""
+
+#: includes/class-rest.php
+msgid "Please enter a valid email address."
+msgstr ""
+
+#: includes/class-rest.php
+msgid "Thanks! Your request is pending approval. We will email you once it is confirmed."
+msgstr ""
+
+#: includes/class-rest.php
+msgid "You are booked! A confirmation email is on its way."
+msgstr ""
+
+#. translators: %s: business name.
+#: includes/class-emails.php
+msgid "Your booking with %s is confirmed"
+msgstr ""
+
+#: includes/class-emails.php
+msgid "Good news — your booking is confirmed."
+msgstr ""
+
+#. translators: %s: business name.
+#: includes/class-emails.php
+msgid "Your booking with %s was cancelled"
+msgstr ""
+
+#: includes/class-emails.php
+msgid "Your booking has been cancelled. If this is unexpected, please get in touch."
+msgstr ""
+
+#. translators: %s: business name.
+#: includes/class-emails.php
+msgid "We received your booking request — %s"
+msgstr ""
+
+#: includes/class-emails.php
+msgid "Thanks for your request. It is pending approval and we will confirm shortly."
+msgstr ""
+
+#: includes/class-emails.php
+msgid "Thanks for booking. Here are the details."
+msgstr ""
+
+#: includes/class-emails.php
+msgid "Service"
+msgstr ""
+
+#: includes/class-emails.php
+msgid "When"
+msgstr ""
+
+#: includes/class-emails.php
+msgid "Name"
+msgstr ""
+
+#: includes/class-emails.php
+msgid "Phone"
+msgstr ""
+
+#. translators: %s: business name.
+#: includes/class-emails.php
+msgid "— %s"
+msgstr ""
+
+#. translators: 1: service title, 2: date/time.
+#: includes/class-emails.php
+msgid "New booking: %1$s — %2$s"
+msgstr ""
+
+#: includes/class-emails.php
+msgid "A new booking just came in."
+msgstr ""
+
+#: includes/class-emails.php
+msgid "Email"
+msgstr ""
+
+#: includes/class-emails.php
+msgid "Notes"
+msgstr ""
+
+#: includes/class-emails.php
+msgid "Manage:"
+msgstr ""
+
+#: includes/class-frontend.php
+msgid "Klyna Booking form"
+msgstr ""
+
+#: includes/class-frontend.php
+msgid "No services are available to book right now."
+msgstr ""
+
+#: includes/class-frontend.php
+msgid "Time"
+msgstr ""
+
+#: includes/class-frontend.php
+msgid "Details"
+msgstr ""
+
+#: includes/class-frontend.php
+msgid "Choose a service"
+msgstr ""
+
+#: includes/class-frontend.php includes/class-admin.php
+msgid "Back"
+msgstr ""
+
+#: includes/class-frontend.php
+msgid "Pick a time"
+msgstr ""
+
+#: includes/class-frontend.php
+msgid "Your details"
+msgstr ""
+
+#: includes/class-frontend.php
+msgid "Notes"
+msgstr ""
+
+#: includes/class-frontend.php
+msgid "Confirm booking"
+msgstr ""
+
+#: includes/class-frontend.php
+msgid "No times available on this day."
+msgstr ""
+
+#: includes/class-frontend.php
+msgid "Loading…"
+msgstr ""
+
+#: includes/class-frontend.php
+msgid "Select a date to see available times."
+msgstr ""
+
+#: includes/class-frontend.php
+msgid "Booking…"
+msgstr ""
+
+#: includes/class-frontend.php includes/class-admin.php
+msgid "Something went wrong. Please try again."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Booking"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Availability"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Settings"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Confirm"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Cancel"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Updating…"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "No bookings yet."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Could not update that booking."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Customer"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Status"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Klyna Booking"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Tools that help your work get found."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "All"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Loading…"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Previous"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Next"
+msgstr ""
+
+#. translators: %s: shortcode.
+#: includes/class-admin.php
+msgid "Add the booking form to any page with the %s shortcode or the \"Klyna Booking form\" block."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Set your weekly opening hours and any days you are closed."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Weekly hours"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "to"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Blackout dates"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "One date per line (YYYY-MM-DD). No bookings can be made on these days."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Save availability"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Business"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Business name"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Notification email"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "New bookings are sent here."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Time zone"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Scheduling"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Slot interval (minutes)"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Minimum lead time (minutes)"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "How far ahead a customer must book."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Booking window (days)"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "How far into the future customers may book."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Confirmations"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Require manual approval before a booking is confirmed"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Email me when a new booking comes in"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Send confirmation emails to the customer"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Save settings"
+msgstr ""

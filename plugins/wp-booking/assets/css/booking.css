@@ -1,0 +1,306 @@
+/**
+ * Klyna Booking — front-end form styles.
+ *
+ * Scoped under .klyna-booking so it inherits the host theme's typography while
+ * keeping a crisp, branded surface. Light by default; works on dark themes via
+ * a translucent surface. Brand accent is electric violet #7c5cff.
+ */
+
+.klyna-booking {
+	--kb-accent: #7c5cff;
+	--kb-accent-hover: #9277ff;
+	--kb-accent-deep: #5b3df0;
+	--kb-border: #e4e4e7;
+	--kb-surface: #ffffff;
+	--kb-muted: #71717a;
+	--kb-text: #18181b;
+	--kb-radius: 12px;
+	--kb-radius-sm: 8px;
+	--kb-success: #34d399;
+	--kb-danger: #ef4444;
+
+	max-width: 640px;
+	margin: 0 auto;
+	color: var( --kb-text );
+	font-size: 15px;
+	line-height: 1.5;
+}
+
+.klyna-booking *,
+.klyna-booking *::before,
+.klyna-booking *::after {
+	box-sizing: border-box;
+}
+
+.klyna-booking__steps {
+	border: 1px solid var( --kb-border );
+	border-radius: var( --kb-radius );
+	background: var( --kb-surface );
+	overflow: hidden;
+}
+
+.klyna-booking__progress {
+	display: flex;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	border-bottom: 1px solid var( --kb-border );
+	background: #fafafa;
+}
+
+.klyna-booking__progress li {
+	flex: 1;
+	padding: 12px 8px;
+	text-align: center;
+	font-size: 13px;
+	font-weight: 600;
+	color: var( --kb-muted );
+	position: relative;
+}
+
+.klyna-booking__progress li.is-active {
+	color: var( --kb-accent-deep );
+}
+
+.klyna-booking__progress li.is-active::after {
+	content: "";
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: -1px;
+	height: 2px;
+	background: linear-gradient( 90deg, var( --kb-accent-hover ), var( --kb-accent-deep ) );
+}
+
+.klyna-booking__panel {
+	padding: 24px;
+}
+
+.klyna-booking__title {
+	margin: 0 0 16px;
+	font-size: 18px;
+	font-weight: 650;
+}
+
+.klyna-booking__back {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	margin-bottom: 12px;
+	padding: 4px 0;
+	border: 0;
+	background: none;
+	color: var( --kb-accent-deep );
+	font-size: 13px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.klyna-booking__back:hover {
+	color: var( --kb-accent-hover );
+}
+
+/* Service list */
+.klyna-booking__services {
+	display: grid;
+	gap: 10px;
+}
+
+.klyna-booking__service {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 4px;
+	width: 100%;
+	padding: 16px;
+	border: 1px solid var( --kb-border );
+	border-radius: var( --kb-radius-sm );
+	background: var( --kb-surface );
+	text-align: left;
+	cursor: pointer;
+	transition: border-color 0.15s, box-shadow 0.15s, transform 0.05s;
+}
+
+.klyna-booking__service:hover {
+	border-color: var( --kb-accent );
+	box-shadow: 0 0 0 3px rgba( 124, 92, 255, 0.1 );
+}
+
+.klyna-booking__service.is-selected {
+	border-color: var( --kb-accent );
+	box-shadow: 0 0 0 3px rgba( 124, 92, 255, 0.18 );
+}
+
+.klyna-booking__service-name {
+	font-weight: 650;
+	font-size: 15px;
+}
+
+.klyna-booking__service-meta {
+	font-size: 13px;
+	color: var( --kb-muted );
+}
+
+/* Dates + slots */
+.klyna-booking__dates {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-bottom: 18px;
+}
+
+.klyna-booking__date {
+	padding: 8px 12px;
+	border: 1px solid var( --kb-border );
+	border-radius: 999px;
+	background: var( --kb-surface );
+	font-size: 13px;
+	font-weight: 600;
+	color: var( --kb-text );
+	cursor: pointer;
+	transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.klyna-booking__date:hover {
+	border-color: var( --kb-accent );
+}
+
+.klyna-booking__date.is-selected {
+	background: linear-gradient( 135deg, var( --kb-accent-hover ), var( --kb-accent-deep ) );
+	border-color: transparent;
+	color: #fff;
+}
+
+.klyna-booking__slots {
+	display: grid;
+	grid-template-columns: repeat( auto-fill, minmax( 92px, 1fr ) );
+	gap: 8px;
+}
+
+.klyna-booking__slot {
+	padding: 10px 8px;
+	border: 1px solid var( --kb-border );
+	border-radius: var( --kb-radius-sm );
+	background: var( --kb-surface );
+	font-size: 14px;
+	font-weight: 600;
+	color: var( --kb-text );
+	cursor: pointer;
+	transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.klyna-booking__slot:hover {
+	border-color: var( --kb-accent );
+	background: rgba( 124, 92, 255, 0.06 );
+}
+
+.klyna-booking__hint {
+	grid-column: 1 / -1;
+	margin: 4px 0;
+	color: var( --kb-muted );
+	font-size: 14px;
+}
+
+/* Details form */
+.klyna-booking__summary {
+	margin: 0 0 16px;
+	padding: 12px 14px;
+	border-radius: var( --kb-radius-sm );
+	background: rgba( 124, 92, 255, 0.08 );
+	color: var( --kb-accent-deep );
+	font-weight: 600;
+	font-size: 14px;
+}
+
+.klyna-booking__field {
+	display: block;
+	margin-bottom: 14px;
+}
+
+.klyna-booking__field > span {
+	display: block;
+	margin-bottom: 6px;
+	font-size: 13px;
+	font-weight: 600;
+}
+
+.klyna-booking__req {
+	color: var( --kb-accent );
+}
+
+.klyna-booking__field input,
+.klyna-booking__field textarea {
+	width: 100%;
+	padding: 10px 12px;
+	border: 1px solid var( --kb-border );
+	border-radius: var( --kb-radius-sm );
+	font-size: 15px;
+	font-family: inherit;
+	color: var( --kb-text );
+	background: var( --kb-surface );
+}
+
+.klyna-booking__field input:focus,
+.klyna-booking__field textarea:focus {
+	outline: none;
+	border-color: var( --kb-accent );
+	box-shadow: 0 0 0 3px rgba( 124, 92, 255, 0.18 );
+}
+
+.klyna-booking__error {
+	margin-bottom: 12px;
+	padding: 10px 12px;
+	border-radius: var( --kb-radius-sm );
+	background: rgba( 239, 68, 68, 0.08 );
+	color: var( --kb-danger );
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.klyna-booking__submit {
+	width: 100%;
+	padding: 12px 16px;
+	border: 0;
+	border-radius: var( --kb-radius-sm );
+	background: linear-gradient( 135deg, var( --kb-accent-hover ), var( --kb-accent-deep ) );
+	color: #fff;
+	font-size: 15px;
+	font-weight: 650;
+	cursor: pointer;
+	transition: filter 0.15s, opacity 0.15s;
+}
+
+.klyna-booking__submit:hover {
+	filter: brightness( 1.06 );
+}
+
+.klyna-booking__submit:disabled {
+	opacity: 0.6;
+	cursor: progress;
+}
+
+/* Done */
+.klyna-booking__done {
+	text-align: center;
+	padding: 40px 24px;
+}
+
+.klyna-booking__check {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 64px;
+	height: 64px;
+	margin-bottom: 16px;
+	border-radius: 50%;
+	background: rgba( 52, 211, 153, 0.14 );
+	color: var( --kb-success );
+}
+
+.klyna-booking--empty {
+	padding: 24px;
+	border: 1px dashed var( --kb-border );
+	border-radius: var( --kb-radius );
+	color: var( --kb-muted );
+	text-align: center;
+}
