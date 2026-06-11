@@ -1,0 +1,14 @@
+# Klyna Urgency — theme app extension.
+#
+# Provides three app blocks merchants can drop into their theme via the theme
+# editor: a countdown timer, a low-stock scarcity badge, and a recently-purchased
+# social-proof popup. All three read live config from the app proxy and report
+# impressions back to it.
+
+name = "klyna-urgency"
+type = "theme"
+
+[[extensions]]
+name = "Klyna Urgency"
+handle = "klyna-urgency"
+type = "theme"

@@ -1,0 +1,42 @@
+{% comment %}
+  Klyna Urgency — Countdown timer block.
+  Reads its configuration live from the app proxy (set up in the Klyna Urgency
+  admin). If you have multiple timers, paste a specific Timer ID to pin one;
+  otherwise the most recent active timer is shown.
+{% endcomment %}
+
+{{ 'klyna-urgency.css' | asset_url | stylesheet_tag }}
+
+<div
+  class="klyna-urgency-block"
+  {{ block.shopify_attributes }}
+>
+  <div
+    class="klyna-timer"
+    data-klyna-timer
+    {% if block.settings.timer_id != blank %}
+      data-timer-id="{{ block.settings.timer_id | escape }}"
+    {% endif %}
+  ></div>
+</div>
+
+<script src="{{ 'klyna-urgency.js' | asset_url }}" defer></script>
+
+{% schema %}
+{
+  "name": "Klyna Countdown",
+  "target": "section",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Configure timers in the Klyna Urgency app. Leave Timer ID blank to show the latest active timer, or paste a specific ID to pin one."
+    },
+    {
+      "type": "text",
+      "id": "timer_id",
+      "label": "Timer ID (optional)",
+      "info": "Copy this from the Klyna Urgency dashboard to pin a specific timer."
+    }
+  ]
+}
+{% endschema %}

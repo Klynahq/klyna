@@ -1,0 +1,10 @@
+node_modules/
+build/
+.cache/
+.env
+.env.local
+*.sqlite
+*.sqlite-journal
+.shopify/
+public/build/
+extensions/*/node_modules/

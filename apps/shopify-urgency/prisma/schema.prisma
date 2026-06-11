@@ -1,0 +1,170 @@
+// Klyna Urgency — Prisma schema.
+// Backs Shopify session storage plus the urgency widgets this app manages:
+// countdown timers, low-stock scarcity, social-proof popups, targeting rules,
+// and impression analytics.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+}
+
+// A countdown timer — a sale or launch deadline rendered on the storefront.
+// `style` is "sale" (counts down to endsAt) or "launch" (counts down to startsAt).
+model CountdownTimer {
+  id          String   @id @default(cuid())
+  shop        String
+  name        String
+  headline    String   @default("Hurry — sale ends soon!")
+  subtext     String   @default("")
+  // "sale" | "launch" | "evergreen"
+  style       String   @default("sale")
+  startsAt    DateTime?
+  endsAt      DateTime?
+  // For evergreen timers: a per-visitor countdown of this many minutes.
+  evergreenMinutes Int  @default(60)
+  // Behaviour after the deadline: "hide" | "keep" | "message"
+  expireAction String  @default("hide")
+  expireMessage String @default("This offer has ended.")
+  accentColor String   @default("#7c5cff")
+  enabled     Boolean  @default(true)
+  // JSON-serialized TargetRule snapshot (see TargetRule below) for quick reads.
+  targeting   String   @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  impressions Impression[]
+
+  @@index([shop, enabled])
+}
+
+// A low-stock scarcity badge — "Only N left!" tied to a product/variant's
+// real inventory. `threshold` is the level at or below which we show the badge.
+model ScarcityRule {
+  id            String   @id @default(cuid())
+  shop          String
+  name          String
+  // Shopify Product GID this rule applies to (or empty = all products).
+  productGid    String   @default("")
+  productTitle  String   @default("")
+  threshold     Int      @default(10)
+  // "{count}" is replaced with the live inventory quantity at render time.
+  template      String   @default("Only {count} left in stock!")
+  // Optional floor so we never show an alarming "Only 1 left" if you prefer.
+  hideAtOrBelow Int      @default(0)
+  accentColor   String   @default("#fbbf24")
+  enabled       Boolean  @default(true)
+  // Cached inventory snapshot for the admin table (refreshed on sync).
+  lastKnownQty  Int?
+  syncedAt      DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  impressions Impression[]
+
+  @@index([shop, enabled])
+}
+
+// A recently-purchased social-proof popup configuration.
+model SocialProofConfig {
+  id            String   @id @default(cuid())
+  shop          String
+  enabled       Boolean  @default(false)
+  // "real" pulls from synced orders; "synthetic" rotates a curated pool.
+  source        String   @default("real")
+  // "{name} from {city} bought {product}"
+  template      String   @default("{name} from {city} just bought {product}")
+  position      String   @default("bottom-left")
+  // Seconds each popup stays visible, and the gap between popups.
+  displaySeconds Int     @default(5)
+  intervalSeconds Int    @default(12)
+  // Don't surface orders older than this many hours.
+  maxAgeHours   Int      @default(168)
+  accentColor   String   @default("#7c5cff")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([shop])
+}
+
+// A single recent purchase event, synced from the Admin API, used to feed the
+// social-proof popup. Personal data is reduced to first name + city on sync.
+model ProofEvent {
+  id          String   @id @default(cuid())
+  shop        String
+  firstName   String
+  city        String
+  productTitle String
+  orderGid    String   @unique
+  purchasedAt DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([shop, purchasedAt])
+}
+
+// Reusable targeting rule. Linked from widgets by id; the resolved snapshot is
+// also denormalized onto each widget's `targeting` field for fast reads.
+model TargetRule {
+  id          String   @id @default(cuid())
+  shop        String
+  name        String
+  // "all" | "products" | "collections" | "home" | "cart"
+  pageScope   String   @default("all")
+  // JSON array of Shopify GIDs (products or collections) when scoped.
+  matchGids   String   @default("[]")
+  // "all" | "desktop" | "mobile"
+  device      String   @default("all")
+  // Optional ISO date window for scheduling the rule itself.
+  activeFrom  DateTime?
+  activeUntil DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([shop])
+}
+
+// Impression / interaction analytics. One row per aggregated day per widget so
+// the table stays small. `widgetType` is "timer" | "scarcity" | "proof".
+model Impression {
+  id          String   @id @default(cuid())
+  shop        String
+  widgetType  String
+  // FK to the owning widget (nullable depending on type).
+  timerId     String?
+  scarcityId  String?
+  // YYYY-MM-DD bucket the counts roll up into.
+  day         String
+  views       Int      @default(0)
+  clicks      Int      @default(0)
+  // For timers: conversions attributed within the urgency window.
+  conversions Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  timer    CountdownTimer? @relation(fields: [timerId], references: [id], onDelete: Cascade)
+  scarcity ScarcityRule?   @relation(fields: [scarcityId], references: [id], onDelete: Cascade)
+
+  @@unique([shop, widgetType, timerId, scarcityId, day])
+  @@index([shop, day])
+}

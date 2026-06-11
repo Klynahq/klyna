@@ -1,0 +1,191 @@
+/* Klyna Urgency — storefront widget styles.
+ * Scoped to .klyna-* so they never collide with the merchant's theme.
+ * --klyna-accent is set per-block from the merchant's chosen color.
+ */
+
+.klyna-urgency-block {
+  --klyna-accent: #7c5cff;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.klyna-urgency-block *,
+.klyna-urgency-block *::before,
+.klyna-urgency-block *::after {
+  box-sizing: border-box;
+}
+
+/* ---- Countdown timer ---------------------------------------------------- */
+
+.klyna-timer {
+  display: none;
+  text-align: center;
+  padding: 16px 18px;
+  border: 1px solid color-mix(in srgb, var(--klyna-accent) 35%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--klyna-accent) 6%, transparent);
+}
+.klyna-timer--ready {
+  display: block;
+}
+.klyna-timer__head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 10px;
+}
+.klyna-timer__headline {
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+.klyna-timer__subtext {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+.klyna-timer__clock {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.klyna-timer__unit {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 48px;
+  padding: 8px 6px;
+  border-radius: 8px;
+  background: var(--klyna-accent);
+  color: #fff;
+}
+.klyna-timer__num {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.klyna-timer__label {
+  margin-top: 4px;
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+.klyna-timer__sep {
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 2.4;
+  color: var(--klyna-accent);
+}
+.klyna-timer__expired {
+  font-weight: 600;
+  padding: 8px 0;
+  color: var(--klyna-accent);
+}
+
+/* ---- Scarcity badge ----------------------------------------------------- */
+
+.klyna-scarcity {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  margin: 8px 0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--klyna-accent) 80%, #000);
+  background: color-mix(in srgb, var(--klyna-accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--klyna-accent) 40%, transparent);
+}
+.klyna-scarcity--ready {
+  display: inline-flex;
+}
+.klyna-scarcity::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--klyna-accent);
+  animation: klyna-pulse 1.6s ease-in-out infinite;
+}
+@keyframes klyna-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.75); }
+}
+
+/* ---- Social-proof popup ------------------------------------------------- */
+
+.klyna-proof {
+  position: fixed;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 320px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fff;
+  color: #18181b;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.16);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  pointer-events: none;
+}
+.klyna-proof--visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.klyna-proof--bottom-left { bottom: 18px; left: 18px; }
+.klyna-proof--bottom-right { bottom: 18px; right: 18px; }
+.klyna-proof--top-left { top: 18px; left: 18px; }
+.klyna-proof--top-right { top: 18px; right: 18px; }
+.klyna-proof__dot {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--klyna-accent);
+}
+.klyna-proof__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.3;
+}
+.klyna-proof__text {
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+.klyna-proof__ago {
+  font-size: 0.72rem;
+  opacity: 0.55;
+}
+.klyna-proof__close {
+  flex: 0 0 auto;
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.4);
+  padding: 2px 4px;
+}
+.klyna-proof__close:hover {
+  color: rgba(0, 0, 0, 0.8);
+}
+
+@media (max-width: 749px) {
+  .klyna-proof {
+    max-width: calc(100vw - 36px);
+  }
+  .klyna-timer__unit {
+    min-width: 40px;
+  }
+  .klyna-timer__num {
+    font-size: 1.25rem;
+  }
+}

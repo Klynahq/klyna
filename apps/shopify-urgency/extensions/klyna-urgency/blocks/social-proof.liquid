@@ -1,0 +1,27 @@
+{% comment %}
+  Klyna Urgency — Recently-purchased social-proof popup.
+  Add this once (e.g. to the theme footer or as an app embed). It renders a
+  floating popup that rotates through your recent purchases. Content, position,
+  and timing are controlled from the Klyna Urgency app.
+{% endcomment %}
+
+{{ 'klyna-urgency.css' | asset_url | stylesheet_tag }}
+
+<div class="klyna-urgency-block" {{ block.shopify_attributes }}>
+  <div class="klyna-proof" data-klyna-proof></div>
+</div>
+
+<script src="{{ 'klyna-urgency.js' | asset_url }}" defer></script>
+
+{% schema %}
+{
+  "name": "Klyna Social Proof",
+  "target": "body",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Floating 'recently purchased' popup. Turn it on, set the message, position, and timing in the Klyna Urgency app, then sync your recent orders. Only first name + city are ever shown."
+    }
+  ]
+}
+{% endschema %}

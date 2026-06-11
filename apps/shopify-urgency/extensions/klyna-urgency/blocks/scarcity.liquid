@@ -1,0 +1,41 @@
+{% comment %}
+  Klyna Urgency — Low-stock scarcity badge.
+  Add this to a product template. It passes the live inventory of the currently
+  selected/first variant to the Klyna runtime, which decides whether to show the
+  "Only N left" badge based on the rule you configured for this product.
+{% endcomment %}
+
+{{ 'klyna-urgency.css' | asset_url | stylesheet_tag }}
+
+{%- assign variant = product.selected_or_first_available_variant -%}
+
+<div class="klyna-urgency-block" {{ block.shopify_attributes }}>
+  <span
+    class="klyna-scarcity"
+    data-klyna-scarcity
+    data-product-gid="gid://shopify/Product/{{ product.id }}"
+    {% if variant and variant.inventory_management != blank %}
+      data-inventory="{{ variant.inventory_quantity }}"
+    {% else %}
+      data-inventory=""
+    {% endif %}
+  ></span>
+</div>
+
+<script src="{{ 'klyna-urgency.js' | asset_url }}" defer></script>
+
+{% schema %}
+{
+  "name": "Klyna Scarcity",
+  "target": "section",
+  "enabled_on": {
+    "templates": ["product"]
+  },
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Shows an 'Only N left' badge wired to this product's live inventory. Set thresholds per product in the Klyna Urgency app. Inventory tracking must be enabled on the variant."
+    }
+  ]
+}
+{% endschema %}
