@@ -1,0 +1,319 @@
+/* Klyna Sticky Cart — storefront widget styles.
+ *
+ * Scoped under .klyna-sc so it never leaks into the theme. Mobile-first:
+ * the bar is a full-width tray on phones and a centered pill on desktop.
+ * Colors that vary per-merchant are injected as CSS custom properties by JS. */
+
+.klyna-sc {
+  --klyna-sc-bg: #ffffff;
+  --klyna-sc-fg: #1a1a23;
+  --klyna-sc-muted: #71717a;
+  --klyna-sc-border: rgba(0, 0, 0, 0.08);
+  --klyna-sc-cta: #7c5cff;
+  --klyna-sc-cta-fg: #ffffff;
+  --klyna-sc-track: rgba(0, 0, 0, 0.08);
+  --klyna-sc-progress: #34d399;
+  --klyna-sc-radius: 12px;
+  --klyna-sc-shadow: 0 -6px 24px rgba(0, 0, 0, 0.12);
+
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 2147483000;
+  box-sizing: border-box;
+  font-family: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
+}
+
+.klyna-sc *,
+.klyna-sc *::before,
+.klyna-sc *::after {
+  box-sizing: border-box;
+}
+
+.klyna-sc[data-pos='bottom'] {
+  bottom: 0;
+  transform: translateY(110%);
+  box-shadow: var(--klyna-sc-shadow);
+}
+
+.klyna-sc[data-pos='top'] {
+  top: 0;
+  transform: translateY(-110%);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+}
+
+.klyna-sc.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.klyna-sc__inner {
+  background: var(--klyna-sc-bg);
+  color: var(--klyna-sc-fg);
+  border-top: 1px solid var(--klyna-sc-border);
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+}
+
+.klyna-sc[data-pos='top'] .klyna-sc__inner {
+  border-top: none;
+  border-bottom: 1px solid var(--klyna-sc-border);
+  padding-top: 10px;
+}
+
+/* Free-shipping progress */
+.klyna-sc__ship {
+  margin-bottom: 8px;
+}
+
+.klyna-sc__ship-msg {
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--klyna-sc-muted);
+  margin-bottom: 5px;
+}
+
+.klyna-sc__ship-msg strong {
+  color: var(--klyna-sc-fg);
+  font-weight: 600;
+}
+
+.klyna-sc__ship-track {
+  position: relative;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--klyna-sc-track);
+  overflow: hidden;
+}
+
+.klyna-sc__ship-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0%;
+  border-radius: 999px;
+  background: var(--klyna-sc-progress);
+  transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.klyna-sc.is-unlocked .klyna-sc__ship-fill {
+  width: 100% !important;
+}
+
+/* Main row */
+.klyna-sc__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.klyna-sc__media {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  border-radius: 8px;
+  object-fit: cover;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.klyna-sc__info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.klyna-sc__title {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 22ch;
+}
+
+.klyna-sc__price {
+  font-size: 13px;
+  color: var(--klyna-sc-muted);
+}
+
+.klyna-sc__controls {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.klyna-sc__select {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid var(--klyna-sc-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--klyna-sc-fg);
+  font: inherit;
+  font-size: 13px;
+  padding: 8px 26px 8px 10px;
+  max-width: 9rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2371717a' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+}
+
+.klyna-sc__qty {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--klyna-sc-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.klyna-sc__qty button {
+  border: none;
+  background: transparent;
+  color: var(--klyna-sc-fg);
+  width: 30px;
+  height: 36px;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.klyna-sc__qty button:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.klyna-sc__qty input {
+  width: 32px;
+  height: 36px;
+  border: none;
+  text-align: center;
+  font: inherit;
+  font-size: 14px;
+  background: transparent;
+  color: var(--klyna-sc-fg);
+  -moz-appearance: textfield;
+}
+
+.klyna-sc__qty input::-webkit-outer-spin-button,
+.klyna-sc__qty input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.klyna-sc__buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.klyna-sc__btn {
+  border: none;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 16px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: filter 0.15s ease, opacity 0.15s ease;
+}
+
+.klyna-sc__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.klyna-sc__btn--add {
+  background: var(--klyna-sc-cta);
+  color: var(--klyna-sc-cta-fg);
+}
+
+.klyna-sc__btn--add:not(:disabled):hover {
+  filter: brightness(1.08);
+}
+
+.klyna-sc__btn--buy {
+  background: transparent;
+  color: var(--klyna-sc-fg);
+  border: 1px solid var(--klyna-sc-cta);
+}
+
+.klyna-sc__btn--buy:not(:disabled):hover {
+  background: rgba(124, 92, 255, 0.08);
+}
+
+.klyna-sc__btn.is-loading {
+  position: relative;
+  color: transparent !important;
+}
+
+.klyna-sc__btn.is-loading::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  color: var(--klyna-sc-cta-fg);
+  animation: klyna-sc-spin 0.6s linear infinite;
+}
+
+.klyna-sc__btn--buy.is-loading::after {
+  color: var(--klyna-sc-cta);
+}
+
+@keyframes klyna-sc-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Phones: stack controls below the product info so the buttons get full width. */
+@media (max-width: 600px) {
+  .klyna-sc__row {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .klyna-sc__title {
+    max-width: 16ch;
+  }
+
+  .klyna-sc__controls {
+    margin-left: auto;
+  }
+
+  .klyna-sc__buttons {
+    width: 100%;
+    order: 3;
+  }
+
+  .klyna-sc__btn {
+    flex: 1;
+    text-align: center;
+  }
+
+  .klyna-sc__select {
+    max-width: 7rem;
+  }
+}
+
+/* Respect reduced-motion preferences. */
+@media (prefers-reduced-motion: reduce) {
+  .klyna-sc,
+  .klyna-sc__ship-fill,
+  .klyna-sc__btn {
+    transition: none;
+  }
+
+  .klyna-sc__btn.is-loading::after {
+    animation: none;
+  }
+}

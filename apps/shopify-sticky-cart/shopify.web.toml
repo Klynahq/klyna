@@ -1,0 +1,6 @@
+name = "klyna-sticky-cart-web"
+roles = ["frontend", "backend"]
+webhooks_path = "/webhooks"
+
+[commands]
+dev = "pnpm exec remix vite:dev"

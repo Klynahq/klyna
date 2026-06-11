@@ -1,0 +1,86 @@
+// Klyna Sticky Cart — Prisma schema.
+// Backs Shopify session storage plus the per-shop widget settings and the
+// click analytics this app records from the storefront.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+}
+
+// One settings row per shop — the source of truth the admin UI edits and the
+// storefront theme block reads (mirrored into a shop metaobject so the App
+// Proxy can serve it without a session). All money values are in the shop's
+// presentment currency minor->major units (e.g. 75.0 = $75.00).
+model StickyCartSettings {
+  id                  String   @id @default(cuid())
+  shop                String   @unique
+
+  enabled             Boolean  @default(true)
+  // "bottom" pins the bar to the viewport bottom (mobile-first); "top" pins it
+  // under the header once the native add-to-cart scrolls out of view.
+  position            String   @default("bottom")
+  // Show the bar only after the user scrolls past the native ATC button.
+  showAfterScroll     Boolean  @default(true)
+
+  showImage           Boolean  @default(true)
+  showPrice           Boolean  @default(true)
+  showVariantSelector Boolean  @default(true)
+  showQuantity        Boolean  @default(true)
+
+  ctaLabel            String   @default("Add to cart")
+  ctaColor            String   @default("#7c5cff")
+  ctaTextColor        String   @default("#ffffff")
+
+  // Quick-buy bypasses the cart and routes straight to checkout.
+  quickBuyEnabled     Boolean  @default(true)
+  quickBuyLabel       String   @default("Buy it now")
+
+  // Free-shipping progress bar.
+  freeShipEnabled     Boolean  @default(true)
+  freeShipThreshold   Float    @default(75)
+  freeShipColor       String   @default("#34d399")
+  freeShipMessage     String   @default("You're {{remaining}} away from free shipping!")
+  freeShipSuccessMsg  String   @default("You've unlocked free shipping! 🎉")
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+// One row per storefront interaction. We bucket by day + event in the admin
+// dashboard; raw rows are kept so we can recompute conversion windows later.
+model ClickEvent {
+  id        String   @id @default(cuid())
+  shop      String
+  // "impression" | "atc" | "quickbuy" | "variant" | "qty" | "freeship_unlock"
+  event     String
+  productId String?
+  variantId String?
+  // Cart subtotal (major units) at the moment of the event, when available.
+  cartValue Float?
+  createdAt DateTime @default(now())
+
+  @@index([shop, createdAt])
+  @@index([shop, event, createdAt])
+}

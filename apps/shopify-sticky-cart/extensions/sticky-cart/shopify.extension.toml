@@ -1,0 +1,15 @@
+# Klyna Sticky Cart — Theme App Extension.
+#
+# Ships the storefront widget as an *app embed* block. Merchants enable it once
+# under Online Store → Themes → Customize → App embeds; it then renders on every
+# product page with no theme code changes.
+
+api_version = "2025-01"
+
+[[extensions]]
+name = "Klyna Sticky Cart"
+handle = "sticky-cart"
+type = "theme"
+
+  [extensions.capabilities]
+  block_only = false

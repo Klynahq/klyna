@@ -1,0 +1,12 @@
+{
+  "klyna_sticky_cart": {
+    "name": "Klyna Sticky Cart",
+    "add_to_cart": "Add to cart",
+    "buy_it_now": "Buy it now",
+    "sold_out": "Sold out",
+    "quantity": "Quantity",
+    "variant": "Variant",
+    "free_shipping_progress": "You're {{ remaining }} away from free shipping!",
+    "free_shipping_unlocked": "You've unlocked free shipping!"
+  }
+}
