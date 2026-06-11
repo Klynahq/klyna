@@ -1,81 +1,192 @@
-import { type LoaderFunctionArgs } from '@remix-run/node';
-import { useLoaderData } from '@remix-run/react';
+import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
+import { Form, useActionData, useFetcher, useLoaderData, useNavigation } from '@remix-run/react';
+import { useState } from 'react';
 import {
+  Banner,
   BlockStack,
   Box,
+  Button,
   Card,
   InlineStack,
   Layout,
-  Link as PolarisLink,
-  List,
+  Link,
   Page,
+  Select,
   Text,
+  TextField,
 } from '@shopify/polaris';
 import { authenticate } from '../shopify.server';
-import prisma from '../db.server';
+import { createAiClient, type AiProvider } from '@klyna/ai-client';
+import { getShopAiSettings, getTodayUsage, saveShopAiSettings } from '../lib/ai.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
-  const shop = session.shop;
+  const settings = await getShopAiSettings(session.shop);
+  const usedToday = await getTodayUsage(session.shop);
+  return { settings, usedToday };
+};
 
-  // Quick health signal: have any saves landed yet?
-  const items = await prisma.wishlistItem.count({ where: { shop } });
+export const action = async ({ request }: ActionFunctionArgs) => {
+  const { session } = await authenticate.admin(request);
+  const form = await request.formData();
+  const intent = String(form.get('intent') ?? 'save');
 
-  const themeEditorUrl = `https://${shop}/admin/themes/current/editor?context=apps`;
-  const wishlistPageUrl = `https://${shop}/apps/wishlist`;
+  const provider = String(form.get('provider') ?? 'off') as AiProvider;
+  const apiKey = String(form.get('apiKey') ?? '').trim() || undefined;
+  const model = String(form.get('model') ?? '').trim() || undefined;
+  const dailyCap = Math.max(1, Math.min(10000, Number(form.get('dailyCap') ?? 100) || 100));
 
-  return { shop, items, themeEditorUrl, wishlistPageUrl };
+  if (intent === 'test') {
+    const client = createAiClient({ provider, apiKey, model });
+    const result = await client.test();
+    return json({ test: result });
+  }
+
+  await saveShopAiSettings(session.shop, { provider, apiKey, model, dailyCap });
+  return json({ saved: true });
+};
+
+const PROVIDER_OPTIONS = [
+  { label: 'Off — no AI assistance', value: 'off' },
+  { label: 'OpenRouter (free models, indefinite)', value: 'openrouter' },
+  { label: 'Groq (2k/day free)', value: 'groq' },
+  { label: 'Google Gemini (1.5k/day free)', value: 'gemini' },
+];
+
+const PROVIDER_HELP: Record<string, { url: string; hint: string }> = {
+  openrouter: {
+    url: 'https://openrouter.ai/keys',
+    hint: 'Free models like Llama 3.3 70B work great. Look for the ":free" suffix.',
+  },
+  groq: {
+    url: 'https://console.groq.com/keys',
+    hint: 'Fastest free tier — ~2,000 requests/day. Default: llama-3.3-70b-versatile.',
+  },
+  gemini: {
+    url: 'https://aistudio.google.com/apikey',
+    hint: '1,500 free requests/day on gemini-2.0-flash. Best for nuance.',
+  },
 };
 
 export default function Settings() {
-  const { items, themeEditorUrl, wishlistPageUrl } = useLoaderData<typeof loader>();
+  const { settings, usedToday } = useLoaderData<typeof loader>();
+  const data = useActionData<typeof action>();
+  const nav = useNavigation();
+  const testFetcher = useFetcher<typeof action>();
+
+  const submitting = nav.state === 'submitting';
+  const testing = testFetcher.state === 'submitting';
+
+  const [provider, setProvider] = useState<string>(settings.provider);
+  const [apiKey, setApiKey] = useState(settings.apiKey ?? '');
+  const [model, setModel] = useState(settings.model ?? '');
+  const [dailyCap, setDailyCap] = useState(String(settings.dailyCap));
+
+  const testResult =
+    testFetcher.data && 'test' in testFetcher.data
+      ? (testFetcher.data.test as { ok: boolean; message: string })
+      : null;
+  const saved = data && 'saved' in data ? data.saved : false;
+  const help = PROVIDER_HELP[provider];
+
+  const runTest = () => {
+    const fd = new FormData();
+    fd.set('intent', 'test');
+    fd.set('provider', provider);
+    fd.set('apiKey', apiKey);
+    fd.set('model', model);
+    fd.set('dailyCap', dailyCap);
+    testFetcher.submit(fd, { method: 'post' });
+  };
 
   return (
     <Page title="Settings" backAction={{ url: '/app' }}>
       <Layout>
         <Layout.Section>
           <Card>
-            <BlockStack gap="300">
-              <Text as="h2" variant="headingMd">Add the wishlist button to your storefront</Text>
-              <Text as="p" tone="subdued">
-                Klyna Wishlist ships as a Theme App Extension, so there is no theme code
-                to edit. Add the block in the theme editor, save, and the heart button
-                appears on product and collection cards.
-              </Text>
-              <List type="number">
-                <List.Item>
-                  Open the{' '}
-                  <PolarisLink url={themeEditorUrl} target="_blank">theme editor</PolarisLink>{' '}
-                  (Online Store → Themes → Customize).
-                </List.Item>
-                <List.Item>
-                  On a product template, click <b>Add block</b> → <b>Apps</b> →{' '}
-                  <b>Wishlist button</b>.
-                </List.Item>
-                <List.Item>
-                  Under <b>App embeds</b>, enable <b>Klyna Wishlist</b> to load the
-                  floating drawer and guest-save script site-wide.
-                </List.Item>
-                <List.Item>Click <b>Save</b>. Done.</List.Item>
-              </List>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
+            <BlockStack gap="400">
+              <BlockStack gap="100">
+                <Text as="h2" variant="headingMd">AI assistant</Text>
+                <Text as="p" tone="subdued">
+                  Klyna ships with auto-fixes for the SEO basics — title, description, OG tags.
+                  For content generation (h1, expanded copy, FAQ blocks), add a free-tier API
+                  key from any provider below. Your key stays on this app's database.
+                </Text>
+              </BlockStack>
 
-        <Layout.Section>
-          <Card>
-            <BlockStack gap="300">
-              <Text as="h2" variant="headingMd">Your storefront wishlist page</Text>
-              <Text as="p" tone="subdued">
-                Shoppers reach their full wishlist — and any shared list — through the
-                App Proxy at this URL. Link to it from your header or account menu.
-              </Text>
-              <Box background="bg-surface-secondary" padding="200" borderRadius="200">
-                <Text as="span" variant="bodyMd" breakWord>{wishlistPageUrl}</Text>
-              </Box>
-              <InlineStack gap="200">
-                <PolarisLink url={wishlistPageUrl} target="_blank">Preview the page</PolarisLink>
-              </InlineStack>
+              <Form method="post">
+                <BlockStack gap="300">
+                  <Select
+                    label="Provider"
+                    options={PROVIDER_OPTIONS}
+                    value={provider}
+                    onChange={setProvider}
+                    name="provider"
+                  />
+
+                  {provider !== 'off' && (
+                    <>
+                      <TextField
+                        label="API key"
+                        type="password"
+                        value={apiKey}
+                        onChange={setApiKey}
+                        name="apiKey"
+                        autoComplete="off"
+                        helpText={
+                          help ? (
+                            <>
+                              <Link url={help.url} target="_blank">Get a free key →</Link>
+                              {' '}{help.hint}
+                            </>
+                          ) : null
+                        }
+                      />
+                      <TextField
+                        label="Model (optional)"
+                        value={model}
+                        onChange={setModel}
+                        name="model"
+                        autoComplete="off"
+                        helpText="Leave blank to use the recommended default for this provider."
+                      />
+                      <TextField
+                        label="Daily cap"
+                        type="number"
+                        value={dailyCap}
+                        onChange={setDailyCap}
+                        name="dailyCap"
+                        autoComplete="off"
+                        min={1}
+                        max={10000}
+                        helpText={`Used today: ${usedToday} requests. Resets at 00:00 UTC.`}
+                      />
+                    </>
+                  )}
+
+                  <InlineStack gap="200">
+                    <Button submit variant="primary" loading={submitting}>
+                      Save settings
+                    </Button>
+                    {provider !== 'off' && (
+                      <Button onClick={runTest} loading={testing} variant="secondary">
+                        Test connection
+                      </Button>
+                    )}
+                    <input type="hidden" name="intent" value="save" />
+                  </InlineStack>
+                </BlockStack>
+              </Form>
+
+              {saved && <Banner tone="success" title="Saved" />}
+              {testResult && (
+                <Banner
+                  tone={testResult.ok ? 'success' : 'critical'}
+                  title={testResult.ok ? 'Connection OK' : 'Connection failed'}
+                >
+                  <Text as="p" variant="bodyMd">{testResult.message}</Text>
+                </Banner>
+              )}
             </BlockStack>
           </Card>
         </Layout.Section>
@@ -83,30 +194,17 @@ export default function Settings() {
         <Layout.Section>
           <Card>
             <BlockStack gap="200">
-              <Text as="h2" variant="headingMd">How it works</Text>
-              <List type="bullet">
-                <List.Item>
-                  <b>Guest saves</b> are stored in the browser (localStorage) instantly —
-                  no login required — then synced to the server on the next interaction.
-                </List.Item>
-                <List.Item>
-                  <b>Logged-in saves</b> attach to the Shopify customer so the list
-                  follows them across devices.
-                </List.Item>
-                <List.Item>
-                  <b>Shareable links</b> are opt-in per list. Enable a link from the
-                  Wishlists page and anyone with the URL can view (not edit) the list.
-                </List.Item>
-                <List.Item>
-                  <b>No paid APIs.</b> Everything runs on your app host and Shopify's
-                  free Admin + Storefront surfaces.
-                </List.Item>
-              </List>
-              <Text as="p" variant="bodySm" tone={items > 0 ? 'success' : 'subdued'}>
-                {items > 0
-                  ? `Looks good — ${items.toLocaleString()} item${items === 1 ? '' : 's'} saved so far.`
-                  : 'No saves recorded yet. Add the block and try saving a product on your storefront.'}
+              <Text as="h2" variant="headingMd">About this app</Text>
+              <Text as="p" tone="subdued" variant="bodyMd">
+                Klyna Wishlist is part of the Klyna indie suite. Wishlists, guest saves, and
+                shareable links work without AI. AI only powers the optional gift-guide blurb
+                on shared wishlists, and only when you have added a key.
               </Text>
+              <Box>
+                <Link url="https://klyna.dev" target="_blank">klyna.dev</Link>
+                {' · '}
+                <Link url="https://github.com/klynahq/klyna" target="_blank">GitHub</Link>
+              </Box>
             </BlockStack>
           </Card>
         </Layout.Section>

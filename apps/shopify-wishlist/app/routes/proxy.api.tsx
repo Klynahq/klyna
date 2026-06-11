@@ -11,6 +11,7 @@ import {
   recordEvent,
   resolveProducts,
 } from '../wishlist.server';
+import { ensureGiftBlurb } from '../lib/gift-blurb.server';
 
 // CORS-safe JSON helper. App Proxy requests are same-origin from the
 // storefront domain, but we set the header defensively for theme previews.
@@ -90,14 +91,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         wishlistId_productId_variantId: {
           wishlistId: wishlist.id,
           productId,
-          variantId: payload.variantId ?? null,
+          variantId: payload.variantId ?? '',
         },
       },
       create: {
         wishlistId: wishlist.id,
         shop,
         productId,
-        variantId: payload.variantId ?? null,
+        variantId: payload.variantId ?? '',
         productTitle: p?.title ?? '',
         productHandle: p?.handle ?? '',
         imageUrl: p?.imageUrl ?? null,
@@ -110,9 +111,23 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   } else if (payload.action === 'remove' && payload.productId) {
     const productId = toGid(payload.productId);
     await prisma.wishlistItem.deleteMany({
-      where: { wishlistId: wishlist.id, productId, variantId: payload.variantId ?? null },
+      where: { wishlistId: wishlist.id, productId, variantId: payload.variantId ?? '' },
     });
     await recordEvent({ shop, type: 'remove', productId, wishlistId: wishlist.id });
+  } else if (payload.action === 'share') {
+    // First share flips the wishlist public and (best-effort) generates a
+    // 40-word gift-bundle blurb so the recipient sees it on the share page.
+    await prisma.wishlist.update({
+      where: { id: wishlist.id },
+      data: { isPublic: true },
+    });
+    await recordEvent({ shop, type: 'share', wishlistId: wishlist.id });
+    const blurb = await ensureGiftBlurb(shop, wishlist.id);
+    return reply({
+      token: wishlist.token,
+      blurb: blurb.ok ? blurb.blurb : null,
+      blurbError: blurb.ok ? null : blurb.error,
+    });
   } else if (payload.action === 'merge' && Array.isArray(payload.items)) {
     // Sync the guest's localStorage list into the server on login / first load.
     const ids = payload.items.map((i) => toGid(i.productId));
@@ -125,14 +140,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           wishlistId_productId_variantId: {
             wishlistId: wishlist.id,
             productId,
-            variantId: raw.variantId ?? null,
+            variantId: raw.variantId ?? '',
           },
         },
         create: {
           wishlistId: wishlist.id,
           shop,
           productId,
-          variantId: raw.variantId ?? null,
+          variantId: raw.variantId ?? '',
           productTitle: p?.title ?? '',
           productHandle: p?.handle ?? '',
           imageUrl: p?.imageUrl ?? null,

@@ -12,4 +12,5 @@ api_version = "2025-01"
 [[extensions]]
 name = "Klyna Wishlist button"
 handle = "wishlist-button"
+uid = "c992d8a7-d734-ca5b-238e-282fcc9d779353d727b0"
 type = "theme"

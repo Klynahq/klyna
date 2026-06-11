@@ -41,6 +41,7 @@ model Wishlist {
   guestId    String? // anonymous browser id for guest saves
   name       String         @default("My wishlist")
   isPublic   Boolean        @default(false) // shareable links only resolve when true
+  giftBlurb  String? // AI-generated 40-word gift-guide blurb, set on first share
   items      WishlistItem[]
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
@@ -83,4 +84,30 @@ model WishlistEvent {
 
   @@index([shop, type, createdAt])
   @@index([shop, productId])
+}
+
+// Per-shop AI provider settings (BYOK — bring your own key).
+model AiSettings {
+  shop      String   @id
+  provider  String   @default("off") // off | openrouter | groq | gemini
+  apiKey    String?
+  model     String?
+  dailyCap  Int      @default(100)
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+// Daily AI usage counter (resets per UTC day) for the per-shop cap.
+model AiUsage {
+  shop      String
+  day       String   // YYYY-MM-DD (UTC)
+  count     Int      @default(0)
+
+  @@id([shop, day])
+}
+
+// Cache for AI completions (key = FNV hash from @klyna/ai-client).
+model AiCache {
+  key       String   @id
+  value     String
+  expiresAt DateTime
 }

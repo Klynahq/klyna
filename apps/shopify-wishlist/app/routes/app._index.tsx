@@ -64,18 +64,27 @@ export default function Dashboard() {
   const tiles = [
     {
       title: 'Wishlists',
-      body: 'Browse every shopper wishlist — guest and logged-in — and the products on each list.',
+      body: 'Browse every shopper wishlist - guest and logged-in - and the products on each list.',
       to: '/app/lists',
+      ai: false,
     },
     {
       title: 'Most wishlisted',
       body: 'See which products shoppers save most. Spot demand before it shows up in orders.',
       to: '/app/reports',
+      ai: false,
+    },
+    {
+      title: 'Gift-guide blurbs',
+      body: 'When a wishlist is shared, generate a short blurb suggesting the best 2-item gift bundle.',
+      to: '/app/giftguide',
+      ai: true,
     },
     {
       title: 'Settings',
-      body: 'Turn on the storefront widget, tune the heart button, and copy your install snippet.',
+      body: 'Turn on the storefront widget and connect a free AI key for the gift-guide blurbs.',
       to: '/app/settings',
+      ai: false,
     },
   ];
 
@@ -140,13 +149,16 @@ export default function Dashboard() {
         )}
 
         <Layout.Section>
-          <InlineGrid columns={{ xs: 1, md: 3 }} gap="300">
+          <InlineGrid columns={{ xs: 1, md: 4 }} gap="300">
             {tiles.map((t) => (
               <Card key={t.to}>
                 <BlockStack gap="200">
-                  <Text as="h3" variant="headingSm">{t.title}</Text>
+                  <InlineStack gap="200" blockAlign="center">
+                    <Text as="h3" variant="headingSm">{t.title}</Text>
+                    {t.ai ? <Badge tone="info">AI</Badge> : null}
+                  </InlineStack>
                   <Text as="p" variant="bodyMd" tone="subdued">{t.body}</Text>
-                  <Link to={t.to}>Open →</Link>
+                  <Link to={t.to}>Open</Link>
                 </BlockStack>
               </Card>
             ))}

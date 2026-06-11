@@ -53,8 +53,9 @@ function page(opts: {
   items: (SavedProduct & { variantId?: string | null })[];
   readOnly: boolean;
   shareToken: string | null;
+  giftBlurb?: string | null;
 }): string {
-  const { shop, heading, subheading, items, readOnly, shareToken } = opts;
+  const { shop, heading, subheading, items, readOnly, shareToken, giftBlurb } = opts;
   const grid =
     items.length === 0
       ? `<p class="kw-empty">No saved products yet. Tap the ♥ on any product to start your wishlist.</p>`
@@ -84,11 +85,22 @@ function page(opts: {
     #klyna-wishlist .kw-share{margin-top:24px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
     #klyna-wishlist .kw-share input{flex:1;min-width:240px;padding:8px 10px;border:1px solid #e5e5ea;border-radius:8px;}
     #klyna-wishlist .kw-share button{padding:8px 14px;border-radius:8px;border:1px solid var(--kw-accent);background:var(--kw-accent);color:#fff;cursor:pointer;}
+    #klyna-wishlist .kw-blurb{margin:0 0 20px;padding:16px 18px;border:1px solid rgba(124,92,255,0.25);background:rgba(124,92,255,0.08);border-radius:12px;color:#1f1f24;}
+    #klyna-wishlist .kw-blurb-label{display:block;text-transform:uppercase;letter-spacing:.04em;font-size:.72rem;color:var(--kw-accent);margin-bottom:6px;font-weight:600;}
+    #klyna-wishlist .kw-blurb p{margin:0;line-height:1.5;}
   </style>
   <div class="kw-head">
     <h1>${esc(heading)}</h1>
     <p class="kw-sub">${esc(subheading)}</p>
   </div>
+  ${
+    giftBlurb
+      ? `<aside class="kw-blurb" aria-label="Gift suggestion">
+          <span class="kw-blurb-label">Gift idea</span>
+          <p>${esc(giftBlurb)}</p>
+        </aside>`
+      : ''
+  }
   ${grid}
   ${
     !readOnly && shareToken
@@ -138,6 +150,7 @@ function page(opts: {
         try{ navigator.clipboard.writeText(input.value); }catch(e){ document.execCommand('copy'); }
         copy.textContent='Copied!';
         setTimeout(function(){copy.textContent='Copy share link';},1500);
+        fetch(api, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'share', guest:guestId()})}).catch(function(){});
       });
     }
   })();
@@ -193,6 +206,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         })),
         readOnly: true,
         shareToken: null,
+        giftBlurb: wishlist.giftBlurb,
       }),
       { headers: { 'Content-Type': 'application/liquid', 'Cache-Control': 'no-store' } },
     );
@@ -221,7 +235,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         variantId: i.variantId,
       })),
       readOnly: false,
-      shareToken: wishlist.isPublic ? wishlist.token : null,
+      shareToken: wishlist.token,
     }),
     { headers: { 'Content-Type': 'application/liquid', 'Cache-Control': 'no-store' } },
   );
