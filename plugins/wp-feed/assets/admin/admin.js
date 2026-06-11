@@ -166,9 +166,144 @@
 
 	/* Boot ----------------------------------------------------------------- */
 
+	/* AI test button ------------------------------------------------------- */
+
+	function bindAiTest() {
+		var btn = document.getElementById( 'klyna-feed-ai-test' );
+		var status = document.getElementById( 'klyna-feed-ai-test-status' );
+		if ( ! btn || ! status ) { return; }
+		btn.addEventListener( 'click', function () {
+			btn.disabled = true;
+			status.textContent = 'Testing…';
+			wp.apiFetch( {
+				path: '/klyna-feed/v1/ai/test',
+				method: 'POST',
+				headers: { 'X-WP-Nonce': KLYNA_FEED.nonce },
+			} ).then( function ( res ) {
+				btn.disabled = false;
+				if ( res && res.ok ) {
+					status.textContent = 'OK · ' + ( res.text || '' );
+				} else {
+					status.textContent = 'Failed: ' + ( ( res && res.text ) || ( res && res.reason ) || 'unknown' );
+				}
+			} ).catch( function ( err ) {
+				btn.disabled = false;
+				status.textContent = 'Error: ' + ( err && err.message ? err.message : 'request failed' );
+			} );
+		} );
+	}
+
+	/* Title variants page ------------------------------------------------- */
+
+	function bindTitles() {
+		var root = document.getElementById( 'klyna-feed-titles-root' );
+		var table = document.getElementById( 'klyna-feed-titles-table' );
+		var btn = document.getElementById( 'klyna-feed-titles-run' );
+		var status = document.getElementById( 'klyna-feed-titles-status' );
+		if ( ! root || ! table ) { return; }
+
+		var products = [];
+		try { products = JSON.parse( root.getAttribute( 'data-products' ) || '[]' ); }
+		catch ( e ) { products = []; }
+
+		var byId = {};
+		products.forEach( function ( p ) { byId[ p.id ] = p; } );
+
+		function render() {
+			if ( ! products.length ) {
+				table.innerHTML = '';
+				return;
+			}
+			var html = '<table class="widefat striped klyna-feed-titles-table"><thead><tr>' +
+				'<th>Product</th>' +
+				'<th>Google (70)</th>' +
+				'<th>Meta (60)</th>' +
+				'<th>Pinterest (50)</th>' +
+				'</tr></thead><tbody>';
+			products.forEach( function ( p ) {
+				html += '<tr data-id="' + p.id + '">' +
+					'<td><strong>' + escapeHtml( p.name ) + '</strong>' +
+					( p.edit_link ? ' · <a href="' + p.edit_link + '">edit</a>' : '' ) +
+					'</td>' +
+					variantCell( p.variants && p.variants.google, 70 ) +
+					variantCell( p.variants && p.variants.meta, 60 ) +
+					variantCell( p.variants && p.variants.pinterest, 50 ) +
+					'</tr>';
+			} );
+			html += '</tbody></table>';
+			table.innerHTML = html;
+		}
+
+		function variantCell( text, max ) {
+			var t = text || '';
+			var len = t.length;
+			var cls = len > max ? 'klyna-feed-over' : '';
+			return '<td><div class="' + cls + '">' + escapeHtml( t || '—' ) +
+				'</div><small>' + len + ' / ' + max + '</small></td>';
+		}
+
+		function escapeHtml( s ) {
+			return String( s ).replace( /[&<>"']/g, function ( c ) {
+				return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ c ];
+			} );
+		}
+
+		function runOne( id ) {
+			return wp.apiFetch( {
+				path: '/klyna-feed/v1/titles/optimize',
+				method: 'POST',
+				headers: { 'X-WP-Nonce': KLYNA_FEED.nonce },
+				data: { product_id: id },
+			} ).then( function ( res ) {
+				if ( res && res.variants && byId[ id ] ) {
+					byId[ id ].variants = res.variants;
+				}
+				render();
+				return res;
+			} );
+		}
+
+		function runAll() {
+			if ( ! products.length ) { return; }
+			btn.disabled = true;
+			var done = 0;
+			var total = products.length;
+			status.textContent = 'Optimizing 0 / ' + total + '…';
+			var chain = Promise.resolve();
+			products.forEach( function ( p ) {
+				chain = chain.then( function () {
+					return runOne( p.id ).then( function () {
+						done += 1;
+						status.textContent = 'Optimizing ' + done + ' / ' + total + '…';
+					} ).catch( function () {
+						done += 1;
+						status.textContent = 'Optimizing ' + done + ' / ' + total + '… (1 error)';
+					} );
+				} );
+			} );
+			chain.then( function () {
+				btn.disabled = false;
+				status.textContent = 'Done.';
+				var url = new URL( window.location.href );
+				url.searchParams.delete( 'run' );
+				url.searchParams.set( 'klyna_feed_optimized', String( total ) );
+				window.history.replaceState( {}, '', url.toString() );
+			} );
+		}
+
+		if ( btn ) { btn.addEventListener( 'click', runAll ); }
+		render();
+
+		if ( root.getAttribute( 'data-autorun' ) === '1' && products.length ) {
+			runAll();
+		}
+	}
+
 	document.addEventListener( 'DOMContentLoaded', function () {
 		bindRegenerate();
 		bindCopy();
 		bindScan();
+		bindAiTest();
+		bindTitles();
 	} );
 } )();

@@ -45,6 +45,12 @@ final class Feed_Builder {
 	 */
 	private array $warnings = array();
 
+	/**
+	 * Which channel the next collect_items() pass is rendering for.
+	 * Used to pick the correct AI-optimized title override.
+	 */
+	private string $channel = '';
+
 	public function __construct() {
 		$this->settings = wp_parse_args(
 			Plugin::settings(),
@@ -67,6 +73,7 @@ final class Feed_Builder {
 	 * @return array{payload:string,item_count:int,warning_count:int,warnings:array<int,array<string,string|int>>}
 	 */
 	public function build_google(): array {
+		$this->channel = 'google';
 		$items = $this->collect_items();
 		$xml   = $this->render_google_xml( $items );
 		return array(
@@ -83,6 +90,7 @@ final class Feed_Builder {
 	 * @return array{payload:string,item_count:int,warning_count:int,warnings:array<int,array<string,string|int>>}
 	 */
 	public function build_meta(): array {
+		$this->channel = 'meta';
 		$items = $this->collect_items();
 		$csv   = $this->render_meta_csv( $items );
 		return array(
@@ -199,6 +207,12 @@ final class Feed_Builder {
 	private function map_product( \WC_Product $product, ?\WC_Product $parent ): array {
 		$id          = $product->get_id();
 		$title       = $product->get_name();
+		// Apply per-channel AI title override if one is stored for this
+		// product (or its parent, for variations).
+		if ( '' !== $this->channel ) {
+			$override_lookup = $parent ? (int) $parent->get_id() : (int) $id;
+			$title = Titles::for_channel( $override_lookup, $this->channel, $title );
+		}
 		$description = $this->description( $product, $parent );
 		$link        = (string) get_permalink( $parent ? $parent->get_id() : $id );
 		$image       = $this->image_url( $product, $parent );

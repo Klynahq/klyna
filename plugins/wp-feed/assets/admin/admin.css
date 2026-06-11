@@ -289,3 +289,7 @@
 	background: var(--klyna-feed-accent-hover);
 	border-color: var(--klyna-feed-accent-deep);
 }
+
+.klyna-feed-titles-table td { vertical-align: top; }
+.klyna-feed-titles-table small { color: #6b7280; }
+.klyna-feed-titles-table .klyna-feed-over { color: #b91c1c; font-weight: 600; }
