@@ -1,0 +1,299 @@
+/**
+ * Klyna Analytics admin styles.
+ *
+ * Scoped to .klyna-an-wrap. Renders a dark, violet-accented surface that
+ * mirrors the Klyna brand tokens (see packages/ui/src/tokens.ts) without
+ * leaking into core WP admin chrome.
+ */
+.klyna-an-wrap {
+	--klyna-bg: #0b0b0f;
+	--klyna-elevated: #13131a;
+	--klyna-surface: #1a1a23;
+	--klyna-border: #2a2a35;
+	--klyna-text: #f4f4f5;
+	--klyna-muted: #a1a1aa;
+	--klyna-dim: #71717a;
+	--klyna-accent: #7c5cff;
+	--klyna-accent-hover: #9277ff;
+	--klyna-accent-deep: #5b3df0;
+	--klyna-success: #34d399;
+
+	margin-right: 20px;
+	color: var(--klyna-text);
+	font-family: "Geist", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.klyna-an-wrap * {
+	box-sizing: border-box;
+}
+
+/* Header --------------------------------------------------------------- */
+.klyna-an-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	flex-wrap: wrap;
+	margin: 8px 0 20px;
+}
+
+.klyna-an-brand {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+}
+
+.klyna-an-logo {
+	border-radius: 8px;
+	flex-shrink: 0;
+}
+
+.klyna-an-wrap h1 {
+	font-weight: 700;
+	letter-spacing: -0.02em;
+	font-size: 22px;
+	margin: 0;
+	color: var(--klyna-text);
+	padding: 0;
+}
+
+.klyna-an-tagline {
+	color: var(--klyna-muted);
+	font-size: 13px;
+	margin: 2px 0 0;
+	max-width: 560px;
+}
+
+.klyna-an-range select {
+	background: var(--klyna-surface);
+	color: var(--klyna-text);
+	border: 1px solid var(--klyna-border);
+	border-radius: 8px;
+	padding: 6px 30px 6px 12px;
+	font-size: 13px;
+	min-height: 34px;
+}
+
+.klyna-an-range select:focus {
+	border-color: var(--klyna-accent);
+	box-shadow: 0 0 0 1px var(--klyna-accent);
+	outline: none;
+}
+
+/* Stat tiles ----------------------------------------------------------- */
+.klyna-an-stats {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+	gap: 14px;
+	margin-bottom: 18px;
+	max-width: 1200px;
+}
+
+.klyna-an-stat {
+	background: var(--klyna-elevated);
+	border: 1px solid var(--klyna-border);
+	border-radius: 12px;
+	padding: 18px 20px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.klyna-an-stat-label {
+	font-size: 12px;
+	color: var(--klyna-dim);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.klyna-an-stat-value {
+	font-size: 30px;
+	font-weight: 700;
+	letter-spacing: -0.02em;
+	line-height: 1;
+	font-variant-numeric: tabular-nums;
+}
+
+/* Cards ---------------------------------------------------------------- */
+.klyna-an-card {
+	background: var(--klyna-elevated);
+	border: 1px solid var(--klyna-border);
+	border-radius: 12px;
+	padding: 18px 20px;
+	max-width: 1200px;
+	margin-bottom: 18px;
+}
+
+.klyna-an-card-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 12px;
+}
+
+.klyna-an-card h2 {
+	font-size: 14px;
+	font-weight: 600;
+	margin: 0;
+	padding: 0;
+	color: var(--klyna-text);
+}
+
+.klyna-an-chart-card canvas {
+	width: 100%;
+	display: block;
+}
+
+.klyna-an-sparkline {
+	width: 100%;
+	height: 64px;
+	display: block;
+}
+
+.klyna-an-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+	gap: 18px;
+	max-width: 1200px;
+}
+
+.klyna-an-grid .klyna-an-card {
+	margin-bottom: 0;
+}
+
+/* Tables --------------------------------------------------------------- */
+.klyna-an-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 13px;
+}
+
+.klyna-an-table td {
+	padding: 8px 6px;
+	border-bottom: 1px solid var(--klyna-border);
+	vertical-align: middle;
+}
+
+.klyna-an-table tr:last-child td {
+	border-bottom: none;
+}
+
+.klyna-an-cell-label {
+	position: relative;
+	max-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.klyna-an-bar {
+	position: absolute;
+	left: 0;
+	top: 50%;
+	transform: translateY(-50%);
+	height: 26px;
+	background: rgba(124, 92, 255, 0.12);
+	border-radius: 6px;
+	z-index: 0;
+	pointer-events: none;
+}
+
+.klyna-an-cell-label a,
+.klyna-an-cell-label span {
+	position: relative;
+	z-index: 1;
+	color: var(--klyna-text);
+	text-decoration: none;
+	padding-left: 8px;
+}
+
+.klyna-an-cell-label a:hover {
+	color: var(--klyna-accent-hover);
+	text-decoration: underline;
+}
+
+.klyna-an-cell-value {
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+	font-weight: 600;
+	color: var(--klyna-text);
+	white-space: nowrap;
+	width: 70px;
+}
+
+.klyna-an-empty td {
+	color: var(--klyna-dim);
+	font-style: italic;
+}
+
+/* Settings form -------------------------------------------------------- */
+.klyna-an-form .form-table th {
+	color: var(--klyna-text);
+}
+
+.klyna-an-form .form-table td,
+.klyna-an-form .description {
+	color: var(--klyna-muted);
+}
+
+.klyna-an-check {
+	display: block;
+	margin-bottom: 10px;
+	color: var(--klyna-text);
+	font-size: 13px;
+}
+
+.klyna-an-form input[type="number"] {
+	background: var(--klyna-surface);
+	color: var(--klyna-text);
+	border: 1px solid var(--klyna-border);
+	border-radius: 8px;
+}
+
+.klyna-an-form .button-primary {
+	background: var(--klyna-accent);
+	border-color: var(--klyna-accent-deep);
+	box-shadow: none;
+	text-shadow: none;
+	border-radius: 8px;
+}
+
+.klyna-an-form .button-primary:hover {
+	background: var(--klyna-accent-hover);
+	border-color: var(--klyna-accent);
+}
+
+.klyna-an-muted {
+	color: var(--klyna-muted);
+	font-size: 13px;
+	line-height: 1.5;
+}
+
+.klyna-an-code {
+	background: var(--klyna-bg);
+	border: 1px solid var(--klyna-border);
+	border-radius: 8px;
+	padding: 12px 14px;
+	overflow-x: auto;
+	margin: 8px 0;
+}
+
+.klyna-an-code code {
+	font-family: "Geist Mono", "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+	font-size: 13px;
+	color: var(--klyna-accent-hover);
+	background: none;
+	padding: 0;
+}
+
+/* Footer --------------------------------------------------------------- */
+.klyna-an-foot {
+	color: var(--klyna-dim);
+	font-size: 12px;
+	margin: 18px 0 8px;
+	max-width: 1200px;
+}
+
+.klyna-an-foot.klyna-an-error {
+	color: var(--klyna-warning, #fbbf24);
+}
