@@ -2,7 +2,7 @@
 
 client_id = "7cede999b6d21fcbcabf544952de3c48"
 name = "Klyna Upsell"
-application_url = "https://example.com"
+application_url = "https://klyna-shopify-upsell.vercel.app"
 embedded = true
 
 [access_scopes]
@@ -10,11 +10,34 @@ embedded = true
 scopes = "read_discounts,read_inventory,read_orders,read_products,write_discounts"
 
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+redirect_urls = [
+  "https://klyna-shopify-upsell.vercel.app/auth/callback",
+  "https://klyna-shopify-upsell.vercel.app/auth/shopify/callback",
+  "https://klyna-shopify-upsell.vercel.app/api/auth/callback"
+]
 
 [webhooks]
-api_version = "2026-07"
+api_version = "2025-01"
+
+  [[webhooks.subscriptions]]
+  topics = ["app/uninstalled"]
+  uri = "/webhooks/app/uninstalled"
+
+  [[webhooks.subscriptions]]
+  topics = ["orders/create"]
+  uri = "/webhooks/orders/create"
+
+  [[webhooks.subscriptions]]
+  topics = ["customers/data_request"]
+  uri = "/webhooks/customers/data_request"
+
+  [[webhooks.subscriptions]]
+  topics = ["customers/redact"]
+  uri = "/webhooks/customers/redact"
+
+  [[webhooks.subscriptions]]
+  topics = ["shop/redact"]
+  uri = "/webhooks/shop/redact"
 
 [build]
-include_config_on_deploy = true
 automatically_update_urls_on_dev = true

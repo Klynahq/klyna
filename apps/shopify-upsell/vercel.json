@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "remix",
+  "buildCommand": "pnpm exec prisma generate && pnpm exec remix vite:build",
+  "installCommand": "corepack enable && pnpm install --no-frozen-lockfile"
+}
