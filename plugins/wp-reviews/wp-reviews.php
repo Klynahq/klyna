@@ -57,6 +57,7 @@ add_action(
 	'plugins_loaded',
 	function () {
 		( new KlynaReviews\Plugin() )->boot();
+		\KlynaReviews\Telemetry::register();
 	}
 );
 

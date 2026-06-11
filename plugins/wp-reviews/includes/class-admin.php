@@ -492,6 +492,8 @@ final class Admin {
 				</table>
 				<?php submit_button(); ?>
 			</form>
+			<?php \KlynaReviews\Telemetry::render_form(); ?>
+
 		</div>
 		<?php
 	}
