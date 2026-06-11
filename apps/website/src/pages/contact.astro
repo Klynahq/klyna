@@ -1,0 +1,187 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Contact — Klyna"
+  description="Get in touch with the Klyna team. Bug reports, feature requests, billing, or security disclosures all welcome."
+>
+  <section class="max-w-2xl mx-auto px-6 pt-20 pb-24">
+    <div class="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-accent)] mb-3">
+      Contact
+    </div>
+    <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-4">Get in touch.</h1>
+    <p class="text-[color:var(--color-text-muted)] text-lg mb-10">
+      Drop us a note. We aim to respond within 48 business hours. Search the
+      <a href="/help" class="text-[color:var(--color-accent)] hover:underline">help center</a>
+      first if you are stuck — most setup questions are already covered there.
+    </p>
+
+    <form id="contact-form" class="space-y-5" novalidate>
+      <div>
+        <label for="email" class="block text-sm font-medium mb-2">Your email</label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          required
+          autocomplete="email"
+          class="w-full px-4 py-3 rounded-lg bg-[color:var(--color-surface)] border border-[color:var(--color-border)] focus:border-[color:var(--color-accent)] focus:outline-none"
+        />
+      </div>
+
+      <div>
+        <label for="subject" class="block text-sm font-medium mb-2">Subject</label>
+        <select
+          id="subject"
+          name="subject"
+          required
+          class="w-full px-4 py-3 rounded-lg bg-[color:var(--color-surface)] border border-[color:var(--color-border)] focus:border-[color:var(--color-accent)] focus:outline-none"
+        >
+          <option value="Bug report">Bug report</option>
+          <option value="Feature request">Feature request</option>
+          <option value="Security issue">Security issue</option>
+          <option value="Billing">Billing</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="message" class="block text-sm font-medium mb-2">
+          Message
+          <span class="text-[color:var(--color-text-dim)] font-normal ml-1">
+            (20–2000 characters)
+          </span>
+        </label>
+        <textarea
+          id="message"
+          name="message"
+          rows="8"
+          required
+          minlength="20"
+          maxlength="2000"
+          class="w-full px-4 py-3 rounded-lg bg-[color:var(--color-surface)] border border-[color:var(--color-border)] focus:border-[color:var(--color-accent)] focus:outline-none resize-y"
+        ></textarea>
+        <div class="mt-1 text-xs text-[color:var(--color-text-dim)]">
+          <span id="char-count">0</span> / 2000
+        </div>
+      </div>
+
+      <div id="form-error" class="hidden text-sm text-[color:var(--color-danger)]"></div>
+
+      <button
+        type="submit"
+        id="submit-btn"
+        class="w-full md:w-auto px-6 py-3 rounded-lg bg-[color:var(--color-accent)] hover:bg-[color:var(--color-accent-hover)] text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        Send message
+      </button>
+    </form>
+
+    <div
+      id="form-success"
+      class="hidden rounded-xl border border-[color:var(--color-accent)]/40 bg-[color:var(--color-accent-muted)] p-6"
+    >
+      <h2 class="text-lg font-semibold mb-2">Thanks — we got it.</h2>
+      <p class="text-[color:var(--color-text-muted)]">
+        Your ticket has been recorded. We aim to reply within 48 business hours.
+        Ticket ID: <code id="ticket-id" class="text-[color:var(--color-accent)]"></code>
+      </p>
+    </div>
+
+    <hr class="my-10 border-[color:var(--color-border)]" />
+
+    <p class="text-sm text-[color:var(--color-text-muted)]">
+      For urgent security issues, email
+      <a href="mailto:security@klyna.dev" class="text-[color:var(--color-accent)] hover:underline">
+        security@klyna.dev
+      </a>
+      directly. See our
+      <a
+        href="/help/security/report-a-vulnerability"
+        class="text-[color:var(--color-accent)] hover:underline"
+      >
+        disclosure policy
+      </a>
+      .
+    </p>
+
+    <script is:inline>
+      (() => {
+        const form = document.getElementById('contact-form');
+        const success = document.getElementById('form-success');
+        const errorBox = document.getElementById('form-error');
+        const submitBtn = document.getElementById('submit-btn');
+        const ticketIdEl = document.getElementById('ticket-id');
+        const msg = document.getElementById('message');
+        const count = document.getElementById('char-count');
+        if (!form || !success || !errorBox || !submitBtn || !msg || !count) return;
+
+        msg.addEventListener('input', () => {
+          count.textContent = String(msg.value.length);
+        });
+
+        function showError(text) {
+          errorBox.textContent = text;
+          errorBox.classList.remove('hidden');
+        }
+
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          errorBox.classList.add('hidden');
+          const data = new FormData(form);
+          const email = String(data.get('email') || '').trim();
+          const subject = String(data.get('subject') || '');
+          const message = String(data.get('message') || '').trim();
+
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return showError('Please enter a valid email address.');
+          }
+          if (message.length < 20 || message.length > 2000) {
+            return showError('Message must be between 20 and 2000 characters.');
+          }
+
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Sending...';
+
+          try {
+            const res = await fetch('/api/tickets', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, subject, message }),
+            });
+            const json = await res.json().catch(() => ({}));
+
+            if (!res.ok) {
+              if (res.status === 429) {
+                return showError(
+                  'Too many requests from your network. Please try again in an hour or email support@klyna.dev.'
+                );
+              }
+              throw new Error(json.error || 'Send failed.');
+            }
+
+            form.classList.add('hidden');
+            success.classList.remove('hidden');
+            ticketIdEl.textContent = json.ticketId || 'pending';
+            console.info('[klyna] ticket submitted', { ticketId: json.ticketId });
+          } catch (err) {
+            console.warn('[klyna] ticket API unavailable, falling back to mailto', err);
+            const body = encodeURIComponent(
+              `Subject category: ${subject}\nFrom: ${email}\n\n${message}`
+            );
+            window.location.href = `mailto:support@klyna.dev?subject=${encodeURIComponent(
+              '[' + subject + '] Klyna support'
+            )}&body=${body}`;
+            form.classList.add('hidden');
+            success.classList.remove('hidden');
+            ticketIdEl.textContent = 'mailto-fallback';
+          } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Send message';
+          }
+        });
+      })();
+    </script>
+  </section>
+</BaseLayout>

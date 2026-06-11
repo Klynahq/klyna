@@ -1,0 +1,41 @@
+---
+title: Conflicts with other WordPress plugins
+description: Klyna ships its own schema, FAQ, and internal-link layers. Here is how it interacts with the major SEO plugins and how to avoid duplicate output.
+category: wordpress
+updated: 2026-06-10
+order: 2
+---
+
+Klyna is designed to coexist with other SEO plugins, but emitting the same
+JSON-LD twice is wasted bytes at best and a structured-data warning at worst.
+
+## Yoast SEO
+
+Yoast emits Organization, WebSite, and Article schema by default. If you keep
+Yoast active, turn **off** the matching emitters in Klyna:
+
+- Klyna → Settings → Schema → uncheck **Organization** and **WebSite**.
+- Leave **FAQPage** and **HowTo** on — Yoast does not detect these on
+  classic-block posts.
+
+## Rank Math
+
+Same idea. Disable Rank Math's FAQ block schema if you let Klyna detect FAQs
+automatically — otherwise the page emits two `FAQPage` blocks and Google picks
+one at random.
+
+## All in One SEO
+
+AIOSEO's general schema is fine to keep alongside Klyna's FAQ detector. Turn
+off AIOSEO's Article schema if you want Klyna's `headline` and `author` fields
+(which include the editor's display name fallback that AIOSEO skips).
+
+## Caching plugins
+
+WP Rocket, LiteSpeed Cache, and W3 Total Cache all play well with Klyna. After
+changing a Klyna setting, **purge the cache** so the new `<head>` markup ships.
+
+## Cannot find your plugin?
+
+[Contact us](/contact) with the plugin name and version — we add known-good
+configs to this page as they come up.

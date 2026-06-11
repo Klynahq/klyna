@@ -1,0 +1,58 @@
+---
+import LegalLayout from '../../layouts/LegalLayout.astro';
+---
+
+<LegalLayout
+  title="Cookie Policy"
+  description="klyna.dev is essentially cookieless. The admin panel uses one CSRF/session cookie."
+  heading="Cookie Policy"
+>
+  <p>
+    <strong>klyna.dev is essentially cookieless.</strong> We do not use tracking cookies, advertising
+    cookies, or analytics cookies. The only cookie we set is a single session cookie on the admin
+    panel, used by the studio operator to stay logged in.
+  </p>
+
+  <h2>The full list</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Where</th>
+        <th>Purpose</th>
+        <th>Lifetime</th>
+        <th>Type</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>klyna_session</code></td>
+        <td><code>klyna.dev/admin</code> only</td>
+        <td>Holds an opaque session id so the admin operator stays logged in and CSRF is enforced.</td>
+        <td>Session, or 15 min idle, whichever is shorter</td>
+        <td>Strictly necessary (HttpOnly, Secure, SameSite=Strict)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    That is the whole list. We do not use Google Analytics, Plausible, Fathom, or any other
+    analytics tool on klyna.dev. We do not embed Facebook pixels, LinkedIn tags, or ad-network
+    snippets. Nothing third-party fires on page load.
+  </p>
+
+  <h2>What about the plugins and apps?</h2>
+  <p>
+    Klyna plugins and apps run inside your WordPress site or Shopify store. Any cookies they
+    interact with belong to that environment (WordPress login, Shopify cart) and are governed by
+    your site's own cookie policy. We do not set any tracking cookies on your visitors' browsers.
+  </p>
+
+  <h2>Do Not Track</h2>
+  <p>
+    Since we do not track in the first place, the Do Not Track header is moot. We respect it
+    anyway.
+  </p>
+
+  <p>Questions: <a href="mailto:privacy@klyna.dev">privacy@klyna.dev</a>.</p>
+</LegalLayout>
