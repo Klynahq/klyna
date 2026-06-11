@@ -35,7 +35,12 @@ spl_autoload_register(
 		$relative = str_replace( 'KlynaBooking\\', '', $class );
 		$relative = str_replace( '\\', '/', $relative );
 		$parts    = explode( '/', $relative );
-		$filename = 'class-' . strtolower( preg_replace( '/(?<!^)[A-Z]/', '-$0', array_pop( $parts ) ) ) . '.php';
+		$base     = array_pop( $parts );
+		// Handle both CamelCase (Plugin -> plugin) and snake_case (Feed_Builder -> feed-builder).
+		$kebab    = preg_replace( '/(?<!^)[A-Z]/', '-$0', $base );
+		$kebab    = str_replace( '_', '-', $kebab );
+		$kebab    = preg_replace( '/-+/', '-', $kebab );
+		$filename = 'class-' . strtolower( $kebab ) . '.php';
 		$path     = KLYNA_BOOKING_PLUGIN_DIR . 'includes/';
 		if ( $parts ) {
 			$path .= strtolower( implode( '/', $parts ) ) . '/';
