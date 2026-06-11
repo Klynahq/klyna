@@ -1,0 +1,23 @@
+/**
+ * Klyna Speed — front-end lazy-load styles.
+ *
+ * A gentle fade-in when a lazy element is swapped in, so deferred images don't
+ * pop. Kept tiny on purpose — this is the only CSS we add to the front end.
+ */
+img[data-klyna-src],
+img[data-klyna-srcset] {
+	opacity: 0;
+}
+
+.klyna-loaded {
+	animation: klyna-fade-in 0.3s ease forwards;
+}
+
+@keyframes klyna-fade-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
