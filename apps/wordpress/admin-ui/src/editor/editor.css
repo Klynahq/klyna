@@ -1,0 +1,120 @@
+/* Klyna sidebar inside the Gutenberg editor — scoped to .klyna-editor-sidebar
+ * so we don't fight with the rest of the editor's styling. */
+
+.klyna-editor-sidebar {
+  background: var(--color-klyna-bg);
+  color: var(--color-klyna-text);
+  font-family: var(--font-sans);
+  padding: 16px 14px 24px;
+  min-height: 100%;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.klyna-editor-sidebar * {
+  box-sizing: border-box;
+}
+
+.klyna-editor-sidebar .klyna-hero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 4px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 14px;
+}
+
+.klyna-editor-sidebar .klyna-hero-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.klyna-editor-sidebar .klyna-hero-grade {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-klyna-accent);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.klyna-editor-sidebar .klyna-hero-summary {
+  color: var(--color-klyna-text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.klyna-editor-sidebar .klyna-fix-cta {
+  width: 100%;
+  margin-bottom: 14px;
+}
+
+.klyna-editor-sidebar .klyna-findings {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.klyna-editor-sidebar .klyna-empty {
+  text-align: center;
+  padding: 24px 12px;
+  color: var(--color-klyna-text-muted);
+  font-size: 12px;
+}
+
+.klyna-editor-sidebar .klyna-empty-success {
+  color: rgb(110, 231, 183);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.klyna-editor-sidebar .klyna-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.klyna-editor-sidebar .klyna-stat {
+  background: var(--color-klyna-bg-elevated);
+  border: 1px solid var(--color-klyna-border);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.klyna-editor-sidebar .klyna-stat-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-klyna-text-dim);
+  font-weight: 700;
+}
+
+.klyna-editor-sidebar .klyna-stat-value {
+  font-size: 16px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
+
+/* Override WP sidebar background — Gutenberg paints it white otherwise */
+.interface-complementary-area:has(.klyna-editor-sidebar) {
+  background: var(--color-klyna-bg);
+}
+.interface-complementary-area:has(.klyna-editor-sidebar)
+  .components-panel__header.interface-complementary-area-header {
+  background: var(--color-klyna-bg);
+  border-bottom-color: var(--color-klyna-border);
+  color: var(--color-klyna-text);
+}
+.interface-complementary-area:has(.klyna-editor-sidebar)
+  .components-panel__header.interface-complementary-area-header h2,
+.interface-complementary-area:has(.klyna-editor-sidebar)
+  .components-panel__header.interface-complementary-area-header strong {
+  color: var(--color-klyna-text);
+}
