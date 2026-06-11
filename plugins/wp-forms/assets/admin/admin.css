@@ -1,0 +1,291 @@
+/**
+ * Klyna Forms — admin styles.
+ *
+ * The Klyna brand surface (dark elevated cards, violet accent) layered onto the
+ * standard wp-admin chrome. Scoped to .klyna-forms-wrap so we never restyle the
+ * rest of the dashboard. Tokens mirror packages/ui/src/tokens.ts.
+ */
+
+.klyna-forms-wrap {
+	--klyna-bg: #0b0b0f;
+	--klyna-elevated: #13131a;
+	--klyna-surface: #1a1a23;
+	--klyna-border: #2a2a35;
+	--klyna-text: #f4f4f5;
+	--klyna-muted: #a1a1aa;
+	--klyna-dim: #71717a;
+	--klyna-accent: #7c5cff;
+	--klyna-accent-hover: #9277ff;
+	--klyna-accent-deep: #5b3df0;
+	--klyna-success: #34d399;
+	--klyna-warning: #fbbf24;
+	--klyna-danger: #f87171;
+	--klyna-radius: 12px;
+	--klyna-radius-sm: 8px;
+}
+
+.klyna-forms-tagline {
+	color: var(--klyna-dim);
+	font-size: 13px;
+	max-width: 720px;
+}
+
+.klyna-forms-tagline .klyna-forms-shortcode,
+.klyna-forms-shortcode {
+	display: inline-block;
+	background: var(--klyna-surface);
+	color: var(--klyna-accent-hover);
+	border: 1px solid var(--klyna-border);
+	border-radius: 6px;
+	padding: 2px 8px;
+	font-size: 12px;
+}
+
+/* Empty state */
+.klyna-forms-empty {
+	background: var(--klyna-elevated);
+	border: 1px solid var(--klyna-border);
+	border-radius: var(--klyna-radius);
+	padding: 48px 32px;
+	text-align: center;
+	color: var(--klyna-text);
+	margin-top: 24px;
+	max-width: 640px;
+}
+
+.klyna-forms-empty h2 {
+	color: var(--klyna-text);
+	margin-top: 0;
+}
+
+.klyna-forms-empty p {
+	color: var(--klyna-muted);
+	max-width: 420px;
+	margin: 0 auto 24px;
+}
+
+/* Pills + badges */
+.klyna-forms-pill {
+	display: inline-block;
+	background: rgba(124, 92, 255, 0.16);
+	color: var(--klyna-accent-hover);
+	border: 1px solid rgba(124, 92, 255, 0.4);
+	border-radius: 999px;
+	padding: 1px 8px;
+	font-size: 11px;
+	font-weight: 600;
+	vertical-align: middle;
+	margin-left: 6px;
+}
+
+.klyna-forms-row-actions .button {
+	margin-right: 4px;
+}
+
+/* Tables */
+.klyna-forms-table td,
+.klyna-forms-entries-table td {
+	vertical-align: middle;
+}
+
+.klyna-forms-entry--unread td {
+	font-weight: 600;
+}
+
+.klyna-forms-col-date {
+	width: 200px;
+}
+
+.klyna-forms-col-actions {
+	width: 220px;
+	text-align: right;
+}
+
+.klyna-forms-delete {
+	color: var(--klyna-danger) !important;
+}
+
+.klyna-forms-entries-filter {
+	margin: 12px 0 16px;
+}
+
+/* ---------------------------------------------------------------------
+ * Builder
+ * ------------------------------------------------------------------- */
+
+.klyna-forms-builder__grid {
+	display: grid;
+	grid-template-columns: 1fr 320px;
+	gap: 24px;
+	align-items: start;
+	margin-top: 16px;
+}
+
+@media ( max-width: 960px ) {
+	.klyna-forms-builder__grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+.klyna-forms-strong {
+	display: block;
+	font-weight: 600;
+	margin-bottom: 4px;
+}
+
+.klyna-forms-field-block {
+	margin-bottom: 16px;
+}
+
+.klyna-forms-panel {
+	background: var(--klyna-elevated);
+	border: 1px solid var(--klyna-border);
+	border-radius: var(--klyna-radius);
+	padding: 16px 18px;
+	margin-bottom: 20px;
+	color: var(--klyna-text);
+}
+
+.klyna-forms-panel h2 {
+	margin-top: 0;
+	font-size: 14px;
+	color: var(--klyna-text);
+	border-bottom: 1px solid var(--klyna-border);
+	padding-bottom: 8px;
+}
+
+.klyna-forms-panel .description {
+	color: var(--klyna-muted);
+}
+
+/* Field rows */
+.klyna-forms-fields {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.klyna-forms-field-row {
+	display: flex;
+	gap: 10px;
+	background: var(--klyna-elevated);
+	border: 1px solid var(--klyna-border);
+	border-radius: var(--klyna-radius);
+	padding: 12px;
+	color: var(--klyna-text);
+}
+
+.klyna-forms-field-row.is-dragging {
+	opacity: 0.5;
+}
+
+.klyna-forms-field-row.is-drop-target {
+	border-color: var(--klyna-accent);
+	box-shadow: 0 0 0 2px rgba(124, 92, 255, 0.3);
+}
+
+.klyna-forms-field-row__handle {
+	cursor: grab;
+	color: var(--klyna-dim);
+	font-size: 18px;
+	line-height: 1;
+	padding-top: 6px;
+	user-select: none;
+	letter-spacing: -3px;
+}
+
+.klyna-forms-field-row__body {
+	flex: 1;
+	min-width: 0;
+}
+
+.klyna-forms-field-row__top {
+	display: flex;
+	gap: 12px;
+	align-items: flex-end;
+	flex-wrap: wrap;
+}
+
+.klyna-forms-field-row__top > label {
+	display: flex;
+	flex-direction: column;
+}
+
+.klyna-forms-field-row__top > label:first-child {
+	flex: 1;
+	min-width: 160px;
+}
+
+.klyna-forms-mini-label {
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--klyna-dim);
+	margin-bottom: 3px;
+}
+
+.klyna-forms-required-toggle {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	white-space: nowrap;
+	padding-bottom: 6px;
+}
+
+.klyna-forms-remove-field {
+	margin-left: auto;
+	font-size: 20px;
+	line-height: 1;
+	color: var(--klyna-dim);
+	text-decoration: none;
+	cursor: pointer;
+	border: none;
+	background: none;
+	padding: 0 4px;
+}
+
+.klyna-forms-remove-field:hover {
+	color: var(--klyna-danger);
+}
+
+.klyna-forms-field-row__extra {
+	display: flex;
+	gap: 12px;
+	margin-top: 10px;
+}
+
+.klyna-forms-field-row__extra label {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+}
+
+.klyna-forms-field-row input[type="text"],
+.klyna-forms-field-row select,
+.klyna-forms-field-row textarea {
+	width: 100%;
+}
+
+.klyna-forms-inline-field {
+	margin-top: 8px;
+}
+
+/* Accent the primary buttons inside our wrap to match brand. */
+.klyna-forms-wrap .button-primary,
+.klyna-forms-builder .button-primary {
+	background: var(--klyna-accent);
+	border-color: var(--klyna-accent-deep);
+	box-shadow: none;
+	text-shadow: none;
+}
+
+.klyna-forms-wrap .button-primary:hover,
+.klyna-forms-builder .button-primary:hover {
+	background: var(--klyna-accent-hover);
+	border-color: var(--klyna-accent-deep);
+}
+
+.klyna-forms-wrap .button-primary:focus,
+.klyna-forms-builder .button-primary:focus {
+	box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--klyna-accent);
+}

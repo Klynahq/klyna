@@ -1,0 +1,169 @@
+/**
+ * Klyna Forms — front-end styles.
+ *
+ * Neutral, theme-friendly defaults that adopt the host theme's font but keep
+ * the Klyna violet accent on the primary action and focus rings. Scoped under
+ * .klyna-form so we never leak into the surrounding page.
+ */
+
+.klyna-form {
+	--klyna-accent: #7c5cff;
+	--klyna-accent-hover: #9277ff;
+	--klyna-danger: #f87171;
+	--klyna-radius: 12px;
+	--klyna-radius-sm: 8px;
+	max-width: 640px;
+	margin: 0 0 1.5rem;
+}
+
+.klyna-form *,
+.klyna-form *::before,
+.klyna-form *::after {
+	box-sizing: border-box;
+}
+
+.klyna-form__field {
+	margin-bottom: 1.1rem;
+}
+
+.klyna-form__label {
+	display: block;
+	margin-bottom: 0.4rem;
+	font-weight: 600;
+	font-size: 0.95rem;
+	line-height: 1.3;
+}
+
+.klyna-form__req {
+	color: var(--klyna-danger);
+	margin-left: 2px;
+}
+
+.klyna-form input[type="text"],
+.klyna-form input[type="email"],
+.klyna-form input[type="tel"],
+.klyna-form input[type="url"],
+.klyna-form input[type="number"],
+.klyna-form textarea,
+.klyna-form select {
+	width: 100%;
+	padding: 0.65rem 0.8rem;
+	font: inherit;
+	color: inherit;
+	background: #fff;
+	border: 1px solid rgba(0, 0, 0, 0.18);
+	border-radius: var(--klyna-radius-sm);
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.klyna-form textarea {
+	min-height: 7rem;
+	resize: vertical;
+}
+
+.klyna-form input:focus,
+.klyna-form textarea:focus,
+.klyna-form select:focus {
+	outline: none;
+	border-color: var(--klyna-accent);
+	box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.18);
+}
+
+.klyna-form input[aria-invalid="true"],
+.klyna-form textarea[aria-invalid="true"],
+.klyna-form select[aria-invalid="true"] {
+	border-color: var(--klyna-danger);
+}
+
+.klyna-form__options {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+}
+
+.klyna-form__check {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.5rem;
+	font-weight: 400;
+	cursor: pointer;
+}
+
+.klyna-form__check input {
+	width: auto;
+	margin-top: 0.2rem;
+}
+
+.klyna-form__actions {
+	margin-top: 1.25rem;
+}
+
+.klyna-form__submit {
+	appearance: none;
+	font: inherit;
+	font-weight: 600;
+	color: #fff;
+	background: var(--klyna-accent);
+	border: none;
+	border-radius: var(--klyna-radius-sm);
+	padding: 0.7rem 1.4rem;
+	cursor: pointer;
+	transition: background 0.15s ease, transform 0.05s ease;
+}
+
+.klyna-form__submit:hover {
+	background: var(--klyna-accent-hover);
+}
+
+.klyna-form__submit:active {
+	transform: translateY(1px);
+}
+
+.klyna-form__submit[disabled] {
+	opacity: 0.6;
+	cursor: progress;
+}
+
+.klyna-form__field-error {
+	display: block;
+	margin-top: 0.3rem;
+	color: var(--klyna-danger);
+	font-size: 0.85rem;
+}
+
+/* Status banner shown after submit. */
+.klyna-form__status {
+	margin-bottom: 1.1rem;
+	padding: 0.8rem 1rem;
+	border-radius: var(--klyna-radius-sm);
+	font-size: 0.95rem;
+}
+
+.klyna-form__status--success {
+	background: rgba(52, 211, 153, 0.12);
+	border: 1px solid rgba(52, 211, 153, 0.4);
+	color: #0f5132;
+}
+
+.klyna-form__status--error {
+	background: rgba(248, 113, 113, 0.12);
+	border: 1px solid rgba(248, 113, 113, 0.4);
+	color: #842029;
+}
+
+/* Honeypot: kept in the DOM but visually and semantically hidden. */
+.klyna-form__hp {
+	position: absolute !important;
+	left: -9999px !important;
+	top: auto;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+}
+
+.klyna-form-error {
+	padding: 0.6rem 0.9rem;
+	border: 1px dashed rgba(248, 113, 113, 0.6);
+	border-radius: 8px;
+	color: #842029;
+}

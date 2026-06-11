@@ -1,0 +1,399 @@
+# Copyright (C) 2026 Klyna
+# This file is distributed under the GPL-2.0-or-later license.
+msgid ""
+msgstr ""
+"Project-Id-Version: Klyna Forms 0.1.0\n"
+"Report-Msgid-Bugs-To: https://klyna.dev\n"
+"POT-Creation-Date: 2026-06-11T00:00:00+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: \n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Domain: wp-forms\n"
+
+#. Plugin Name of the plugin
+msgid "Klyna Forms"
+msgstr ""
+
+#. Description of the plugin
+msgid "Tools that help your work get found. Lead-gen forms with entry storage, spam protection & notifications."
+msgstr ""
+
+#. Author of the plugin
+msgid "Klyna"
+msgstr ""
+
+# wp-forms.php
+msgid "New form submission: {form_title}"
+msgstr ""
+
+# class-forms.php — CPT labels
+msgid "Forms"
+msgstr ""
+
+msgid "Form"
+msgstr ""
+
+msgid "Add form"
+msgstr ""
+
+msgid "Add new form"
+msgstr ""
+
+msgid "Edit form"
+msgstr ""
+
+msgid "New form"
+msgstr ""
+
+msgid "View form"
+msgstr ""
+
+msgid "Search forms"
+msgstr ""
+
+msgid "No forms found"
+msgstr ""
+
+msgid "No forms found in Trash"
+msgstr ""
+
+msgid "Klyna Forms"
+msgstr ""
+
+# class-forms.php — config defaults
+msgid "Submit"
+msgstr ""
+
+msgid "Thanks — your message has been received."
+msgstr ""
+
+# class-render.php
+msgid "Leave this field empty"
+msgstr ""
+
+msgid "Klyna Forms: form not found or not published."
+msgstr ""
+
+msgid "Select…"
+msgstr ""
+
+msgid "Sending…"
+msgstr ""
+
+msgid "Something went wrong. Please try again."
+msgstr ""
+
+# class-submission.php
+msgid "This form is no longer available."
+msgstr ""
+
+msgid "Security check failed. Please reload the page and try again."
+msgstr ""
+
+msgid "Please fix the highlighted fields."
+msgstr ""
+
+#. translators: %s: field label
+msgid "%s is required."
+msgstr ""
+
+#. translators: %s: field label
+msgid "%s must be a valid email address."
+msgstr ""
+
+#. translators: %s: field label
+msgid "%s must be a valid URL."
+msgstr ""
+
+#. translators: %s: field label
+msgid "%s must be a number."
+msgstr ""
+
+#. translators: %s: form title
+msgid "New submission for \"%s\"."
+msgstr ""
+
+#. translators: %s: admin entries URL
+msgid "View all entries: %s"
+msgstr ""
+
+# class-admin.php — menus
+msgid "All forms"
+msgstr ""
+
+msgid "Entries"
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+# class-admin.php — actions
+msgid "You are not allowed to do that."
+msgstr ""
+
+msgid "Untitled form"
+msgstr ""
+
+msgid "Could not save the form."
+msgstr ""
+
+msgid "Date"
+msgstr ""
+
+msgid "Status"
+msgstr ""
+
+# class-admin.php — assets i18n
+msgid "Delete this field?"
+msgstr ""
+
+msgid "Remove"
+msgstr ""
+
+msgid "One option per line"
+msgstr ""
+
+# class-admin.php — forms list
+msgid "Tools that help your work get found. Lead-gen forms with entry storage, spam protection & notifications."
+msgstr ""
+
+msgid "No forms yet"
+msgstr ""
+
+msgid "Build your first form in under a minute — add fields, drop the shortcode on any page, and start collecting leads."
+msgstr ""
+
+msgid "Create a form"
+msgstr ""
+
+msgid "Shortcode"
+msgstr ""
+
+msgid "Fields"
+msgstr ""
+
+#. translators: %d: count
+msgid "%d new"
+msgstr ""
+
+msgid "Edit"
+msgstr ""
+
+# class-admin.php — editor
+msgid "Form saved."
+msgstr ""
+
+msgid "Embed this form with the shortcode"
+msgstr ""
+
+msgid "or the Klyna Form block."
+msgstr ""
+
+msgid "Form name"
+msgstr ""
+
+msgid "Contact form"
+msgstr ""
+
+msgid "+ Add field"
+msgstr ""
+
+msgid "After submit"
+msgstr ""
+
+msgid "On success"
+msgstr ""
+
+msgid "Show a message"
+msgstr ""
+
+msgid "Redirect to a URL"
+msgstr ""
+
+msgid "Success message"
+msgstr ""
+
+msgid "Redirect URL"
+msgstr ""
+
+msgid "Submit button label"
+msgstr ""
+
+msgid "Notifications"
+msgstr ""
+
+msgid "Send entries to"
+msgstr ""
+
+msgid "Comma-separated. Leave blank to use the global recipient from Settings."
+msgstr ""
+
+msgid "Save form"
+msgstr ""
+
+# class-admin.php — field types
+msgid "Text"
+msgstr ""
+
+msgid "Email"
+msgstr ""
+
+msgid "Phone"
+msgstr ""
+
+msgid "URL"
+msgstr ""
+
+msgid "Number"
+msgstr ""
+
+msgid "Paragraph"
+msgstr ""
+
+msgid "Dropdown"
+msgstr ""
+
+msgid "Radio"
+msgstr ""
+
+msgid "Checkbox"
+msgstr ""
+
+# class-admin.php — builder row
+msgid "Drag to reorder"
+msgstr ""
+
+msgid "Label"
+msgstr ""
+
+msgid "Type"
+msgstr ""
+
+msgid "Field label"
+msgstr ""
+
+msgid "Required"
+msgstr ""
+
+msgid "Remove field"
+msgstr ""
+
+msgid "Placeholder"
+msgstr ""
+
+msgid "Options (one per line)"
+msgstr ""
+
+# class-admin.php — starter fields
+msgid "Name"
+msgstr ""
+
+msgid "Message"
+msgstr ""
+
+# class-admin.php — entries view
+msgid "Choose form"
+msgstr ""
+
+msgid "Export CSV"
+msgstr ""
+
+msgid "Create a form first to start collecting entries."
+msgstr ""
+
+msgid "No entries yet for this form."
+msgstr ""
+
+msgid "New"
+msgstr ""
+
+msgid "Mark read"
+msgstr ""
+
+msgid "Mark unread"
+msgstr ""
+
+msgid "Delete"
+msgstr ""
+
+msgid "Delete this entry permanently?"
+msgstr ""
+
+# class-admin.php — settings
+msgid "Klyna Forms settings"
+msgstr ""
+
+msgid "Email notifications"
+msgstr ""
+
+msgid "Email an admin when a form is submitted"
+msgstr ""
+
+msgid "Default recipient(s)"
+msgstr ""
+
+msgid "Comma-separated. A form can override this with its own recipient."
+msgstr ""
+
+msgid "Subject line"
+msgstr ""
+
+msgid "Use {form_title} as a placeholder."
+msgstr ""
+
+msgid "From name"
+msgstr ""
+
+msgid "From email"
+msgstr ""
+
+msgid "Spam protection"
+msgstr ""
+
+msgid "Honeypot"
+msgstr ""
+
+msgid "Add an invisible honeypot field bots fill in"
+msgstr ""
+
+msgid "Time-trap"
+msgstr ""
+
+msgid "Reject submissions sent faster than a human could fill the form"
+msgstr ""
+
+msgid "Minimum seconds:"
+msgstr ""
+
+msgid "Storage & privacy"
+msgstr ""
+
+msgid "Store entries"
+msgstr ""
+
+msgid "Save every submission to the database"
+msgstr ""
+
+msgid "Store IP address"
+msgstr ""
+
+msgid "Record the submitter IP with each entry"
+msgstr ""
+
+# class-render.php / block.js
+msgid "Klyna Form"
+msgstr ""
+
+msgid "Embed a Klyna lead-gen form."
+msgstr ""
+
+msgid "Select a form…"
+msgstr ""
+
+msgid "Choose which form to display on this page."
+msgstr ""
