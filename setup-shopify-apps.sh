@@ -16,12 +16,29 @@
 # Usage:
 #   chmod +x setup-shopify-apps.sh
 #   DEV_STORE=klynadev.myshopify.com ./setup-shopify-apps.sh
+#
+# NOTE: Shopify does NOT allow "Shopify" in app names. Each app is named
+#       "Klyna <Feature>" (e.g. "Klyna Bundles"). If the CLI prompts for
+#       "App name:", just press Enter — the script pipes the correct name.
 
 set -e
 
 DEV_STORE="${DEV_STORE:-klynadev.myshopify.com}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKTREES_PARENT="$(dirname "$ROOT")"
+
+# slug → Partners app display name (no "Shopify" — Shopify rejects that word)
+declare -A APP_NAMES
+APP_NAMES["shopify-bundles"]="Klyna Bundles"
+APP_NAMES["shopify-upsell"]="Klyna Upsell"
+APP_NAMES["shopify-rewards"]="Klyna Rewards"
+APP_NAMES["shopify-reviews"]="Klyna Reviews"
+APP_NAMES["shopify-urgency"]="Klyna Urgency"
+APP_NAMES["shopify-restock"]="Klyna Back-in-Stock"
+APP_NAMES["shopify-wishlist"]="Klyna Wishlist"
+APP_NAMES["shopify-feed"]="Klyna Feed"
+APP_NAMES["shopify-sticky-cart"]="Klyna Sticky Cart"
+APP_NAMES["shopify-capture"]="Klyna Capture"
 
 APPS=(
   "shopify-bundles"
@@ -54,34 +71,47 @@ echo ""
 # Step 2: Install + link each app
 for slug in "${APPS[@]}"; do
   app_dir="$WORKTREES_PARENT/klyna-${slug}/apps/${slug}"
-  
+  app_name="${APP_NAMES[$slug]}"
+
   if [ ! -d "$app_dir" ]; then
     echo "⚠ Worktree not found: $app_dir — skipping"
     continue
   fi
-  
+
   echo "─── Setting up: $slug ───"
-  
+  echo "    App name in Partners: \"$app_name\""
+
   # Install deps
   echo "  Installing dependencies..."
   (cd "$app_dir" && pnpm install --silent)
-  
+
   # Generate Prisma client
   echo "  Generating Prisma client..."
   (cd "$app_dir" && npx prisma generate 2>/dev/null)
-  
-  # Link to Partner dashboard (creates app if it doesn't exist)
+
+  # Link to Partner dashboard.
+  # The CLI prompts "App name:" when creating a new app.
+  # Pipe the correct name so the prompt is answered automatically.
+  # If the CLI asks "Create new / Link existing", it will get the name on a
+  # subsequent line — this works for non-TTY stdin on Shopify CLI v3.
   echo "  Linking to Shopify Partner dashboard..."
-  echo "  (You may be asked to choose 'Create new app' — pick that)"
-  (cd "$app_dir" && shopify app config link --config shopify.app.toml)
-  
+  echo "  (If the browser opens again for consent, approve it)"
+  (cd "$app_dir" && printf '%s\n' "$app_name" | shopify app config link --config shopify.app.toml) || {
+    echo ""
+    echo "  ⚠  Auto-link failed for $slug. Run manually:"
+    echo "     cd $app_dir"
+    echo "     shopify app config link --config shopify.app.toml"
+    echo "     When prompted for 'App name:', enter: $app_name"
+    echo ""
+  }
+
   # Copy .env.example to .env
   if [ -f "$app_dir/.env.example" ] && [ ! -f "$app_dir/.env" ]; then
     cp "$app_dir/.env.example" "$app_dir/.env"
     echo "  Created .env from .env.example"
     echo "  ⚠ Open $app_dir/.env and fill in SHOPIFY_API_KEY + SHOPIFY_API_SECRET"
   fi
-  
+
   echo "  ✓ $slug ready"
   echo ""
 done
