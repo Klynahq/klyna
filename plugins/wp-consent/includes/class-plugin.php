@@ -68,6 +68,12 @@ final class Plugin {
 			'google_consent_mode'       => true,
 			'geo_restrict'              => false,
 			'cookie_settings_link'      => true,
+			// AI assistant.
+			'ai_provider'               => 'off',
+			'ai_model'                  => '',
+			'ai_api_key'                => '',
+			'ai_endpoint'               => '',
+			'ai_daily_cap'              => 100,
 		);
 
 		return wp_parse_args( $saved, $defaults );

@@ -43,6 +43,70 @@ final class Rest {
 				),
 			)
 		);
+
+		register_rest_route(
+			self::NAMESPACE,
+			'/ai/test',
+			array(
+				'methods'             => WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'ai_test' ),
+				'permission_callback' => array( $this, 'manage_options_permission' ),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
+			'/ai/suggest',
+			array(
+				'methods'             => WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'ai_suggest' ),
+				'permission_callback' => array( $this, 'manage_options_permission' ),
+				'args'                => array(
+					'prompt' => array( 'type' => 'string', 'required' => true ),
+				),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
+			'/ai/generate-policy',
+			array(
+				'methods'             => WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'ai_generate_policy' ),
+				'permission_callback' => array( $this, 'manage_options_permission' ),
+			)
+		);
+	}
+
+	/**
+	 * POST /wp-consent/v1/ai/test
+	 */
+	public function ai_test( WP_REST_Request $request ): WP_REST_Response {
+		$result = Ai::test();
+		return new WP_REST_Response( $result, 200 );
+	}
+
+	/**
+	 * POST /wp-consent/v1/ai/suggest
+	 */
+	public function ai_suggest( WP_REST_Request $request ) {
+		$prompt = $request->get_param( 'prompt' );
+		if ( ! is_string( $prompt ) || '' === trim( $prompt ) ) {
+			return new WP_Error( 'invalid_prompt', __( 'Prompt is required.', 'wp-consent' ), array( 'status' => 400 ) );
+		}
+		$clean   = sanitize_textarea_field( $prompt );
+		$ai      = new Ai();
+		$result  = $ai->complete( $clean );
+		return new WP_REST_Response( $result, 200 );
+	}
+
+	/**
+	 * POST /wp-consent/v1/ai/generate-policy
+	 */
+	public function ai_generate_policy( WP_REST_Request $request ): WP_REST_Response {
+		$result = PolicyGenerator::generate();
+		$status = ! empty( $result['ok'] ) ? 200 : 200; // Always 200; caller checks `ok`.
+		return new WP_REST_Response( $result, $status );
 	}
 
 	/**
