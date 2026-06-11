@@ -34,6 +34,40 @@ final class Rest {
 		);
 		register_rest_route(
 			self::NAMESPACE,
+			'/ai/test',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'ai_test' ),
+				'permission_callback' => array( $this, 'can_manage' ),
+			)
+		);
+		register_rest_route(
+			self::NAMESPACE,
+			'/ai/suggest',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'ai_suggest' ),
+				'permission_callback' => array( $this, 'can_manage' ),
+				'args'                => array(
+					'urls' => array(
+						'type'     => 'array',
+						'required' => false,
+						'items'    => array( 'type' => 'string' ),
+					),
+				),
+			)
+		);
+		register_rest_route(
+			self::NAMESPACE,
+			'/ai/apply',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'ai_apply' ),
+				'permission_callback' => array( $this, 'can_manage' ),
+			)
+		);
+		register_rest_route(
+			self::NAMESPACE,
 			'/purge',
 			array(
 				'methods'             => 'POST',
@@ -104,5 +138,250 @@ final class Rest {
 			),
 			200
 		);
+	}
+
+	/**
+	 * POST /ai/test - ping the configured provider.
+	 */
+	public function ai_test( \WP_REST_Request $req ): \WP_REST_Response {
+		$ai     = new Ai();
+		$result = $ai->test();
+		return new \WP_REST_Response( $result, 200 );
+	}
+
+	/**
+	 * POST /ai/suggest - sample the given URLs, send telemetry to the AI,
+	 * return JSON with skip[] + aggressive[] rules.
+	 */
+	public function ai_suggest( \WP_REST_Request $req ): \WP_REST_Response {
+		$raw = (array) $req->get_param( 'urls' );
+		$urls = array();
+		foreach ( $raw as $u ) {
+			$u = esc_url_raw( (string) $u );
+			if ( '' !== $u ) {
+				$urls[] = $u;
+			}
+		}
+		if ( ! $urls ) {
+			$urls = array( home_url( '/' ) );
+		}
+		// Cap to 5 to bound the number of HTTP requests.
+		$urls = array_slice( $urls, 0, 5 );
+
+		$samples = array();
+		foreach ( $urls as $u ) {
+			$samples[] = $this->sample_url( $u );
+		}
+
+		$prompt = $this->build_cache_prompt( $samples );
+
+		$ai     = new Ai();
+		$result = $ai->complete( $prompt, array( 'temperature' => 0.2, 'max_tokens' => 800 ) );
+		if ( empty( $result['ok'] ) ) {
+			return new \WP_REST_Response(
+				array(
+					'ok'     => false,
+					'reason' => $result['reason'] ?? 'ai_error',
+					'text'   => $result['text'] ?? __( 'AI call failed.', 'wp-speed' ),
+				),
+				200
+			);
+		}
+
+		$parsed = $this->parse_suggestions( (string) $result['text'] );
+		return new \WP_REST_Response(
+			array(
+				'ok'         => true,
+				'skip'       => $parsed['skip'],
+				'aggressive' => $parsed['aggressive'],
+				'samples'    => $samples,
+				'cached'     => ! empty( $result['cached'] ),
+			),
+			200
+		);
+	}
+
+	/**
+	 * POST /ai/apply - merge selected suggestions into the settings option.
+	 *  skip[]       -> appended to exclude_urls.
+	 *  aggressive[] -> the longest sane TTL among the proposals replaces
+	 *                  cache_ttl_hours (capped at 720).
+	 */
+	public function ai_apply( \WP_REST_Request $req ): \WP_REST_Response {
+		$skip = (array) $req->get_param( 'skip' );
+		$agg  = (array) $req->get_param( 'aggressive' );
+
+		$settings = wp_parse_args( Plugin::settings(), Plugin::defaults() );
+		$existing = preg_split( "/\r\n|\r|\n/", (string) $settings['exclude_urls'] );
+		$existing = array_filter( array_map( 'trim', (array) $existing ) );
+
+		$added = 0;
+		foreach ( $skip as $item ) {
+			if ( ! is_array( $item ) ) { continue; }
+			$pattern = isset( $item['pattern'] ) ? sanitize_text_field( (string) $item['pattern'] ) : '';
+			if ( '' === $pattern ) { continue; }
+			if ( ! in_array( $pattern, $existing, true ) ) {
+				$existing[] = $pattern;
+				$added++;
+			}
+		}
+		$settings['exclude_urls'] = implode( "\n", $existing );
+
+		$max_ttl = 0;
+		foreach ( $agg as $item ) {
+			if ( ! is_array( $item ) ) { continue; }
+			$ttl = isset( $item['ttl_hours'] ) ? (int) $item['ttl_hours'] : 0;
+			if ( $ttl > $max_ttl ) {
+				$max_ttl = $ttl;
+			}
+		}
+		if ( $max_ttl > 0 ) {
+			$settings['cache_ttl_hours'] = max( 1, min( 720, $max_ttl ) );
+		}
+
+		update_option( KLYNA_SPEED_OPTION_KEY, $settings );
+
+		return new \WP_REST_Response(
+			array(
+				'ok'         => true,
+				'added_skip' => $added,
+				'ttl_hours'  => (int) $settings['cache_ttl_hours'],
+				'message'    => __( 'Applied AI suggestions.', 'wp-speed' ),
+			),
+			200
+		);
+	}
+
+	/**
+	 * Fetch a URL and capture page kind + render time. Errors are returned
+	 * inline so the AI can still reason about partial data.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function sample_url( string $url ): array {
+		$start = microtime( true );
+		$resp  = wp_remote_get(
+			$url,
+			array(
+				'timeout'     => 15,
+				'redirection' => 2,
+				'sslverify'   => false,
+				'headers'     => array( 'User-Agent' => 'KlynaSpeed/AITuner' ),
+			)
+		);
+		$ms = (int) round( ( microtime( true ) - $start ) * 1000 );
+
+		if ( is_wp_error( $resp ) ) {
+			return array(
+				'url'   => $url,
+				'kind'  => 'error',
+				'ms'    => $ms,
+				'error' => $resp->get_error_message(),
+			);
+		}
+
+		$code = (int) wp_remote_retrieve_response_code( $resp );
+		$body = (string) wp_remote_retrieve_body( $resp );
+		$len  = strlen( $body );
+		$kind = $this->classify_url( $url, $body );
+
+		return array(
+			'url'    => $url,
+			'kind'   => $kind,
+			'ms'     => $ms,
+			'status' => $code,
+			'bytes'  => $len,
+		);
+	}
+
+	/**
+	 * Rough page-kind classifier for the AI prompt.
+	 */
+	private function classify_url( string $url, string $html ): string {
+		$path = (string) wp_parse_url( $url, PHP_URL_PATH );
+		$path = strtolower( $path );
+		$dynamic_paths = array( '/cart', '/checkout', '/my-account', '/account', '/wp-admin', '/wp-login', '/?s=', '/search' );
+		foreach ( $dynamic_paths as $needle ) {
+			if ( false !== strpos( $url, $needle ) || ( '/' !== $needle && false !== strpos( $path, $needle ) ) ) {
+				return 'dynamic';
+			}
+		}
+		if ( '/' === $path || '' === $path ) {
+			return 'home';
+		}
+		if ( false !== stripos( $html, 'rel="canonical"' ) && false !== stripos( $html, 'article' ) ) {
+			return 'post';
+		}
+		return 'page';
+	}
+
+	/**
+	 * Build the user prompt with sampled telemetry. Asks for strict JSON.
+	 *
+	 * @param array<int,array<string,mixed>> $samples
+	 */
+	private function build_cache_prompt( array $samples ): string {
+		$lines = array();
+		foreach ( $samples as $s ) {
+			$lines[] = sprintf(
+				'- url=%s kind=%s render_ms=%d bytes=%d status=%s',
+				$s['url'],
+				$s['kind'],
+				(int) ( $s['ms'] ?? 0 ),
+				(int) ( $s['bytes'] ?? 0 ),
+				(string) ( $s['status'] ?? ( $s['error'] ?? 'n/a' ) )
+			);
+		}
+		$telemetry = implode( "\n", $lines );
+
+		return "You are tuning a WordPress full-page cache for a single site. "
+			. "Given the page-load telemetry below, propose cache exclusion + aggressive-cache rules.\n\n"
+			. "Telemetry:\n" . $telemetry . "\n\n"
+			. "Reply with STRICT JSON ONLY, no prose, no code fences, matching this shape:\n"
+			. "{\n"
+			. "  \"skip\": [ { \"pattern\": \"/cart\", \"reason\": \"one sentence why\" } ],\n"
+			. "  \"aggressive\": [ { \"pattern\": \"/blog/*\", \"ttl_hours\": 72, \"reason\": \"one sentence why\" } ]\n"
+			. "}\n"
+			. "Rules:\n"
+			. "- skip[] are path patterns to NEVER cache (carts, checkouts, account, search, admin previews).\n"
+			. "- aggressive[] are path patterns that are safe to cache longer; ttl_hours must be an integer 1-720.\n"
+			. "- Each item must include a one-sentence reason.\n"
+			. "- Use leading slashes; * is a wildcard. Do not invent paths that contradict the telemetry.";
+	}
+
+	/**
+	 * Parse the AI JSON response defensively. Returns normalized arrays.
+	 *
+	 * @return array{skip:array<int,array<string,mixed>>,aggressive:array<int,array<string,mixed>>}
+	 */
+	private function parse_suggestions( string $text ): array {
+		$text = trim( $text );
+		// Strip code fences if a model adds them despite instructions.
+		$text = preg_replace( '/^```(?:json)?\s*|\s*```$/im', '', $text );
+		// Try to extract the first JSON object.
+		if ( preg_match( '/\{[\s\S]*\}/', $text, $m ) ) {
+			$text = $m[0];
+		}
+		$data = json_decode( $text, true );
+		$out  = array( 'skip' => array(), 'aggressive' => array() );
+		if ( ! is_array( $data ) ) {
+			return $out;
+		}
+		foreach ( (array) ( $data['skip'] ?? array() ) as $item ) {
+			if ( ! is_array( $item ) ) { continue; }
+			$pattern = isset( $item['pattern'] ) ? sanitize_text_field( (string) $item['pattern'] ) : '';
+			$reason  = isset( $item['reason'] ) ? sanitize_text_field( (string) $item['reason'] ) : '';
+			if ( '' === $pattern ) { continue; }
+			$out['skip'][] = array( 'pattern' => $pattern, 'reason' => $reason );
+		}
+		foreach ( (array) ( $data['aggressive'] ?? array() ) as $item ) {
+			if ( ! is_array( $item ) ) { continue; }
+			$pattern = isset( $item['pattern'] ) ? sanitize_text_field( (string) $item['pattern'] ) : '';
+			$reason  = isset( $item['reason'] ) ? sanitize_text_field( (string) $item['reason'] ) : '';
+			$ttl     = isset( $item['ttl_hours'] ) ? max( 1, min( 720, (int) $item['ttl_hours'] ) ) : 24;
+			if ( '' === $pattern ) { continue; }
+			$out['aggressive'][] = array( 'pattern' => $pattern, 'ttl_hours' => $ttl, 'reason' => $reason );
+		}
+		return $out;
 	}
 }

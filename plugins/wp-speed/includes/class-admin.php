@@ -54,6 +54,14 @@ final class Admin {
 			'wp-speed-settings',
 			array( $this, 'render_settings' )
 		);
+		add_submenu_page(
+			self::MENU_SLUG,
+			__( 'AI Tuning', 'wp-speed' ),
+			__( 'AI Tuning', 'wp-speed' ),
+			'manage_options',
+			'wp-speed-ai',
+			array( $this, 'render_ai_tuning' )
+		);
 	}
 
 	public function register_settings(): void {
@@ -105,6 +113,17 @@ final class Admin {
 			? sanitize_textarea_field( (string) $input['exclude_urls'] )
 			: '';
 
+		// AI assistant fields.
+		$providers           = array( 'off', 'openrouter', 'groq', 'gemini', 'cloudflare', 'ollama' );
+		$provider            = isset( $input['ai_provider'] ) ? sanitize_key( (string) $input['ai_provider'] ) : 'off';
+		$out['ai_provider']  = in_array( $provider, $providers, true ) ? $provider : 'off';
+		$out['ai_model']     = isset( $input['ai_model'] ) ? sanitize_text_field( (string) $input['ai_model'] ) : '';
+		$out['ai_api_key']   = isset( $input['ai_api_key'] ) ? sanitize_text_field( (string) $input['ai_api_key'] ) : '';
+		$out['ai_endpoint']  = isset( $input['ai_endpoint'] ) ? sanitize_text_field( (string) $input['ai_endpoint'] ) : '';
+		$out['ai_daily_cap'] = isset( $input['ai_daily_cap'] )
+			? max( 1, min( 10000, (int) $input['ai_daily_cap'] ) )
+			: 100;
+
 		// Note: the whole cache is purged via the `update_option_` hook in
 		// Cache::register() once the new settings are persisted, so nothing
 		// stale survives a settings change.
@@ -135,13 +154,135 @@ final class Admin {
 				'apiBase' => esc_url_raw( rest_url( 'klyna-speed/v1' ) ),
 				'nonce'   => wp_create_nonce( 'wp_rest' ),
 				'i18n'    => array(
-					'purging'  => __( 'Purging…', 'wp-speed' ),
+					'purging'  => __( 'Purging...', 'wp-speed' ),
 					'purged'   => __( 'Cache purged.', 'wp-speed' ),
 					'failed'   => __( 'Something went wrong. Try again.', 'wp-speed' ),
 					'purgeAll' => __( 'Purge all cache', 'wp-speed' ),
+					'testing'  => __( 'Testing...', 'wp-speed' ),
+					'analyzing'=> __( 'Analyzing pages...', 'wp-speed' ),
+					'applying' => __( 'Applying...', 'wp-speed' ),
+					'applied'  => __( 'Applied.', 'wp-speed' ),
+					'noSugg'   => __( 'No suggestions returned.', 'wp-speed' ),
 				),
 			)
 		);
+		wp_add_inline_script( 'klyna-speed-admin', $this->inline_ai_script() );
+	}
+
+	/**
+	 * Inline JS for the AI tuning page + settings test button. Kept minimal
+	 * so we do not require a build step.
+	 */
+	private function inline_ai_script(): string {
+		return <<<'JS'
+(function(){
+	if ( typeof window === 'undefined' || ! window.KLYNA_SPEED ) { return; }
+	var cfg = window.KLYNA_SPEED;
+	var i18n = cfg.i18n || {};
+	var api = cfg.apiBase.replace(/\/$/, '');
+	function post(path, body){
+		return fetch(api + path, {
+			method: 'POST',
+			credentials: 'same-origin',
+			headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': cfg.nonce },
+			body: JSON.stringify(body || {})
+		}).then(function(r){ return r.json().then(function(j){ return { ok: r.ok, data: j }; }); });
+	}
+	var lastSuggestions = { skip: [], aggressive: [] };
+
+	var testBtn = document.getElementById('klyna-speed-ai-test');
+	if (testBtn) {
+		testBtn.addEventListener('click', function(){
+			var status = document.getElementById('klyna-speed-ai-test-status');
+			status.textContent = i18n.testing || 'Testing...';
+			post('/ai/test', {}).then(function(res){
+				if (res.ok && res.data && res.data.ok) {
+					status.textContent = 'OK: ' + (res.data.text || '').slice(0, 80);
+				} else {
+					var msg = (res.data && (res.data.text || res.data.message)) || (i18n.failed || 'Failed');
+					status.textContent = 'Error: ' + msg;
+				}
+			}).catch(function(){ status.textContent = i18n.failed || 'Failed'; });
+		});
+	}
+
+	var analyzeBtn = document.getElementById('klyna-speed-ai-analyze');
+	if (analyzeBtn) {
+		analyzeBtn.addEventListener('click', function(){
+			var status = document.getElementById('klyna-speed-ai-analyze-status');
+			var area = document.getElementById('klyna-speed-ai-urls');
+			var urls = (area.value || '').split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
+			status.textContent = i18n.analyzing || 'Analyzing...';
+			post('/ai/suggest', { urls: urls }).then(function(res){
+				if (!res.ok || !res.data || !res.data.ok) {
+					var msg = (res.data && (res.data.text || res.data.message)) || (i18n.failed || 'Failed');
+					status.textContent = 'Error: ' + msg;
+					return;
+				}
+				lastSuggestions = {
+					skip: Array.isArray(res.data.skip) ? res.data.skip : [],
+					aggressive: Array.isArray(res.data.aggressive) ? res.data.aggressive : []
+				};
+				renderSuggestions(lastSuggestions);
+				status.textContent = '';
+			}).catch(function(){ status.textContent = i18n.failed || 'Failed'; });
+		});
+	}
+
+	function renderSuggestions(s){
+		var wrap = document.getElementById('klyna-speed-ai-results');
+		var skip = document.getElementById('klyna-speed-ai-skip');
+		var agg = document.getElementById('klyna-speed-ai-aggressive');
+		if (!wrap) { return; }
+		wrap.style.display = '';
+		skip.innerHTML = '<h3>Skip cache (add to exclude list)</h3>';
+		agg.innerHTML = '<h3>Aggressive cache (extend TTL)</h3>';
+		function list(target, items, kind) {
+			if (!items.length) {
+				target.insertAdjacentHTML('beforeend', '<p><em>' + (i18n.noSugg || 'No suggestions.') + '</em></p>');
+				return;
+			}
+			var ul = document.createElement('ul');
+			items.forEach(function(it, idx){
+				var li = document.createElement('li');
+				var id = 'klyna-ai-' + kind + '-' + idx;
+				var rule = (it.pattern || it.path || '').toString();
+				var reason = (it.reason || '').toString();
+				li.innerHTML = '<label><input type="checkbox" data-kind="' + kind + '" data-idx="' + idx + '" checked> <code></code> <span></span></label>';
+				li.querySelector('code').textContent = rule;
+				li.querySelector('span').textContent = ' - ' + reason;
+				ul.appendChild(li);
+			});
+			target.appendChild(ul);
+		}
+		list(skip, s.skip, 'skip');
+		list(agg, s.aggressive, 'aggressive');
+	}
+
+	var applyBtn = document.getElementById('klyna-speed-ai-apply');
+	if (applyBtn) {
+		applyBtn.addEventListener('click', function(){
+			var status = document.getElementById('klyna-speed-ai-apply-status');
+			status.textContent = i18n.applying || 'Applying...';
+			var picked = { skip: [], aggressive: [] };
+			document.querySelectorAll('#klyna-speed-ai-results input[type=checkbox]:checked').forEach(function(cb){
+				var kind = cb.getAttribute('data-kind');
+				var idx = parseInt(cb.getAttribute('data-idx'), 10);
+				var item = lastSuggestions[kind] && lastSuggestions[kind][idx];
+				if (item) { picked[kind].push(item); }
+			});
+			post('/ai/apply', picked).then(function(res){
+				if (res.ok && res.data && res.data.ok) {
+					status.textContent = i18n.applied || 'Applied.';
+				} else {
+					var msg = (res.data && (res.data.text || res.data.message)) || (i18n.failed || 'Failed');
+					status.textContent = 'Error: ' + msg;
+				}
+			}).catch(function(){ status.textContent = i18n.failed || 'Failed'; });
+		});
+	}
+})();
+JS;
 	}
 
 	/**
@@ -338,10 +479,165 @@ final class Admin {
 					</tbody>
 				</table>
 
+				<h2 class="klyna-speed-section"><?php esc_html_e( 'AI assistant', 'wp-speed' ); ?></h2>
+				<table class="form-table" role="presentation">
+					<tbody>
+						<tr>
+							<th scope="row"><label for="ai_provider"><?php esc_html_e( 'Provider', 'wp-speed' ); ?></label></th>
+							<td>
+								<?php
+								$providers = array(
+									'off'        => __( 'Off (no AI)', 'wp-speed' ),
+									'openrouter' => __( 'OpenRouter (free models)', 'wp-speed' ),
+									'groq'       => __( 'Groq', 'wp-speed' ),
+									'gemini'     => __( 'Google Gemini', 'wp-speed' ),
+									'cloudflare' => __( 'Cloudflare Workers AI', 'wp-speed' ),
+									'ollama'     => __( 'Ollama (self-hosted)', 'wp-speed' ),
+								);
+								$current = (string) ( $s['ai_provider'] ?? 'off' );
+								?>
+								<select id="ai_provider" name="<?php echo esc_attr( $opt ); ?>[ai_provider]">
+									<?php foreach ( $providers as $value => $label ) : ?>
+										<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $current, $value ); ?>>
+											<?php echo esc_html( $label ); ?>
+										</option>
+									<?php endforeach; ?>
+								</select>
+								<p class="description"><?php esc_html_e( 'Default is Off. The plugin works without AI; turn it on to enable cache-rule suggestions.', 'wp-speed' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="ai_api_key"><?php esc_html_e( 'API key', 'wp-speed' ); ?></label></th>
+							<td>
+								<input type="password" id="ai_api_key" name="<?php echo esc_attr( $opt ); ?>[ai_api_key]" value="<?php echo esc_attr( (string) ( $s['ai_api_key'] ?? '' ) ); ?>" class="regular-text" autocomplete="off">
+								<p class="description"><?php esc_html_e( 'Required for hosted providers. Ollama uses the endpoint field instead.', 'wp-speed' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="ai_model"><?php esc_html_e( 'Model', 'wp-speed' ); ?></label></th>
+							<td>
+								<input type="text" id="ai_model" name="<?php echo esc_attr( $opt ); ?>[ai_model]" value="<?php echo esc_attr( (string) ( $s['ai_model'] ?? '' ) ); ?>" class="regular-text">
+								<p class="description"><?php esc_html_e( 'Optional. Provider defaults: OpenRouter llama-3.3-70b:free, Groq llama-3.3-70b-versatile, Gemini gemini-2.0-flash, Cloudflare @cf/meta/llama-3.1-8b-instruct, Ollama llama3.2.', 'wp-speed' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="ai_endpoint"><?php esc_html_e( 'Endpoint / Account ID', 'wp-speed' ); ?></label></th>
+							<td>
+								<input type="text" id="ai_endpoint" name="<?php echo esc_attr( $opt ); ?>[ai_endpoint]" value="<?php echo esc_attr( (string) ( $s['ai_endpoint'] ?? '' ) ); ?>" class="regular-text">
+								<p class="description"><?php esc_html_e( 'Cloudflare Account ID, or full Ollama URL such as http://localhost:11434.', 'wp-speed' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="ai_daily_cap"><?php esc_html_e( 'Daily call cap', 'wp-speed' ); ?></label></th>
+							<td>
+								<input type="number" min="1" max="10000" id="ai_daily_cap" name="<?php echo esc_attr( $opt ); ?>[ai_daily_cap]" value="<?php echo esc_attr( (string) ( (int) ( $s['ai_daily_cap'] ?? 100 ) ) ); ?>" class="small-text">
+								<p class="description"><?php esc_html_e( 'Hard cap on AI calls per day. Resets at 00:00 UTC.', 'wp-speed' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Test connection', 'wp-speed' ); ?></th>
+							<td>
+								<button type="button" class="button" id="klyna-speed-ai-test"><?php esc_html_e( 'Send test ping', 'wp-speed' ); ?></button>
+								<span id="klyna-speed-ai-test-status" class="klyna-speed-status" role="status" aria-live="polite"></span>
+								<p class="description"><?php esc_html_e( 'Save changes first, then ping the provider with a 1-token prompt.', 'wp-speed' ); ?></p>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+
 				<?php submit_button( __( 'Save changes', 'wp-speed' ) ); ?>
 			</form>
 		</div>
 		<?php
+	}
+
+	/**
+	 * AI Tuning page — sample a few URLs, ask the AI for cache rules, render
+	 * checkboxed suggestions the admin can apply with one click.
+	 */
+	public function render_ai_tuning(): void {
+		$s        = wp_parse_args( Plugin::settings(), Plugin::defaults() );
+		$provider = (string) $s['ai_provider'];
+		$usage    = Ai::usage();
+		?>
+		<div class="wrap klyna-speed-wrap">
+			<div class="klyna-speed-head">
+				<span class="klyna-speed-logo" aria-hidden="true"><?php echo $this->logo_svg(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static, trusted inline SVG. ?></span>
+				<div>
+					<h1><?php esc_html_e( 'AI cache tuning', 'wp-speed' ); ?></h1>
+					<p class="klyna-speed-tagline"><?php esc_html_e( 'Sample real page loads, then ask AI to suggest skip + aggressive cache rules.', 'wp-speed' ); ?></p>
+				</div>
+			</div>
+
+			<?php if ( 'off' === $provider ) : ?>
+				<div class="notice notice-warning inline"><p>
+					<?php
+					printf(
+						/* translators: %s: settings link */
+						wp_kses_post( __( 'AI assistant is off. Pick a provider in <a href="%s">Settings</a> to enable suggestions.', 'wp-speed' ) ),
+						esc_url( admin_url( 'admin.php?page=wp-speed-settings' ) )
+					);
+					?>
+				</p></div>
+			<?php endif; ?>
+
+			<div class="klyna-speed-card">
+				<p>
+					<?php
+					printf(
+						esc_html__( 'Provider: %1$s. Used today: %2$d of %3$d.', 'wp-speed' ),
+						esc_html( $provider ),
+						(int) $usage['today_calls'],
+						(int) $usage['daily_cap']
+					);
+					?>
+				</p>
+				<p>
+					<label for="klyna-speed-ai-urls"><strong><?php esc_html_e( 'Sample URLs (one per line, 3-5 recommended)', 'wp-speed' ); ?></strong></label>
+					<textarea id="klyna-speed-ai-urls" rows="5" class="large-text code" placeholder="<?php echo esc_attr( home_url( '/' ) ); ?>"><?php echo esc_textarea( $this->default_sample_urls() ); ?></textarea>
+				</p>
+				<p>
+					<button type="button" class="button button-primary" id="klyna-speed-ai-analyze" <?php disabled( 'off' === $provider ); ?>>
+						<?php esc_html_e( 'Analyze with AI', 'wp-speed' ); ?>
+					</button>
+					<span id="klyna-speed-ai-analyze-status" class="klyna-speed-status" role="status" aria-live="polite"></span>
+				</p>
+			</div>
+
+			<div id="klyna-speed-ai-results" class="klyna-speed-card" style="display:none">
+				<h2><?php esc_html_e( 'Suggestions', 'wp-speed' ); ?></h2>
+				<div id="klyna-speed-ai-skip"></div>
+				<div id="klyna-speed-ai-aggressive"></div>
+				<p>
+					<button type="button" class="button button-primary" id="klyna-speed-ai-apply"><?php esc_html_e( 'Apply selected', 'wp-speed' ); ?></button>
+					<span id="klyna-speed-ai-apply-status" class="klyna-speed-status" role="status" aria-live="polite"></span>
+				</p>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Build a small default list of sample URLs based on existing content.
+	 */
+	private function default_sample_urls(): string {
+		$urls = array( home_url( '/' ) );
+		$posts = get_posts(
+			array(
+				'numberposts'      => 2,
+				'post_status'      => 'publish',
+				'suppress_filters' => true,
+			)
+		);
+		foreach ( $posts as $p ) {
+			$urls[] = get_permalink( $p );
+		}
+		$pages = get_pages( array( 'number' => 2 ) );
+		foreach ( (array) $pages as $pg ) {
+			$urls[] = get_permalink( $pg );
+		}
+		$urls = array_values( array_unique( array_filter( $urls ) ) );
+		return implode( "\n", array_slice( $urls, 0, 5 ) );
 	}
 
 	/**

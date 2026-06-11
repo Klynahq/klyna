@@ -64,6 +64,12 @@ final class Plugin {
 			'preload_urls'       => '',
 			'heartbeat_mode'     => 'slow',
 			'exclude_urls'       => '',
+			// AI assistant — off by default; plugin must work without a key.
+			'ai_provider'        => 'off',
+			'ai_model'           => '',
+			'ai_api_key'         => '',
+			'ai_endpoint'        => '',
+			'ai_daily_cap'       => 100,
 		);
 	}
 
