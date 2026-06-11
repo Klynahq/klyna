@@ -71,6 +71,37 @@ final class Rest {
 
 		register_rest_route(
 			self::NAMESPACE,
+			'/ai/test',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'ai_test' ),
+				'permission_callback' => array( $this, 'admin_permission' ),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
+			'/ai/suggest',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'ai_suggest' ),
+				'permission_callback' => array( $this, 'admin_permission' ),
+				'args'                => array(
+					'kind'    => array(
+						'type'              => 'string',
+						'required'          => true,
+						'sanitize_callback' => 'sanitize_key',
+					),
+					'context' => array(
+						'type'     => 'string',
+						'required' => false,
+					),
+				),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
 			'/entries',
 			array(
 				'methods'             => 'GET',
@@ -182,6 +213,106 @@ final class Rest {
 			),
 			200
 		);
+	}
+
+	/**
+	 * POST /ai/test - verify provider credentials work with a tiny prompt.
+	 */
+	public function ai_test( \WP_REST_Request $request ): \WP_REST_Response {
+		$nonce = $request->get_header( 'X-WP-Nonce' );
+		if ( ! $nonce || ! wp_verify_nonce( $nonce, 'wp_rest' ) ) {
+			return new \WP_REST_Response( array( 'ok' => false, 'reason' => 'bad_nonce' ), 403 );
+		}
+		$result = Ai::test();
+		return new \WP_REST_Response( $result, 200 );
+	}
+
+	/**
+	 * POST /ai/suggest - generate text for the requested kind.
+	 *
+	 * Currently supports:
+	 *   - "headline_variants": returns 3 alternative headline strings.
+	 */
+	public function ai_suggest( \WP_REST_Request $request ): \WP_REST_Response {
+		$nonce = $request->get_header( 'X-WP-Nonce' );
+		if ( ! $nonce || ! wp_verify_nonce( $nonce, 'wp_rest' ) ) {
+			return new \WP_REST_Response( array( 'ok' => false, 'reason' => 'bad_nonce' ), 403 );
+		}
+
+		$kind    = sanitize_key( (string) $request->get_param( 'kind' ) );
+		$context = sanitize_text_field( (string) $request->get_param( 'context' ) );
+
+		if ( 'headline_variants' === $kind ) {
+			$prompt = sprintf(
+				"Generate exactly 3 alternative popup headlines for this email-capture popup. The current headline is: \"%s\". Each new headline must:\n- Be under 50 characters\n- Vary the angle (1=urgency, 2=value, 3=social proof)\n- Be punchy and concrete\n\nOutput ONLY a JSON array of 3 strings. No prose, no markdown fences. Example: [\"first\",\"second\",\"third\"]",
+				$context
+			);
+			$ai     = new Ai();
+			$result = $ai->complete( $prompt, array( 'max_tokens' => 200, 'temperature' => 0.8 ) );
+			if ( empty( $result['ok'] ) ) {
+				return new \WP_REST_Response( $result, 200 );
+			}
+			$variants = $this->parse_variant_list( (string) $result['text'] );
+			return new \WP_REST_Response(
+				array(
+					'ok'       => true,
+					'variants' => $variants,
+					'cached'   => ! empty( $result['cached'] ),
+				),
+				200
+			);
+		}
+
+		return new \WP_REST_Response(
+			array( 'ok' => false, 'reason' => 'unknown_kind', 'text' => 'Unknown suggestion kind.' ),
+			400
+		);
+	}
+
+	/**
+	 * Pull up to 3 short headline strings from a model response. Accepts a JSON
+	 * array or a newline / bullet-list fallback.
+	 *
+	 * @return string[]
+	 */
+	private function parse_variant_list( string $text ): array {
+		$text = trim( $text );
+		// Strip markdown fences if present.
+		$text = (string) preg_replace( '/^```(?:json)?\s*|\s*```$/m', '', $text );
+
+		$out = array();
+		$json = json_decode( $text, true );
+		if ( is_array( $json ) ) {
+			foreach ( $json as $item ) {
+				if ( is_string( $item ) ) {
+					$out[] = $item;
+				}
+			}
+		}
+		if ( empty( $out ) ) {
+			$lines = preg_split( '/\r?\n/', $text );
+			foreach ( (array) $lines as $line ) {
+				$line = trim( (string) $line );
+				$line = (string) preg_replace( '/^(?:[-*]|\d+\.)\s*/', '', $line );
+				$line = trim( $line, " \t\"'" );
+				if ( '' !== $line ) {
+					$out[] = $line;
+				}
+			}
+		}
+
+		$out = array_map(
+			static function ( $s ) {
+				$s = sanitize_text_field( (string) $s );
+				if ( function_exists( 'mb_substr' ) && mb_strlen( $s ) > 60 ) {
+					$s = mb_substr( $s, 0, 60 );
+				}
+				return $s;
+			},
+			$out
+		);
+		$out = array_values( array_filter( $out, static fn( $s ) => '' !== $s ) );
+		return array_slice( $out, 0, 3 );
 	}
 
 	/**

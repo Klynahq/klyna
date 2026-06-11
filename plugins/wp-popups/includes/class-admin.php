@@ -112,6 +112,15 @@ final class Admin {
 		$webhook            = esc_url_raw( (string) ( $input['webhook_url'] ?? '' ) );
 		$out['webhook_url'] = ( '' === $webhook || wp_http_validate_url( $webhook ) ) ? $webhook : '';
 
+		// AI assistant fields.
+		$allowed_providers   = array( 'off', 'openrouter', 'groq', 'gemini', 'cloudflare', 'ollama' );
+		$provider            = sanitize_key( (string) ( $input['ai_provider'] ?? 'off' ) );
+		$out['ai_provider']  = in_array( $provider, $allowed_providers, true ) ? $provider : 'off';
+		$out['ai_api_key']   = sanitize_text_field( (string) ( $input['ai_api_key'] ?? '' ) );
+		$out['ai_model']     = sanitize_text_field( (string) ( $input['ai_model'] ?? '' ) );
+		$out['ai_endpoint']  = esc_url_raw( (string) ( $input['ai_endpoint'] ?? '' ) );
+		$out['ai_daily_cap'] = max( 1, min( 10000, (int) ( $input['ai_daily_cap'] ?? 100 ) ) );
+
 		return $out;
 	}
 
@@ -325,13 +334,102 @@ final class Admin {
 							<th scope="row"><label for="webhook_secret"><?php esc_html_e( 'Webhook signing secret', 'wp-popups' ); ?></label></th>
 							<td>
 								<input type="text" id="webhook_secret" name="<?php echo esc_attr( KLYNA_POPUPS_OPTION_KEY ); ?>[webhook_secret]" class="regular-text" value="<?php echo esc_attr( (string) ( $settings['webhook_secret'] ?? '' ) ); ?>" autocomplete="off">
-								<p class="description"><?php esc_html_e( 'If set, requests include an X-Klyna-Signature: sha256=… HMAC of the body.', 'wp-popups' ); ?></p>
+								<p class="description"><?php esc_html_e( 'If set, requests include an X-Klyna-Signature: sha256= HMAC of the body.', 'wp-popups' ); ?></p>
 							</td>
 						</tr>
 					</tbody>
 				</table>
+
+				<h2><?php esc_html_e( 'AI assistant (optional)', 'wp-popups' ); ?></h2>
+				<p class="description"><?php esc_html_e( 'Pick a free provider, paste a key, and the popup editor gains a Generate variants button for headlines. Off by default. Plugin works fine without a key.', 'wp-popups' ); ?></p>
+				<table class="form-table" role="presentation">
+					<tbody>
+						<tr>
+							<th scope="row"><label for="ai_provider"><?php esc_html_e( 'Provider', 'wp-popups' ); ?></label></th>
+							<td>
+								<?php $current_provider = (string) ( $settings['ai_provider'] ?? 'off' ); ?>
+								<select id="ai_provider" name="<?php echo esc_attr( KLYNA_POPUPS_OPTION_KEY ); ?>[ai_provider]">
+									<option value="off" <?php selected( $current_provider, 'off' ); ?>><?php esc_html_e( 'Off', 'wp-popups' ); ?></option>
+									<option value="openrouter" <?php selected( $current_provider, 'openrouter' ); ?>>OpenRouter (free models)</option>
+									<option value="groq" <?php selected( $current_provider, 'groq' ); ?>>Groq (fast and free)</option>
+									<option value="gemini" <?php selected( $current_provider, 'gemini' ); ?>>Google Gemini (free tier)</option>
+									<option value="cloudflare" <?php selected( $current_provider, 'cloudflare' ); ?>>Cloudflare Workers AI</option>
+									<option value="ollama" <?php selected( $current_provider, 'ollama' ); ?>>Ollama (self-hosted)</option>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="ai_api_key"><?php esc_html_e( 'API key', 'wp-popups' ); ?></label></th>
+							<td>
+								<input type="password" id="ai_api_key" name="<?php echo esc_attr( KLYNA_POPUPS_OPTION_KEY ); ?>[ai_api_key]" class="regular-text" value="<?php echo esc_attr( (string) ( $settings['ai_api_key'] ?? '' ) ); ?>" autocomplete="new-password">
+								<p class="description"><?php esc_html_e( 'Get a free key from your providers dashboard. Stored only in your database.', 'wp-popups' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="ai_model"><?php esc_html_e( 'Model', 'wp-popups' ); ?></label></th>
+							<td>
+								<input type="text" id="ai_model" name="<?php echo esc_attr( KLYNA_POPUPS_OPTION_KEY ); ?>[ai_model]" class="regular-text" value="<?php echo esc_attr( (string) ( $settings['ai_model'] ?? '' ) ); ?>" placeholder="meta-llama/llama-3.3-70b-instruct:free">
+								<p class="description"><?php esc_html_e( 'Optional. Leave blank to use the provider default (OpenRouter: Llama 3.3 70B free, Groq: Llama 3.3 70B versatile, Gemini: 1.5 Flash, Cloudflare: Llama 3.1 8B, Ollama: llama3.2).', 'wp-popups' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="ai_endpoint"><?php esc_html_e( 'Endpoint (Ollama or Cloudflare account id)', 'wp-popups' ); ?></label></th>
+							<td>
+								<input type="text" id="ai_endpoint" name="<?php echo esc_attr( KLYNA_POPUPS_OPTION_KEY ); ?>[ai_endpoint]" class="regular-text" value="<?php echo esc_attr( (string) ( $settings['ai_endpoint'] ?? '' ) ); ?>" placeholder="http://localhost:11434">
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="ai_daily_cap"><?php esc_html_e( 'Daily request cap', 'wp-popups' ); ?></label></th>
+							<td>
+								<input type="number" min="1" max="10000" id="ai_daily_cap" name="<?php echo esc_attr( KLYNA_POPUPS_OPTION_KEY ); ?>[ai_daily_cap]" value="<?php echo esc_attr( (string) ( $settings['ai_daily_cap'] ?? 100 ) ); ?>" class="small-text">
+								<p class="description"><?php esc_html_e( 'Hard cap on AI calls per day. Resets at 00:00 UTC.', 'wp-popups' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Test connection', 'wp-popups' ); ?></th>
+							<td>
+								<button type="button" class="button" id="klyna-popups-ai-test"><?php esc_html_e( 'Run a test call', 'wp-popups' ); ?></button>
+								<span id="klyna-popups-ai-test-result" style="margin-left:8px;"></span>
+								<p class="description"><?php esc_html_e( 'Saves nothing. Sends a one-word prompt to confirm credentials work.', 'wp-popups' ); ?></p>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+
 				<?php submit_button(); ?>
 			</form>
+			<script>
+			(function () {
+				var btn = document.getElementById('klyna-popups-ai-test');
+				var out = document.getElementById('klyna-popups-ai-test-result');
+				if (!btn || !window.KLYNA_POPUPS_ADMIN) { return; }
+				btn.addEventListener('click', function () {
+					out.textContent = '<?php echo esc_js( __( 'Testing...', 'wp-popups' ) ); ?>';
+					fetch(window.KLYNA_POPUPS_ADMIN.apiBase + '/ai/test', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'X-WP-Nonce': window.KLYNA_POPUPS_ADMIN.nonce
+						},
+						body: '{}'
+					})
+					.then(function (r) { return r.json(); })
+					.then(function (j) {
+						if (j && j.ok) {
+							out.style.color = '#1a7f37';
+							out.textContent = '<?php echo esc_js( __( 'OK - provider replied:', 'wp-popups' ) ); ?> ' + (j.text || '').slice(0, 60);
+						} else {
+							out.style.color = '#b32d2e';
+							out.textContent = '<?php echo esc_js( __( 'Failed:', 'wp-popups' ) ); ?> ' + ((j && (j.text || j.reason)) || 'unknown');
+						}
+					})
+					.catch(function (e) {
+						out.style.color = '#b32d2e';
+						out.textContent = '<?php echo esc_js( __( 'Error:', 'wp-popups' ) ); ?> ' + e.message;
+					});
+				});
+			})();
+			</script>
 		</div>
 		<?php
 	}

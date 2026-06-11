@@ -352,8 +352,88 @@ final class Popups {
 						<th scope="row"><?php esc_html_e( 'Copy', 'wp-popups' ); ?></th>
 						<td>
 							<label class="klyna-block"><?php esc_html_e( 'Headline', 'wp-popups' ); ?>
-								<input type="text" class="large-text" name="klyna_config[headline]" value="<?php echo esc_attr( $config['headline'] ); ?>">
+								<input type="text" class="large-text" id="klyna-popups-headline" name="klyna_config[headline]" value="<?php echo esc_attr( $config['headline'] ); ?>">
 							</label>
+							<?php
+							$ai_provider = (string) Plugin::setting( 'ai_provider', 'off' );
+							if ( 'off' !== $ai_provider ) :
+								?>
+								<div class="klyna-ai-variants" style="margin:6px 0 12px;">
+									<button type="button" class="button" id="klyna-popups-ai-variants-btn"><?php esc_html_e( 'Generate variants with AI', 'wp-popups' ); ?></button>
+									<span id="klyna-popups-ai-variants-status" style="margin-left:8px;color:#71717a;"></span>
+									<div id="klyna-popups-ai-variants-list" style="margin-top:8px;"></div>
+								</div>
+								<script>
+								(function () {
+									var btn  = document.getElementById('klyna-popups-ai-variants-btn');
+									var list = document.getElementById('klyna-popups-ai-variants-list');
+									var stat = document.getElementById('klyna-popups-ai-variants-status');
+									var head = document.getElementById('klyna-popups-headline');
+									if (!btn || !window.KLYNA_POPUPS_ADMIN) { return; }
+									function escapeHtml(s) {
+										return String(s).replace(/[&<>"']/g, function (c) {
+											return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+										});
+									}
+									btn.addEventListener('click', function () {
+										list.innerHTML = '';
+										stat.style.color = '#71717a';
+										stat.textContent = '<?php echo esc_js( __( 'Generating...', 'wp-popups' ) ); ?>';
+										btn.disabled = true;
+										fetch(window.KLYNA_POPUPS_ADMIN.apiBase + '/ai/suggest', {
+											method: 'POST',
+											headers: {
+												'Content-Type': 'application/json',
+												'X-WP-Nonce': window.KLYNA_POPUPS_ADMIN.nonce
+											},
+											body: JSON.stringify({
+												kind: 'headline_variants',
+												context: head ? head.value : ''
+											})
+										})
+										.then(function (r) { return r.json(); })
+										.then(function (j) {
+											btn.disabled = false;
+											if (!j || !j.ok || !j.variants || !j.variants.length) {
+												stat.style.color = '#b32d2e';
+												stat.textContent = (j && (j.text || j.reason)) || '<?php echo esc_js( __( 'No variants returned.', 'wp-popups' ) ); ?>';
+												return;
+											}
+											stat.textContent = j.cached ? '<?php echo esc_js( __( 'Cached.', 'wp-popups' ) ); ?>' : '';
+											var html = '<p style="margin:4px 0 6px;color:#71717a;"><?php echo esc_js( __( 'Pick one to swap into the headline:', 'wp-popups' ) ); ?></p>';
+											j.variants.forEach(function (v, i) {
+												html += '<label style="display:block;padding:6px 8px;border:1px solid #dcdcde;border-radius:4px;margin-bottom:6px;cursor:pointer;">'
+													+ '<input type="radio" name="klyna_ai_variant" value="' + i + '" data-text="' + escapeHtml(v) + '" style="margin-right:8px;">'
+													+ escapeHtml(v)
+													+ '</label>';
+											});
+											list.innerHTML = html;
+											var radios = list.querySelectorAll('input[name="klyna_ai_variant"]');
+											radios.forEach(function (r) {
+												r.addEventListener('change', function () {
+													if (head) { head.value = r.getAttribute('data-text') || ''; }
+												});
+											});
+										})
+										.catch(function (e) {
+											btn.disabled = false;
+											stat.style.color = '#b32d2e';
+											stat.textContent = e.message;
+										});
+									});
+								})();
+								</script>
+							<?php else : ?>
+								<p class="description" style="margin:4px 0 12px;">
+									<?php
+									printf(
+										/* translators: %s: settings page url */
+										wp_kses( __( 'Want AI-generated headline variants? <a href="%s">Enable a provider in Settings</a>.', 'wp-popups' ), array( 'a' => array( 'href' => array() ) ) ),
+										esc_url( admin_url( 'admin.php?page=klyna-popups-settings' ) )
+									);
+									?>
+								</p>
+							<?php endif; ?>
 							<label class="klyna-block"><?php esc_html_e( 'Subheadline', 'wp-popups' ); ?>
 								<input type="text" class="large-text" name="klyna_config[subhead]" value="<?php echo esc_attr( $config['subhead'] ); ?>">
 							</label>
