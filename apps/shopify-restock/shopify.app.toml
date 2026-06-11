@@ -1,4 +1,4 @@
-# Klyna Back-in-Stock — app config.
+# Klyna Back-in-Stock - app config.
 #
 # To use this app:
 #   1. Create a Shopify Partner account at https://partners.shopify.com
@@ -6,7 +6,7 @@
 #      The CLI will overwrite `client_id` below with your actual app key.
 #   3. Run `pnpm dev` (or `shopify app dev`) to start the embedded app on your dev store.
 
-# Placeholder — `shopify app config link` rewrites this with your real client_id.
+# Placeholder - `shopify app config link` rewrites this with your real client_id.
 client_id = "REPLACE_WITH_CLIENT_ID_FROM_PARTNER_DASHBOARD"
 
 name = "Klyna Back-in-Stock"
@@ -17,6 +17,7 @@ embedded = true
 [build]
 automatically_update_urls_on_dev = true
 dev_store_url = ""
+include_config_on_deploy = true
 
 [webhooks]
 api_version = "2025-01"
@@ -40,8 +41,8 @@ api_version = "2025-01"
 
 [access_scopes]
 # read_products + read_inventory power the demand report and the inventory webhook.
-# write_products is not requested — Klyna never mutates your catalog.
-scopes = "read_products,read_inventory"
+# read_customers powers smart per-customer notification timing (timezone lookup).
+scopes = "read_products,read_inventory,read_customers"
 
 [auth]
 redirect_urls = [
