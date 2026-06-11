@@ -1,0 +1,121 @@
+// Klyna admin — Prisma schema.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id        String   @id
+  email     String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  ip        String?
+  userAgent String?
+
+  @@index([email])
+  @@index([expiresAt])
+}
+
+model MagicLink {
+  id        String    @id @default(cuid())
+  email     String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  ip        String?
+
+  @@index([email])
+  @@index([expiresAt])
+}
+
+model DownloadEvent {
+  id           String   @id @default(cuid())
+  slug         String
+  kind         String   // wp|shopify|theme
+  downloadedAt DateTime @default(now())
+  ipHash       String
+  country      String?
+
+  @@index([slug])
+  @@index([downloadedAt])
+  @@index([kind])
+}
+
+model InstallPing {
+  id        String   @id @default(cuid())
+  slug      String
+  kind      String   // wp|shopify|theme
+  version   String
+  hostHash  String
+  wpVersion String?
+  phpVersion String?
+  pingedAt  DateTime @default(now())
+
+  @@index([slug])
+  @@index([hostHash])
+  @@index([pingedAt])
+}
+
+model SupportTicket {
+  id             String   @id @default(cuid())
+  email          String
+  subject        String
+  message        String
+  status         String   @default("open") // open|in_progress|closed
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  githubIssueUrl String?
+  replies        TicketReply[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model TicketReply {
+  id        String   @id @default(cuid())
+  ticketId  String
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author    String   // email of admin or "customer"
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([ticketId])
+}
+
+model HelpArticle {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  body      String
+  category  String
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@index([published])
+}
+
+model AuthEvent {
+  id        String   @id @default(cuid())
+  kind      String   // magic_issued|magic_consumed|login_success|login_fail|logout|rate_limited
+  email     String?
+  ip        String?
+  detail    String?
+  createdAt DateTime @default(now())
+
+  @@index([kind])
+  @@index([createdAt])
+}
+
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

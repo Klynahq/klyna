@@ -2,7 +2,37 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "astro",
   "installCommand": "corepack enable && pnpm install --frozen-lockfile",
-  "buildCommand": "pnpm --filter website build",
-  "outputDirectory": "apps/website/dist",
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- apps/website packages vercel.json package.json pnpm-lock.yaml || exit 1"
+  "buildCommand": "pnpm --filter website build && mkdir -p .vercel/output && cp -R apps/website/.vercel/output/. .vercel/output/",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- apps/website packages vercel.json package.json pnpm-lock.yaml || exit 1",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "geolocation=(), microphone=(), camera=()"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self'; connect-src 'self' https://api.klyna.dev; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+        }
+      ]
+    }
+  ]
 }
