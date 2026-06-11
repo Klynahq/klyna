@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Klyna Reviews">
+	<defs>
+		<linearGradient id="klyna-reviews-g" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0%" stop-color="#9277ff"/>
+			<stop offset="100%" stop-color="#5b3df0"/>
+		</linearGradient>
+	</defs>
+	<rect x="2" y="2" width="28" height="28" rx="7" fill="url(#klyna-reviews-g)"/>
+	<path d="M16 8.5l2.25 4.56 5.03.73-3.64 3.55.86 5.01L16 19.99l-4.5 2.37.86-5.01-3.64-3.55 5.03-.73z" fill="#fff"/>
+</svg>

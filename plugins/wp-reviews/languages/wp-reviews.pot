@@ -1,0 +1,78 @@
+# Copyright (C) 2026 Klyna
+# This file is distributed under the same license as the Klyna Reviews plugin.
+msgid ""
+msgstr ""
+"Project-Id-Version: Klyna Reviews 0.1.0\n"
+"Report-Msgid-Bugs-To: https://klyna.dev\n"
+"POT-Creation-Date: 2026-06-11\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"X-Generator: Poedit\n"
+"X-Domain: wp-reviews\n"
+
+msgid "Klyna Reviews"
+msgstr ""
+
+msgid "Your name"
+msgstr ""
+
+msgid "Your email"
+msgstr ""
+
+msgid "Rating"
+msgstr ""
+
+msgid "Title"
+msgstr ""
+
+msgid "Review"
+msgstr ""
+
+msgid "Submit Review"
+msgstr ""
+
+msgid "Thank you for your review!"
+msgstr ""
+
+msgid "Your review is pending moderation."
+msgstr ""
+
+msgid "Please fill in all required fields."
+msgstr ""
+
+msgid "Reviews"
+msgstr ""
+
+msgid "All Reviews"
+msgstr ""
+
+msgid "Approved"
+msgstr ""
+
+msgid "Pending"
+msgstr ""
+
+msgid "Rejected"
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+msgid "General"
+msgstr ""
+
+msgid "Moderation"
+msgstr ""
+
+msgid "Require approval before display"
+msgstr ""
+
+msgid "Enable review request emails"
+msgstr ""
+
+msgid "Save Changes"
+msgstr ""

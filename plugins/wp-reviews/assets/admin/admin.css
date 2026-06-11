@@ -1,0 +1,241 @@
+/**
+ * Klyna Reviews admin styles.
+ *
+ * Scoped to .klyna-reviews-wrap so we never bleed into core WP styles. The
+ * dashboard surfaces use the Klyna dark/violet brand tokens; the moderation
+ * queue cards render as elevated dark panels to feel like the rest of the
+ * Klyna toolkit.
+ */
+.klyna-reviews-wrap {
+	--klyna-bg: #0b0b0f;
+	--klyna-elevated: #13131a;
+	--klyna-surface: #1a1a23;
+	--klyna-border: #2a2a35;
+	--klyna-text: #f4f4f5;
+	--klyna-muted: #a1a1aa;
+	--klyna-dim: #71717a;
+	--klyna-accent: #7c5cff;
+	--klyna-accent-hover: #9277ff;
+	--klyna-success: #34d399;
+	--klyna-warning: #fbbf24;
+	--klyna-danger: #f87171;
+	--klyna-radius: 12px;
+	--klyna-radius-sm: 8px;
+}
+
+.klyna-reviews-wrap h1 {
+	font-weight: 700;
+	letter-spacing: -0.01em;
+}
+
+.klyna-reviews-tagline {
+	color: var(--klyna-dim);
+	font-size: 14px;
+	margin: 4px 0 24px;
+	max-width: 680px;
+}
+
+/* ---- Stat strip ---- */
+.klyna-reviews-stats {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+	gap: 16px;
+	max-width: 760px;
+	margin-bottom: 24px;
+}
+
+.klyna-reviews-stat {
+	background: var(--klyna-elevated);
+	border: 1px solid var(--klyna-border);
+	border-radius: var(--klyna-radius);
+	padding: 18px 20px;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.klyna-reviews-stat.is-pending {
+	border-color: var(--klyna-accent);
+	box-shadow: 0 0 0 1px var(--klyna-accent) inset;
+}
+
+.klyna-reviews-stat__value {
+	font-size: 28px;
+	font-weight: 700;
+	color: var(--klyna-text);
+	font-variant-numeric: tabular-nums;
+}
+
+.klyna-reviews-stat__label {
+	font-size: 13px;
+	color: var(--klyna-muted);
+}
+
+/* ---- Cards ---- */
+.klyna-reviews-cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	gap: 16px;
+	max-width: 1100px;
+}
+
+.klyna-reviews-card {
+	background: var(--klyna-elevated);
+	border: 1px solid var(--klyna-border);
+	border-radius: var(--klyna-radius);
+	padding: 20px;
+	color: var(--klyna-text);
+}
+
+.klyna-reviews-card h2 {
+	font-size: 16px;
+	margin: 0 0 8px;
+	font-weight: 600;
+	color: var(--klyna-text);
+}
+
+.klyna-reviews-card p {
+	font-size: 13px;
+	color: var(--klyna-muted);
+	line-height: 1.5;
+	margin: 0 0 12px;
+}
+
+.klyna-reviews-card .button {
+	margin-top: 4px;
+}
+
+.klyna-reviews-code {
+	display: block;
+	background: var(--klyna-surface);
+	border: 1px solid var(--klyna-border);
+	border-radius: var(--klyna-radius-sm);
+	color: #c4b5fd;
+	padding: 8px 12px;
+	font-family: "Geist Mono", ui-monospace, "SF Mono", monospace;
+	font-size: 13px;
+	margin-bottom: 8px;
+	user-select: all;
+}
+
+.klyna-reviews-hint {
+	font-size: 12px !important;
+	color: var(--klyna-dim) !important;
+	margin-bottom: 0 !important;
+}
+
+/* ---- Moderation queue ---- */
+.klyna-reviews-queue {
+	max-width: 880px;
+}
+
+.klyna-reviews-queue__loading,
+.klyna-reviews-queue__empty {
+	color: var(--klyna-dim);
+	font-size: 14px;
+}
+
+.klyna-reviews-queue__item {
+	background: var(--klyna-elevated);
+	border: 1px solid var(--klyna-border);
+	border-radius: var(--klyna-radius);
+	padding: 18px 20px;
+	margin-bottom: 14px;
+	color: var(--klyna-text);
+}
+
+.klyna-reviews-queue__head {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-wrap: wrap;
+	margin-bottom: 8px;
+}
+
+.klyna-reviews-queue__stars {
+	color: var(--klyna-warning);
+	letter-spacing: 2px;
+	font-size: 16px;
+}
+
+.klyna-reviews-queue__title {
+	font-weight: 600;
+	font-size: 15px;
+}
+
+.klyna-reviews-queue__target {
+	font-size: 12px;
+	color: var(--klyna-dim);
+	background: var(--klyna-surface);
+	border: 1px solid var(--klyna-border);
+	border-radius: 999px;
+	padding: 2px 10px;
+}
+
+.klyna-reviews-queue__body {
+	margin: 0 0 10px;
+	color: var(--klyna-muted);
+	line-height: 1.55;
+	white-space: pre-line;
+}
+
+.klyna-reviews-queue__meta {
+	font-size: 13px;
+	color: var(--klyna-dim);
+	margin: 0 0 14px;
+}
+
+.klyna-reviews-queue__meta a {
+	color: var(--klyna-accent-hover);
+}
+
+.klyna-reviews-queue__actions {
+	display: flex;
+	gap: 8px;
+}
+
+.klyna-reviews-btn {
+	appearance: none;
+	border: 1px solid var(--klyna-border);
+	background: var(--klyna-surface);
+	color: var(--klyna-text);
+	font: inherit;
+	font-size: 13px;
+	font-weight: 600;
+	padding: 7px 16px;
+	border-radius: var(--klyna-radius-sm);
+	cursor: pointer;
+	transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.klyna-reviews-btn:hover {
+	border-color: var(--klyna-accent);
+}
+
+.klyna-reviews-btn--approve {
+	background: var(--klyna-accent);
+	border-color: var(--klyna-accent);
+	color: #fff;
+}
+
+.klyna-reviews-btn--approve:hover {
+	background: var(--klyna-accent-hover);
+	border-color: var(--klyna-accent-hover);
+}
+
+.klyna-reviews-btn--delete:hover {
+	border-color: var(--klyna-danger);
+	color: var(--klyna-danger);
+}
+
+.klyna-reviews-btn:disabled {
+	opacity: 0.5;
+	cursor: progress;
+}
+
+/* ---- Request form spacing ---- */
+.klyna-reviews-request-form {
+	max-width: 760px;
+}
+
+/* The pending bubble already inherits core admin-menu styling. */

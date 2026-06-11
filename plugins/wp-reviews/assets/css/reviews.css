@@ -1,0 +1,260 @@
+/**
+ * Klyna Reviews — front-end styles.
+ *
+ * Scoped to .klyna-reviews so we never bleed into the host theme. The component
+ * adapts to the theme's own colors where it can; the brand violet is reserved
+ * for the stars and the primary action.
+ */
+.klyna-reviews {
+	--klyna-accent: #7c5cff;
+	--klyna-accent-hover: #9277ff;
+	--klyna-star: #fbbf24;
+	--klyna-star-empty: #d4d4d8;
+	--klyna-border: #e4e4e7;
+	--klyna-text-dim: #71717a;
+	--klyna-radius: 12px;
+	--klyna-radius-sm: 8px;
+	font-size: 15px;
+	line-height: 1.5;
+	max-width: 720px;
+}
+
+/* ---- Star primitive ---- */
+.klyna-stars {
+	position: relative;
+	display: inline-flex;
+	vertical-align: middle;
+	line-height: 1;
+}
+
+.klyna-stars__track,
+.klyna-stars__fill {
+	display: inline-flex;
+	gap: 2px;
+}
+
+.klyna-stars__fill {
+	position: absolute;
+	top: 0;
+	left: 0;
+	overflow: hidden;
+	white-space: nowrap;
+}
+
+.klyna-stars svg {
+	width: 18px;
+	height: 18px;
+	flex: 0 0 auto;
+}
+
+.klyna-stars__track svg {
+	fill: var(--klyna-star-empty);
+}
+
+.klyna-stars__fill svg {
+	fill: var(--klyna-star);
+}
+
+/* ---- Aggregate badge ---- */
+.klyna-reviews__badge {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 20px;
+}
+
+.klyna-reviews__avg {
+	font-weight: 700;
+	font-size: 18px;
+}
+
+.klyna-reviews__count {
+	color: var(--klyna-text-dim);
+	font-size: 14px;
+}
+
+/* ---- Review list ---- */
+.klyna-reviews__list {
+	list-style: none;
+	margin: 0 0 28px;
+	padding: 0;
+}
+
+.klyna-reviews__item {
+	padding: 16px 0;
+	border-top: 1px solid var(--klyna-border);
+}
+
+.klyna-reviews__item:first-child {
+	border-top: none;
+	padding-top: 0;
+}
+
+.klyna-reviews__item-head {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 6px;
+}
+
+.klyna-reviews__item-title {
+	font-size: 15px;
+}
+
+.klyna-reviews__item-body {
+	margin: 0 0 8px;
+	white-space: pre-line;
+}
+
+.klyna-reviews__item-meta {
+	display: flex;
+	gap: 8px;
+	margin: 0;
+	font-size: 13px;
+	color: var(--klyna-text-dim);
+}
+
+.klyna-reviews__item-author {
+	font-weight: 600;
+}
+
+.klyna-reviews__item-author::after {
+	content: "·";
+	margin-left: 8px;
+}
+
+.klyna-reviews__empty {
+	color: var(--klyna-text-dim);
+	margin: 0 0 24px;
+}
+
+/* ---- Submission form ---- */
+.klyna-reviews__form {
+	border: 1px solid var(--klyna-border);
+	border-radius: var(--klyna-radius);
+	padding: 24px;
+}
+
+.klyna-reviews__form-title {
+	margin: 0 0 16px;
+	font-size: 18px;
+}
+
+.klyna-reviews__field {
+	margin-bottom: 16px;
+}
+
+.klyna-reviews__label {
+	display: block;
+	font-weight: 600;
+	font-size: 14px;
+	margin-bottom: 6px;
+}
+
+.klyna-reviews__optional {
+	font-weight: 400;
+	color: var(--klyna-text-dim);
+}
+
+.klyna-reviews__field input[type="text"],
+.klyna-reviews__field input[type="email"],
+.klyna-reviews__field textarea {
+	width: 100%;
+	box-sizing: border-box;
+	padding: 10px 12px;
+	border: 1px solid var(--klyna-border);
+	border-radius: var(--klyna-radius-sm);
+	font: inherit;
+	background: #fff;
+	color: inherit;
+}
+
+.klyna-reviews__field input:focus,
+.klyna-reviews__field textarea:focus {
+	outline: none;
+	border-color: var(--klyna-accent);
+	box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.18);
+}
+
+/* Star rating input (CSS-only, no JS needed for the hover/select state). */
+.klyna-reviews__rating {
+	display: inline-flex;
+	flex-direction: row-reverse;
+	gap: 2px;
+}
+
+.klyna-reviews__rating input {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	opacity: 0;
+}
+
+.klyna-reviews__rating label {
+	cursor: pointer;
+	line-height: 0;
+}
+
+.klyna-reviews__rating label svg {
+	width: 28px;
+	height: 28px;
+	fill: var(--klyna-star-empty);
+	transition: fill 0.12s ease;
+}
+
+.klyna-reviews__rating label:hover svg,
+.klyna-reviews__rating label:hover ~ label svg,
+.klyna-reviews__rating input:checked ~ label svg {
+	fill: var(--klyna-star);
+}
+
+.klyna-reviews__rating input:focus-visible + label svg {
+	outline: 2px solid var(--klyna-accent);
+	outline-offset: 2px;
+	border-radius: 4px;
+}
+
+/* Honeypot — keep it out of the visual + accessibility tree but in the DOM. */
+.klyna-reviews__hp {
+	position: absolute !important;
+	left: -9999px !important;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+}
+
+.klyna-reviews__submit {
+	appearance: none;
+	border: none;
+	background: var(--klyna-accent);
+	color: #fff;
+	font: inherit;
+	font-weight: 600;
+	padding: 11px 22px;
+	border-radius: var(--klyna-radius-sm);
+	cursor: pointer;
+	transition: background 0.15s ease;
+}
+
+.klyna-reviews__submit:hover {
+	background: var(--klyna-accent-hover);
+}
+
+.klyna-reviews__submit:disabled {
+	opacity: 0.6;
+	cursor: progress;
+}
+
+.klyna-reviews__notice {
+	margin: 12px 0 0;
+	font-size: 14px;
+	min-height: 1em;
+}
+
+.klyna-reviews__notice.is-success {
+	color: #15803d;
+}
+
+.klyna-reviews__notice.is-error {
+	color: #b91c1c;
+}
