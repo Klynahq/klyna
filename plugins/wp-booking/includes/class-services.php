@@ -23,6 +23,8 @@ final class Services {
 	private const META_DURATION = '_klyna_booking_duration';
 	private const META_PRICE    = '_klyna_booking_price';
 	private const META_CAPACITY = '_klyna_booking_capacity';
+	public  const META_AI_CONFIRM = '_klyna_booking_ai_confirm';
+	public  const META_AI_PREP    = '_klyna_booking_ai_prep';
 
 	public function register(): void {
 		add_action( 'init', array( $this, 'register_post_type' ) );
@@ -90,6 +92,30 @@ final class Services {
 		);
 		register_post_meta(
 			self::POST_TYPE,
+			self::META_AI_CONFIRM,
+			array(
+				'type'              => 'boolean',
+				'single'            => true,
+				'default'           => false,
+				'show_in_rest'      => true,
+				'sanitize_callback' => static fn( $v ) => (bool) $v,
+				'auth_callback'     => static fn() => current_user_can( 'edit_posts' ),
+			)
+		);
+		register_post_meta(
+			self::POST_TYPE,
+			self::META_AI_PREP,
+			array(
+				'type'              => 'string',
+				'single'            => true,
+				'default'           => '',
+				'show_in_rest'      => true,
+				'sanitize_callback' => 'sanitize_textarea_field',
+				'auth_callback'     => static fn() => current_user_can( 'edit_posts' ),
+			)
+		);
+		register_post_meta(
+			self::POST_TYPE,
 			self::META_CAPACITY,
 			array(
 				'type'              => 'integer',
@@ -120,6 +146,8 @@ final class Services {
 		$capacity = (int) get_post_meta( $post->ID, self::META_CAPACITY, true );
 		$duration = $duration > 0 ? $duration : 30;
 		$capacity = $capacity > 0 ? $capacity : 1;
+		$ai_on    = (bool) get_post_meta( $post->ID, self::META_AI_CONFIRM, true );
+		$ai_prep  = (string) get_post_meta( $post->ID, self::META_AI_PREP, true );
 		?>
 		<p>
 			<label for="klyna-service-duration"><strong><?php esc_html_e( 'Duration (minutes)', 'wp-booking' ); ?></strong></label><br>
@@ -134,6 +162,19 @@ final class Services {
 			<label for="klyna-service-capacity"><strong><?php esc_html_e( 'Capacity per slot', 'wp-booking' ); ?></strong></label><br>
 			<input type="number" min="1" step="1" id="klyna-service-capacity" name="klyna_service_capacity" value="<?php echo esc_attr( (string) $capacity ); ?>" class="widefat">
 			<span class="description"><?php esc_html_e( 'How many bookings one slot can hold.', 'wp-booking' ); ?></span>
+		</p>
+		<hr>
+		<p>
+			<label class="klyna-toggle">
+				<input type="checkbox" name="klyna_service_ai_confirm" value="1" <?php checked( $ai_on ); ?>>
+				<strong><?php esc_html_e( 'AI personalized confirmation email', 'wp-booking' ); ?></strong>
+			</label>
+			<span class="description"><?php esc_html_e( 'When a booking is created, generate an 80-word personalized confirmation mentioning the service + customer. Requires AI assistant configured in Settings.', 'wp-booking' ); ?></span>
+		</p>
+		<p>
+			<label for="klyna-service-ai-prep"><strong><?php esc_html_e( 'What should clients prepare? (optional)', 'wp-booking' ); ?></strong></label><br>
+			<textarea id="klyna-service-ai-prep" name="klyna_service_ai_prep" rows="3" class="widefat" placeholder="<?php esc_attr_e( 'e.g. arrive 10 min early, bring photo ID, wash hair the night before', 'wp-booking' ); ?>"><?php echo esc_textarea( $ai_prep ); ?></textarea>
+			<span class="description"><?php esc_html_e( 'Optional hints folded into the AI confirmation.', 'wp-booking' ); ?></span>
 		</p>
 		<?php
 	}
@@ -165,6 +206,10 @@ final class Services {
 		}
 		if ( isset( $_POST['klyna_service_capacity'] ) ) {
 			update_post_meta( $post_id, self::META_CAPACITY, max( 1, absint( wp_unslash( $_POST['klyna_service_capacity'] ) ) ) );
+		}
+		update_post_meta( $post_id, self::META_AI_CONFIRM, ! empty( $_POST['klyna_service_ai_confirm'] ) );
+		if ( isset( $_POST['klyna_service_ai_prep'] ) ) {
+			update_post_meta( $post_id, self::META_AI_PREP, sanitize_textarea_field( wp_unslash( $_POST['klyna_service_ai_prep'] ) ) );
 		}
 	}
 
@@ -215,11 +260,13 @@ final class Services {
 		$duration = (int) get_post_meta( $service_id, self::META_DURATION, true );
 		$capacity = (int) get_post_meta( $service_id, self::META_CAPACITY, true );
 		return array(
-			'id'       => $service_id,
-			'title'    => get_the_title( $post ),
-			'duration' => $duration > 0 ? $duration : 30,
-			'price'    => round( (float) get_post_meta( $service_id, self::META_PRICE, true ), 2 ),
-			'capacity' => $capacity > 0 ? $capacity : 1,
+			'id'         => $service_id,
+			'title'      => get_the_title( $post ),
+			'duration'   => $duration > 0 ? $duration : 30,
+			'price'      => round( (float) get_post_meta( $service_id, self::META_PRICE, true ), 2 ),
+			'capacity'   => $capacity > 0 ? $capacity : 1,
+			'ai_confirm' => (bool) get_post_meta( $service_id, self::META_AI_CONFIRM, true ),
+			'ai_prep'    => (string) get_post_meta( $service_id, self::META_AI_PREP, true ),
 		);
 	}
 

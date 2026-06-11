@@ -83,6 +83,10 @@ register_activation_hook(
 		// Register CPTs so the rewrite rules exist before the flush.
 		( new KlynaBooking\Services() )->register_post_type();
 		( new KlynaBooking\Bookings() )->register_post_type();
+
+		// Install / upgrade the AI email storage table.
+		KlynaBooking\Booking_Emails::install();
+
 		flush_rewrite_rules();
 	}
 );

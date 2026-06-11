@@ -28,6 +28,7 @@ final class Plugin {
 		( new Rest() )->register();
 		( new Frontend() )->register();
 		( new Emails() )->register();
+		( new Ai_Confirmations() )->register();
 
 		if ( is_admin() ) {
 			( new Admin() )->register();
@@ -64,6 +65,11 @@ final class Plugin {
 			'notify_customer'  => true,
 			'availability'     => Availability::default_hours(),
 			'blackout_dates'   => '',
+			'ai_provider'      => 'off',
+			'ai_model'         => '',
+			'ai_api_key'       => '',
+			'ai_endpoint'      => '',
+			'ai_daily_cap'     => 100,
 		);
 	}
 }

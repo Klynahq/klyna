@@ -92,6 +92,42 @@ final class Rest {
 
 		register_rest_route(
 			self::NAMESPACE,
+			'/admin/bookings/(?P<id>\d+)/ai-email',
+			array(
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_ai_email' ),
+				'permission_callback' => array( $this, 'check_admin_nonce' ),
+				'args'                => array(
+					'id' => array( 'type' => 'integer', 'sanitize_callback' => 'absint' ),
+				),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
+			'/ai/test',
+			array(
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'ai_test' ),
+				'permission_callback' => array( $this, 'check_admin_nonce' ),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
+			'/ai/suggest',
+			array(
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'ai_suggest' ),
+				'permission_callback' => array( $this, 'check_admin_nonce' ),
+				'args'                => array(
+					'prompt' => array( 'type' => 'string', 'required' => true ),
+				),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
 			'/admin/bookings/(?P<id>\d+)/status',
 			array(
 				'methods'             => \WP_REST_Server::EDITABLE,
@@ -118,6 +154,20 @@ final class Rest {
 
 	public function check_admin(): bool {
 		return current_user_can( 'manage_options' );
+	}
+
+	/**
+	 * Admin routes that mutate or expose AI also require a logged-in nonce.
+	 */
+	public function check_admin_nonce( \WP_REST_Request $request ): bool {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return false;
+		}
+		$nonce = $request->get_header( 'X-WP-Nonce' );
+		if ( ! $nonce ) {
+			$nonce = (string) $request->get_param( '_wpnonce' );
+		}
+		return (bool) wp_verify_nonce( $nonce, 'wp_rest' );
 	}
 
 	/**
@@ -247,7 +297,8 @@ final class Rest {
 		// Decorate each row with a localized time for display.
 		$items = array_map(
 			static function ( array $row ): array {
-				$row['when'] = Availability::format_local( $row['start'] );
+				$row['when']     = Availability::format_local( $row['start'] );
+				$row['ai_email'] = Booking_Emails::latest_for_booking( (int) $row['id'] );
 				return $row;
 			},
 			$result['items']
@@ -282,6 +333,37 @@ final class Rest {
 		}
 		$result['when'] = Availability::format_local( $result['start'] );
 		return new \WP_REST_Response( $result, 200 );
+	}
+
+	/* --------------------------------------------------------------------- */
+	/* AI routes                                                             */
+	/* --------------------------------------------------------------------- */
+
+	public function ai_test( \WP_REST_Request $request ): \WP_REST_Response {
+		$result = Ai::test();
+		return new \WP_REST_Response( $result, 200 );
+	}
+
+	public function ai_suggest( \WP_REST_Request $request ): \WP_REST_Response {
+		$prompt = sanitize_textarea_field( (string) $request->get_param( 'prompt' ) );
+		if ( '' === $prompt ) {
+			return new \WP_REST_Response( array( 'ok' => false, 'text' => 'Missing prompt.', 'reason' => 'missing_prompt' ), 200 );
+		}
+		$ai     = new Ai();
+		$result = $ai->complete( $prompt, array(
+			'max_tokens'  => absint( $request->get_param( 'max_tokens' ) ) ?: 400,
+			'temperature' => (float) ( $request->get_param( 'temperature' ) ?? 0.6 ),
+		) );
+		return new \WP_REST_Response( $result, 200 );
+	}
+
+	public function get_ai_email( \WP_REST_Request $request ): \WP_REST_Response {
+		$id    = absint( $request->get_param( 'id' ) );
+		$email = Booking_Emails::latest_for_booking( $id );
+		if ( ! $email ) {
+			return new \WP_REST_Response( array( 'ok' => false, 'email' => null ), 200 );
+		}
+		return new \WP_REST_Response( array( 'ok' => true, 'email' => $email ), 200 );
 	}
 
 	/* --------------------------------------------------------------------- */

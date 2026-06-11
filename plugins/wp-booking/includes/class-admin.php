@@ -116,6 +116,28 @@ final class Admin {
 			$out['availability'] = $this->sanitize_availability( $input['availability'] );
 		}
 
+		// AI assistant settings.
+		$providers = array_merge( array( 'off' => 'off' ), array_combine(
+			array_keys( Ai::provider_catalog() ),
+			array_keys( Ai::provider_catalog() )
+		) );
+		if ( isset( $input['ai_provider'] ) ) {
+			$prov                = sanitize_key( (string) $input['ai_provider'] );
+			$out['ai_provider']  = array_key_exists( $prov, $providers ) ? $prov : 'off';
+		}
+		if ( isset( $input['ai_model'] ) ) {
+			$out['ai_model'] = sanitize_text_field( (string) $input['ai_model'] );
+		}
+		if ( isset( $input['ai_api_key'] ) ) {
+			$out['ai_api_key'] = sanitize_text_field( (string) $input['ai_api_key'] );
+		}
+		if ( isset( $input['ai_endpoint'] ) ) {
+			$out['ai_endpoint'] = esc_url_raw( (string) $input['ai_endpoint'] );
+		}
+		if ( isset( $input['ai_daily_cap'] ) ) {
+			$out['ai_daily_cap'] = $this->clamp_int( $input['ai_daily_cap'], 1, 100000, 100 );
+		}
+
 		return $out;
 	}
 
@@ -350,8 +372,96 @@ final class Admin {
 					?>
 				</div>
 
+				<div class="klyna-card">
+					<h2><?php esc_html_e( 'AI assistant', 'wp-booking' ); ?></h2>
+					<p class="klyna-muted">
+						<?php esc_html_e( 'Optional. When on, services can generate personalized 80-word confirmation emails. Bring your own free-tier key. The plugin works without AI.', 'wp-booking' ); ?>
+					</p>
+					<?php
+					$ai_provider = (string) ( $settings['ai_provider'] ?? 'off' );
+					$ai_model    = (string) ( $settings['ai_model'] ?? '' );
+					$ai_key      = (string) ( $settings['ai_api_key'] ?? '' );
+					$ai_endpoint = (string) ( $settings['ai_endpoint'] ?? '' );
+					$ai_cap      = (int) ( $settings['ai_daily_cap'] ?? 100 );
+					$catalog     = Ai::provider_catalog();
+					?>
+					<table class="form-table" role="presentation">
+						<tbody>
+							<tr>
+								<th scope="row"><label for="kb-ai-provider"><?php esc_html_e( 'Provider', 'wp-booking' ); ?></label></th>
+								<td>
+									<select id="kb-ai-provider" name="<?php echo esc_attr( KLYNA_BOOKING_OPTION_KEY ); ?>[ai_provider]">
+										<option value="off" <?php selected( 'off', $ai_provider ); ?>><?php esc_html_e( 'Off', 'wp-booking' ); ?></option>
+										<?php foreach ( $catalog as $slug => $meta ) : ?>
+											<option value="<?php echo esc_attr( $slug ); ?>" <?php selected( $slug, $ai_provider ); ?>><?php echo esc_html( $meta['label'] ); ?></option>
+										<?php endforeach; ?>
+									</select>
+									<p class="description"><?php esc_html_e( 'All five providers are free-tier friendly.', 'wp-booking' ); ?></p>
+								</td>
+							</tr>
+							<tr>
+								<th scope="row"><label for="kb-ai-api-key"><?php esc_html_e( 'API key', 'wp-booking' ); ?></label></th>
+								<td>
+									<input type="password" id="kb-ai-api-key" class="regular-text" name="<?php echo esc_attr( KLYNA_BOOKING_OPTION_KEY ); ?>[ai_api_key]" value="<?php echo esc_attr( $ai_key ); ?>" autocomplete="off">
+									<p class="description"><?php esc_html_e( 'Stored in your site options; never sent anywhere except the provider.', 'wp-booking' ); ?></p>
+								</td>
+							</tr>
+							<tr>
+								<th scope="row"><label for="kb-ai-model"><?php esc_html_e( 'Model', 'wp-booking' ); ?></label></th>
+								<td>
+									<input type="text" id="kb-ai-model" class="regular-text" name="<?php echo esc_attr( KLYNA_BOOKING_OPTION_KEY ); ?>[ai_model]" value="<?php echo esc_attr( $ai_model ); ?>">
+									<p class="description"><?php esc_html_e( 'Optional. Leave blank to use the provider default (e.g. Llama 3.3 70B free on OpenRouter, gemini-2.0-flash on Gemini).', 'wp-booking' ); ?></p>
+								</td>
+							</tr>
+							<tr>
+								<th scope="row"><label for="kb-ai-endpoint"><?php esc_html_e( 'Endpoint / Account ID', 'wp-booking' ); ?></label></th>
+								<td>
+									<input type="text" id="kb-ai-endpoint" class="regular-text" name="<?php echo esc_attr( KLYNA_BOOKING_OPTION_KEY ); ?>[ai_endpoint]" value="<?php echo esc_attr( $ai_endpoint ); ?>">
+									<p class="description"><?php esc_html_e( 'Only for Cloudflare (Account ID) or Ollama (URL like http://localhost:11434).', 'wp-booking' ); ?></p>
+								</td>
+							</tr>
+							<tr>
+								<th scope="row"><label for="kb-ai-cap"><?php esc_html_e( 'Daily call cap', 'wp-booking' ); ?></label></th>
+								<td>
+									<input type="number" id="kb-ai-cap" min="1" step="1" name="<?php echo esc_attr( KLYNA_BOOKING_OPTION_KEY ); ?>[ai_daily_cap]" value="<?php echo esc_attr( (string) $ai_cap ); ?>">
+									<p class="description"><?php esc_html_e( 'Hard cap on AI calls per day to protect your free-tier quota.', 'wp-booking' ); ?></p>
+								</td>
+							</tr>
+							<tr>
+								<th scope="row"><?php esc_html_e( 'Test connection', 'wp-booking' ); ?></th>
+								<td>
+									<button type="button" class="button" id="kb-ai-test" data-nonce="<?php echo esc_attr( wp_create_nonce( 'wp_rest' ) ); ?>" data-endpoint="<?php echo esc_url( rest_url( 'wp-booking/v1/ai/test' ) ); ?>"><?php esc_html_e( 'Send test prompt', 'wp-booking' ); ?></button>
+									<span id="kb-ai-test-result" class="klyna-muted" style="margin-left:8px"></span>
+									<p class="description"><?php esc_html_e( 'Save your settings first, then test.', 'wp-booking' ); ?></p>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
 				<?php submit_button( __( 'Save settings', 'wp-booking' ) ); ?>
 			</form>
+			<script>
+			(function(){
+				var btn = document.getElementById('kb-ai-test');
+				if (!btn) return;
+				btn.addEventListener('click', function(){
+					var out = document.getElementById('kb-ai-test-result');
+					out.textContent = '<?php echo esc_js( __( 'Testing...', 'wp-booking' ) ); ?>';
+					fetch(btn.dataset.endpoint, {
+						method: 'POST',
+						headers: { 'X-WP-Nonce': btn.dataset.nonce, 'Content-Type': 'application/json' },
+						body: '{}'
+					}).then(function(r){ return r.json(); }).then(function(j){
+						if (j && j.ok) {
+							out.textContent = '<?php echo esc_js( __( 'OK: ', 'wp-booking' ) ); ?>' + (j.text || '').slice(0, 80);
+						} else {
+							out.textContent = '<?php echo esc_js( __( 'Failed: ', 'wp-booking' ) ); ?>' + ((j && (j.text || j.message)) || '<?php echo esc_js( __( 'unknown error', 'wp-booking' ) ); ?>');
+						}
+					}).catch(function(e){ out.textContent = '<?php echo esc_js( __( 'Failed: ', 'wp-booking' ) ); ?>' + e.message; });
+				});
+			})();
+			</script>
 		</div>
 		<?php
 	}
