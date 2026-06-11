@@ -94,17 +94,38 @@ for slug in "${APPS[@]}"; do
   echo "  Generating Prisma client..."
   (cd "$app_dir" && npx prisma generate 2>/dev/null)
 
-  # Link to Partner dashboard.
-  # The CLI prompts "App name:" when creating a new app.
-  # Pipe the correct name so the prompt is answered automatically.
-  # If the CLI asks "Create new / Link existing", it will get the name on a
-  # subsequent line — this works for non-TTY stdin on Shopify CLI v3.
+  # Link to Partner dashboard using expect to drive the interactive prompts.
+  # The CLI requires a real TTY — piped stdin is rejected. expect fakes one.
+  # Prompts handled:
+  #   "Create new app" / "Connect to an existing app" → choose Create (1)
+  #   "App name:"                                      → send $app_name
   echo "  Linking to Shopify Partner dashboard..."
-  echo "  (If the browser opens again for consent, approve it)"
-  (cd "$app_dir" && printf '%s\n' "$app_name" | shopify app config link --config shopify.app.toml) || {
+  (cd "$app_dir" && /usr/bin/expect -c "
+    set timeout 90
+    log_user 1
+    spawn shopify app config link --config shopify.app.toml
+    expect {
+      -re {App name[^:]*:} {
+        send \"$app_name\r\"
+        exp_continue
+      }
+      -re {[Cc]reate new} {
+        send \"1\r\"
+        exp_continue
+      }
+      -re {connect.*existing} {
+        send \"1\r\"
+        exp_continue
+      }
+      eof {}
+      timeout { exit 1 }
+    }
+    catch wait result
+    exit [lindex \$result 3]
+  ") || {
     echo ""
-    echo "  ⚠  Auto-link failed for $slug. Run manually:"
-    echo "     cd $app_dir"
+    echo "  ⚠  Auto-link failed for $slug. Run manually in a new terminal:"
+    echo "     cd \"$app_dir\""
     echo "     shopify app config link --config shopify.app.toml"
     echo "     When prompted for 'App name:', enter: $app_name"
     echo ""
