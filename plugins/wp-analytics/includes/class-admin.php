@@ -334,8 +334,9 @@ final class Admin {
 	private function render_ai_settings_rows( array $settings ): void {
 		$catalog        = Ai::provider_catalog();
 		$current        = (string) ( $settings['ai_provider'] ?? 'off' );
-		$has_key        = ! empty( $settings['ai_api_key'] );
-		$key_placeholder = $has_key ? str_repeat( '*', 12 ) : '';
+		$key            = (string) ( $settings['ai_api_key'] ?? '' );
+		$has_key        = ! empty( $key );
+		$masked         = $has_key ? str_repeat( "\xE2\x80\xA2", 4 ) . ' ' . substr( $key, -4 ) : '';
 		$model          = (string) ( $settings['ai_model'] ?? '' );
 		$endpoint       = (string) ( $settings['ai_endpoint'] ?? '' );
 		$cap            = (int) ( $settings['ai_daily_cap'] ?? 100 );
@@ -362,11 +363,28 @@ final class Admin {
 				</p>
 				<p>
 					<label for="klyna-an-ai-key"><strong><?php esc_html_e( 'API key', 'wp-analytics' ); ?></strong></label><br>
-					<input type="password" id="klyna-an-ai-key" class="regular-text"
-						name="<?php echo esc_attr( $opt ); ?>[ai_api_key]"
-						value=""
-						placeholder="<?php echo esc_attr( $key_placeholder ); ?>"
-						autocomplete="new-password">
+					<?php if ( $has_key ) : ?>
+						<span id="klyna-an-ai-key-display">
+							<code style="padding:4px 8px;background:#f0f0f1;border-radius:3px;"><?php echo esc_html( $masked ); ?></code>
+							<button type="button" class="button button-secondary" id="klyna-an-ai-key-replace" style="margin-left:8px;"><?php esc_html_e( 'Replace key', 'wp-analytics' ); ?></button>
+						</span>
+						<input type="hidden" name="<?php echo esc_attr( $opt ); ?>[ai_api_key_keep]" value="1">
+						<input type="password" id="klyna-an-ai-key" class="regular-text"
+							name="<?php echo esc_attr( $opt ); ?>[ai_api_key]"
+							value="" autocomplete="new-password" style="display:none;margin-top:8px;">
+						<script>
+						(function(){
+							var btn=document.getElementById('klyna-an-ai-key-replace');
+							var inp=document.getElementById('klyna-an-ai-key');
+							var disp=document.getElementById('klyna-an-ai-key-display');
+							if(btn&&inp&&disp){btn.addEventListener('click',function(){inp.style.display='';inp.focus();disp.style.display='none';});}
+						})();
+						</script>
+					<?php else : ?>
+						<input type="password" id="klyna-an-ai-key" class="regular-text"
+							name="<?php echo esc_attr( $opt ); ?>[ai_api_key]"
+							value="" autocomplete="new-password">
+					<?php endif; ?>
 					<span class="description"><?php esc_html_e( 'Leave blank to keep the saved key.', 'wp-analytics' ); ?></span>
 				</p>
 				<p>
