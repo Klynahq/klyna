@@ -2,7 +2,7 @@
 
 client_id = "ce967ef55bafcdeb9823498ffedb17c7"
 name = "Klyna Wishlist"
-application_url = "https://example.com"
+application_url = "https://klyna-wishlist.vercel.app"
 embedded = true
 
 [access_scopes]
@@ -10,11 +10,18 @@ embedded = true
 scopes = "read_customers,read_products"
 
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+redirect_urls = [
+  "https://klyna-wishlist.vercel.app/auth/callback",
+  "https://klyna-wishlist.vercel.app/auth/shopify/callback",
+  "https://klyna-wishlist.vercel.app/api/auth/callback"
+]
 
 [webhooks]
-api_version = "2026-07"
+api_version = "2025-01"
+
+[[webhooks.subscriptions]]
+compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
+uri = "/webhooks/compliance"
 
 [build]
-include_config_on_deploy = true
 automatically_update_urls_on_dev = true
