@@ -1,0 +1,49 @@
+# Klyna Wishlist — app config.
+#
+# To use this app:
+#   1. Create a Shopify Partner account at https://partners.shopify.com
+#   2. Run `shopify app config link` from this folder to bind it to your Partner app.
+#      The CLI will overwrite `client_id` below with your actual app key.
+#   3. Run `pnpm dev` (or `shopify app dev`) to start the embedded app on your dev store.
+
+# Placeholder — `shopify app config link` rewrites this with your real client_id.
+client_id = "REPLACE_WITH_CLIENT_ID_FROM_PARTNER_DASHBOARD"
+
+name = "Klyna Wishlist"
+handle = "shopify-wishlist"
+application_url = "https://klyna.dev"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = ""
+
+[webhooks]
+api_version = "2025-01"
+
+  [[webhooks.subscriptions]]
+  topics = ["app/uninstalled"]
+  uri = "/webhooks/app/uninstalled"
+
+# read_products    — resolve product titles/images/prices for wishlist items + reports
+# read_customers   — link logged-in saves to a customer record (storefront identity)
+# write_app_proxy  — serve the storefront wishlist + share pages through the App Proxy
+[access_scopes]
+scopes = "read_products,read_customers"
+
+[auth]
+redirect_urls = [
+  "https://klyna.dev/auth/callback",
+  "https://klyna.dev/auth/shopify/callback",
+  "https://klyna.dev/api/auth/callback"
+]
+
+# App Proxy — exposes the storefront wishlist + shareable list pages at
+# /apps/wishlist on the merchant's domain. Proxied to /proxy/* in this app.
+[app_proxy]
+url = "https://klyna.dev/proxy"
+subpath = "wishlist"
+prefix = "apps"
+
+[pos]
+embedded = false

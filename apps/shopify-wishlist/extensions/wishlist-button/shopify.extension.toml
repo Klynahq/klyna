@@ -1,0 +1,15 @@
+# Klyna Wishlist — Theme App Extension.
+#
+# Ships two surfaces to the merchant's storefront with no theme code edits:
+#   • blocks/wishlist-button.liquid  — a "save to wishlist" heart, added to
+#     product / collection card templates via the theme editor.
+#   • blocks/wishlist-embed.liquid   — an App Embed (toggled under
+#     Theme settings → App embeds) that loads the shared wishlist drawer +
+#     guest-save script site-wide.
+
+api_version = "2025-01"
+
+[[extensions]]
+name = "Klyna Wishlist button"
+handle = "wishlist-button"
+type = "theme"

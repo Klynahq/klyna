@@ -1,0 +1,86 @@
+// Klyna Wishlist — Prisma schema.
+// Backs Shopify session storage plus the wishlist data this app owns:
+// wishlists (one per shopper, guest or logged-in), the products saved on
+// them, and an append-only event log that powers the analytics reports.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+}
+
+// A single shopper's wishlist. Identified either by a customer GID (logged-in)
+// or a guest token minted in the browser (localStorage). `token` is the public,
+// unguessable id used in shareable links.
+model Wishlist {
+  id         String         @id @default(cuid())
+  shop       String
+  token      String         @unique // public share id, used in /apps/wishlist?list=<token>
+  customerId String? // Shopify customer GID when the shopper is logged in
+  guestId    String? // anonymous browser id for guest saves
+  name       String         @default("My wishlist")
+  isPublic   Boolean        @default(false) // shareable links only resolve when true
+  items      WishlistItem[]
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@index([shop, customerId])
+  @@index([shop, guestId])
+}
+
+// One product saved on a wishlist. We store a denormalized snapshot of the
+// product (title/handle/image/price) so the storefront and reports render
+// instantly without an Admin API round-trip on every view.
+model WishlistItem {
+  id           String   @id @default(cuid())
+  wishlistId   String
+  wishlist     Wishlist @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+  shop         String
+  productId    String // Shopify product GID
+  variantId    String? // optional saved variant GID
+  productTitle String   @default("")
+  productHandle String  @default("")
+  imageUrl     String?
+  price        String? // formatted price snapshot, e.g. "29.00"
+  currency     String?
+  createdAt    DateTime @default(now())
+
+  @@unique([wishlistId, productId, variantId])
+  @@index([shop, productId])
+}
+
+// Append-only analytics log. Every meaningful storefront interaction lands
+// here so the dashboard can aggregate saves, removes, shares, and views
+// over time without mutating the wishlist tables.
+model WishlistEvent {
+  id         String   @id @default(cuid())
+  shop       String
+  type       String // "add" | "remove" | "share" | "view" | "add_to_cart"
+  productId  String?
+  wishlistId String?
+  createdAt  DateTime @default(now())
+
+  @@index([shop, type, createdAt])
+  @@index([shop, productId])
+}

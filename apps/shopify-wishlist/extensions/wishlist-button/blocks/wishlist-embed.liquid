@@ -1,0 +1,91 @@
+{% comment %}
+  Klyna Wishlist — App Embed.
+
+  Enable this under Theme settings → App embeds to load the floating wishlist
+  launcher + drawer site-wide. The launcher shows a live saved-count badge and
+  links to the full wishlist page (App Proxy at /apps/wishlist). It reuses the
+  same `wishlist.js` engine as the heart buttons, so a single localStorage
+  cache + server sync drives both.
+{% endcomment %}
+
+<div
+  id="klyna-wishlist-root"
+  data-klyna-root
+  data-page-url="{{ shop.url }}/apps/wishlist"
+  style="--klyna-accent: {{ block.settings.accent | default: '#7c5cff' }};"
+>
+  {%- if block.settings.show_launcher -%}
+    <a
+      href="{{ shop.url }}/apps/wishlist"
+      class="klyna-wishlist-launcher{% if block.settings.position == 'bottom-left' %} klyna-wishlist-launcher--left{% endif %}"
+      data-klyna-launcher
+      aria-label="Open your wishlist"
+    >
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+        <path
+          d="M12 20.5l-1.45-1.32C5.4 14.5 2 11.4 2 7.5 2 4.9 4.1 3 6.6 3c1.5 0 2.95.7 3.9 1.8C11.45 3.7 12.9 3 14.4 3 16.9 3 19 4.9 19 7.5c0 3.9-3.4 7-8.55 11.68L12 20.5z"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+      <span class="klyna-wishlist-launcher__count" data-klyna-count hidden>0</span>
+    </a>
+  {%- endif -%}
+</div>
+
+{%- liquid
+  assign customer_id = ''
+  if customer
+    assign customer_id = customer.id
+  endif
+-%}
+<script>
+  window.KlynaWishlist = window.KlynaWishlist || {};
+  window.KlynaWishlist.config = {
+    apiBase: "{{ shop.url }}/apps/wishlist/api",
+    pageUrl: "{{ shop.url }}/apps/wishlist",
+    customerId: {% if customer %}"gid://shopify/Customer/{{ customer.id }}"{% else %}null{% endif %},
+    position: "{{ block.settings.position | default: 'bottom-right' }}"
+  };
+</script>
+
+{{ 'wishlist.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'wishlist.js' | asset_url }}" defer></script>
+
+{% schema %}
+{
+  "name": "Klyna Wishlist",
+  "target": "body",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Floating wishlist launcher"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_launcher",
+      "label": "Show floating launcher",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "position",
+      "label": "Launcher position",
+      "options": [
+        { "value": "bottom-right", "label": "Bottom right" },
+        { "value": "bottom-left", "label": "Bottom left" }
+      ],
+      "default": "bottom-right"
+    },
+    {
+      "type": "color",
+      "id": "accent",
+      "label": "Accent color",
+      "default": "#7c5cff"
+    }
+  ]
+}
+{% endschema %}

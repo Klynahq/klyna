@@ -1,0 +1,111 @@
+/* Klyna Wishlist — storefront widget styles.
+   Scoped to the extension's own class names so it never leaks into the theme.
+   Accent is themeable per block via the --klyna-accent custom property. */
+
+.klyna-wishlist-toggle {
+  --klyna-accent: #7c5cff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #fff;
+  color: #18181b;
+  border-radius: 999px;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.12s ease, color 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+  line-height: 0;
+}
+
+.klyna-wishlist-toggle--pill,
+.klyna-wishlist-toggle.has-label {
+  width: auto;
+  padding: 0 14px;
+  height: 38px;
+}
+
+.klyna-wishlist-toggle__label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.klyna-wishlist-toggle:hover {
+  border-color: var(--klyna-accent);
+  color: var(--klyna-accent);
+}
+
+.klyna-wishlist-toggle.is-saved {
+  color: var(--klyna-accent);
+  border-color: var(--klyna-accent);
+}
+
+.klyna-wishlist-toggle.is-saved .klyna-wishlist-heart {
+  fill: var(--klyna-accent);
+}
+
+.klyna-wishlist-heart {
+  transition: fill 0.12s ease;
+  fill: none;
+}
+
+.klyna-wishlist-toggle.klyna-pop {
+  animation: klyna-pop 0.3s ease;
+}
+
+@keyframes klyna-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+
+/* Floating launcher (App Embed) */
+.klyna-wishlist-launcher {
+  --klyna-accent: #7c5cff;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9998;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  background: var(--klyna-accent);
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(124, 92, 255, 0.35);
+  text-decoration: none;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.klyna-wishlist-launcher:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(124, 92, 255, 0.45);
+}
+
+.klyna-wishlist-launcher--left {
+  right: auto;
+  left: 20px;
+}
+
+.klyna-wishlist-launcher__count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #18181b;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+}

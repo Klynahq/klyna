@@ -1,0 +1,93 @@
+{% comment %}
+  Klyna Wishlist — save-to-wishlist heart button.
+
+  Add this block to a product template, or to a product card snippet, from the
+  theme editor. It renders an accessible heart toggle wired to the Klyna
+  storefront API (App Proxy at /apps/wishlist/api). Works for guests
+  (localStorage) and logged-in customers alike — the shared script in
+  `wishlist.js` handles persistence and optimistic UI.
+{% endcomment %}
+
+{%- liquid
+  assign product_gid = product.id | prepend: 'gid://shopify/Product/'
+  assign variant_id = product.selected_or_first_available_variant.id
+-%}
+
+<button
+  type="button"
+  class="klyna-wishlist-toggle{% if block.settings.style == 'pill' %} klyna-wishlist-toggle--pill{% endif %}"
+  data-klyna-wishlist
+  data-product-id="{{ product_gid }}"
+  data-variant-id="{{ variant_id }}"
+  data-product-handle="{{ product.handle }}"
+  aria-pressed="false"
+  aria-label="{{ block.settings.label_add | default: 'Save to wishlist' }}"
+  title="{{ block.settings.label_add | default: 'Save to wishlist' }}"
+  style="--klyna-accent: {{ block.settings.accent | default: '#7c5cff' }};"
+>
+  <svg class="klyna-wishlist-heart" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+    <path
+      d="M12 20.5l-1.45-1.32C5.4 14.5 2 11.4 2 7.5 2 4.9 4.1 3 6.6 3c1.5 0 2.95.7 3.9 1.8C11.45 3.7 12.9 3 14.4 3 16.9 3 19 4.9 19 7.5c0 3.9-3.4 7-8.55 11.68L12 20.5z"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </svg>
+  {%- if block.settings.show_label -%}
+    <span class="klyna-wishlist-toggle__label" data-label-add="{{ block.settings.label_add | default: 'Save' }}" data-label-saved="{{ block.settings.label_saved | default: 'Saved' }}">
+      {{ block.settings.label_add | default: 'Save' }}
+    </span>
+  {%- endif -%}
+</button>
+
+{{ 'wishlist.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'wishlist.js' | asset_url }}" defer></script>
+
+{% schema %}
+{
+  "name": "Wishlist button",
+  "target": "section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Klyna Wishlist"
+    },
+    {
+      "type": "select",
+      "id": "style",
+      "label": "Button style",
+      "options": [
+        { "value": "icon", "label": "Icon only" },
+        { "value": "pill", "label": "Icon + label pill" }
+      ],
+      "default": "icon"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_label",
+      "label": "Show text label",
+      "default": false
+    },
+    {
+      "type": "text",
+      "id": "label_add",
+      "label": "Label — not saved",
+      "default": "Save"
+    },
+    {
+      "type": "text",
+      "id": "label_saved",
+      "label": "Label — saved",
+      "default": "Saved"
+    },
+    {
+      "type": "color",
+      "id": "accent",
+      "label": "Accent color",
+      "default": "#7c5cff"
+    }
+  ]
+}
+{% endschema %}
