@@ -271,8 +271,10 @@ export const products: Product[] = [
     tagline: 'GDPR/CCPA cookie consent banner with Google Consent Mode v2.',
     description:
       'Consent banner with accept/reject/preferences, cookie categories, Google Consent Mode v2 dataLayer signals, script blocking until consent, and geo-aware display.',
-    status: 'soon',
+    status: 'beta',
     surface: 'wordpress',
+    downloadUrl: '/downloads/wp-consent.zip',
+    installNote: 'Plugins → Add New → Upload → Activate',
   },
 
   // ─── 2 Shopify Themes ─────────────────────────────────────────────────────
