@@ -1,0 +1,510 @@
+# Copyright (C) 2026 Klyna
+# This file is distributed under the GPL-2.0-or-later license.
+msgid ""
+msgstr ""
+"Project-Id-Version: Klyna Tables 0.1.0\n"
+"Report-Msgid-Bugs-To: https://klyna.dev\n"
+"Last-Translator: Klyna <hello@klyna.dev>\n"
+"Language-Team: Klyna <hello@klyna.dev>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-06-11T00:00:00+00:00\n"
+"PO-Revision-Date: 2026-06-11T00:00:00+00:00\n"
+"X-Generator: Klyna build tools\n"
+"X-Domain: wp-tables\n"
+
+#. Plugin Name of the plugin
+msgid "Klyna Tables"
+msgstr ""
+
+#. Description of the plugin
+msgid "Tools that help your work get found."
+msgstr ""
+
+#. Author of the plugin
+msgid "Klyna"
+msgstr ""
+
+#: includes/class-table-store.php
+msgid "Tables"
+msgstr ""
+
+#: includes/class-table-store.php
+msgid "Table"
+msgstr ""
+
+#: includes/class-table-store.php
+msgid "Add table"
+msgstr ""
+
+#: includes/class-table-store.php
+msgid "Add new table"
+msgstr ""
+
+#: includes/class-table-store.php
+msgid "Edit table"
+msgstr ""
+
+#: includes/class-table-store.php
+msgid "New table"
+msgstr ""
+
+#: includes/class-table-store.php
+msgid "View table"
+msgstr ""
+
+#: includes/class-table-store.php
+msgid "Search tables"
+msgstr ""
+
+#: includes/class-table-store.php
+msgid "No tables found"
+msgstr ""
+
+#: includes/class-table-store.php
+msgid "No tables found in Trash"
+msgstr ""
+
+#: includes/class-table-store.php includes/class-admin.php
+msgid "Klyna Tables"
+msgstr ""
+
+#: includes/class-table-store.php
+msgid "Untitled table"
+msgstr ""
+
+#: includes/class-table-store.php assets/admin/admin.js
+msgid "Column 1"
+msgstr ""
+
+#: includes/class-table-store.php assets/admin/admin.js
+msgid "Column 2"
+msgstr ""
+
+#. translators: %d: column number.
+#: includes/class-table-store.php includes/class-rest.php
+msgid "Column %d"
+msgstr ""
+
+#: includes/class-rest.php
+msgid "Could not create table."
+msgstr ""
+
+#: includes/class-rest.php
+msgid "Table not found."
+msgstr ""
+
+#: includes/class-rest.php
+msgid "No rows found in CSV."
+msgstr ""
+
+#: includes/class-renderer.php
+msgid "WooCommerce is not active, so the product table cannot render."
+msgstr ""
+
+#: includes/class-renderer.php
+msgid "Products"
+msgstr ""
+
+#: includes/class-renderer.php includes/class-admin.php
+msgid "Image"
+msgstr ""
+
+#: includes/class-renderer.php
+msgid "Product"
+msgstr ""
+
+#: includes/class-renderer.php includes/class-admin.php
+msgid "SKU"
+msgstr ""
+
+#: includes/class-renderer.php includes/class-admin.php
+msgid "Category"
+msgstr ""
+
+#: includes/class-renderer.php includes/class-admin.php
+msgid "Price"
+msgstr ""
+
+#: includes/class-renderer.php
+msgid "Stock"
+msgstr ""
+
+#: includes/class-renderer.php includes/class-admin.php
+msgid "Add to cart"
+msgstr ""
+
+#: includes/class-renderer.php
+msgid "Search table"
+msgstr ""
+
+#: includes/class-renderer.php assets/js/tables.js
+msgid "Search…"
+msgstr ""
+
+#: includes/class-renderer.php
+msgid "Table pagination"
+msgstr ""
+
+#: includes/class-renderer.php
+msgid "This table has no rows yet."
+msgstr ""
+
+#: includes/class-shortcode.php assets/js/tables.js
+msgid "No matching rows."
+msgstr ""
+
+#. translators: 1: visible count, 2: total count.
+#: includes/class-shortcode.php assets/js/tables.js
+msgid "Showing %1$s of %2$s"
+msgstr ""
+
+#: includes/class-shortcode.php assets/js/tables.js
+msgid "Previous"
+msgstr ""
+
+#: includes/class-shortcode.php assets/js/tables.js
+msgid "Next"
+msgstr ""
+
+#. translators: %s: page number.
+#: includes/class-shortcode.php
+msgid "Page %s"
+msgstr ""
+
+#: includes/class-block.php
+msgid "Klyna Table"
+msgstr ""
+
+#: includes/class-block.php assets/js/block.js
+msgid "Insert a responsive, sortable, searchable table or WooCommerce product list."
+msgstr ""
+
+#: includes/class-block.php assets/js/block.js
+msgid "Saved table"
+msgstr ""
+
+#: includes/class-block.php assets/js/block.js
+msgid "WooCommerce products"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Settings"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "All tables"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Responsive, sortable, searchable data &amp; product tables. Build by hand or import a CSV, drop in a shortcode or block."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "The Klyna Tables builder needs JavaScript enabled."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Loading tables…"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Klyna Tables — Settings"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Defaults applied to every table. Individual tables can override these in the builder."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Default features"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Live search box above each table"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Click-to-sort column headers"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Paginate long tables"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Stack into cards on mobile"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Striped (zebra) rows"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Rows per page"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Accent color"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Used for sort indicators, links, and the active page in pagination."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "WooCommerce product columns"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Product name"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Stock status"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Columns shown by the [klyna_products] shortcode and the product block."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "WooCommerce is not active. Install it to enable product tables."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Tables"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Delete this table permanently? This cannot be undone."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Saved."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Saving…"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Shortcode copied."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "CSV imported."
+msgstr ""
+
+#: assets/js/block.js
+msgid "— Select a table —"
+msgstr ""
+
+#: assets/js/block.js
+msgid "table"
+msgstr ""
+
+#: assets/js/block.js
+msgid "data"
+msgstr ""
+
+#: assets/js/block.js
+msgid "products"
+msgstr ""
+
+#: assets/js/block.js
+msgid "Table source"
+msgstr ""
+
+#: assets/js/block.js
+msgid "Source"
+msgstr ""
+
+#: assets/js/block.js
+msgid "Max products"
+msgstr ""
+
+#: assets/js/block.js
+msgid "Category slug (optional)"
+msgstr ""
+
+#: assets/js/block.js
+msgid "WooCommerce product table"
+msgstr ""
+
+#: assets/js/block.js
+msgid "Selected table"
+msgstr ""
+
+#: assets/js/block.js
+msgid "Choose a table in the block settings"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "New table name…"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Create table"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Untitled table"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Edit"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Delete"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Rows"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Cols"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Source"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Shortcode"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Actions"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Click to copy"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "No tables yet. Create your first one above, then drop its shortcode into any post or page."
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Delete this table?"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "All tables"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Discard unsaved changes?"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Save table"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Column"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Row"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Import CSV"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "cols"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "rows"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Move left"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Move right"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Delete column"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Delete row"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "No rows. Add one above."
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Paste CSV or upload a .csv file. This replaces the current grid."
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "First row is a header"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Import"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "This table’s features"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "“Default” inherits the global setting. Override per table here."
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Search box"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Sortable columns"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Pagination"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Mobile stacking"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Striped rows"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "default"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Default"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "On"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Off"
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Copied."
+msgstr ""
+
+#: assets/admin/admin.js
+msgid "Could not load tables. Reload the page to try again."
+msgstr ""

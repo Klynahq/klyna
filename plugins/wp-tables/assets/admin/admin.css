@@ -1,0 +1,445 @@
+/**
+ * Klyna Tables — admin styles.
+ *
+ * The builder is a dark, violet-accented surface that mirrors the Klyna brand
+ * tokens (see packages/ui/src/tokens.ts), scoped to .klyna-tables-wrap so it
+ * never bleeds into the rest of wp-admin.
+ */
+
+.klyna-tables-wrap {
+	--klyna-bg: #0b0b0f;
+	--klyna-elevated: #13131a;
+	--klyna-surface: #1a1a23;
+	--klyna-border: #2a2a35;
+	--klyna-text: #f4f4f5;
+	--klyna-muted: #a1a1aa;
+	--klyna-dim: #71717a;
+	--klyna-accent: #7c5cff;
+	--klyna-accent-hover: #9277ff;
+	--klyna-accent-deep: #5b3df0;
+	--klyna-success: #34d399;
+	--klyna-danger: #f87171;
+	--klyna-radius: 12px;
+	--klyna-radius-sm: 8px;
+
+	max-width: 1180px;
+	font-family: "Geist", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.klyna-tables-head h1,
+.klyna-tables-wrap > h1 {
+	color: inherit;
+}
+
+.klyna-tables-tagline {
+	color: #50515a;
+	font-size: 14px;
+	margin: 4px 0 20px;
+}
+
+/* App shell ---------------------------------------------------------------- */
+#klyna-tables-app {
+	background: var( --klyna-bg );
+	border: 1px solid var( --klyna-border );
+	border-radius: var( --klyna-radius );
+	padding: 22px;
+	color: var( --klyna-text );
+	position: relative;
+	overflow: hidden;
+}
+
+.klyna-tables-loading {
+	color: var( --klyna-muted );
+	margin: 0;
+}
+
+/* Flash bar ---------------------------------------------------------------- */
+.klyna-flash {
+	position: absolute;
+	top: 12px;
+	right: 12px;
+	background: var( --klyna-accent );
+	color: #fff;
+	padding: 6px 14px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 600;
+	opacity: 0;
+	transform: translateY( -6px );
+	transition: opacity 0.18s ease, transform 0.18s ease;
+	pointer-events: none;
+	z-index: 5;
+}
+
+.klyna-flash.is-visible {
+	opacity: 1;
+	transform: translateY( 0 );
+}
+
+/* Buttons (override wp-admin within the shell) ----------------------------- */
+.klyna-tables-wrap #klyna-tables-app .button,
+.klyna-tables-wrap #klyna-tables-app .button-primary {
+	border-radius: var( --klyna-radius-sm );
+	border: 1px solid var( --klyna-border );
+	background: var( --klyna-surface );
+	color: var( --klyna-text );
+	box-shadow: none;
+	text-shadow: none;
+	height: auto;
+	padding: 6px 14px;
+	line-height: 1.6;
+	transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.klyna-tables-wrap #klyna-tables-app .button:hover {
+	border-color: var( --klyna-accent );
+	background: var( --klyna-elevated );
+	color: var( --klyna-text );
+}
+
+.klyna-tables-wrap #klyna-tables-app .button-primary {
+	background: var( --klyna-accent );
+	border-color: var( --klyna-accent );
+	color: #fff;
+}
+
+.klyna-tables-wrap #klyna-tables-app .button-primary:hover {
+	background: var( --klyna-accent-hover );
+	border-color: var( --klyna-accent-hover );
+}
+
+/* Inputs ------------------------------------------------------------------- */
+.klyna-input,
+.klyna-select {
+	background: var( --klyna-elevated );
+	border: 1px solid var( --klyna-border );
+	border-radius: var( --klyna-radius-sm );
+	color: var( --klyna-text );
+	padding: 6px 10px;
+	font: inherit;
+	line-height: 1.5;
+	box-shadow: none;
+}
+
+.klyna-input:focus,
+.klyna-select:focus {
+	outline: none;
+	border-color: var( --klyna-accent );
+	box-shadow: 0 0 0 3px rgba( 124, 92, 255, 0.25 );
+}
+
+.klyna-select {
+	padding: 4px 6px;
+	font-size: 12px;
+}
+
+/* List view ---------------------------------------------------------------- */
+.klyna-list-head {
+	display: flex;
+	justify-content: flex-end;
+	margin-bottom: 18px;
+}
+
+.klyna-newtable {
+	display: flex;
+	gap: 8px;
+}
+
+.klyna-newtable .klyna-input {
+	min-width: 240px;
+}
+
+.klyna-list-table.widefat {
+	background: var( --klyna-surface );
+	border: 1px solid var( --klyna-border );
+	border-radius: var( --klyna-radius );
+	border-collapse: separate;
+	border-spacing: 0;
+	overflow: hidden;
+	color: var( --klyna-text );
+}
+
+.klyna-list-table th,
+.klyna-list-table td {
+	border-bottom: 1px solid var( --klyna-border );
+	color: var( --klyna-text );
+	padding: 12px 14px;
+}
+
+.klyna-list-table thead th {
+	background: var( --klyna-elevated );
+	color: var( --klyna-muted );
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	font-size: 11px;
+}
+
+.klyna-list-table tbody tr:last-child td {
+	border-bottom: none;
+}
+
+.klyna-list-table tbody tr:hover {
+	background: rgba( 124, 92, 255, 0.07 );
+}
+
+.klyna-table-name {
+	color: var( --klyna-accent-hover );
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.klyna-table-name:hover {
+	color: #fff;
+	text-decoration: underline;
+}
+
+.klyna-num {
+	text-align: center;
+	width: 64px;
+	color: var( --klyna-muted );
+}
+
+.klyna-badge {
+	display: inline-block;
+	padding: 2px 9px;
+	border-radius: 999px;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: capitalize;
+	background: var( --klyna-elevated );
+	border: 1px solid var( --klyna-border );
+	color: var( --klyna-muted );
+}
+
+.klyna-badge-csv { color: var( --klyna-success ); border-color: rgba( 52, 211, 153, 0.4 ); }
+.klyna-badge-woocommerce { color: var( --klyna-accent-hover ); border-color: rgba( 124, 92, 255, 0.4 ); }
+
+.klyna-shortcode {
+	background: var( --klyna-elevated );
+	border: 1px solid var( --klyna-border );
+	border-radius: 6px;
+	padding: 3px 8px;
+	font-family: "Geist Mono", ui-monospace, "SF Mono", monospace;
+	font-size: 12px;
+	color: var( --klyna-muted );
+	cursor: pointer;
+}
+
+.klyna-shortcode:hover {
+	border-color: var( --klyna-accent );
+	color: var( --klyna-text );
+}
+
+.klyna-actions {
+	white-space: nowrap;
+}
+
+.klyna-tables-wrap #klyna-tables-app .button-link {
+	color: var( --klyna-muted );
+	background: none;
+	border: none;
+	padding: 0 8px;
+	cursor: pointer;
+	text-decoration: none;
+}
+
+.klyna-tables-wrap #klyna-tables-app .button-link:hover {
+	color: var( --klyna-text );
+}
+
+.klyna-danger {
+	color: var( --klyna-danger ) !important;
+}
+
+.klyna-empty {
+	text-align: center;
+	color: var( --klyna-muted );
+	padding: 48px 16px;
+	border: 1px dashed var( --klyna-border );
+	border-radius: var( --klyna-radius );
+}
+
+/* Edit view ---------------------------------------------------------------- */
+.klyna-edit-head {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 18px;
+	flex-wrap: wrap;
+}
+
+.klyna-title-input {
+	flex: 1 1 240px;
+	font-size: 16px;
+	font-weight: 600;
+	padding: 8px 12px;
+}
+
+.klyna-builder-toolbar {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 14px;
+	flex-wrap: wrap;
+}
+
+.klyna-grid-meta {
+	color: var( --klyna-dim );
+	font-size: 12px;
+	margin-left: auto;
+	font-family: "Geist Mono", ui-monospace, monospace;
+}
+
+.klyna-grid-scroll {
+	overflow-x: auto;
+	border: 1px solid var( --klyna-border );
+	border-radius: var( --klyna-radius );
+	background: var( --klyna-surface );
+}
+
+.klyna-builder-grid {
+	border-collapse: collapse;
+	width: 100%;
+	min-width: 480px;
+}
+
+.klyna-builder-grid th,
+.klyna-builder-grid td {
+	border: 1px solid var( --klyna-border );
+	padding: 8px;
+	vertical-align: top;
+}
+
+.klyna-col-cell {
+	background: var( --klyna-elevated );
+	min-width: 180px;
+}
+
+.klyna-col-label {
+	width: 100%;
+	box-sizing: border-box;
+	margin-bottom: 6px;
+	font-weight: 600;
+}
+
+.klyna-col-controls {
+	display: flex;
+	gap: 4px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.klyna-cell {
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.klyna-icon-btn {
+	background: var( --klyna-surface );
+	border: 1px solid var( --klyna-border );
+	border-radius: 6px;
+	color: var( --klyna-muted );
+	cursor: pointer;
+	width: 26px;
+	height: 26px;
+	line-height: 1;
+	font-size: 12px;
+	padding: 0;
+	transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.klyna-icon-btn:hover {
+	border-color: var( --klyna-accent );
+	color: var( --klyna-text );
+}
+
+.klyna-icon-btn.klyna-danger:hover {
+	border-color: var( --klyna-danger );
+}
+
+.klyna-row-actions,
+.klyna-row-actions-head {
+	width: 44px;
+	text-align: center;
+	background: var( --klyna-elevated );
+}
+
+.klyna-empty-row {
+	text-align: center;
+	color: var( --klyna-dim );
+	padding: 24px;
+	font-style: italic;
+}
+
+/* CSV + config panels ------------------------------------------------------- */
+.klyna-csv-panel,
+.klyna-config-panel {
+	background: var( --klyna-surface );
+	border: 1px solid var( --klyna-border );
+	border-radius: var( --klyna-radius );
+	padding: 18px;
+	margin-top: 18px;
+}
+
+.klyna-csv-panel h3,
+.klyna-config-panel h3 {
+	margin: 0 0 6px;
+	color: var( --klyna-text );
+}
+
+.klyna-csv-panel .description,
+.klyna-config-panel .description {
+	color: var( --klyna-dim );
+	margin: 0 0 12px;
+}
+
+.klyna-csv-row {
+	display: flex;
+	gap: 18px;
+	align-items: center;
+	margin-bottom: 12px;
+	flex-wrap: wrap;
+}
+
+.klyna-csv-text {
+	width: 100%;
+	box-sizing: border-box;
+	background: var( --klyna-elevated );
+	border: 1px solid var( --klyna-border );
+	border-radius: var( --klyna-radius-sm );
+	color: var( --klyna-text );
+	font-family: "Geist Mono", ui-monospace, monospace;
+	font-size: 13px;
+	padding: 10px;
+	margin-bottom: 12px;
+}
+
+.klyna-check {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	color: var( --klyna-muted );
+	font-size: 13px;
+}
+
+.klyna-config-grid {
+	display: grid;
+	grid-template-columns: repeat( auto-fit, minmax( 200px, 1fr ) );
+	gap: 12px;
+}
+
+.klyna-rpp-input {
+	width: 72px;
+}
+
+/* Re-skin the WP color picker swatch on the settings page. */
+.klyna-tables-wrap input[ type="color" ] {
+	width: 48px;
+	height: 32px;
+	padding: 2px;
+	border: 1px solid #2a2a35;
+	border-radius: 8px;
+	background: #fff;
+	vertical-align: middle;
+}
