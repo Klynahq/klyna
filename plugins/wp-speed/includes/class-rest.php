@@ -154,7 +154,7 @@ final class Rest {
 	 * return JSON with skip[] + aggressive[] rules.
 	 */
 	public function ai_suggest( \WP_REST_Request $req ): \WP_REST_Response {
-		$raw = (array) $req->get_param( 'urls' );
+		$raw  = (array) $req->get_param( 'urls' );
 		$urls = array();
 		foreach ( $raw as $u ) {
 			$u = esc_url_raw( (string) $u );
@@ -165,12 +165,23 @@ final class Rest {
 		if ( ! $urls ) {
 			$urls = array( home_url( '/' ) );
 		}
-		// Cap to 5 to bound the number of HTTP requests.
+		// Dedupe and cap to 5 to bound the number of HTTP requests.
+		$urls = array_values( array_unique( $urls ) );
 		$urls = array_slice( $urls, 0, 5 );
 
 		$samples = array();
 		foreach ( $urls as $u ) {
-			$samples[] = $this->sample_url( $u );
+			$sample = $this->sample_url( $u );
+			if ( is_wp_error( $sample ) ) {
+				$samples[] = array(
+					'url'   => $u,
+					'kind'  => 'error',
+					'ms'    => 0,
+					'error' => $sample->get_error_message(),
+				);
+				continue;
+			}
+			$samples[] = $sample;
 		}
 
 		$prompt = $this->build_cache_prompt( $samples );
@@ -253,20 +264,130 @@ final class Rest {
 	}
 
 	/**
+	 * SSRF guard: only allow https URLs whose resolved host is a public
+	 * IP, and reject known cloud metadata endpoints.
+	 */
+	private static function is_safe_public_url( string $url ): bool {
+		$parts = wp_parse_url( $url );
+		if ( ! is_array( $parts ) || empty( $parts['scheme'] ) || empty( $parts['host'] ) ) {
+			return false;
+		}
+		if ( 'https' !== strtolower( (string) $parts['scheme'] ) ) {
+			return false;
+		}
+
+		$host = strtolower( (string) $parts['host'] );
+
+		// Block well-known cloud metadata hostnames outright.
+		$blocked_hosts = array(
+			'metadata.google.internal',
+			'instance-data.ec2.internal',
+			'metadata',
+			'localhost',
+		);
+		if ( in_array( $host, $blocked_hosts, true ) ) {
+			return false;
+		}
+
+		// Resolve host. gethostbyname returns the host unchanged on failure.
+		$ip = gethostbyname( $host );
+		if ( $ip === $host && ! filter_var( $host, FILTER_VALIDATE_IP ) ) {
+			return false;
+		}
+
+		// Try IPv4 first.
+		if ( filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 ) ) {
+			$v4_ranges = array(
+				array( '10.0.0.0',    8  ),
+				array( '172.16.0.0',  12 ),
+				array( '192.168.0.0', 16 ),
+				array( '127.0.0.0',   8  ),
+				array( '169.254.0.0', 16 ),
+				array( '0.0.0.0',     8  ),
+				array( '100.64.0.0',  10 ), // CGNAT / metadata 169.254 alt
+				array( '224.0.0.0',   4  ), // multicast
+				array( '240.0.0.0',   4  ), // reserved
+			);
+			$ip_bin = inet_pton( $ip );
+			if ( false === $ip_bin ) {
+				return false;
+			}
+			foreach ( $v4_ranges as $r ) {
+				if ( self::ip_in_cidr_bin( $ip_bin, $r[0], $r[1] ) ) {
+					return false;
+				}
+			}
+			return true;
+		}
+
+		// IPv6
+		if ( filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 ) ) {
+			if ( '::1' === $ip ) {
+				return false;
+			}
+			$v6_ranges = array(
+				array( 'fc00::', 7  ), // unique local
+				array( 'fe80::', 10 ), // link local
+				array( '::',     128 ), // unspecified (exact)
+			);
+			$ip_bin = inet_pton( $ip );
+			if ( false === $ip_bin ) {
+				return false;
+			}
+			foreach ( $v6_ranges as $r ) {
+				if ( self::ip_in_cidr_bin( $ip_bin, $r[0], $r[1] ) ) {
+					return false;
+				}
+			}
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Bitmask check: does $ip_bin (raw inet_pton bytes) sit inside
+	 * $network/$prefix?
+	 */
+	private static function ip_in_cidr_bin( string $ip_bin, string $network, int $prefix ): bool {
+		$net_bin = inet_pton( $network );
+		if ( false === $net_bin || strlen( $net_bin ) !== strlen( $ip_bin ) ) {
+			return false;
+		}
+		$bytes_full = intdiv( $prefix, 8 );
+		$bits_rem   = $prefix % 8;
+		if ( $bytes_full > 0 && 0 !== substr_compare( $ip_bin, $net_bin, 0, $bytes_full ) ) {
+			return false;
+		}
+		if ( 0 === $bits_rem ) {
+			return true;
+		}
+		$mask = chr( ( 0xff << ( 8 - $bits_rem ) ) & 0xff );
+		return ( $ip_bin[ $bytes_full ] & $mask ) === ( $net_bin[ $bytes_full ] & $mask );
+	}
+
+	/**
 	 * Fetch a URL and capture page kind + render time. Errors are returned
 	 * inline so the AI can still reason about partial data.
 	 *
-	 * @return array<string,mixed>
+	 * @return array<string,mixed>|\WP_Error
 	 */
-	private function sample_url( string $url ): array {
+	private function sample_url( string $url ) {
+		if ( ! self::is_safe_public_url( $url ) ) {
+			return new \WP_Error(
+				'klyna_speed_unsafe_url',
+				__( 'Refusing to fetch a non-public or non-HTTPS URL.', 'wp-speed' )
+			);
+		}
+
 		$start = microtime( true );
 		$resp  = wp_remote_get(
 			$url,
 			array(
-				'timeout'     => 15,
-				'redirection' => 2,
-				'sslverify'   => false,
-				'headers'     => array( 'User-Agent' => 'KlynaSpeed/AITuner' ),
+				'timeout'              => 5,
+				'redirection'          => 2,
+				'limit_response_size'  => 262144,
+				'headers'              => array( 'User-Agent' => 'KlynaSpeed/1.0 (+https://klyna.dev)' ),
 			)
 		);
 		$ms = (int) round( ( microtime( true ) - $start ) * 1000 );
