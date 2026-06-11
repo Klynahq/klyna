@@ -11,7 +11,7 @@ client_id = "REPLACE_WITH_CLIENT_ID_FROM_PARTNER_DASHBOARD"
 
 name = "Klyna Back-in-Stock"
 handle = "shopify-restock"
-application_url = "https://klyna.dev"
+application_url = "https://klyna-shopify-restock.vercel.app"
 embedded = true
 
 [build]
@@ -39,6 +39,19 @@ api_version = "2025-01"
   topics = ["products/update"]
   uri = "/webhooks/products/update"
 
+  # Mandatory GDPR / App Store compliance webhooks.
+  [[webhooks.subscriptions]]
+  compliance_topics = ["customers/data_request"]
+  uri = "/webhooks/customers/data_request"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = ["customers/redact"]
+  uri = "/webhooks/customers/redact"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = ["shop/redact"]
+  uri = "/webhooks/shop/redact"
+
 [access_scopes]
 # read_products + read_inventory power the demand report and the inventory webhook.
 # read_customers powers smart per-customer notification timing (timezone lookup).
@@ -46,9 +59,9 @@ scopes = "read_products,read_inventory,read_customers"
 
 [auth]
 redirect_urls = [
-  "https://klyna.dev/auth/callback",
-  "https://klyna.dev/auth/shopify/callback",
-  "https://klyna.dev/api/auth/callback"
+  "https://klyna-shopify-restock.vercel.app/auth/callback",
+  "https://klyna-shopify-restock.vercel.app/auth/shopify/callback",
+  "https://klyna-shopify-restock.vercel.app/api/auth/callback"
 ]
 
 [pos]
