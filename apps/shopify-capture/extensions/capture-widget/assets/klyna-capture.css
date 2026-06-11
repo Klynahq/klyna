@@ -1,0 +1,200 @@
+/* Klyna Capture — storefront widget styles.
+   Scoped under .klyna-cap-* so it never collides with the host theme. */
+
+.klyna-cap-overlay {
+  --klyna-accent: #7c5cff;
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  padding: 24px;
+  background: rgba(11, 11, 15, 0.6);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+.klyna-cap-overlay.klyna-cap-open {
+  opacity: 1;
+}
+.klyna-cap-overlay.klyna-cap-closing {
+  opacity: 0;
+}
+.klyna-cap-overlay[data-position='center'] {
+  align-items: center;
+  justify-content: center;
+}
+.klyna-cap-overlay[data-position='bottom-right'] {
+  align-items: flex-end;
+  justify-content: flex-end;
+  background: transparent;
+  backdrop-filter: none;
+  pointer-events: none;
+}
+.klyna-cap-overlay[data-position='bottom-left'] {
+  align-items: flex-end;
+  justify-content: flex-start;
+  background: transparent;
+  backdrop-filter: none;
+  pointer-events: none;
+}
+
+.klyna-cap-card {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  background: #13131a;
+  color: #f4f4f5;
+  border: 1px solid #2a2a35;
+  border-radius: 12px;
+  padding: 28px 24px 22px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  transform: translateY(8px) scale(0.98);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: auto;
+}
+.klyna-cap-overlay.klyna-cap-open .klyna-cap-card {
+  transform: translateY(0) scale(1);
+}
+
+.klyna-cap-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #71717a;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+.klyna-cap-close:hover {
+  background: #1a1a23;
+  color: #f4f4f5;
+}
+
+.klyna-cap-headline {
+  margin: 0 24px 8px 0;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+.klyna-cap-body {
+  margin: 0 0 16px;
+  color: #a1a1aa;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.klyna-cap-wheel {
+  width: 168px;
+  height: 168px;
+  margin: 4px auto 18px;
+  border-radius: 50%;
+  border: 4px solid #1a1a23;
+  box-shadow: 0 0 0 2px var(--klyna-accent);
+}
+
+.klyna-cap-form {
+  display: grid;
+  gap: 10px;
+}
+.klyna-cap-form input {
+  width: 100%;
+  padding: 11px 13px;
+  border-radius: 8px;
+  border: 1px solid #2a2a35;
+  background: #0b0b0f;
+  color: #f4f4f5;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+.klyna-cap-form input:focus {
+  outline: 2px solid var(--klyna-accent);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+.klyna-cap-submit {
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 8px;
+  background: var(--klyna-accent);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+.klyna-cap-submit:hover {
+  filter: brightness(1.08);
+}
+.klyna-cap-submit:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.klyna-cap-msg {
+  margin: 2px 0 0;
+  font-size: 13px;
+  min-height: 16px;
+}
+.klyna-cap-msg--err {
+  color: #f87171;
+}
+
+.klyna-cap-fine {
+  margin: 14px 0 0;
+  font-size: 11px;
+  color: #71717a;
+  text-align: center;
+}
+
+.klyna-cap-success {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  text-align: center;
+  padding: 8px 0 4px;
+}
+.klyna-cap-check {
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+}
+.klyna-cap-success-msg {
+  margin: 0;
+  font-size: 15px;
+  color: #f4f4f5;
+}
+.klyna-cap-prize {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--klyna-accent);
+}
+.klyna-cap-code {
+  margin-top: 4px;
+  padding: 10px 16px;
+  border: 1px dashed var(--klyna-accent);
+  border-radius: 8px;
+  background: rgba(124, 92, 255, 0.12);
+  color: #f4f4f5;
+  font-family: 'Geist Mono', ui-monospace, 'SF Mono', monospace;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  cursor: copy;
+}
+
+@media (max-width: 480px) {
+  .klyna-cap-overlay {
+    padding: 12px;
+  }
+  .klyna-cap-card {
+    max-width: none;
+  }
+}

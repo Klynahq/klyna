@@ -1,0 +1,53 @@
+{% comment %}
+  Klyna Capture — storefront app embed.
+  Mounts the popup runtime and hands it the page context + proxy base URL.
+  The runtime fetches active campaigns from the app and renders the matching
+  popup based on its trigger and targeting rules.
+{% endcomment %}
+
+{% unless block.settings.enabled == false %}
+  <script
+    src="{{ 'klyna-capture.js' | asset_url }}"
+    defer="defer"
+    data-klyna-capture
+    data-proxy-base="/apps/klyna-capture"
+    data-page-type="{{ request.page_type }}"
+    data-customer="{% if customer %}returning{% else %}new{% endif %}"
+    data-position="{{ block.settings.position | default: 'center' }}"
+    data-respect-frequency="{{ block.settings.respect_frequency | default: true }}"
+  ></script>
+  {{ 'klyna-capture.css' | asset_url | stylesheet_tag }}
+{% endunless %}
+
+{% schema %}
+{
+  "name": "Klyna Capture",
+  "target": "body",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "enabled",
+      "label": "Enable Klyna Capture popups",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "position",
+      "label": "Popup position",
+      "options": [
+        { "value": "center", "label": "Center modal" },
+        { "value": "bottom-right", "label": "Bottom-right corner" },
+        { "value": "bottom-left", "label": "Bottom-left corner" }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "checkbox",
+      "id": "respect_frequency",
+      "label": "Respect re-show cooldown",
+      "info": "Don't show the same popup again until its cooldown elapses for a visitor.",
+      "default": true
+    }
+  ]
+}
+{% endschema %}

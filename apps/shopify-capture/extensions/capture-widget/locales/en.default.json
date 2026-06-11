@@ -1,0 +1,10 @@
+{
+  "klyna_capture": {
+    "name": "Klyna Capture",
+    "settings": {
+      "enabled": "Enable Klyna Capture popups",
+      "position": "Popup position",
+      "respect_frequency": "Respect re-show cooldown"
+    }
+  }
+}

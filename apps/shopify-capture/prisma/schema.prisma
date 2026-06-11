@@ -1,0 +1,122 @@
+// Klyna Capture — Prisma schema.
+// Backs Shopify session storage plus the popup campaigns, captured
+// subscribers, and conversion analytics that power this app.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+}
+
+// A single popup campaign. One row drives both the admin builder and the
+// storefront widget (the theme app extension reads it via the public API).
+model Popup {
+  id        String  @id @default(cuid())
+  shop      String
+  name      String
+  status    String  @default("draft") // draft | active | paused
+
+  // Layout / format: "email" | "sms" | "email_sms" | "spin_to_win"
+  format    String  @default("email")
+
+  // Copy + appearance (mirrors store branding by default).
+  headline      String  @default("Get 10% off your first order")
+  body          String  @default("Join our list for early drops and members-only deals.")
+  buttonLabel   String  @default("Unlock my discount")
+  successMessage String @default("You're in. Check your inbox for the code.")
+  accentColor   String  @default("#7c5cff")
+  discountCode  String? // optional code revealed on capture / wheel win
+
+  // Trigger: how the popup is shown.
+  // trigger = "time" | "scroll" | "exit_intent"
+  trigger        String @default("time")
+  triggerSeconds Int    @default(5)   // for trigger = time
+  triggerScroll  Int    @default(40)  // percent scrolled, for trigger = scroll
+
+  // Targeting rules.
+  targetPages    String @default("all")  // all | home | product | collection | cart
+  targetDevice   String @default("all")  // all | desktop | mobile
+  targetAudience String @default("all")  // all | new | returning
+  frequencyDays  Int    @default(7)      // re-show cooldown per visitor (days)
+
+  // Spin-to-win wheel: serialized JSON array of segments
+  // [{ label, discountCode, weight, color }]
+  wheelSegments String @default("[]")
+
+  subscribers Subscriber[]
+  events      PopupEvent[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([shop, status])
+}
+
+// A captured contact. Written to Shopify customers (with marketing consent)
+// at capture time; we keep a local copy for analytics + de-duplication.
+model Subscriber {
+  id        String  @id @default(cuid())
+  shop      String
+  popupId   String
+  popup     Popup   @relation(fields: [popupId], references: [id], onDelete: Cascade)
+
+  email     String?
+  phone     String?
+  // Marketing consent captured at opt-in time.
+  emailConsent Boolean @default(false)
+  smsConsent   Boolean @default(false)
+
+  // Shopify customer GID once synced to the Admin API ("gid://shopify/Customer/123").
+  shopifyCustomerId String?
+  syncState         String  @default("pending") // pending | synced | error
+  syncError         String?
+
+  // Attribution context.
+  pageUrl   String?
+  device    String? // desktop | mobile
+  audience  String? // new | returning
+
+  createdAt DateTime @default(now())
+
+  @@unique([popupId, email])
+  @@index([shop, createdAt])
+}
+
+// One analytics event. We aggregate these into the conversion funnel.
+model PopupEvent {
+  id      String @id @default(cuid())
+  shop    String
+  popupId String
+  popup   Popup  @relation(fields: [popupId], references: [id], onDelete: Cascade)
+
+  // type = "impression" | "conversion" | "dismiss"
+  type    String
+  device  String?
+  pageUrl String?
+
+  createdAt DateTime @default(now())
+
+  @@index([shop, popupId, type])
+  @@index([popupId, createdAt])
+}

@@ -1,0 +1,16 @@
+# Klyna Capture — theme app extension.
+#
+# Ships the storefront widget that renders the merchant's active popups
+# (email/SMS capture, spin-to-win, exit-intent) and talks back to the app
+# over the signed App Proxy. Merchants enable it under
+# Online Store → Themes → Customize → App embeds → Klyna Capture.
+
+api_version = "2025-01"
+
+[[extensions]]
+name = "Klyna Capture"
+handle = "capture-widget"
+type = "theme"
+
+  [extensions.capabilities]
+  block_only = true
