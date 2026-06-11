@@ -1,0 +1,54 @@
+# Klyna Rewards — app config.
+#
+# To use this app:
+#   1. Create a Shopify Partner account at https://partners.shopify.com
+#   2. Run `shopify app config link` from this folder to bind it to your Partner app.
+#      The CLI will overwrite `client_id` below with your actual app key.
+#   3. Run `pnpm dev` (or `shopify app dev`) to start the embedded app on your dev store.
+
+# Placeholder — `shopify app config link` rewrites this with your real client_id.
+client_id = "REPLACE_WITH_CLIENT_ID_FROM_PARTNER_DASHBOARD"
+
+name = "Klyna Rewards"
+handle = "shopify-rewards"
+application_url = "https://klyna.dev"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = ""
+
+[webhooks]
+api_version = "2025-01"
+
+  [[webhooks.subscriptions]]
+  topics = ["app/uninstalled"]
+  uri = "/webhooks/app/uninstalled"
+
+  [[webhooks.subscriptions]]
+  topics = ["orders/paid"]
+  uri = "/webhooks/orders/paid"
+
+  [[webhooks.subscriptions]]
+  topics = ["customers/create"]
+  uri = "/webhooks/customers/create"
+
+[access_scopes]
+scopes = "read_orders,read_customers,write_customers,write_discounts,read_products"
+
+# App proxy — powers the storefront rewards widget. Shopify forwards
+# /apps/rewards/* (storefront) to /proxy/* (this app) with a signed request.
+[app_proxy]
+url = "https://klyna.dev"
+subpath = "rewards"
+prefix = "apps"
+
+[auth]
+redirect_urls = [
+  "https://klyna.dev/auth/callback",
+  "https://klyna.dev/auth/shopify/callback",
+  "https://klyna.dev/api/auth/callback"
+]
+
+[pos]
+embedded = false

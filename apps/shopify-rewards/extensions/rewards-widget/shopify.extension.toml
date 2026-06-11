@@ -1,0 +1,13 @@
+# Klyna Rewards — storefront widget (Theme App Extension).
+#
+# Adds an app block merchants can drop into any theme section from the theme
+# editor (Online Store → Customize → Add block → Apps → Klyna Rewards).
+# The block fetches the shopper's balance, tier, and referral code through the
+# app proxy (/apps/rewards/widget/state) and renders a rewards panel.
+
+api_version = "2025-01"
+
+[[extensions]]
+name = "Klyna Rewards"
+handle = "rewards-widget"
+type = "theme"

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="Klyna Rewards">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#9277ff"/>
+      <stop offset="100%" stop-color="#5b3df0"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="28" height="28" rx="7" fill="url(#g)"/>
+  <circle cx="16" cy="16" r="9" stroke="#fff" stroke-width="1.5" fill="none" opacity="0.45"/>
+  <path d="M16 9.5l1.85 3.74 4.13.6-2.99 2.92.71 4.11L16 19.94l-3.71 1.95.71-4.11-2.99-2.92 4.13-.6L16 9.5z" fill="#fff"/>
+</svg>

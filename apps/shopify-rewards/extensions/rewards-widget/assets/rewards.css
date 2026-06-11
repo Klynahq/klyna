@@ -1,0 +1,208 @@
+/* Klyna Rewards — storefront widget styles.
+   Scoped under .klyna-rewards so it never leaks into the host theme. */
+
+.klyna-rewards {
+  --klyna-accent: #7c5cff;
+  --klyna-bg: #13131a;
+  --klyna-text: #f4f4f5;
+  --klyna-muted: #a1a1aa;
+  --klyna-border: #2a2a35;
+  --klyna-radius: 12px;
+  font-family: 'Geist', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  max-width: 420px;
+  margin: 24px auto;
+}
+
+.klyna-rewards * {
+  box-sizing: border-box;
+}
+
+.klyna-rewards__card {
+  background: var(--klyna-bg);
+  color: var(--klyna-text);
+  border: 1px solid var(--klyna-border);
+  border-radius: var(--klyna-radius);
+  padding: 20px;
+}
+
+.klyna-rewards__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.klyna-rewards__badge {
+  display: inline-flex;
+  line-height: 0;
+}
+
+.klyna-rewards__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.klyna-rewards__loading {
+  color: var(--klyna-muted);
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.klyna-rewards__balance {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 4px;
+}
+
+.klyna-rewards__points {
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--klyna-accent);
+}
+
+.klyna-rewards__points-label {
+  color: var(--klyna-muted);
+  font-size: 0.85rem;
+}
+
+.klyna-rewards__tier {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--klyna-muted);
+  margin-bottom: 14px;
+}
+
+.klyna-rewards__tier-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--klyna-accent);
+}
+
+.klyna-rewards__progress {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--klyna-border);
+  overflow: hidden;
+  margin: 8px 0 6px;
+}
+
+.klyna-rewards__progress-bar {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #9277ff, #5b3df0);
+  transition: width 0.4s ease;
+}
+
+.klyna-rewards__hint {
+  font-size: 0.8rem;
+  color: var(--klyna-muted);
+  margin: 0 0 16px;
+}
+
+.klyna-rewards__redeem {
+  background: rgba(124, 92, 255, 0.12);
+  border: 1px solid var(--klyna-border);
+  border-radius: var(--klyna-radius);
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+}
+
+.klyna-rewards__redeem strong {
+  color: var(--klyna-text);
+}
+
+.klyna-rewards__refer-label {
+  font-size: 0.8rem;
+  color: var(--klyna-muted);
+  margin: 0 0 6px;
+}
+
+.klyna-rewards__refer {
+  display: flex;
+  gap: 8px;
+}
+
+.klyna-rewards__refer input {
+  flex: 1;
+  min-width: 0;
+  background: #0b0b0f;
+  border: 1px solid var(--klyna-border);
+  color: var(--klyna-text);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.8rem;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+}
+
+.klyna-rewards__btn {
+  background: var(--klyna-accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-weight: 500;
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.klyna-rewards__btn:hover {
+  background: #9277ff;
+}
+
+.klyna-rewards__cta {
+  display: inline-block;
+  margin-top: 4px;
+  color: var(--klyna-accent);
+  font-weight: 500;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.klyna-rewards__cta:hover {
+  text-decoration: underline;
+}
+
+.klyna-rewards__perks {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.klyna-rewards__perks li {
+  font-size: 0.8rem;
+  color: var(--klyna-muted);
+  padding: 3px 0 3px 16px;
+  position: relative;
+}
+
+.klyna-rewards__perks li::before {
+  content: '★';
+  position: absolute;
+  left: 0;
+  color: var(--klyna-accent);
+}
+
+.klyna-rewards__powered {
+  margin: 16px 0 0;
+  font-size: 0.7rem;
+  color: var(--klyna-muted);
+  text-align: right;
+}
+
+.klyna-rewards__powered a {
+  color: var(--klyna-muted);
+  text-decoration: none;
+}
+
+.klyna-rewards__powered a:hover {
+  color: var(--klyna-accent);
+}

@@ -1,0 +1,108 @@
+{% comment %}
+  Klyna Rewards — storefront widget block.
+
+  Renders a loyalty panel that shows the shopper's points balance, tier
+  progress, redeemable discounts, and a shareable referral link. Data is
+  fetched client-side from the app proxy so the panel stays in sync with the
+  merchant's program settings without a theme redeploy.
+
+  All colors come from block settings (defaulting to the Klyna brand) so
+  merchants can match their theme.
+{% endcomment %}
+
+<div
+  id="klyna-rewards-{{ block.id }}"
+  class="klyna-rewards"
+  data-proxy="{{ block.settings.proxy_base }}/widget/state"
+  data-logged-in="{% if customer %}true{% else %}false{% endif %}"
+  data-customer-id="{{ customer.id }}"
+  data-shop-url="{{ shop.url }}"
+  data-heading="{{ block.settings.heading | escape }}"
+  data-accent="{{ block.settings.accent_color }}"
+  style="
+    --klyna-accent: {{ block.settings.accent_color }};
+    --klyna-bg: {{ block.settings.bg_color }};
+    --klyna-text: {{ block.settings.text_color }};
+    --klyna-radius: {{ block.settings.radius }}px;
+  "
+>
+  <div class="klyna-rewards__card">
+    <div class="klyna-rewards__head">
+      <span class="klyna-rewards__badge" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="28" height="28">
+          <defs>
+            <linearGradient id="klyna-g-{{ block.id }}" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#9277ff" />
+              <stop offset="100%" stop-color="#5b3df0" />
+            </linearGradient>
+          </defs>
+          <rect x="2" y="2" width="28" height="28" rx="7" fill="url(#klyna-g-{{ block.id }})" />
+          <circle cx="16" cy="16" r="9" stroke="#fff" stroke-width="1.5" fill="none" opacity="0.45" />
+          <path d="M16 9.5l1.85 3.74 4.13.6-2.99 2.92.71 4.11L16 19.94l-3.71 1.95.71-4.11-2.99-2.92 4.13-.6L16 9.5z" fill="#fff" />
+        </svg>
+      </span>
+      <h3 class="klyna-rewards__title" data-klyna="title">{{ block.settings.heading }}</h3>
+    </div>
+
+    <div class="klyna-rewards__body" data-klyna="body">
+      <p class="klyna-rewards__loading">Loading your rewards…</p>
+    </div>
+
+    <p class="klyna-rewards__powered">
+      Powered by <a href="https://klyna.dev" target="_blank" rel="noopener">Klyna</a>
+    </p>
+  </div>
+</div>
+
+{{ 'rewards.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'rewards.js' | asset_url }}" defer></script>
+
+{% schema %}
+{
+  "name": "Klyna Rewards",
+  "target": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Your rewards"
+    },
+    {
+      "type": "text",
+      "id": "proxy_base",
+      "label": "App proxy base",
+      "info": "Storefront path your app proxy is mounted at. Leave as default unless you changed the proxy subpath.",
+      "default": "/apps/rewards"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent color",
+      "default": "#7c5cff"
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Card background",
+      "default": "#13131a"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#f4f4f5"
+    },
+    {
+      "type": "range",
+      "id": "radius",
+      "label": "Corner radius",
+      "min": 0,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "default": 12
+    }
+  ]
+}
+{% endschema %}

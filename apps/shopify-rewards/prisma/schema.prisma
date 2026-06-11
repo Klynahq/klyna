@@ -1,0 +1,155 @@
+// Klyna Rewards — Prisma schema.
+// Backs Shopify session storage plus the loyalty program: per-shop config,
+// members and their point balances, the ledger of every points event,
+// redemptions (point → discount code), and referrals.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+}
+
+// One row per shop — the merchant's program configuration. Created lazily
+// with sensible defaults the first time the dashboard loads (see getProgram).
+model Program {
+  shop                String   @id
+  active              Boolean  @default(true)
+  programName         String   @default("Rewards")
+  // Earning rules.
+  pointsPerDollar     Int      @default(1)
+  pointsPerSignup     Int      @default(100)
+  pointsPerReview     Int      @default(50)
+  pointsPerReferral   Int      @default(250)
+  // Redemption: how many points buy how much off (a fixed-amount discount).
+  redeemPoints        Int      @default(500)
+  redeemValue         Int      @default(5) // currency units (e.g. $5) per redeemPoints
+  currencyCode        String   @default("USD")
+  // Referral reward for the *referred* friend, as a percentage off first order.
+  refereeDiscountPct  Int      @default(10)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  tiers       Tier[]
+  members     Member[]
+  ledger      PointsEvent[]
+  redemptions Redemption[]
+  referrals   Referral[]
+}
+
+// Loyalty tiers, ordered by the lifetime points threshold to reach them.
+model Tier {
+  id          String   @id @default(cuid())
+  shop        String
+  name        String
+  threshold   Int      // lifetime points required to enter this tier
+  multiplier  Float    @default(1.0) // earn multiplier while in this tier
+  perkText    String   @default("")
+  color       String   @default("#7c5cff")
+  createdAt   DateTime @default(now())
+
+  program Program @relation(fields: [shop], references: [shop], onDelete: Cascade)
+
+  @@index([shop, threshold])
+}
+
+// A program member, keyed by the Shopify customer GID. Tracks the spendable
+// `balance` and the never-decreasing `lifetime` total used for tiering.
+model Member {
+  id             String   @id @default(cuid())
+  shop           String
+  customerId     String   // Shopify customer GID, e.g. gid://shopify/Customer/123
+  email          String?
+  displayName    String?
+  balance        Int      @default(0)
+  lifetime       Int      @default(0)
+  tierName       String   @default("")
+  referralCode   String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  program     Program       @relation(fields: [shop], references: [shop], onDelete: Cascade)
+  ledger      PointsEvent[]
+  redemptions Redemption[]
+  referrals   Referral[]    @relation("Referrer")
+
+  @@unique([shop, customerId])
+  @@index([shop, balance])
+}
+
+// Append-only ledger. Every earn/redeem/adjust writes a row here; the member
+// balance is the running total. `amount` is signed (+earn, -redeem).
+model PointsEvent {
+  id          String   @id @default(cuid())
+  shop        String
+  memberId    String
+  amount      Int
+  reason      String   // ORDER | SIGNUP | REVIEW | REFERRAL | REDEEM | ADJUST
+  note        String   @default("")
+  orderId     String?  // Shopify order GID when reason = ORDER
+  createdAt   DateTime @default(now())
+
+  program Program @relation(fields: [shop], references: [shop], onDelete: Cascade)
+  member  Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([shop, createdAt])
+  @@index([memberId, createdAt])
+}
+
+// A redemption turns points into a Shopify discount code via the Admin API.
+model Redemption {
+  id            String   @id @default(cuid())
+  shop          String
+  memberId      String
+  pointsSpent   Int
+  value         Int      // discount face value in currency units
+  currencyCode  String   @default("USD")
+  code          String   // the generated discount code
+  discountId    String?  // Shopify discount node GID
+  status        String   @default("ACTIVE") // ACTIVE | USED | EXPIRED
+  createdAt     DateTime @default(now())
+
+  program Program @relation(fields: [shop], references: [shop], onDelete: Cascade)
+  member  Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([shop, createdAt])
+}
+
+// A referral link. Created when a member shares their code; converts when the
+// referred friend places their first qualifying order.
+model Referral {
+  id           String   @id @default(cuid())
+  shop         String
+  referrerId   String   // Member.id of the advocate
+  code         String   // the referrer's referralCode that was used
+  refereeEmail String?
+  status       String   @default("PENDING") // PENDING | CONVERTED
+  convertedAt  DateTime?
+  rewardPoints Int      @default(0) // points granted to referrer on conversion
+  createdAt    DateTime @default(now())
+
+  program  Program @relation(fields: [shop], references: [shop], onDelete: Cascade)
+  referrer Member  @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+
+  @@index([shop, status])
+}
