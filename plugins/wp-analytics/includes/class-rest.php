@@ -209,7 +209,14 @@ final class Rest {
 	/**
 	 * Public collector. Buckets one hit into the daily aggregate table.
 	 */
-	public function collect( \WP_REST_Request $req ): \WP_REST_Response {
+	public function collect( \WP_REST_Request $req ) {
+		// Hard byte cap on request body — the beacon is tiny, anything
+		// larger is abuse. Reject before any parsing/work.
+		$body = (string) $req->get_body();
+		if ( strlen( $body ) > 2048 ) {
+			return new \WP_Error( 'body_too_large', __( 'Request body too large.', 'wp-analytics' ), array( 'status' => 413 ) );
+		}
+
 		$settings = Plugin::settings();
 
 		if ( empty( $settings['enabled'] ) ) {
