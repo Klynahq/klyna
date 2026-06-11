@@ -1,0 +1,101 @@
+{% comment %}
+  Klyna Reviews — full reviews widget + write-a-review form.
+  Renders the aggregate header, the review list, and a submission form. All
+  data loads from the App Proxy (/apps/reviews) via the bundled klyna-reviews.js
+  so the theme never has to be edited.
+{% endcomment %}
+
+<div
+  id="klyna-reviews"
+  class="klyna-reviews"
+  data-klyna-reviews
+  data-product-id="{{ product.id | prepend: 'gid://shopify/Product/' }}"
+  data-product-handle="{{ product.handle }}"
+  data-product-title="{{ product.title | escape }}"
+  data-proxy="{{ block.settings.proxy_path | default: '/apps/reviews' }}"
+  data-show-photos="{{ block.settings.show_photos | default: true }}"
+  data-token="{{ request.parameters.klyna_token | default: '' | escape }}"
+  style="--klyna-accent: {{ block.settings.accent | default: '#7c5cff' }};"
+>
+  <div class="klyna-reviews__head">
+    <h2 class="klyna-reviews__title">{{ block.settings.heading | default: 'Customer reviews' }}</h2>
+    <div class="klyna-reviews__summary" data-klyna-summary>
+      <span class="klyna-reviews__loading">Loading reviews…</span>
+    </div>
+  </div>
+
+  <div class="klyna-reviews__list" data-klyna-list></div>
+
+  <button type="button" class="klyna-reviews__more" data-klyna-more hidden>
+    Show more reviews
+  </button>
+
+  <div class="klyna-reviews__formwrap">
+    <button type="button" class="klyna-btn" data-klyna-write>
+      {{ block.settings.cta | default: 'Write a review' }}
+    </button>
+
+    <form class="klyna-form" data-klyna-form hidden>
+      <fieldset class="klyna-form__stars" data-klyna-rating>
+        <legend>Your rating</legend>
+        {% for i in (1..5) %}
+          <button type="button" class="klyna-form__star" data-value="{{ i }}" aria-label="{{ i }} stars">★</button>
+        {% endfor %}
+        <input type="hidden" name="rating" value="0" />
+      </fieldset>
+
+      <label class="klyna-form__field">
+        <span>Headline (optional)</span>
+        <input type="text" name="title" maxlength="120" placeholder="Sums up your experience" />
+      </label>
+
+      <label class="klyna-form__field">
+        <span>Your review</span>
+        <textarea name="body" rows="4" required placeholder="What did you think?"></textarea>
+      </label>
+
+      <div class="klyna-form__row">
+        <label class="klyna-form__field">
+          <span>Name</span>
+          <input type="text" name="authorName" required placeholder="Your name" />
+        </label>
+        <label class="klyna-form__field">
+          <span>Email (kept private)</span>
+          <input type="email" name="authorEmail" placeholder="you@example.com" />
+        </label>
+      </div>
+
+      {% if block.settings.show_photos %}
+        <label class="klyna-form__field">
+          <span>Photos (optional)</span>
+          <input type="file" name="photoFiles" accept="image/*" multiple data-klyna-photos />
+          <small>Up to 6 images.</small>
+        </label>
+      {% endif %}
+
+      <div class="klyna-form__actions">
+        <button type="submit" class="klyna-btn">Submit review</button>
+        <button type="button" class="klyna-btn klyna-btn--ghost" data-klyna-cancel>Cancel</button>
+      </div>
+
+      <p class="klyna-form__status" data-klyna-status role="status"></p>
+    </form>
+  </div>
+</div>
+
+{{ 'klyna-reviews.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'klyna-reviews.js' | asset_url }}" defer></script>
+
+{% schema %}
+{
+  "name": "Klyna reviews",
+  "target": "section",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Customer reviews" },
+    { "type": "text", "id": "cta", "label": "Write-review button", "default": "Write a review" },
+    { "type": "color", "id": "accent", "label": "Accent color", "default": "#7c5cff" },
+    { "type": "checkbox", "id": "show_photos", "label": "Allow photo uploads", "default": true },
+    { "type": "text", "id": "proxy_path", "label": "App proxy path", "default": "/apps/reviews" }
+  ]
+}
+{% endschema %}

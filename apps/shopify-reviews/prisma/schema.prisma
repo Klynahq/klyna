@@ -1,0 +1,107 @@
+// Klyna Reviews — Prisma schema.
+// Backs Shopify session storage plus the review collection, moderation queue,
+// review-request automation, and cached per-product aggregate ratings.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+}
+
+// A single customer review for a product. Photos are stored as a serialized
+// JSON array of URLs (uploaded to Shopify Files or an external bucket).
+model Review {
+  id            String   @id @default(cuid())
+  shop          String
+  productId     String   // Shopify product GID, e.g. gid://shopify/Product/123
+  productTitle  String
+  productHandle String?
+  orderId       String?  // set when the review came from a verified purchase
+  rating        Int      // 1–5 stars
+  title         String?
+  body          String
+  authorName    String
+  authorEmail   String?
+  photos        String   @default("[]") // serialized JSON array of image URLs
+  verified      Boolean  @default(false)
+  status        String   @default("pending") // pending | published | rejected | spam
+  reply         String?  // optional merchant reply, shown under the review
+  source        String   @default("widget") // widget | request_email | import | manual
+  helpfulCount  Int      @default(0)
+  createdAt     DateTime @default(now())
+  publishedAt   DateTime?
+
+  @@index([shop, productId, status])
+  @@index([shop, status, createdAt])
+}
+
+// Cached per-product aggregate, recomputed whenever a review's status changes.
+// The storefront widget + JSON-LD read this so the theme never has to scan
+// every review at render time. Also mirrored into a Shopify metafield.
+model ProductRating {
+  id            String   @id @default(cuid())
+  shop          String
+  productId     String
+  reviewCount   Int      @default(0)
+  ratingSum     Int      @default(0)
+  ratingValue   Float    @default(0) // rounded average, 0–5
+  distribution  String   @default("[0,0,0,0,0]") // [#1★,#2★,#3★,#4★,#5★]
+  updatedAt     DateTime @updatedAt
+
+  @@unique([shop, productId])
+  @@index([shop])
+}
+
+// A queued or sent review-request email. One row per (order line item) so we
+// never ask the same customer for the same product twice.
+model ReviewRequest {
+  id            String   @id @default(cuid())
+  shop          String
+  orderId       String
+  productId     String
+  productTitle  String
+  customerEmail String
+  customerName  String?
+  token         String   @unique // signed link target: /r/:token
+  status        String   @default("scheduled") // scheduled | sent | reviewed | bounced | skipped
+  scheduledFor  DateTime
+  sentAt        DateTime?
+  reviewedAt    DateTime?
+  createdAt     DateTime @default(now())
+
+  @@unique([shop, orderId, productId])
+  @@index([shop, status, scheduledFor])
+}
+
+// Per-shop widget + automation configuration. One row per shop.
+model Settings {
+  shop             String   @id
+  autoPublish      Boolean  @default(false) // publish 4–5★ reviews without moderation
+  requestEnabled   Boolean  @default(true)  // send review-request emails on fulfillment
+  requestDelayDays Int      @default(7)     // wait N days after fulfillment to ask
+  widgetAccent     String   @default("#7c5cff")
+  showPhotos       Boolean  @default(true)
+  emailFrom        String?
+  updatedAt        DateTime @updatedAt
+}

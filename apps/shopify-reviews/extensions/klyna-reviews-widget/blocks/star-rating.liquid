@@ -1,0 +1,85 @@
+{% comment %}
+  Klyna Reviews — compact AggregateRating stars.
+  Drop this near the product title. Reads the cached aggregate from the
+  product metafield (instant, no request) and emits Product + AggregateRating
+  JSON-LD for rich snippets. Falls back to a live App Proxy read.
+{% endcomment %}
+
+{% assign agg = product.metafields.klyna_reviews.aggregate.value %}
+{% if agg and agg.reviewCount > 0 %}
+  {% assign rating_value = agg.ratingValue %}
+  {% assign review_count = agg.reviewCount %}
+{% else %}
+  {% assign rating_value = 0 %}
+  {% assign review_count = 0 %}
+{% endif %}
+
+<div
+  class="klyna-stars"
+  data-klyna-stars
+  data-product-id="{{ product.id | prepend: 'gid://shopify/Product/' }}"
+  data-product-handle="{{ product.handle }}"
+  data-product-title="{{ product.title | escape }}"
+  style="--klyna-accent: {{ block.settings.accent | default: '#7c5cff' }};"
+>
+  {% if review_count > 0 %}
+    <span class="klyna-stars__row" aria-label="Rated {{ rating_value }} out of 5">
+      {% assign full = rating_value | round %}
+      {% for i in (1..5) %}
+        {% if i <= full %}
+          <span class="klyna-stars__star is-on">★</span>
+        {% else %}
+          <span class="klyna-stars__star">★</span>
+        {% endif %}
+      {% endfor %}
+    </span>
+    <a class="klyna-stars__count" href="#klyna-reviews">
+      {{ rating_value }} ({{ review_count }} {% if review_count == 1 %}review{% else %}reviews{% endif %})
+    </a>
+  {% else %}
+    <a class="klyna-stars__count klyna-stars__count--empty" href="#klyna-reviews">
+      {{ block.settings.empty_label | default: 'Be the first to review' }}
+    </a>
+  {% endif %}
+</div>
+
+{% if review_count > 0 %}
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": {{ product.title | json }},
+      "description": {{ product.description | strip_html | truncatewords: 30 | json }},
+      "url": {{ shop.url | append: product.url | json }},
+      {% if product.featured_image %}"image": {{ product.featured_image | image_url: width: 800 | prepend: 'https:' | json }},{% endif %}
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": {{ rating_value }},
+        "reviewCount": {{ review_count }},
+        "bestRating": 5,
+        "worstRating": 1
+      }
+    }
+  </script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Klyna star rating",
+  "target": "section",
+  "settings": [
+    {
+      "type": "color",
+      "id": "accent",
+      "label": "Star color",
+      "default": "#7c5cff"
+    },
+    {
+      "type": "text",
+      "id": "empty_label",
+      "label": "Empty-state label",
+      "default": "Be the first to review"
+    }
+  ]
+}
+{% endschema %}

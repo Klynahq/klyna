@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="Klyna Reviews">
+  <defs>
+    <linearGradient id="klyna-reviews-g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#9277ff"/>
+      <stop offset="100%" stop-color="#5b3df0"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="28" height="28" rx="7" fill="url(#klyna-reviews-g)"/>
+  <!-- Star glyph -->
+  <path d="M14.4 9.1l1.66 3.36 3.71.54-2.69 2.62.64 3.69-3.32-1.74-3.32 1.74.64-3.69-2.69-2.62 3.71-.54L14.4 9.1z" fill="#fff"/>
+  <!-- Small quotation mark -->
+  <path d="M20.4 19.6c0-1.18.86-2.16 2-2.4l.2.86c-.5.14-.86.5-.94.96h.74v1.86H20.4v-1.28zm3.1 0c0-1.18.86-2.16 2-2.4l.2.86c-.5.14-.86.5-.94.96h.74v1.86H23.5v-1.28z" fill="#fff"/>
+</svg>

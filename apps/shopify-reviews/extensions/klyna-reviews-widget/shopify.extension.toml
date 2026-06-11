@@ -1,0 +1,17 @@
+# Klyna Reviews — Theme App Extension.
+#
+# Ships two app blocks the merchant can drop into the product template from the
+# theme editor:
+#   • star-rating  — compact AggregateRating stars (for the product title area)
+#   • review-list  — full reviews widget + "write a review" form
+#
+# Both talk to the App Proxy at /apps/reviews and render AggregateRating JSON-LD
+# for rich snippets. No theme code edits required.
+
+name = "klyna-reviews-widget"
+type = "theme"
+
+[[extensions]]
+name = "Klyna Reviews"
+handle = "klyna-reviews-widget"
+type = "theme"
