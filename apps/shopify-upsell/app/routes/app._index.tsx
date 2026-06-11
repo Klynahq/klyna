@@ -48,16 +48,25 @@ export default function Dashboard() {
       title: 'Offers',
       body: 'Build rules that trigger upsells by product, collection, or cart value. A/B test two recommendations head to head.',
       to: '/app/offers',
+      ai: false,
+    },
+    {
+      title: 'AI headlines',
+      body: 'Generate three headline variants for any offer, tuned to live inventory and cart context. Pick one and ship it.',
+      to: '/app/offers',
+      ai: true,
     },
     {
       title: 'Analytics',
       body: 'Impressions, accept rate, conversions, and attributed revenue per offer and per A/B variant.',
       to: '/app/analytics',
+      ai: false,
     },
     {
       title: 'Settings',
-      body: 'Enable the cart widget theme extension and configure the post-purchase offer placement.',
+      body: 'Cart widget theme extension, post-purchase placement, and the AI assistant.',
       to: '/app/settings',
+      ai: false,
     },
   ];
 
@@ -99,14 +108,17 @@ export default function Dashboard() {
         </Layout.Section>
 
         <Layout.Section>
-          <InlineGrid columns={{ xs: 1, md: 3 }} gap="300">
+          <InlineGrid columns={{ xs: 1, sm: 2, md: 4 }} gap="300">
             {tiles.map((t) => (
-              <Card key={t.to}>
+              <Card key={t.title}>
                 <BlockStack gap="200">
-                  <Text as="h3" variant="headingSm">{t.title}</Text>
+                  <InlineStack align="space-between" blockAlign="center">
+                    <Text as="h3" variant="headingSm">{t.title}</Text>
+                    {t.ai && <Badge tone="info">AI</Badge>}
+                  </InlineStack>
                   <Text as="p" variant="bodyMd" tone="subdued">{t.body}</Text>
                   <Box paddingBlockStart="100">
-                    <Link to={t.to}>Open →</Link>
+                    <Link to={t.to}>Open</Link>
                   </Box>
                 </BlockStack>
               </Card>

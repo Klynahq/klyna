@@ -1,46 +1,20 @@
-# Klyna Upsell — app config.
-#
-# To use this app:
-#   1. Create a Shopify Partner account at https://partners.shopify.com
-#   2. Run `shopify app config link` from this folder to bind it to your Partner app.
-#      The CLI will overwrite `client_id` below with your actual app key.
-#   3. Run `pnpm dev` (or `shopify app dev`) to start the embedded app on your dev store.
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-# Placeholder — `shopify app config link` rewrites this with your real client_id.
-client_id = "REPLACE_WITH_CLIENT_ID_FROM_PARTNER_DASHBOARD"
-
+client_id = "7cede999b6d21fcbcabf544952de3c48"
 name = "Klyna Upsell"
-handle = "shopify-upsell"
-application_url = "https://klyna.dev"
+application_url = "https://example.com"
 embedded = true
 
-[build]
-automatically_update_urls_on_dev = true
-dev_store_url = ""
-
-[webhooks]
-api_version = "2025-01"
-
-  [[webhooks.subscriptions]]
-  topics = ["app/uninstalled"]
-  uri = "/webhooks/app/uninstalled"
-
-  [[webhooks.subscriptions]]
-  topics = ["orders/create"]
-  uri = "/webhooks/orders/create"
-
 [access_scopes]
-# read_products       — resolve offer-rule product/collection triggers + widget product data
-# read_orders         — attribute accepted upsells to orders for conversion analytics
-# read/write_discounts — create the auto-applied discount that backs an accepted offer
-scopes = "read_products,read_orders,read_discounts,write_discounts"
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_discounts,read_inventory,read_orders,read_products,write_discounts"
 
 [auth]
-redirect_urls = [
-  "https://klyna.dev/auth/callback",
-  "https://klyna.dev/auth/shopify/callback",
-  "https://klyna.dev/api/auth/callback"
-]
+redirect_urls = [ "https://example.com/api/auth" ]
 
-[pos]
-embedded = false
+[webhooks]
+api_version = "2026-07"
+
+[build]
+include_config_on_deploy = true
+automatically_update_urls_on_dev = true

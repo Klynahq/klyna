@@ -8,4 +8,5 @@ api_version = "2025-01"
 [[extensions]]
 name = "Klyna Upsell"
 handle = "klyna-upsell"
+uid = "966ac525-8a76-746a-9ae0-dd0b97233968cfb6aef7"
 type = "theme"

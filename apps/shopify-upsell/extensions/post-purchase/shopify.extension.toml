@@ -14,5 +14,6 @@ api_version = "2025-01"
 [[extensions]]
 name = "Klyna Upsell — Post-purchase"
 handle = "klyna-upsell-post-purchase"
+uid = "3f7d5b8f-a116-4ec1-580f-2c9bccad6bd7c2f7e464"
 type = "checkout_post_purchase"
 # No custom metafields required; offers are fetched from the app at runtime.

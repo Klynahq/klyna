@@ -1,5 +1,5 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json, redirect } from '@remix-run/node';
-import { useActionData, useLoaderData, useNavigation } from '@remix-run/react';
+import { useActionData, useLoaderData, useNavigation, useParams } from '@remix-run/react';
 import { Page } from '@shopify/polaris';
 import { authenticate } from '../shopify.server';
 import { getProduct } from '../models/admin.server';
@@ -76,8 +76,14 @@ export default function EditOffer() {
   const data = useActionData<typeof action>();
   const nav = useNavigation();
 
+  const params = useParams();
+
   return (
-    <Page title={`Edit · ${values.name}`} backAction={{ url: '/app/offers' }}>
+    <Page
+      title={`Edit · ${values.name}`}
+      backAction={{ url: '/app/offers' }}
+      secondaryActions={[{ content: 'AI headlines', url: `/app/offers/${params.id}/copy` }]}
+    >
       <OfferEditor
         initial={values}
         errors={data?.errors ?? []}

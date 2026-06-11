@@ -1,94 +1,192 @@
-import { type LoaderFunctionArgs } from '@remix-run/node';
-import { useLoaderData } from '@remix-run/react';
+import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
+import { Form, useActionData, useFetcher, useLoaderData, useNavigation } from '@remix-run/react';
+import { useState } from 'react';
 import {
-  Badge,
+  Banner,
   BlockStack,
   Box,
   Button,
   Card,
   InlineStack,
   Layout,
-  List,
+  Link,
   Page,
+  Select,
   Text,
+  TextField,
 } from '@shopify/polaris';
 import { authenticate } from '../shopify.server';
-import prisma from '../db.server';
-
-// The handle of the theme app extension (matches extensions/cart-upsell/).
-const THEME_EXTENSION_HANDLE = 'klyna-upsell';
+import { createAiClient, type AiProvider } from '@klyna/ai-client';
+import { getShopAiSettings, getTodayUsage, saveShopAiSettings } from '../lib/ai.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
-  const [cartOffers, postPurchaseOffers] = await Promise.all([
-    prisma.offer.count({ where: { shop: session.shop, placement: 'cart', enabled: true } }),
-    prisma.offer.count({ where: { shop: session.shop, placement: 'post_purchase', enabled: true } }),
-  ]);
+  const settings = await getShopAiSettings(session.shop);
+  const usedToday = await getTodayUsage(session.shop);
+  return { settings, usedToday };
+};
 
-  // Deep link into the theme editor with our app embed pre-selected.
-  const storeHandle = session.shop.replace('.myshopify.com', '');
-  const themeEditorUrl = `https://admin.shopify.com/store/${storeHandle}/themes/current/editor?context=apps`;
+export const action = async ({ request }: ActionFunctionArgs) => {
+  const { session } = await authenticate.admin(request);
+  const form = await request.formData();
+  const intent = String(form.get('intent') ?? 'save');
 
-  return { shop: session.shop, cartOffers, postPurchaseOffers, themeEditorUrl };
+  const provider = String(form.get('provider') ?? 'off') as AiProvider;
+  const apiKey = String(form.get('apiKey') ?? '').trim() || undefined;
+  const model = String(form.get('model') ?? '').trim() || undefined;
+  const dailyCap = Math.max(1, Math.min(10000, Number(form.get('dailyCap') ?? 100) || 100));
+
+  if (intent === 'test') {
+    const client = createAiClient({ provider, apiKey, model });
+    const result = await client.test();
+    return json({ test: result });
+  }
+
+  await saveShopAiSettings(session.shop, { provider, apiKey, model, dailyCap });
+  return json({ saved: true });
+};
+
+const PROVIDER_OPTIONS = [
+  { label: 'Off — no AI assistance', value: 'off' },
+  { label: 'OpenRouter (free models, indefinite)', value: 'openrouter' },
+  { label: 'Groq (2k/day free)', value: 'groq' },
+  { label: 'Google Gemini (1.5k/day free)', value: 'gemini' },
+];
+
+const PROVIDER_HELP: Record<string, { url: string; hint: string }> = {
+  openrouter: {
+    url: 'https://openrouter.ai/keys',
+    hint: 'Free models like Llama 3.3 70B work great. Look for the ":free" suffix.',
+  },
+  groq: {
+    url: 'https://console.groq.com/keys',
+    hint: 'Fastest free tier — ~2,000 requests/day. Default: llama-3.3-70b-versatile.',
+  },
+  gemini: {
+    url: 'https://aistudio.google.com/apikey',
+    hint: '1,500 free requests/day on gemini-2.0-flash. Best for nuance.',
+  },
 };
 
 export default function Settings() {
-  const { shop, cartOffers, postPurchaseOffers, themeEditorUrl } = useLoaderData<typeof loader>();
+  const { settings, usedToday } = useLoaderData<typeof loader>();
+  const data = useActionData<typeof action>();
+  const nav = useNavigation();
+  const testFetcher = useFetcher<typeof action>();
+
+  const submitting = nav.state === 'submitting';
+  const testing = testFetcher.state === 'submitting';
+
+  const [provider, setProvider] = useState<string>(settings.provider);
+  const [apiKey, setApiKey] = useState(settings.apiKey ?? '');
+  const [model, setModel] = useState(settings.model ?? '');
+  const [dailyCap, setDailyCap] = useState(String(settings.dailyCap));
+
+  const testResult =
+    testFetcher.data && 'test' in testFetcher.data
+      ? (testFetcher.data.test as { ok: boolean; message: string })
+      : null;
+  const saved = data && 'saved' in data ? data.saved : false;
+  const help = PROVIDER_HELP[provider];
+
+  const runTest = () => {
+    const fd = new FormData();
+    fd.set('intent', 'test');
+    fd.set('provider', provider);
+    fd.set('apiKey', apiKey);
+    fd.set('model', model);
+    fd.set('dailyCap', dailyCap);
+    testFetcher.submit(fd, { method: 'post' });
+  };
 
   return (
     <Page title="Settings" backAction={{ url: '/app' }}>
       <Layout>
         <Layout.Section>
           <Card>
-            <BlockStack gap="300">
-              <InlineStack align="space-between" blockAlign="center">
-                <Text as="h2" variant="headingMd">In-cart widget</Text>
-                <Badge tone={cartOffers > 0 ? 'success' : 'attention'}>
-                  {cartOffers > 0 ? `${cartOffers} live` : 'No live cart offers'}
-                </Badge>
-              </InlineStack>
-              <Text as="p" tone="subdued">
-                The cart upsell is a theme app extension (block handle{' '}
-                <code>{THEME_EXTENSION_HANDLE}</code>). Add it to your cart drawer
-                or cart page in the theme editor — no theme code required. It pulls
-                live offers from this app and records impressions and accepts.
-              </Text>
-              <List type="number">
-                <List.Item>Open the theme editor.</List.Item>
-                <List.Item>Go to your Cart template (or the cart drawer section).</List.Item>
-                <List.Item>Click “Add block” → Apps → “Klyna Upsell”.</List.Item>
-                <List.Item>Save. Live offers targeting the cart now render automatically.</List.Item>
-              </List>
-              <Box>
-                <Button url={themeEditorUrl} target="_blank" variant="primary">
-                  Open theme editor
-                </Button>
-              </Box>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
+            <BlockStack gap="400">
+              <BlockStack gap="100">
+                <Text as="h2" variant="headingMd">AI assistant</Text>
+                <Text as="p" tone="subdued">
+                  Klyna Upsell can generate headline variants tuned to your cart
+                  contents and live inventory. Add a free-tier API key from any
+                  provider below to turn it on. Your key stays on this app's database.
+                </Text>
+              </BlockStack>
 
-        <Layout.Section>
-          <Card>
-            <BlockStack gap="300">
-              <InlineStack align="space-between" blockAlign="center">
-                <Text as="h2" variant="headingMd">Post-purchase offer</Text>
-                <Badge tone={postPurchaseOffers > 0 ? 'success' : 'attention'}>
-                  {postPurchaseOffers > 0 ? `${postPurchaseOffers} live` : 'Not configured'}
-                </Badge>
-              </InlineStack>
-              <Text as="p" tone="subdued">
-                Post-purchase offers appear on the thank-you / order-status page
-                via a Checkout UI extension. The extension scaffold ships in{' '}
-                <code>extensions/post-purchase/</code>. Activate it in{' '}
-                <strong>Settings → Checkout → Post-purchase page</strong> and
-                select “Klyna Upsell”.
-              </Text>
-              <List type="bullet">
-                <List.Item>One-click acceptance with no re-entry of payment.</List.Item>
-                <List.Item>Honors the same offer rules and A/B split as the cart widget.</List.Item>
-                <List.Item>Accepted offers are attributed to the order automatically.</List.Item>
-              </List>
+              <Form method="post">
+                <BlockStack gap="300">
+                  <Select
+                    label="Provider"
+                    options={PROVIDER_OPTIONS}
+                    value={provider}
+                    onChange={setProvider}
+                    name="provider"
+                  />
+
+                  {provider !== 'off' && (
+                    <>
+                      <TextField
+                        label="API key"
+                        type="password"
+                        value={apiKey}
+                        onChange={setApiKey}
+                        name="apiKey"
+                        autoComplete="off"
+                        helpText={
+                          help ? (
+                            <>
+                              <Link url={help.url} target="_blank">Get a free key</Link>
+                              {' '}{help.hint}
+                            </>
+                          ) : null
+                        }
+                      />
+                      <TextField
+                        label="Model (optional)"
+                        value={model}
+                        onChange={setModel}
+                        name="model"
+                        autoComplete="off"
+                        helpText="Leave blank to use the recommended default for this provider."
+                      />
+                      <TextField
+                        label="Daily cap"
+                        type="number"
+                        value={dailyCap}
+                        onChange={setDailyCap}
+                        name="dailyCap"
+                        autoComplete="off"
+                        min={1}
+                        max={10000}
+                        helpText={`Used today: ${usedToday} requests. Resets at 00:00 UTC.`}
+                      />
+                    </>
+                  )}
+
+                  <InlineStack gap="200">
+                    <Button submit variant="primary" loading={submitting}>
+                      Save settings
+                    </Button>
+                    {provider !== 'off' && (
+                      <Button onClick={runTest} loading={testing} variant="secondary">
+                        Test connection
+                      </Button>
+                    )}
+                    <input type="hidden" name="intent" value="save" />
+                  </InlineStack>
+                </BlockStack>
+              </Form>
+
+              {saved && <Banner tone="success" title="Saved" />}
+              {testResult && (
+                <Banner
+                  tone={testResult.ok ? 'success' : 'critical'}
+                  title={testResult.ok ? 'Connection OK' : 'Connection failed'}
+                >
+                  <Text as="p" variant="bodyMd">{testResult.message}</Text>
+                </Banner>
+              )}
             </BlockStack>
           </Card>
         </Layout.Section>
@@ -96,14 +194,19 @@ export default function Settings() {
         <Layout.Section>
           <Card>
             <BlockStack gap="200">
-              <Text as="h2" variant="headingMd">Connection</Text>
-              <Text as="p" tone="subdued">Store</Text>
-              <Text as="p" variant="bodyMd">{shop}</Text>
-              <Text as="p" variant="bodySm" tone="subdued">
-                Storefront API endpoint: <code>/api/offers</code> (app proxy / fetched
-                by the theme block). No customer data leaves your store beyond what
-                Shopify already exposes to the cart.
+              <Text as="h2" variant="headingMd">About this app</Text>
+              <Text as="p" tone="subdued" variant="bodyMd">
+                Klyna Upsell shows the right cross-sell at the right moment — in
+                the cart drawer and on the post-purchase page — and measures what
+                each offer earned. Rules and analytics work without AI. The AI
+                assistant is opt-in and used only to draft upsell headlines from
+                cart contents and live inventory when you ask for one.
               </Text>
+              <Box>
+                <Link url="https://klyna.dev" target="_blank">klyna.dev</Link>
+                {' · '}
+                <Link url="https://github.com/klynahq/klyna" target="_blank">GitHub</Link>
+              </Box>
             </BlockStack>
           </Card>
         </Layout.Section>
