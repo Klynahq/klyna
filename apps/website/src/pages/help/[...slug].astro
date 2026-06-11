@@ -1,0 +1,68 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  const articles = await getCollection('help');
+  return articles.map((a) => ({
+    params: { slug: a.id.replace(/\.mdx?$/, '') },
+    props: { article: a },
+  }));
+}
+
+const { article } = Astro.props;
+const { Content } = await render(article);
+
+const categoryLabels: Record<string, string> = {
+  'getting-started': 'Getting started',
+  wordpress: 'WordPress',
+  shopify: 'Shopify',
+  troubleshooting: 'Troubleshooting',
+  billing: 'Billing',
+  security: 'Security',
+};
+
+const updated = article.data.updated.toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+---
+
+<BaseLayout
+  title={`${article.data.title} — Klyna help`}
+  description={article.data.description}
+>
+  <article class="max-w-3xl mx-auto px-6 pt-20 pb-24">
+    <nav class="text-sm text-[color:var(--color-text-muted)] mb-6">
+      <a href="/help" class="hover:text-white">Help</a>
+      <span class="mx-2 text-[color:var(--color-text-dim)]">/</span>
+      <span class="text-[color:var(--color-accent)]">
+        {categoryLabels[article.data.category]}
+      </span>
+    </nav>
+
+    <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-4">
+      {article.data.title}
+    </h1>
+    <p class="text-[color:var(--color-text-muted)] text-lg mb-2">
+      {article.data.description}
+    </p>
+    <p class="text-xs text-[color:var(--color-text-dim)] mb-10">Updated {updated}</p>
+
+    <div class="prose-klyna">
+      <Content />
+    </div>
+
+    <hr class="my-12 border-[color:var(--color-border)]" />
+
+    <div class="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-6">
+      <p class="text-[color:var(--color-text-muted)]">
+        Still stuck?
+        <a href="/contact" class="text-[color:var(--color-accent)] hover:underline ml-1">
+          Open a support ticket →
+        </a>
+      </p>
+    </div>
+  </article>
+</BaseLayout>

@@ -1,0 +1,133 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const faqs = [
+  {
+    q: 'Is Klyna really free?',
+    a: 'Yes. The browser extension, WordPress plugin, and Shopify app are all free. The studio is self-funded. AI features use your own provider key, so the AI calls cost whatever your provider charges — usually zero on the free tiers we support.',
+  },
+  {
+    q: 'How do you make money then?',
+    a: 'We do not yet. Klyna is an indie studio and the products are deliberately free while the engine matures. If we ever charge for anything, it will be an optional hosted tier, never a paywall on what is free today.',
+  },
+  {
+    q: 'What does Klyna do that Yoast or Rank Math does not?',
+    a: 'Klyna auto-fixes findings instead of just listing them. The same engine also runs as a browser extension and a Shopify app, so the audit rubric stays identical across surfaces. See the Products page for the current scope.',
+  },
+  {
+    q: 'Do you sell my data?',
+    a: 'No. We do not run analytics that profile visitors, we do not proxy AI prompts, and we do not log content. Anonymous install pings are the only outbound signal, and you can disable them with a single constant.',
+  },
+  {
+    q: 'Which AI providers are supported?',
+    a: 'OpenRouter, Groq, Google Gemini, Cloudflare Workers AI, and Ollama (local). All five have free tiers Klyna uses by default. See the BYOK guide for setup.',
+  },
+  {
+    q: 'Where does my AI key live?',
+    a: 'In your own WordPress or Shopify database. Klyna never sees the key and never logs it. The plugin posts the prompt directly to your chosen provider from your server.',
+  },
+  {
+    q: 'Does the WordPress plugin work on multisite?',
+    a: 'Yes. Network-activate it like any other plugin. Each site gets its own settings and audit history.',
+  },
+  {
+    q: 'What WordPress version do I need?',
+    a: 'WordPress 6.4 or newer and PHP 8.1 or newer. Older PHP versions are out of security support and we will not target them.',
+  },
+  {
+    q: 'Will Klyna conflict with my SEO plugin?',
+    a: 'Klyna coexists with Yoast, Rank Math, AIOSEO, and SEOPress. You may want to disable duplicate schema emitters — see the conflicts guide.',
+  },
+  {
+    q: 'Does the Shopify app cost anything?',
+    a: 'No. We do not charge a Shopify recurring fee. Shopify itself charges nothing to install a free app.',
+  },
+  {
+    q: 'Can I use Klyna on a client site?',
+    a: 'Yes. The WordPress plugin is GPLv2+, the Shopify app is MIT, and the extension is MPL-2.0. You can install on as many client sites as you want.',
+  },
+  {
+    q: 'How often does the audit engine update?',
+    a: 'Engine releases happen roughly every two weeks. Plugins and apps pick up the new version on their next release. Subscribe to the Klyna blog RSS for changelogs.',
+  },
+  {
+    q: 'What happens if I uninstall the WordPress plugin?',
+    a: 'The plugin removes its own options and database tables on uninstall. Schemas it emitted are gone from the head. Auto-fixes that wrote into post content stay (since they are part of your post now).',
+  },
+  {
+    q: 'How do I report a security issue?',
+    a: 'Email security@klyna.dev. See the disclosure policy for SLA, safe-harbor language, and what to include.',
+  },
+  {
+    q: 'How do I request a feature?',
+    a: 'Use the contact form and pick "Feature request" as the subject, or open a discussion in the klyna/community GitHub repo. We triage weekly.',
+  },
+  {
+    q: 'Why is there no signup or login on the marketing site?',
+    a: 'Because there is nothing to sign up for. The products live in your WordPress, Shopify, or browser. The marketing site is just a place to read and download.',
+  },
+  {
+    q: 'Do you collect analytics on klyna.dev?',
+    a: 'No tracking cookies, no third-party analytics. We may add privacy-respecting first-party aggregate stats later (Plausible-style) and we will announce it before turning it on.',
+  },
+  {
+    q: 'What is GEO and why is Klyna chasing it?',
+    a: 'GEO is generative engine optimization — getting cited by AI answer engines like ChatGPT, Perplexity, and Google AI Overviews. The signals overlap with classic SEO but the surface is different. The Klyna engine scores both.',
+  },
+  {
+    q: 'Can I contribute?',
+    a: 'Yes. The repos are at github.com/klynahq. PRs welcome on bugs, docs, and translations. Larger features start with a discussion thread.',
+  },
+  {
+    q: 'Where do I get help?',
+    a: 'Start with the help center. If you cannot find your answer, the contact form opens a support ticket.',
+  },
+];
+---
+
+<BaseLayout
+  title="FAQ — Klyna"
+  description="Answers to the questions we get most often about Klyna, the free SEO and GEO tool studio."
+>
+  <section class="max-w-3xl mx-auto px-6 pt-20 pb-24">
+    <div class="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-accent)] mb-3">
+      FAQ
+    </div>
+    <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-4">Frequently asked questions.</h1>
+    <p class="text-[color:var(--color-text-muted)] text-lg mb-12">
+      Twenty answers to the things people ask most. If yours is not here,
+      <a href="/contact" class="text-[color:var(--color-accent)] hover:underline">drop us a note</a>
+      .
+    </p>
+
+    <div class="space-y-3">
+      {
+        faqs.map((f) => (
+          <details class="group rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface)] overflow-hidden">
+            <summary class="cursor-pointer list-none px-5 py-4 flex items-center justify-between gap-4 hover:bg-white/[0.02]">
+              <span class="font-medium">{f.q}</span>
+              <span
+                class="text-[color:var(--color-text-dim)] group-open:rotate-45 transition-transform"
+                aria-hidden="true"
+              >
+                +
+              </span>
+            </summary>
+            <div class="px-5 pb-5 text-[color:var(--color-text-muted)] leading-relaxed">
+              {f.a}
+            </div>
+          </details>
+        ))
+      }
+    </div>
+
+    <div class="mt-14 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-6 text-center">
+      <p class="text-[color:var(--color-text-muted)]">
+        Still curious?
+        <a href="/contact" class="text-[color:var(--color-accent)] hover:underline ml-1">
+          Ask us anything →
+        </a>
+      </p>
+    </div>
+  </section>
+</BaseLayout>
