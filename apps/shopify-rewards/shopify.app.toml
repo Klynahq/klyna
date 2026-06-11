@@ -1,20 +1,27 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "5562b3e17b36882181d43367a6f87631"
-application_url = "https://example.com"
+application_url = "https://klyna-rewards.vercel.app"
 embedded = true
 name = "Klyna Rewards"
 
 [webhooks]
 api_version = "2026-07"
 
+  [[webhooks.subscriptions]]
+  compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
+  uri = "/webhooks/compliance"
+
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
 scopes = "read_customers,read_orders,read_products,write_customers,write_discounts"
 
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+redirect_urls = [
+  "https://klyna-rewards.vercel.app/auth/callback",
+  "https://klyna-rewards.vercel.app/auth/shopify/callback",
+  "https://klyna-rewards.vercel.app/api/auth/callback"
+]
 
 [build]
-include_config_on_deploy = true
 automatically_update_urls_on_dev = true
