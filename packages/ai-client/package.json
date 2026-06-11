@@ -1,0 +1,22 @@
+{
+  "name": "@klyna/ai-client",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Klyna shared AI client. Free-tier, BYOK, multi-provider (OpenRouter / Groq / Gemini). Mirrors the WP class-ai.php contract.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@klyna/tsconfig": "workspace:*",
+    "typescript": "^5.7.2"
+  }
+}
