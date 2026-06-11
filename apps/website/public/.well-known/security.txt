@@ -1,0 +1,13 @@
+Contact: mailto:security@klyna.dev
+Expires: 2027-01-01T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://klyna.dev/.well-known/security.txt
+Policy: https://klyna.dev/legal/security
+Acknowledgments: https://klyna.dev/legal/security
+
+# PGP key fingerprint:
+# 4F1E 9AA0 C3D2 76B1 8C57  31E0 7E2D 5A1B 9F4C 0D2A
+#
+# Report security vulnerabilities to security@klyna.dev.
+# We acknowledge within 48 hours (Asia/Karachi business day).
+# See https://klyna.dev/legal/security for our full disclosure policy.
