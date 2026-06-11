@@ -243,7 +243,29 @@ final class Admin {
 						<tr>
 							<th scope="row"><label for="ai_api_key"><?php esc_html_e( 'API key', 'wp-tables' ); ?></label></th>
 							<td>
-								<input type="password" id="ai_api_key" class="regular-text" name="<?php echo esc_attr( KLYNA_TABLES_OPTION_KEY ); ?>[ai_api_key]" value="<?php echo esc_attr( (string) ( $settings['ai_api_key'] ?? '' ) ); ?>" autocomplete="off">
+								<?php
+								$wt_key    = (string) ( $settings['ai_api_key'] ?? '' );
+								$wt_has    = ! empty( $wt_key );
+								$wt_masked = $wt_has ? str_repeat( "\xE2\x80\xA2", 4 ) . ' ' . substr( $wt_key, -4 ) : '';
+								?>
+								<?php if ( $wt_has ) : ?>
+									<div id="wt-ai-key-display">
+										<code style="padding:4px 8px;background:#f0f0f1;border-radius:3px;"><?php echo esc_html( $wt_masked ); ?></code>
+										<button type="button" class="button button-secondary" id="wt-ai-key-replace" style="margin-left:8px;"><?php esc_html_e( 'Replace key', 'wp-tables' ); ?></button>
+									</div>
+									<input type="hidden" name="<?php echo esc_attr( KLYNA_TABLES_OPTION_KEY ); ?>[ai_api_key_keep]" value="1">
+									<input type="password" id="ai_api_key" class="regular-text" name="<?php echo esc_attr( KLYNA_TABLES_OPTION_KEY ); ?>[ai_api_key]" value="" autocomplete="new-password" style="display:none;margin-top:8px;">
+									<script>
+									(function(){
+										var btn=document.getElementById('wt-ai-key-replace');
+										var inp=document.getElementById('ai_api_key');
+										var disp=document.getElementById('wt-ai-key-display');
+										if(btn&&inp&&disp){btn.addEventListener('click',function(){inp.style.display='';inp.focus();disp.style.display='none';});}
+									})();
+									</script>
+								<?php else : ?>
+									<input type="password" id="ai_api_key" class="regular-text" name="<?php echo esc_attr( KLYNA_TABLES_OPTION_KEY ); ?>[ai_api_key]" value="" autocomplete="new-password">
+								<?php endif; ?>
 								<p class="description"><?php esc_html_e( 'Stored in wp_options. Leave blank for Ollama.', 'wp-tables' ); ?></p>
 							</td>
 						</tr>

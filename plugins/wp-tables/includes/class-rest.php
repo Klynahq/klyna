@@ -324,7 +324,14 @@ final class Rest {
 			$out['ai_provider'] = in_array( $prov, $allowed, true ) ? $prov : 'off';
 		}
 		if ( isset( $input['ai_api_key'] ) ) {
-			$out['ai_api_key'] = sanitize_text_field( (string) $input['ai_api_key'] );
+			$submitted = sanitize_text_field( (string) $input['ai_api_key'] );
+			$keep      = ! empty( $input['ai_api_key_keep'] );
+			if ( '' === $submitted && $keep ) {
+				// retain existing key from $out (already seeded from Plugin::settings()).
+				$out['ai_api_key'] = (string) ( $out['ai_api_key'] ?? '' );
+			} else {
+				$out['ai_api_key'] = $submitted;
+			}
 		}
 		if ( isset( $input['ai_model'] ) ) {
 			$out['ai_model'] = sanitize_text_field( (string) $input['ai_model'] );
