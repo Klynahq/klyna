@@ -25,6 +25,7 @@ final class Plugin {
 		( new Schema() )->register();
 		( new InternalLinks() )->register();
 		( new Faq() )->register();
+		( new Rest() )->register();
 
 		if ( is_admin() ) {
 			( new Admin() )->register();
