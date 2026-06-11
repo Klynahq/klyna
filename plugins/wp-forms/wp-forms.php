@@ -83,6 +83,7 @@ register_activation_hook(
 
 		// Create the entries table up front so the very first submission has somewhere to land.
 		KlynaForms\Entries::install_table();
+		KlynaForms\Replies::install_table();
 
 		// Register the CPT then flush so /klyna_form rewrite rules exist.
 		KlynaForms\Forms::register_post_type();

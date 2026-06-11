@@ -183,3 +183,114 @@
 		}
 	} );
 } )();
+
+/* AI assistant + reply drafts (added by AI auto-reply feature). */
+( function () {
+	var data = window.KlynaFormsAdmin || {};
+	if ( ! data.restUrl ) { return; }
+	var i18n = data.i18n || {};
+
+	function rest( path, body ) {
+		return fetch( data.restUrl + path, {
+			method: 'POST',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				'X-WP-Nonce': data.nonce
+			},
+			body: JSON.stringify( body || {} )
+		} ).then( function ( r ) {
+			return r.json().then( function ( j ) { return { status: r.status, body: j }; } );
+		} );
+	}
+
+	document.addEventListener( 'DOMContentLoaded', function () {
+		var testBtn = document.getElementById( 'klyna-forms-ai-test' );
+		var testOut = document.getElementById( 'klyna-forms-ai-test-result' );
+		if ( testBtn && testOut ) {
+			testBtn.addEventListener( 'click', function () {
+				testOut.textContent = i18n.testing || 'Testing...';
+				rest( 'ai/test', {} ).then( function ( res ) {
+					if ( res.body && res.body.ok ) {
+						testOut.textContent = ( i18n.testOk || 'OK' ) + ' ' + ( res.body.text || '' );
+					} else {
+						testOut.textContent = ( i18n.testFail || 'Failed:' ) + ' ' + ( ( res.body && ( res.body.text || res.body.reason ) ) || 'unknown' );
+					}
+				} ).catch( function ( e ) {
+					testOut.textContent = ( i18n.testFail || 'Failed:' ) + ' ' + e.message;
+				} );
+			} );
+		}
+
+		var blocks = document.querySelectorAll( '.klyna-forms-reply' );
+		blocks.forEach( function ( block ) {
+			var entryId = parseInt( block.getAttribute( 'data-entry-id' ), 10 );
+			var replyIdAttr = block.getAttribute( 'data-reply-id' );
+			var replyId = replyIdAttr ? parseInt( replyIdAttr, 10 ) : 0;
+			var toEl   = block.querySelector( '.klyna-forms-reply__to' );
+			var subjEl = block.querySelector( '.klyna-forms-reply__subject' );
+			var bodyEl = block.querySelector( '.klyna-forms-reply__body-text' );
+			var statusEl = block.querySelector( '.klyna-forms-reply__status' );
+			var genBtn  = block.querySelector( '.klyna-forms-reply__generate' );
+			var saveBtn = block.querySelector( '.klyna-forms-reply__save' );
+			var sendBtn = block.querySelector( '.klyna-forms-reply__send' );
+
+			function setStatus( msg ) { if ( statusEl ) { statusEl.textContent = msg || ''; } }
+
+			if ( genBtn ) {
+				genBtn.addEventListener( 'click', function () {
+					setStatus( i18n.generating || 'Generating...' );
+					rest( 'replies/generate', { entry_id: entryId } ).then( function ( res ) {
+						if ( res.body && res.body.ok ) {
+							if ( bodyEl ) { bodyEl.value = res.body.text || ''; }
+							if ( res.body.reply_id ) {
+								replyId = parseInt( res.body.reply_id, 10 );
+								block.setAttribute( 'data-reply-id', String( replyId ) );
+								if ( saveBtn ) { saveBtn.disabled = false; }
+								if ( sendBtn ) { sendBtn.disabled = false; }
+							}
+							setStatus( i18n.saved || 'Saved.' );
+						} else {
+							setStatus( ( res.body && ( res.body.text || res.body.reason ) ) || 'error' );
+						}
+					} ).catch( function ( e ) { setStatus( e.message ); } );
+				} );
+			}
+
+			if ( saveBtn ) {
+				saveBtn.addEventListener( 'click', function () {
+					if ( ! replyId ) { return; }
+					rest( 'replies/' + replyId, {
+						to_email: toEl ? toEl.value : '',
+						subject: subjEl ? subjEl.value : '',
+						body: bodyEl ? bodyEl.value : ''
+					} ).then( function ( res ) {
+						setStatus( ( res.body && res.body.ok ) ? ( i18n.saved || 'Saved.' ) : 'error' );
+					} ).catch( function ( e ) { setStatus( e.message ); } );
+				} );
+			}
+
+			if ( sendBtn ) {
+				sendBtn.addEventListener( 'click', function () {
+					if ( ! replyId ) { return; }
+					setStatus( i18n.sending || 'Sending...' );
+					// Save first, then send.
+					rest( 'replies/' + replyId, {
+						to_email: toEl ? toEl.value : '',
+						subject: subjEl ? subjEl.value : '',
+						body: bodyEl ? bodyEl.value : ''
+					} ).then( function () {
+						return rest( 'replies/' + replyId + '/send', {} );
+					} ).then( function ( res ) {
+						if ( res.body && res.body.ok ) {
+							setStatus( i18n.sent || 'Sent.' );
+							if ( sendBtn ) { sendBtn.disabled = true; }
+						} else {
+							setStatus( ( res.body && ( res.body.text || res.body.reason ) ) || 'error' );
+						}
+					} ).catch( function ( e ) { setStatus( e.message ); } );
+				} );
+			}
+		} );
+	} );
+} )();

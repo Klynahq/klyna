@@ -24,8 +24,11 @@ final class Plugin {
 
 		( new Forms() )->register();
 		( new Entries() )->register();
+		( new Replies() )->register();
 		( new Render() )->register();
 		( new Submission() )->register();
+		( new Auto_Reply() )->register();
+		( new Rest() )->register();
 
 		if ( is_admin() ) {
 			( new Admin() )->register();

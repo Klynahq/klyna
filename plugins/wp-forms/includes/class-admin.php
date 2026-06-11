@@ -112,6 +112,17 @@ final class Admin {
 		$out['from_email']     = ( $from_email && is_email( $from_email ) ) ? $from_email : '';
 		$seconds               = (int) ( $input['time_trap_seconds'] ?? 3 );
 		$out['time_trap_seconds'] = max( 0, min( 60, $seconds ) );
+
+		// AI assistant settings (all optional — default off).
+		$providers = array( 'off', 'openrouter', 'groq', 'gemini', 'cloudflare', 'ollama' );
+		$provider  = (string) ( $input['ai_provider'] ?? 'off' );
+		$out['ai_provider']  = in_array( $provider, $providers, true ) ? $provider : 'off';
+		$out['ai_api_key']   = sanitize_text_field( (string) ( $input['ai_api_key'] ?? '' ) );
+		$out['ai_model']     = sanitize_text_field( (string) ( $input['ai_model'] ?? '' ) );
+		$out['ai_endpoint']  = sanitize_text_field( (string) ( $input['ai_endpoint'] ?? '' ) );
+		$cap                 = (int) ( $input['ai_daily_cap'] ?? 100 );
+		$out['ai_daily_cap'] = max( 1, min( 10000, $cap ) );
+
 		return $out;
 	}
 
@@ -189,6 +200,18 @@ final class Admin {
 			'notify_to'       => isset( $_POST['config']['notify_to'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['config']['notify_to'] ) ) : '',
 		);
 		Forms::save_config( $form_id, $config );
+
+		// AI auto-reply settings (per-form).
+		$autoreply_enabled     = ! empty( $_POST['autoreply']['enabled'] );
+		$autoreply_instruction = isset( $_POST['autoreply']['instruction'] )
+			? sanitize_textarea_field( wp_unslash( (string) $_POST['autoreply']['instruction'] ) )
+			: '';
+		$autoreply_subject = isset( $_POST['autoreply']['subject'] )
+			? sanitize_text_field( wp_unslash( (string) $_POST['autoreply']['subject'] ) )
+			: '';
+		update_post_meta( $form_id, Auto_Reply::META_ENABLED, $autoreply_enabled ? 1 : 0 );
+		update_post_meta( $form_id, Auto_Reply::META_INSTRUCTION, $autoreply_instruction );
+		update_post_meta( $form_id, Auto_Reply::META_SUBJECT, $autoreply_subject );
 
 		wp_safe_redirect(
 			add_query_arg(
@@ -337,10 +360,19 @@ final class Admin {
 			'klyna-forms-admin',
 			'KlynaFormsAdmin',
 			array(
-				'i18n' => array(
+				'restUrl' => esc_url_raw( rest_url( 'klyna-forms/v1/' ) ),
+				'nonce'   => wp_create_nonce( 'wp_rest' ),
+				'i18n'    => array(
 					'confirmDelete' => __( 'Delete this field?', 'wp-forms' ),
 					'removeLabel'   => __( 'Remove', 'wp-forms' ),
 					'optionsHelp'   => __( 'One option per line', 'wp-forms' ),
+					'testing'       => __( 'Testing…', 'wp-forms' ),
+					'testOk'        => __( 'Connection OK.', 'wp-forms' ),
+					'testFail'      => __( 'Connection failed:', 'wp-forms' ),
+					'generating'    => __( 'Generating…', 'wp-forms' ),
+					'sending'       => __( 'Sending…', 'wp-forms' ),
+					'sent'          => __( 'Sent.', 'wp-forms' ),
+					'saved'         => __( 'Saved.', 'wp-forms' ),
 				),
 			)
 		);
@@ -498,6 +530,45 @@ final class Admin {
 								<label class="klyna-forms-strong" for="notify_to"><?php esc_html_e( 'Send entries to', 'wp-forms' ); ?></label>
 								<input type="text" id="notify_to" name="config[notify_to]" class="regular-text" value="<?php echo esc_attr( $config['notify_to'] ); ?>" placeholder="<?php echo esc_attr( (string) Plugin::setting( 'notify_to', get_option( 'admin_email' ) ) ); ?>">
 								<span class="description"><?php esc_html_e( 'Comma-separated. Leave blank to use the global recipient from Settings.', 'wp-forms' ); ?></span>
+							</p>
+						</div>
+
+						<?php
+						$ar_enabled     = (bool) get_post_meta( $form_id, Auto_Reply::META_ENABLED, true );
+						$ar_instruction = (string) get_post_meta( $form_id, Auto_Reply::META_INSTRUCTION, true );
+						$ar_subject     = (string) get_post_meta( $form_id, Auto_Reply::META_SUBJECT, true );
+						$ai_provider    = (string) Plugin::setting( 'ai_provider', 'off' );
+						?>
+						<div class="klyna-forms-panel">
+							<h2><?php esc_html_e( 'AI auto-reply', 'wp-forms' ); ?></h2>
+							<?php if ( 'off' === $ai_provider || '' === $ai_provider ) : ?>
+								<p class="description">
+									<?php
+									echo wp_kses_post(
+										sprintf(
+											/* translators: %s: settings page link */
+											__( 'Pick a provider on the %s page to enable AI auto-reply drafts.', 'wp-forms' ),
+											'<a href="' . esc_url( admin_url( 'admin.php?page=wp-forms-settings' ) ) . '">' . esc_html__( 'Settings', 'wp-forms' ) . '</a>'
+										)
+									);
+									?>
+								</p>
+							<?php endif; ?>
+							<p class="klyna-forms-field-block">
+								<label>
+									<input type="checkbox" name="autoreply[enabled]" value="1" <?php checked( $ar_enabled ); ?>>
+									<?php esc_html_e( 'Draft an AI auto-reply on every submission', 'wp-forms' ); ?>
+								</label>
+								<span class="description"><?php esc_html_e( 'Drafts are saved for review. Never sent automatically.', 'wp-forms' ); ?></span>
+							</p>
+							<p class="klyna-forms-field-block">
+								<label class="klyna-forms-strong" for="autoreply_subject"><?php esc_html_e( 'Subject line', 'wp-forms' ); ?></label>
+								<input type="text" id="autoreply_subject" name="autoreply[subject]" class="regular-text" value="<?php echo esc_attr( $ar_subject ); ?>" placeholder="<?php esc_attr_e( 'Thanks for reaching out', 'wp-forms' ); ?>">
+							</p>
+							<p class="klyna-forms-field-block">
+								<label class="klyna-forms-strong" for="autoreply_instruction"><?php esc_html_e( 'Instructions for the AI', 'wp-forms' ); ?></label>
+								<textarea id="autoreply_instruction" name="autoreply[instruction]" rows="4" class="large-text" placeholder="<?php esc_attr_e( 'e.g. Confirm we received the message, mention our 24h response time, sign as the team.', 'wp-forms' ); ?>"><?php echo esc_textarea( $ar_instruction ); ?></textarea>
+								<span class="description"><?php esc_html_e( 'Replies stay under 120 words.', 'wp-forms' ); ?></span>
 							</p>
 						</div>
 					</div>
@@ -708,6 +779,66 @@ final class Admin {
 									<a class="button button-small klyna-forms-delete" href="<?php echo esc_url( $delete_url ); ?>" onclick="return confirm('<?php echo esc_js( __( 'Delete this entry permanently?', 'wp-forms' ) ); ?>');"><?php esc_html_e( 'Delete', 'wp-forms' ); ?></a>
 								</td>
 							</tr>
+							<?php
+							$reply        = Replies::latest_for_entry( (int) $entry['id'] );
+							$colspan      = 2 + count( $fields );
+							$ai_provider  = (string) Plugin::setting( 'ai_provider', 'off' );
+							$ai_available = 'off' !== $ai_provider && '' !== $ai_provider;
+							?>
+							<tr class="klyna-forms-reply-row">
+								<td colspan="<?php echo esc_attr( (string) $colspan ); ?>">
+									<details class="klyna-forms-reply" data-entry-id="<?php echo esc_attr( (string) $entry['id'] ); ?>" data-reply-id="<?php echo esc_attr( (string) ( $reply['id'] ?? 0 ) ); ?>" <?php echo $reply ? 'open' : ''; ?>>
+										<summary>
+											<?php if ( $reply ) : ?>
+												<?php if ( 'sent' === $reply['status'] ) : ?>
+													<strong><?php esc_html_e( 'AI reply: sent', 'wp-forms' ); ?></strong>
+													<span class="description"><?php echo esc_html( (string) $reply['sent_at'] ); ?></span>
+												<?php else : ?>
+													<strong><?php esc_html_e( 'AI reply draft', 'wp-forms' ); ?></strong>
+												<?php endif; ?>
+											<?php else : ?>
+												<strong><?php esc_html_e( 'AI reply', 'wp-forms' ); ?></strong>
+												<span class="description"><?php esc_html_e( 'No draft yet.', 'wp-forms' ); ?></span>
+											<?php endif; ?>
+										</summary>
+										<div class="klyna-forms-reply__body">
+											<?php if ( ! $ai_available ) : ?>
+												<p class="description">
+													<?php
+													echo wp_kses_post(
+														sprintf(
+															/* translators: %s: settings page link */
+															__( 'Configure an AI provider on %s to draft replies.', 'wp-forms' ),
+															'<a href="' . esc_url( admin_url( 'admin.php?page=wp-forms-settings' ) ) . '">' . esc_html__( 'Settings', 'wp-forms' ) . '</a>'
+														)
+													);
+													?>
+												</p>
+											<?php endif; ?>
+											<p class="klyna-forms-field-block">
+												<label class="klyna-forms-mini-label" for="reply_to_<?php echo esc_attr( (string) $entry['id'] ); ?>"><?php esc_html_e( 'To', 'wp-forms' ); ?></label>
+												<input type="email" id="reply_to_<?php echo esc_attr( (string) $entry['id'] ); ?>" class="regular-text klyna-forms-reply__to" value="<?php echo esc_attr( (string) ( $reply['to_email'] ?? '' ) ); ?>">
+											</p>
+											<p class="klyna-forms-field-block">
+												<label class="klyna-forms-mini-label" for="reply_subj_<?php echo esc_attr( (string) $entry['id'] ); ?>"><?php esc_html_e( 'Subject', 'wp-forms' ); ?></label>
+												<input type="text" id="reply_subj_<?php echo esc_attr( (string) $entry['id'] ); ?>" class="regular-text klyna-forms-reply__subject" value="<?php echo esc_attr( (string) ( $reply['subject'] ?? '' ) ); ?>">
+											</p>
+											<p class="klyna-forms-field-block">
+												<label class="klyna-forms-mini-label" for="reply_body_<?php echo esc_attr( (string) $entry['id'] ); ?>"><?php esc_html_e( 'Message', 'wp-forms' ); ?></label>
+												<textarea id="reply_body_<?php echo esc_attr( (string) $entry['id'] ); ?>" rows="6" class="large-text klyna-forms-reply__body-text"><?php echo esc_textarea( (string) ( $reply['body'] ?? '' ) ); ?></textarea>
+											</p>
+											<p>
+												<?php if ( $ai_available ) : ?>
+													<button type="button" class="button klyna-forms-reply__generate"><?php echo $reply ? esc_html__( 'Regenerate draft', 'wp-forms' ) : esc_html__( 'Generate draft', 'wp-forms' ); ?></button>
+												<?php endif; ?>
+												<button type="button" class="button klyna-forms-reply__save" <?php disabled( ! $reply ); ?>><?php esc_html_e( 'Save edits', 'wp-forms' ); ?></button>
+												<button type="button" class="button button-primary klyna-forms-reply__send" <?php disabled( ! $reply || 'sent' === ( $reply['status'] ?? '' ) ); ?>><?php esc_html_e( 'Edit + send', 'wp-forms' ); ?></button>
+												<span class="klyna-forms-reply__status description" style="margin-left:8px;"></span>
+											</p>
+										</div>
+									</details>
+								</td>
+							</tr>
 						<?php endforeach; ?>
 					</tbody>
 				</table>
@@ -751,7 +882,25 @@ final class Admin {
 				'store_ip'          => true,
 			)
 		);
-		$key = KLYNA_FORMS_OPTION_KEY;
+		$settings = wp_parse_args(
+			$settings,
+			array(
+				'ai_provider'   => 'off',
+				'ai_api_key'    => '',
+				'ai_model'      => '',
+				'ai_endpoint'   => '',
+				'ai_daily_cap'  => 100,
+			)
+		);
+		$key       = KLYNA_FORMS_OPTION_KEY;
+		$providers = array(
+			'off'        => __( 'Off — no AI features', 'wp-forms' ),
+			'openrouter' => 'OpenRouter (free models)',
+			'groq'       => 'Groq (fast & free)',
+			'gemini'     => 'Google Gemini',
+			'cloudflare' => 'Cloudflare Workers AI',
+			'ollama'     => 'Ollama (self-hosted)',
+		);
 		?>
 		<div class="wrap klyna-forms-wrap">
 			<h1><?php esc_html_e( 'Klyna Forms settings', 'wp-forms' ); ?></h1>
@@ -842,6 +991,57 @@ final class Admin {
 									<input type="checkbox" name="<?php echo esc_attr( $key ); ?>[store_ip]" value="1" <?php checked( ! empty( $settings['store_ip'] ) ); ?>>
 									<?php esc_html_e( 'Record the submitter IP with each entry', 'wp-forms' ); ?>
 								</label>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+
+				<h2><?php esc_html_e( 'AI assistant', 'wp-forms' ); ?></h2>
+				<p class="description"><?php esc_html_e( 'Powers AI auto-reply drafts on submissions. Bring your own key. Defaults to Off — the plugin works without AI.', 'wp-forms' ); ?></p>
+				<table class="form-table" role="presentation">
+					<tbody>
+						<tr>
+							<th scope="row"><label for="ai_provider"><?php esc_html_e( 'Provider', 'wp-forms' ); ?></label></th>
+							<td>
+								<select id="ai_provider" name="<?php echo esc_attr( $key ); ?>[ai_provider]">
+									<?php foreach ( $providers as $value => $label ) : ?>
+										<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $settings['ai_provider'], $value ); ?>><?php echo esc_html( $label ); ?></option>
+									<?php endforeach; ?>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="ai_api_key"><?php esc_html_e( 'API key', 'wp-forms' ); ?></label></th>
+							<td>
+								<input type="password" id="ai_api_key" name="<?php echo esc_attr( $key ); ?>[ai_api_key]" class="regular-text" value="<?php echo esc_attr( (string) $settings['ai_api_key'] ); ?>" autocomplete="off">
+								<p class="description"><?php esc_html_e( 'Stored in the WordPress options table. Free-tier keys are fine.', 'wp-forms' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="ai_model"><?php esc_html_e( 'Model', 'wp-forms' ); ?></label></th>
+							<td>
+								<input type="text" id="ai_model" name="<?php echo esc_attr( $key ); ?>[ai_model]" class="regular-text" value="<?php echo esc_attr( (string) $settings['ai_model'] ); ?>" placeholder="<?php esc_attr_e( 'Leave blank for the provider default', 'wp-forms' ); ?>">
+								<p class="description"><?php esc_html_e( 'OpenRouter: meta-llama/llama-3.3-70b-instruct:free. Groq: llama-3.3-70b-versatile. Gemini: gemini-2.0-flash. Cloudflare: @cf/meta/llama-3.1-8b-instruct. Ollama: llama3.2.', 'wp-forms' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="ai_endpoint"><?php esc_html_e( 'Endpoint / Account ID', 'wp-forms' ); ?></label></th>
+							<td>
+								<input type="text" id="ai_endpoint" name="<?php echo esc_attr( $key ); ?>[ai_endpoint]" class="regular-text" value="<?php echo esc_attr( (string) $settings['ai_endpoint'] ); ?>" placeholder="<?php esc_attr_e( 'Cloudflare Account ID or Ollama URL', 'wp-forms' ); ?>">
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="ai_daily_cap"><?php esc_html_e( 'Daily call cap', 'wp-forms' ); ?></label></th>
+							<td>
+								<input type="number" id="ai_daily_cap" name="<?php echo esc_attr( $key ); ?>[ai_daily_cap]" value="<?php echo esc_attr( (string) $settings['ai_daily_cap'] ); ?>" min="1" max="10000" class="small-text">
+								<p class="description"><?php esc_html_e( 'Safety net so a hot inbox does not burn through your free-tier quota.', 'wp-forms' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Connection', 'wp-forms' ); ?></th>
+							<td>
+								<button type="button" class="button" id="klyna-forms-ai-test"><?php esc_html_e( 'Test connection', 'wp-forms' ); ?></button>
+								<span id="klyna-forms-ai-test-result" class="description" style="margin-left:8px;"></span>
 							</td>
 						</tr>
 					</tbody>
