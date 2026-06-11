@@ -2,38 +2,103 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ProductCard from '../components/ProductCard.astro';
 import { products } from '@klyna/utils';
+
+const shopifyApps = products.filter(p => p.surface === 'shopify');
+const wpPlugins   = products.filter(p => p.surface === 'wordpress');
+const themes      = products.filter(p => p.surface === 'theme');
+const other       = products.filter(p => !['shopify','wordpress','theme'].includes(p.surface));
 ---
 
 <BaseLayout
   title="Products — Klyna"
-  description="The full Klyna lineup. SEO and growth tools for WordPress, Shopify, and the browser. More on the way."
+  description="The full Klyna lineup — 10 Shopify apps, 10 WordPress plugins, 2 themes, and a browser extension. SEO and growth tools for the whole stack."
 >
+  <!-- Hero -->
   <section class="max-w-7xl mx-auto px-6 pt-20 pb-12">
     <div class="max-w-2xl">
       <div class="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-accent)] mb-3">
         The lineup
       </div>
       <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-4">Products</h1>
-      <p class="text-[color:var(--color-text-muted)] leading-relaxed">
-        Every Klyna tool runs on the same shared engine. That means the lineup grows fast,
-        and improvements in one place lift everything.
+      <p class="text-[color:var(--color-text-muted)] leading-relaxed max-w-xl">
+        Every Klyna tool runs on the same shared engine — brand-consistent, no bloat,
+        no paid APIs in the default stack. The lineup spans Shopify apps, WordPress plugins,
+        and themes for the whole growth stack.
       </p>
     </div>
-  </section>
 
-  <section class="max-w-7xl mx-auto px-6 pb-20">
-    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {products.map((p) => <ProductCard product={p} />)}
+    <!-- Team download CTA -->
+    <div class="mt-8 inline-flex items-center gap-3 px-5 py-3 rounded-xl border border-[color:var(--color-warning)]/40 bg-[color:var(--color-warning)]/5">
+      <span class="w-2 h-2 rounded-full bg-[color:var(--color-warning)] animate-pulse"></span>
+      <span class="text-sm text-[color:var(--color-text-muted)]">Team member?</span>
+      <a
+        href="/downloads"
+        class="text-sm font-semibold text-[color:var(--color-warning)] hover:underline"
+      >
+        Download all beta builds →
+      </a>
     </div>
   </section>
 
+  <!-- Shopify Apps -->
+  <section class="max-w-7xl mx-auto px-6 pb-14">
+    <div class="flex items-end justify-between mb-6">
+      <div>
+        <div class="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-accent)] mb-2">Shopify Apps</div>
+        <h2 class="text-2xl font-bold tracking-tight">{shopifyApps.length} apps</h2>
+      </div>
+    </div>
+    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      {shopifyApps.map(p => <ProductCard product={p} />)}
+    </div>
+  </section>
+
+  <!-- WordPress Plugins -->
+  <section class="max-w-7xl mx-auto px-6 pb-14">
+    <div class="flex items-end justify-between mb-6">
+      <div>
+        <div class="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-success)] mb-2">WordPress Plugins</div>
+        <h2 class="text-2xl font-bold tracking-tight">{wpPlugins.length} plugins</h2>
+      </div>
+    </div>
+    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      {wpPlugins.map(p => <ProductCard product={p} />)}
+    </div>
+  </section>
+
+  <!-- Themes -->
+  {themes.length > 0 && (
+    <section class="max-w-7xl mx-auto px-6 pb-14">
+      <div class="mb-6">
+        <div class="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-text-dim)] mb-2">Shopify Themes</div>
+        <h2 class="text-2xl font-bold tracking-tight">{themes.length} themes</h2>
+      </div>
+      <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {themes.map(p => <ProductCard product={p} />)}
+      </div>
+    </section>
+  )}
+
+  <!-- Extension + other -->
+  {other.length > 0 && (
+    <section class="max-w-7xl mx-auto px-6 pb-14">
+      <div class="mb-6">
+        <div class="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-text-dim)] mb-2">Other tools</div>
+      </div>
+      <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {other.map(p => <ProductCard product={p} />)}
+      </div>
+    </section>
+  )}
+
+  <!-- Bottom note -->
   <section class="max-w-3xl mx-auto px-6 pb-24">
     <div class="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] p-8">
-      <h2 class="text-xl font-semibold mb-2">More on the roadmap</h2>
+      <h2 class="text-xl font-semibold mb-2">Built on one engine.</h2>
       <p class="text-sm text-[color:var(--color-text-muted)] leading-relaxed">
-        A self-hosted analytics tool, a sitemap-driven content auditor, an open-graph image
-        generator, a privacy-first heatmap, and an indie-friendly link-in-bio. We'll publish the
-        full roadmap once the first three products are live.
+        Every product in the Klyna fleet shares the same TypeScript core for SEO analysis,
+        schema generation, and link suggestions — so improvements compound across the whole lineup.
+        Each app and plugin is self-contained: no paid SaaS, no forced accounts, no dark patterns.
       </p>
     </div>
   </section>
