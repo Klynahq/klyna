@@ -327,6 +327,7 @@ final class Admin {
 							<th scope="row"><label for="webhook_url"><?php esc_html_e( 'Webhook URL', 'wp-popups' ); ?></label></th>
 							<td>
 								<input type="url" id="webhook_url" name="<?php echo esc_attr( KLYNA_POPUPS_OPTION_KEY ); ?>[webhook_url]" class="regular-text" value="<?php echo esc_attr( (string) ( $settings['webhook_url'] ?? '' ) ); ?>" placeholder="https://hooks.example.com/...">
+								<p class="description"><?php esc_html_e( 'Webhook receives captured email + name on each submit. URL must be https and not resolve to a private IP. Set a shared secret to enable HMAC signature header.', 'wp-popups' ); ?></p>
 								<p class="description"><?php esc_html_e( 'Each capture is POSTed here as JSON (event "popup.capture"). Non-blocking; failures never affect the visitor.', 'wp-popups' ); ?></p>
 							</td>
 						</tr>

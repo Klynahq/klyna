@@ -281,6 +281,10 @@ final class Entries {
 		if ( '' === $url || ! wp_http_validate_url( $url ) ) {
 			return;
 		}
+		if ( ! self::is_safe_public_url( $url ) ) {
+			error_log( '[wp-popups] webhook URL rejected: not https or resolves to private/metadata host' );
+			return;
+		}
 
 		$payload = wp_json_encode(
 			array(
@@ -310,6 +314,114 @@ final class Entries {
 				'body'     => $payload,
 			)
 		);
+	}
+
+	/**
+	 * SSRF guard for outbound webhook URLs.
+	 *
+	 * Requires https, resolves the hostname, and rejects any address inside
+	 * private / loopback / link-local / cloud-metadata ranges. Defence in
+	 * depth against an admin (or attacker who phished an admin) pointing the
+	 * webhook at an internal service to exfiltrate captured PII.
+	 *
+	 * @param string $url Candidate URL.
+	 */
+	private static function is_safe_public_url( string $url ): bool {
+		$parts = wp_parse_url( $url );
+		if ( ! is_array( $parts ) || empty( $parts['scheme'] ) || empty( $parts['host'] ) ) {
+			return false;
+		}
+		if ( 'https' !== strtolower( (string) $parts['scheme'] ) ) {
+			return false;
+		}
+		$host = strtolower( (string) $parts['host'] );
+
+		// Block well-known cloud metadata hostnames outright.
+		$blocked_hosts = array(
+			'metadata.google.internal',
+			'metadata.goog',
+			'metadata',
+			'localhost',
+			'localhost.localdomain',
+			'ip6-localhost',
+			'ip6-loopback',
+		);
+		if ( in_array( $host, $blocked_hosts, true ) ) {
+			return false;
+		}
+
+		// Resolve to an IP. If gethostbyname can't resolve it returns the host unchanged.
+		$ip = $host;
+		if ( ! filter_var( $host, FILTER_VALIDATE_IP ) ) {
+			$resolved = gethostbyname( $host );
+			if ( $resolved === $host ) {
+				return false; // unresolvable
+			}
+			$ip = $resolved;
+		}
+
+		if ( ! filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+			return false;
+		}
+
+		// Reject private + reserved ranges via PHP's built-in filter.
+		if ( ! filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
+			return false;
+		}
+
+		// Belt-and-braces bitmask checks for common SSRF targets.
+		$packed = @inet_pton( $ip );
+		if ( false === $packed ) {
+			return false;
+		}
+
+		if ( filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 ) ) {
+			$long = ip2long( $ip );
+			if ( false === $long ) {
+				return false;
+			}
+			$ranges = array(
+				array( '10.0.0.0',        '255.0.0.0' ),       // 10/8
+				array( '172.16.0.0',      '255.240.0.0' ),     // 172.16/12
+				array( '192.168.0.0',     '255.255.0.0' ),     // 192.168/16
+				array( '127.0.0.0',       '255.0.0.0' ),       // loopback
+				array( '169.254.0.0',     '255.255.0.0' ),     // link-local + AWS/Azure metadata 169.254.169.254
+				array( '0.0.0.0',         '255.0.0.0' ),       // current network
+				array( '100.64.0.0',      '255.192.0.0' ),     // CGNAT
+				array( '192.0.0.0',       '255.255.255.0' ),   // IETF protocol
+				array( '198.18.0.0',      '255.254.0.0' ),     // benchmarking
+				array( '224.0.0.0',       '240.0.0.0' ),       // multicast
+				array( '240.0.0.0',       '240.0.0.0' ),       // reserved
+			);
+			foreach ( $ranges as $r ) {
+				if ( ( $long & ip2long( $r[1] ) ) === ip2long( $r[0] ) ) {
+					return false;
+				}
+			}
+		} else {
+			// IPv6: block loopback ::1, unspecified ::, link-local fe80::/10, ULA fc00::/7, IPv4-mapped.
+			$first_byte  = ord( $packed[0] );
+			$second_byte = ord( $packed[1] );
+			if ( '::1' === inet_ntop( $packed ) || '::' === inet_ntop( $packed ) ) {
+				return false;
+			}
+			if ( ( $first_byte & 0xFE ) === 0xFC ) {
+				return false; // fc00::/7 unique-local
+			}
+			if ( 0xFE === $first_byte && ( $second_byte & 0xC0 ) === 0x80 ) {
+				return false; // fe80::/10 link-local
+			}
+			// IPv4-mapped ::ffff:0:0/96 — re-check the embedded IPv4.
+			if ( 0 === strncmp( $packed, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\xff", 12 ) ) {
+				$mapped = inet_ntop( substr( $packed, 12 ) );
+				if ( false !== $mapped ) {
+					return self::is_safe_public_url( 'https://' . $mapped );
+				}
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**
