@@ -1,0 +1,13 @@
+# Klyna Back-in-Stock — Theme App Extension.
+#
+# Ships the storefront "Notify me" widget as an app block merchants drop into
+# their product template (Online Store → Themes → Customize → Add block → Apps).
+# The block renders only when the selected variant is sold out, captures
+# email/SMS interest, and POSTs it to the app's /api/subscribe endpoint.
+
+api_version = "2025-01"
+
+[[extensions]]
+name = "Klyna Notify me"
+handle = "notify-me"
+type = "theme"

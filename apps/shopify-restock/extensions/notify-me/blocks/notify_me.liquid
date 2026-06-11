@@ -1,0 +1,172 @@
+{% comment %}
+  Klyna Back-in-Stock — "Notify me" app block.
+
+  Renders on the product page. Hidden while the selected variant is in stock;
+  when sold out it shows an email (and optionally phone) capture form that POSTs
+  to the app's /api/subscribe endpoint. Variant switching is handled client-side
+  by reading the product JSON below, so the form follows the customer's variant
+  selection without a page reload.
+{% endcomment %}
+
+{%- assign current_variant = product.selected_or_first_available_variant -%}
+
+{{ 'klyna-bis.css' | asset_url | stylesheet_tag }}
+
+<div
+  class="klyna-bis"
+  id="klyna-bis-{{ block.id }}"
+  data-klyna-bis
+  data-endpoint="{{ block.settings.app_url | default: 'https://klyna.dev' }}/api/subscribe"
+  data-shop="{{ shop.permanent_domain }}"
+  data-product-id="{{ product.id }}"
+  data-product-title="{{ product.title | escape }}"
+  data-product-handle="{{ product.handle }}"
+  data-variant-id="{{ current_variant.id }}"
+  data-collect-phone="{{ block.settings.collect_phone }}"
+  data-require-consent="{{ block.settings.require_consent }}"
+  data-success="{{ block.settings.success_message | escape }}"
+  {% if current_variant.available %}hidden{% endif %}
+  {{ block.shopify_attributes }}
+  style="--klyna-accent: {{ block.settings.accent_color }};"
+>
+  <p class="klyna-bis__lead">{{ block.settings.heading | escape }}</p>
+
+  <form class="klyna-bis__form" data-klyna-bis-form>
+    <label class="klyna-bis__label" for="klyna-bis-email-{{ block.id }}">
+      {{ block.settings.email_label | escape }}
+    </label>
+    <input
+      class="klyna-bis__input"
+      id="klyna-bis-email-{{ block.id }}"
+      type="email"
+      name="email"
+      autocomplete="email"
+      placeholder="you@example.com"
+      required
+    >
+
+    {%- if block.settings.collect_phone -%}
+      <label class="klyna-bis__label" for="klyna-bis-phone-{{ block.id }}">
+        {{ block.settings.phone_label | escape }}
+      </label>
+      <input
+        class="klyna-bis__input"
+        id="klyna-bis-phone-{{ block.id }}"
+        type="tel"
+        name="phone"
+        autocomplete="tel"
+        placeholder="+1 555 000 0000"
+      >
+    {%- endif -%}
+
+    {%- if block.settings.require_consent -%}
+      <label class="klyna-bis__consent">
+        <input type="checkbox" name="consent" value="on" required>
+        <span>{{ block.settings.consent_label | escape }}</span>
+      </label>
+    {%- endif -%}
+
+    <button class="klyna-bis__button" type="submit" data-klyna-bis-submit>
+      {{ block.settings.button_label | escape }}
+    </button>
+
+    <p class="klyna-bis__msg" data-klyna-bis-msg hidden></p>
+  </form>
+</div>
+
+<script type="application/json" data-klyna-bis-variants="{{ block.id }}">
+  {{ product.variants | json }}
+</script>
+
+<script src="{{ 'klyna-bis.js' | asset_url }}" defer></script>
+
+{% schema %}
+{
+  "name": "Klyna Notify me",
+  "target": "section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Connection"
+    },
+    {
+      "type": "text",
+      "id": "app_url",
+      "label": "App URL",
+      "info": "Your installed app's public URL (the application_url from shopify.app.toml). The widget posts signups here.",
+      "default": "https://klyna.dev"
+    },
+    {
+      "type": "header",
+      "content": "Copy"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Out of stock — get notified"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Button label",
+      "default": "Notify me when available"
+    },
+    {
+      "type": "text",
+      "id": "email_label",
+      "label": "Email field label",
+      "default": "Email"
+    },
+    {
+      "type": "text",
+      "id": "phone_label",
+      "label": "Phone field label",
+      "default": "Phone (optional)"
+    },
+    {
+      "type": "text",
+      "id": "success_message",
+      "label": "Success message",
+      "default": "You're on the list — we'll let you know the moment it's back."
+    },
+    {
+      "type": "header",
+      "content": "Behavior"
+    },
+    {
+      "type": "checkbox",
+      "id": "collect_phone",
+      "label": "Collect phone number (SMS)",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "require_consent",
+      "label": "Require marketing consent",
+      "default": false
+    },
+    {
+      "type": "text",
+      "id": "consent_label",
+      "label": "Consent checkbox label",
+      "default": "I agree to receive a restock notification."
+    },
+    {
+      "type": "header",
+      "content": "Style"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent color",
+      "default": "#7c5cff"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Klyna Notify me"
+    }
+  ]
+}
+{% endschema %}

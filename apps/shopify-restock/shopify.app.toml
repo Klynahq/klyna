@@ -1,0 +1,54 @@
+# Klyna Back-in-Stock — app config.
+#
+# To use this app:
+#   1. Create a Shopify Partner account at https://partners.shopify.com
+#   2. Run `shopify app config link` from this folder to bind it to your Partner app.
+#      The CLI will overwrite `client_id` below with your actual app key.
+#   3. Run `pnpm dev` (or `shopify app dev`) to start the embedded app on your dev store.
+
+# Placeholder — `shopify app config link` rewrites this with your real client_id.
+client_id = "REPLACE_WITH_CLIENT_ID_FROM_PARTNER_DASHBOARD"
+
+name = "Klyna Back-in-Stock"
+handle = "shopify-restock"
+application_url = "https://klyna.dev"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = ""
+
+[webhooks]
+api_version = "2025-01"
+
+  [[webhooks.subscriptions]]
+  topics = ["app/uninstalled"]
+  uri = "/webhooks/app/uninstalled"
+
+  # Fired whenever a variant's available count changes at a location. This is the
+  # signal that drives back-in-stock alerts: when a sold-out variant goes > 0 we
+  # flush its waitlist.
+  [[webhooks.subscriptions]]
+  topics = ["inventory_levels/update"]
+  uri = "/webhooks/inventory/update"
+
+  # Keeps the cached variant title / product handle fresh for the storefront
+  # widget and the demand report.
+  [[webhooks.subscriptions]]
+  topics = ["products/update"]
+  uri = "/webhooks/products/update"
+
+[access_scopes]
+# read_products + read_inventory power the demand report and the inventory webhook.
+# write_products is not requested — Klyna never mutates your catalog.
+scopes = "read_products,read_inventory"
+
+[auth]
+redirect_urls = [
+  "https://klyna.dev/auth/callback",
+  "https://klyna.dev/auth/shopify/callback",
+  "https://klyna.dev/api/auth/callback"
+]
+
+[pos]
+embedded = false

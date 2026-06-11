@@ -1,0 +1,149 @@
+// Klyna Back-in-Stock — Prisma schema.
+//
+// Backs Shopify session storage plus the waitlist data this app owns:
+// subscriptions to sold-out variants, the alerts we send when they restock,
+// a cached snapshot of variant metadata (so the demand report + storefront
+// widget don't re-query the Admin API on every render), and per-shop settings.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+}
+
+// One row per "notify me" signup. A shopper can subscribe to the same variant
+// with both an email and a phone, or different shoppers to the same variant —
+// every signup is its own row, deduped at the app layer by (variant, contact).
+model Subscription {
+  id          String   @id @default(cuid())
+  shop        String
+  // GraphQL gids, e.g. gid://shopify/ProductVariant/123 — stored verbatim.
+  variantId   String
+  productId   String
+  // Denormalized for fast report rendering without a join to the variant cache.
+  productTitle String
+  variantTitle String?
+  productHandle String?
+
+  channel     Channel  @default(EMAIL)
+  email       String?
+  phone       String?
+
+  status      SubscriptionStatus @default(PENDING)
+  // Marketing opt-in the shopper gave at signup (drives consent records).
+  marketingConsent Boolean @default(false)
+  locale      String?
+  // Where the signup happened, e.g. the storefront URL — pure analytics.
+  sourceUrl   String?
+
+  createdAt   DateTime @default(now())
+  // Set when an alert for this subscription is dispatched.
+  notifiedAt  DateTime?
+
+  alerts      Alert[]
+
+  // A given contact can only sit on a variant's waitlist once.
+  @@unique([shop, variantId, email, phone])
+  @@index([shop, status])
+  @@index([shop, variantId])
+}
+
+// One row per alert we attempt to deliver, so the merchant has an auditable
+// log and we never double-send. Created the moment a restock is detected.
+model Alert {
+  id             String      @id @default(cuid())
+  shop           String
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  variantId      String
+  channel        Channel
+  recipient      String      // email address or phone number actually used
+  status         AlertStatus @default(QUEUED)
+  error          String?     // provider error message if status == FAILED
+
+  createdAt      DateTime    @default(now())
+  sentAt         DateTime?
+
+  @@index([shop, status])
+  @@index([shop, createdAt])
+}
+
+// Cached, denormalized snapshot of variant inventory so the dashboard, demand
+// report, and storefront widget read from SQLite instead of hammering the
+// Admin API. Refreshed by the inventory + products webhooks and on each report
+// sync. `available` reflects the last value Klyna observed.
+model VariantSnapshot {
+  id            String   @id @default(cuid())
+  shop          String
+  variantId     String
+  productId     String
+  inventoryItemId String?
+  productTitle  String
+  variantTitle  String?
+  productHandle String?
+  imageUrl      String?
+  price         String?
+
+  available     Int      @default(0)
+  inStock       Boolean  @default(false)
+
+  updatedAt     DateTime @updatedAt
+
+  @@unique([shop, variantId])
+  @@index([shop, inventoryItemId])
+}
+
+// Per-shop configuration for the widget + delivery behavior.
+model ShopSettings {
+  shop            String   @id
+  // Storefront widget copy / behavior.
+  buttonLabel     String   @default("Notify me when available")
+  successMessage  String   @default("You're on the list — we'll email you the moment it's back.")
+  collectPhone    Boolean  @default(false)
+  requireConsent  Boolean  @default(false)
+  // Throttle: don't re-alert a contact about the same variant within N hours.
+  resendGuardHours Int     @default(24)
+  // Master switch for outbound alerts (useful while testing).
+  alertsEnabled   Boolean  @default(true)
+
+  updatedAt       DateTime @updatedAt
+}
+
+enum Channel {
+  EMAIL
+  SMS
+}
+
+enum SubscriptionStatus {
+  PENDING   // waiting for restock
+  NOTIFIED  // alert sent
+  CANCELLED // shopper unsubscribed or merchant removed
+}
+
+enum AlertStatus {
+  QUEUED
+  SENT
+  FAILED
+}

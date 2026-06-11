@@ -1,0 +1,99 @@
+/* Klyna Back-in-Stock — storefront widget styles.
+   Scoped under .klyna-bis so it never leaks into the host theme. Inherits the
+   theme's font; the accent is driven by the --klyna-accent block setting. */
+
+.klyna-bis {
+  --klyna-accent: #7c5cff;
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  background: rgba(124, 92, 255, 0.04);
+  font-family: inherit;
+}
+
+.klyna-bis[hidden] {
+  display: none;
+}
+
+.klyna-bis__lead {
+  margin: 0 0 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.klyna-bis__form {
+  display: grid;
+  gap: 8px;
+}
+
+.klyna-bis__label {
+  font-size: 0.8rem;
+  opacity: 0.75;
+}
+
+.klyna-bis__input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  font-size: 0.95rem;
+  font-family: inherit;
+  background: #fff;
+  color: inherit;
+}
+
+.klyna-bis__input:focus-visible {
+  outline: 2px solid var(--klyna-accent);
+  outline-offset: 1px;
+  border-color: var(--klyna-accent);
+}
+
+.klyna-bis__consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  opacity: 0.85;
+}
+
+.klyna-bis__consent input {
+  margin-top: 2px;
+}
+
+.klyna-bis__button {
+  margin-top: 4px;
+  padding: 11px 16px;
+  border: none;
+  border-radius: 8px;
+  background: var(--klyna-accent);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+
+.klyna-bis__button:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.klyna-bis__button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.klyna-bis__msg {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+}
+
+.klyna-bis__msg[data-tone='success'] {
+  color: #0f9d58;
+}
+
+.klyna-bis__msg[data-tone='error'] {
+  color: #d93025;
+}
