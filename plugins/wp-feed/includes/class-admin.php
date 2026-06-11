@@ -158,7 +158,14 @@ final class Admin {
 		$ai_provider        = isset( $input['ai_provider'] ) ? sanitize_key( (string) $input['ai_provider'] ) : '';
 		$out['ai_provider'] = in_array( $ai_provider, $providers, true ) ? $ai_provider : '';
 		$out['ai_model']    = isset( $input['ai_model'] ) ? sanitize_text_field( (string) $input['ai_model'] ) : '';
-		$out['ai_api_key']  = isset( $input['ai_api_key'] ) ? sanitize_text_field( (string) $input['ai_api_key'] ) : '';
+		$submitted_key = isset( $input['ai_api_key'] ) ? sanitize_text_field( (string) $input['ai_api_key'] ) : '';
+		$keep_key      = ! empty( $input['ai_api_key_keep'] );
+		if ( '' === $submitted_key && $keep_key ) {
+			$existing          = get_option( KLYNA_FEED_OPTION_KEY, array() );
+			$out['ai_api_key'] = (string) ( is_array( $existing ) && isset( $existing['ai_api_key'] ) ? $existing['ai_api_key'] : '' );
+		} else {
+			$out['ai_api_key'] = $submitted_key;
+		}
 		$out['ai_endpoint'] = isset( $input['ai_endpoint'] ) ? sanitize_text_field( (string) $input['ai_endpoint'] ) : '';
 		$out['ai_daily_cap'] = isset( $input['ai_daily_cap'] ) ? max( 1, (int) $input['ai_daily_cap'] ) : 100;
 
@@ -496,7 +503,29 @@ final class Admin {
 						<tr>
 							<th scope="row"><label for="ai_api_key"><?php esc_html_e( 'API key', 'wp-feed' ); ?></label></th>
 							<td>
-								<input type="password" id="ai_api_key" name="<?php echo esc_attr( $option ); ?>[ai_api_key]" class="regular-text" value="<?php echo esc_attr( (string) ( $settings['ai_api_key'] ?? '' ) ); ?>" autocomplete="off">
+								<?php
+								$wf_key    = (string) ( $settings['ai_api_key'] ?? '' );
+								$wf_has    = ! empty( $wf_key );
+								$wf_masked = $wf_has ? str_repeat( "\xE2\x80\xA2", 4 ) . ' ' . substr( $wf_key, -4 ) : '';
+								?>
+								<?php if ( $wf_has ) : ?>
+									<div id="wf-ai-key-display">
+										<code style="padding:4px 8px;background:#f0f0f1;border-radius:3px;"><?php echo esc_html( $wf_masked ); ?></code>
+										<button type="button" class="button button-secondary" id="wf-ai-key-replace" style="margin-left:8px;"><?php esc_html_e( 'Replace key', 'wp-feed' ); ?></button>
+									</div>
+									<input type="hidden" name="<?php echo esc_attr( $option ); ?>[ai_api_key_keep]" value="1">
+									<input type="password" id="ai_api_key" name="<?php echo esc_attr( $option ); ?>[ai_api_key]" class="regular-text" value="" autocomplete="new-password" style="display:none;margin-top:8px;">
+									<script>
+									(function(){
+										var btn=document.getElementById('wf-ai-key-replace');
+										var inp=document.getElementById('ai_api_key');
+										var disp=document.getElementById('wf-ai-key-display');
+										if(btn&&inp&&disp){btn.addEventListener('click',function(){inp.style.display='';inp.focus();disp.style.display='none';});}
+									})();
+									</script>
+								<?php else : ?>
+									<input type="password" id="ai_api_key" name="<?php echo esc_attr( $option ); ?>[ai_api_key]" class="regular-text" value="" autocomplete="new-password">
+								<?php endif; ?>
 								<p class="description"><?php esc_html_e( 'Stored only on this site. Ollama does not need a key.', 'wp-feed' ); ?></p>
 							</td>
 						</tr>
