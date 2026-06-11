@@ -11,7 +11,7 @@ client_id = "REPLACE_WITH_CLIENT_ID_FROM_PARTNER_DASHBOARD"
 
 name = "Klyna Urgency"
 handle = "shopify-urgency"
-application_url = "https://klyna.dev"
+application_url = "https://klyna-urgency.vercel.app"
 embedded = true
 
 [build]
@@ -25,6 +25,18 @@ api_version = "2025-01"
   topics = ["app/uninstalled"]
   uri = "/webhooks/app/uninstalled"
 
+  [[webhooks.subscriptions]]
+  topics = ["customers/data_request"]
+  uri = "/webhooks/customers/data_request"
+
+  [[webhooks.subscriptions]]
+  topics = ["customers/redact"]
+  uri = "/webhooks/customers/redact"
+
+  [[webhooks.subscriptions]]
+  topics = ["shop/redact"]
+  uri = "/webhooks/shop/redact"
+
 # Scarcity & social-proof need products, inventory levels, and orders.
 # Theme app extension blocks need theme read access.
 [access_scopes]
@@ -32,9 +44,9 @@ scopes = "read_products,read_inventory,read_orders,read_themes"
 
 [auth]
 redirect_urls = [
-  "https://klyna.dev/auth/callback",
-  "https://klyna.dev/auth/shopify/callback",
-  "https://klyna.dev/api/auth/callback"
+  "https://klyna-urgency.vercel.app/auth/callback",
+  "https://klyna-urgency.vercel.app/auth/shopify/callback",
+  "https://klyna-urgency.vercel.app/api/auth/callback"
 ]
 
 [pos]

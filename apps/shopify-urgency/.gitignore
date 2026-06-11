@@ -8,3 +8,4 @@ build/
 .shopify/
 public/build/
 extensions/*/node_modules/
+.vercel
