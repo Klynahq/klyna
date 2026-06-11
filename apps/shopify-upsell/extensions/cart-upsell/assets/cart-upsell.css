@@ -1,0 +1,106 @@
+/* Klyna Upsell — in-cart widget styles. Scoped under .klyna-upsell so they
+   never leak into the host theme. Neutral by default; accent is themeable. */
+
+.klyna-upsell {
+  --klyna-accent: #7c5cff;
+  margin: 12px 0;
+  font-family: inherit;
+}
+
+.klyna-upsell__card {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.klyna-upsell__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.klyna-upsell__headline {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #111;
+}
+
+.klyna-upsell__close {
+  appearance: none;
+  border: none;
+  background: transparent;
+  font-size: 18px;
+  line-height: 1;
+  color: #999;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.klyna-upsell__close:hover { color: #333; }
+
+.klyna-upsell__body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.klyna-upsell__img {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex: 0 0 auto;
+  background: #f3f3f5;
+}
+.klyna-upsell__img--empty {
+  background: linear-gradient(135deg, #f3f3f5, #e7e7ea);
+}
+
+.klyna-upsell__info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.klyna-upsell__title {
+  font-size: 14px;
+  color: #1a1a1a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.klyna-upsell__badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--klyna-accent);
+  border-radius: 999px;
+  padding: 2px 7px;
+}
+
+.klyna-upsell__cta {
+  appearance: none;
+  border: none;
+  border-radius: 8px;
+  background: var(--klyna-accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: filter 0.15s ease;
+}
+.klyna-upsell__cta:hover { filter: brightness(1.08); }
+.klyna-upsell__cta:disabled { opacity: 0.6; cursor: default; }

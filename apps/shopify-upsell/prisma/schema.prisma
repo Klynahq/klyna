@@ -1,0 +1,117 @@
+// Klyna Upsell — Prisma schema.
+// Backs Shopify session storage plus the offer rules engine, A/B variants,
+// and the event log that powers the conversion analytics dashboard.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+}
+
+// An offer rule. Decides WHEN to show an upsell (the trigger) and WHERE
+// (the placement). The actual product shown lives on its OfferVariant rows,
+// so a single offer can A/B test two recommendations.
+model Offer {
+  id        String   @id @default(cuid())
+  shop      String
+  name      String
+  enabled   Boolean  @default(true)
+
+  // Trigger — "product" | "collection" | "cart_value".
+  // triggerValue holds a product GID, a collection GID, or a minimum
+  // cart subtotal (minor units, e.g. "5000" = $50.00) depending on type.
+  triggerType  String
+  triggerValue String
+
+  // Placement — "cart" (Theme App Extension drawer) or
+  // "post_purchase" (Checkout UI extension thank-you page).
+  placement String  @default("cart")
+
+  // A/B split: percentage (0-100) of impressions routed to variant A.
+  // The remainder goes to variant B when a B variant exists.
+  splitA Int @default(50)
+
+  variants OfferVariant[]
+  events   OfferEvent[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([shop, enabled])
+}
+
+// One side of an offer. A/B testing = two variants ("A" and "B") on the
+// same offer. A solo offer just has variant "A".
+model OfferVariant {
+  id      String @id @default(cuid())
+  offerId String
+  offer   Offer  @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  // "A" or "B".
+  label String @default("A")
+
+  // The recommended product to upsell.
+  productGid    String
+  productHandle String  @default("")
+  productTitle  String
+  productImage  String?
+
+  // Copy shown in the widget.
+  headline String  @default("You might also like")
+  ctaText  String  @default("Add to order")
+
+  // Optional incentive. discountPercent 0-100; 0 = no discount.
+  discountPercent Int @default(0)
+
+  events OfferEvent[]
+
+  @@unique([offerId, label])
+  @@index([offerId])
+}
+
+// Append-only event log. Every storefront impression / accept / decline is
+// written here, then aggregated into the analytics dashboard.
+model OfferEvent {
+  id        String @id @default(cuid())
+  shop      String
+  offerId   String
+  offer     Offer  @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  variantId String
+  variant   OfferVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  // "impression" | "accept" | "decline".
+  type String
+
+  // Set on "accept" so we can attribute revenue. Minor units.
+  revenue Int @default(0)
+
+  // Shopify order GID, set when an orders/create webhook confirms the upsell.
+  orderGid String?
+
+  createdAt DateTime @default(now())
+
+  @@index([shop, createdAt])
+  @@index([offerId, type])
+  @@index([variantId, type])
+}
