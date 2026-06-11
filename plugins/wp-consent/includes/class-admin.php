@@ -115,7 +115,14 @@ final class Admin {
 		$prov              = isset( $input['ai_provider'] ) ? sanitize_key( (string) $input['ai_provider'] ) : 'off';
 		$out['ai_provider']  = in_array( $prov, $allowed_providers, true ) ? $prov : 'off';
 		$out['ai_model']     = isset( $input['ai_model'] ) ? sanitize_text_field( (string) $input['ai_model'] ) : '';
-		$out['ai_api_key']   = isset( $input['ai_api_key'] ) ? trim( sanitize_text_field( (string) $input['ai_api_key'] ) ) : '';
+		$submitted_key = isset( $input['ai_api_key'] ) ? trim( sanitize_text_field( (string) $input['ai_api_key'] ) ) : '';
+		$keep_key      = ! empty( $input['ai_api_key_keep'] );
+		if ( '' === $submitted_key && $keep_key ) {
+			$existing          = get_option( KLYNA_CONSENT_OPTION_KEY, array() );
+			$out['ai_api_key'] = (string) ( is_array( $existing ) && isset( $existing['ai_api_key'] ) ? $existing['ai_api_key'] : '' );
+		} else {
+			$out['ai_api_key'] = $submitted_key;
+		}
 		$out['ai_endpoint']  = isset( $input['ai_endpoint'] ) ? sanitize_text_field( (string) $input['ai_endpoint'] ) : '';
 		$cap                 = isset( $input['ai_daily_cap'] ) ? (int) $input['ai_daily_cap'] : 100;
 		$out['ai_daily_cap'] = max( 1, min( 10000, $cap ) );
@@ -518,14 +525,43 @@ final class Admin {
 					<label for="kc-ai-api-key" class="klyna-consent-label">
 						<?php esc_html_e( 'API key', 'wp-consent' ); ?>
 					</label>
-					<input
-						type="password"
-						id="kc-ai-api-key"
-						name="<?php echo esc_attr( KLYNA_CONSENT_OPTION_KEY ); ?>[ai_api_key]"
-						class="klyna-consent-input"
-						value="<?php echo esc_attr( $ai_api_key ); ?>"
-						autocomplete="new-password"
-					>
+					<?php
+					$wc_has    = ! empty( $ai_api_key );
+					$wc_masked = $wc_has ? str_repeat( "\xE2\x80\xA2", 4 ) . ' ' . substr( $ai_api_key, -4 ) : '';
+					?>
+					<?php if ( $wc_has ) : ?>
+						<div id="kc-ai-key-display">
+							<code style="padding:4px 8px;background:#f0f0f1;border-radius:3px;"><?php echo esc_html( $wc_masked ); ?></code>
+							<button type="button" class="button button-secondary" id="kc-ai-key-replace" style="margin-left:8px;"><?php esc_html_e( 'Replace key', 'wp-consent' ); ?></button>
+						</div>
+						<input type="hidden" name="<?php echo esc_attr( KLYNA_CONSENT_OPTION_KEY ); ?>[ai_api_key_keep]" value="1">
+						<input
+							type="password"
+							id="kc-ai-api-key"
+							name="<?php echo esc_attr( KLYNA_CONSENT_OPTION_KEY ); ?>[ai_api_key]"
+							class="klyna-consent-input"
+							value=""
+							autocomplete="new-password"
+							style="display:none;margin-top:8px;"
+						>
+						<script>
+						(function(){
+							var btn=document.getElementById('kc-ai-key-replace');
+							var inp=document.getElementById('kc-ai-api-key');
+							var disp=document.getElementById('kc-ai-key-display');
+							if(btn&&inp&&disp){btn.addEventListener('click',function(){inp.style.display='';inp.focus();disp.style.display='none';});}
+						})();
+						</script>
+					<?php else : ?>
+						<input
+							type="password"
+							id="kc-ai-api-key"
+							name="<?php echo esc_attr( KLYNA_CONSENT_OPTION_KEY ); ?>[ai_api_key]"
+							class="klyna-consent-input"
+							value=""
+							autocomplete="new-password"
+						>
+					<?php endif; ?>
 				</div>
 
 				<div class="klyna-consent-field">
