@@ -280,6 +280,8 @@ final class Admin {
 				</table>
 				<?php submit_button(); ?>
 			</form>
+			<?php \KlynaTables\Telemetry::render_form(); ?>
+
 			<script>
 			(function(){
 				var btn = document.getElementById('klyna-tables-ai-test');
