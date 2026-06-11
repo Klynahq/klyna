@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto';
 import { type LoaderFunctionArgs, json } from '@remix-run/node';
 import shopify from '../shopify.server';
 import prisma from '../db.server';
@@ -9,18 +10,20 @@ import { generateFeed } from '../lib/feeds.server';
 // nextRefreshAt is due (and whose shop isn't paused), pulls offline admin
 // access for that shop, and regenerates the feed.
 //
-// Auth: pass ?key=<CRON_SECRET> or an Authorization: Bearer <CRON_SECRET>
-// header. CRON_SECRET defaults to FEED_TOKEN_SALT so a fresh install still has
-// a non-empty secret.
+// Auth: pass an Authorization: Bearer <CRON_SECRET> header. CRON_SECRET
+// defaults to FEED_TOKEN_SALT so a fresh install still has a non-empty
+// secret. Query-string secrets are not accepted (they leak into logs).
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const secret = process.env.CRON_SECRET ?? process.env.FEED_TOKEN_SALT ?? '';
   const url = new URL(request.url);
-  const provided =
-    url.searchParams.get('key') ??
-    request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ??
-    '';
+  const provided = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ?? '';
 
-  if (!secret || provided !== secret) {
+  if (!secret || !provided) {
+    return json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  const a = Buffer.from(provided);
+  const b = Buffer.from(secret);
+  if (a.length !== b.length || !timingSafeEqual(a, b)) {
     return json({ error: 'Unauthorized' }, { status: 401 });
   }
 
