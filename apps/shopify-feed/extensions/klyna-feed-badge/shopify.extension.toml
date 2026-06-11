@@ -11,4 +11,5 @@ api_version = "2025-01"
 [[extensions]]
 name = "Klyna Feed badge"
 handle = "klyna-feed-badge"
+uid = "24aa4314-0262-27f7-dea4-b7005af7276bc87d4521"
 type = "theme"

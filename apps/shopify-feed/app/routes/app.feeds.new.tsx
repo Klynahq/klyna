@@ -88,6 +88,8 @@ export default function NewFeed() {
   const preset = (searchParams.get('channel') as Channel) || 'google';
   const [channel, setChannel] = useState<Channel>(CHANNELS[preset] ? preset : 'google');
   const [refresh, setRefresh] = useState('360');
+  const [currencyVal, setCurrencyVal] = useState(currency);
+  const [languageVal, setLanguageVal] = useState('en');
 
   const error = data && 'error' in data ? data.error : null;
 
@@ -102,7 +104,7 @@ export default function NewFeed() {
                   label="Feed name"
                   name="name"
                   autoComplete="off"
-                  helpText="Just for you — e.g. “Google Shopping — US”."
+                  helpText="Just for you — e.g. 'Google Shopping — US'."
                   requiredIndicator
                 />
 
@@ -129,15 +131,17 @@ export default function NewFeed() {
                   label="Currency"
                   name="currency"
                   autoComplete="off"
-                  defaultValue={currency}
-                  helpText="ISO code — prices emit as e.g. “12.99 USD”."
+                  value={currencyVal}
+                  onChange={setCurrencyVal}
+                  helpText="ISO code — prices emit as e.g. '12.99 USD'."
                 />
 
                 <TextField
                   label="Language"
                   name="language"
                   autoComplete="off"
-                  defaultValue="en"
+                  value={languageVal}
+                  onChange={setLanguageVal}
                   helpText="ISO language code for the feed metadata."
                 />
 

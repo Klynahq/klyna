@@ -25,7 +25,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   const run = feed.runs[0];
   if (!run || !run.body) {
     return new Response(
-      'Feed has not been generated yet. Open the app and hit “Refresh now”.',
+      'Feed has not been generated yet. Open the app and hit "Refresh now".',
       { status: 503, headers: { 'Retry-After': '600' } },
     );
   }

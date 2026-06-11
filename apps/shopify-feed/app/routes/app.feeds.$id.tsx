@@ -332,7 +332,7 @@ export default function FeedDetail() {
                 borderColor="border"
                 borderWidth="025"
               >
-                <Text as="code" variant="bodyMd" breakWord>{feedUrl}</Text>
+                <Text as="p" variant="bodyMd" breakWord>{feedUrl}</Text>
               </Box>
               {lastRun ? (
                 <InlineStack gap="400">
@@ -346,7 +346,7 @@ export default function FeedDetail() {
                 </InlineStack>
               ) : (
                 <Banner tone="info">
-                  This feed has never been generated. Hit “Refresh now” to build it.
+                  This feed has never been generated. Hit "Refresh now" to build it.
                 </Banner>
               )}
             </BlockStack>

@@ -15,6 +15,7 @@ import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
 import { ensureShopSettings } from '../lib/feeds.server';
 import { CHANNELS } from '../lib/channels';
+import { getShopAiSettings } from '../lib/ai.server';
 import type { Channel, FeedHealth } from '../lib/types';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -28,6 +29,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       runs: { orderBy: { createdAt: 'desc' }, take: 1 },
     },
   });
+
+  const ai = await getShopAiSettings(session.shop);
 
   const summary = feeds.map((f) => {
     const last = f.runs[0];
@@ -45,7 +48,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     };
   });
 
-  return { shop: session.shop, summary };
+  return {
+    shop: session.shop,
+    summary,
+    aiEnabled: ai.provider !== 'off' && !!ai.apiKey,
+    aiProvider: ai.provider,
+  };
 };
 
 function gradeTone(grade: string | null) {
@@ -56,11 +64,38 @@ function gradeTone(grade: string | null) {
 }
 
 export default function Dashboard() {
-  const { shop, summary } = useLoaderData<typeof loader>();
+  const { shop, summary, aiEnabled, aiProvider } = useLoaderData<typeof loader>();
 
   const channels = Object.values(CHANNELS);
   const totalItems = summary.reduce((s, f) => s + f.itemCount, 0);
   const live = summary.filter((f) => f.enabled).length;
+
+  const tiles = [
+    {
+      title: 'Feeds',
+      body: 'Create and manage your Google, Meta, TikTok, and Pinterest feeds. Field mapping, taxonomy, include rules, scheduled refresh.',
+      to: '/app/feeds',
+      cta: 'Open feeds',
+    },
+    {
+      title: 'AI title rewrites',
+      body: 'Per-channel product titles tuned to how Google, Meta, and Pinterest each rank and click. Applied automatically on next render.',
+      to: '/app/feeds/optimize-titles',
+      cta: aiEnabled ? 'Optimize titles' : 'Enable AI first',
+    },
+    {
+      title: 'Feed health',
+      body: 'See which items each channel will reject before they reject them. Per-feed score, grade, and breakdown of missing fields.',
+      to: '/app/health',
+      cta: 'View health',
+    },
+    {
+      title: 'Settings',
+      body: 'Connect a free AI provider (OpenRouter / Groq / Gemini) for title rewrites. Configure metafield namespace and refresh schedule.',
+      to: '/app/settings',
+      cta: aiEnabled ? `Connected . ${aiProvider}` : 'Set up',
+    },
+  ];
 
   return (
     <Page
@@ -72,10 +107,17 @@ export default function Dashboard() {
         <Layout.Section>
           <Card>
             <BlockStack gap="200">
-              <Text as="h2" variant="headingMd">Product feeds, always in sync.</Text>
+              <InlineStack gap="200" blockAlign="center">
+                <Text as="h2" variant="headingMd">Product feeds, always in sync.</Text>
+                {aiEnabled ? (
+                  <Badge tone="success">{`AI . ${aiProvider}`}</Badge>
+                ) : (
+                  <Badge tone="info">No AI key set</Badge>
+                )}
+              </InlineStack>
               <Text as="p" variant="bodyMd" tone="subdued">
                 Klyna Feed generates Google Shopping XML and Meta, TikTok, and Pinterest
-                CSV feeds straight from your catalog — with field and taxonomy mapping,
+                CSV feeds straight from your catalog, with field and taxonomy mapping,
                 per-channel include rules, metafield overrides, scheduled refresh, and a
                 health report that catches missing fields before the channel rejects them.
               </Text>
@@ -86,6 +128,20 @@ export default function Dashboard() {
               </InlineStack>
             </BlockStack>
           </Card>
+        </Layout.Section>
+
+        <Layout.Section>
+          <InlineGrid columns={{ xs: 1, md: 2 }} gap="300">
+            {tiles.map((t) => (
+              <Card key={t.to}>
+                <BlockStack gap="200">
+                  <Text as="h3" variant="headingSm">{t.title}</Text>
+                  <Text as="p" variant="bodyMd" tone="subdued">{t.body}</Text>
+                  <Link to={t.to}>{t.cta}</Link>
+                </BlockStack>
+              </Card>
+            ))}
+          </InlineGrid>
         </Layout.Section>
 
         {summary.length > 0 && (
@@ -111,19 +167,19 @@ export default function Dashboard() {
                             </Badge>
                           </InlineStack>
                           <Text as="span" variant="bodySm" tone="subdued">
-                            {CHANNELS[f.channel].label} · {f.itemCount} items
+                            {CHANNELS[f.channel].label} . {f.itemCount} items
                             {f.lastRefreshAt
-                              ? ` · refreshed ${new Date(f.lastRefreshAt).toLocaleString()}`
-                              : ' · never refreshed'}
+                              ? ` . refreshed ${new Date(f.lastRefreshAt).toLocaleString()}`
+                              : ' . never refreshed'}
                           </Text>
                         </BlockStack>
                         <InlineStack gap="300" blockAlign="center">
                           {f.grade && (
                             <Badge tone={gradeTone(f.grade)}>
-                              {`Health ${f.grade} · ${f.score}`}
+                              {`Health ${f.grade} . ${f.score}`}
                             </Badge>
                           )}
-                          <Link to={`/app/feeds/${f.id}`}>Manage →</Link>
+                          <Link to={`/app/feeds/${f.id}`}>Manage</Link>
                         </InlineStack>
                       </InlineStack>
                     </Box>
@@ -145,7 +201,7 @@ export default function Dashboard() {
                     <Text as="p" variant="bodySm" tone="subdued">
                       {c.format === 'xml' ? 'Google Shopping XML (RSS 2.0)' : 'CSV catalog'}
                     </Text>
-                    <Link to={`/app/feeds/new?channel=${c.id}`}>Create feed →</Link>
+                    <Link to={`/app/feeds/new?channel=${c.id}`}>Create feed</Link>
                   </BlockStack>
                 </Card>
               ))}
@@ -159,11 +215,11 @@ export default function Dashboard() {
               <BlockStack gap="200">
                 <Text as="h2" variant="headingMd">Get started</Text>
                 <Text as="p" tone="subdued">
-                  You have no feeds yet. Create your first one — pick a channel, map a few
+                  You have no feeds yet. Create your first one. Pick a channel, map a few
                   fields, and Klyna generates a feed URL you paste into Google Merchant
                   Center, Meta Commerce Manager, TikTok, or Pinterest.
                 </Text>
-                <Link to="/app/feeds/new">Create your first feed →</Link>
+                <Link to="/app/feeds/new">Create your first feed</Link>
               </BlockStack>
             </Card>
           </Layout.Section>

@@ -81,6 +81,8 @@ export interface FeedConfig {
   includeRules: IncludeRules;
   metafieldNamespace: string;
   defaultGoogleCategory: string | null;
+  // AI-generated per-channel title overrides, keyed by productId.
+  titleOverrides?: Record<string, string>;
 }
 
 // Product attributes we can map a feed field onto.

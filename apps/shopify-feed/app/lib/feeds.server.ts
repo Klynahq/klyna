@@ -87,10 +87,20 @@ export async function generateFeed(
   const settings = await prisma.shopSettings.findUnique({ where: { shop } });
   const namespace = settings?.metafieldNamespace ?? 'klyna_feed';
 
-  const config = toFeedConfig(feed as unknown as FeedRow, {
+  const baseConfig = toFeedConfig(feed as unknown as FeedRow, {
     metafieldNamespace: namespace,
     defaultGoogleCategory: settings?.defaultGoogleCategory ?? null,
   });
+
+  // Load any AI title overrides for this shop+channel. We key by productId so
+  // resolveItem() can swap in a channel-tuned title when one exists.
+  const channelKey = baseConfig.channel === 'tiktok' ? 'meta' : baseConfig.channel;
+  const overrideRows = await prisma.feedTitleOverride.findMany({
+    where: { shop, channel: channelKey },
+  });
+  const titleOverrides: Record<string, string> = {};
+  for (const row of overrideRows) titleOverrides[row.productId] = row.title;
+  const config: FeedConfig = { ...baseConfig, titleOverrides };
 
   let result: GeneratedFeed;
   let status: 'ok' | 'warn' | 'error' = 'ok';

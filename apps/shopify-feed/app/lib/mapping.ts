@@ -123,7 +123,8 @@ export function resolveItem(
   // id: prefer the mapped field; fall back to variant id so it's never empty.
   out.id = resolveField(view, fm.id) || (view.variantId.split('/').pop() ?? view.variantId);
 
-  out.title = resolveField(view, fm.title);
+  const override = config.titleOverrides?.[view.productId];
+  out.title = override && override.trim() ? override.trim() : resolveField(view, fm.title);
   out.description = resolveField(view, fm.description);
 
   // link is always synthesized from the handle so UTM + variant land correctly.
