@@ -398,6 +398,8 @@ final class Admin {
 
 				<?php submit_button(); ?>
 			</form>
+			<?php \KlynaPopups\Telemetry::render_form(); ?>
+
 			<script>
 			(function () {
 				var btn = document.getElementById('klyna-popups-ai-test');

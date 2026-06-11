@@ -58,6 +58,7 @@ add_action(
 	'plugins_loaded',
 	function () {
 		( new KlynaPopups\Plugin() )->boot();
+		\KlynaPopups\Telemetry::register();
 	}
 );
 
