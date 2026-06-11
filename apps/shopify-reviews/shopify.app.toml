@@ -11,7 +11,7 @@ client_id = "REPLACE_WITH_CLIENT_ID_FROM_PARTNER_DASHBOARD"
 
 name = "Klyna Reviews"
 handle = "shopify-reviews"
-application_url = "https://klyna.dev"
+application_url = "https://klyna-shopify-reviews.vercel.app"
 embedded = true
 
 [build]
@@ -31,6 +31,18 @@ api_version = "2025-01"
   topics = ["orders/fulfilled"]
   uri = "/webhooks/orders/fulfilled"
 
+  [[webhooks.subscriptions]]
+  compliance_topics = ["customers/data_request"]
+  uri = "/webhooks/customers/data_request"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = ["customers/redact"]
+  uri = "/webhooks/customers/redact"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = ["shop/redact"]
+  uri = "/webhooks/shop/redact"
+
 [access_scopes]
 # read_products      — resolve product titles/handles/images for the widget + emails
 # read_orders        — match fulfillments to line items for review requests
@@ -40,9 +52,9 @@ scopes = "read_products,read_orders,read_customers,write_metafields"
 
 [auth]
 redirect_urls = [
-  "https://klyna.dev/auth/callback",
-  "https://klyna.dev/auth/shopify/callback",
-  "https://klyna.dev/api/auth/callback"
+  "https://klyna-shopify-reviews.vercel.app/auth/callback",
+  "https://klyna-shopify-reviews.vercel.app/auth/shopify/callback",
+  "https://klyna-shopify-reviews.vercel.app/api/auth/callback"
 ]
 
 [pos]

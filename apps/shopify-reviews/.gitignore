@@ -7,3 +7,4 @@ build/
 *.sqlite-journal
 .shopify/
 public/build/
+.vercel
