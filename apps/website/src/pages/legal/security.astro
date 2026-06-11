@@ -1,0 +1,103 @@
+---
+import LegalLayout from '../../layouts/LegalLayout.astro';
+---
+
+<LegalLayout
+  title="Security & Disclosure"
+  description="How to report a security issue in Klyna tools, our SLA, and safe harbour."
+  heading="Security & Disclosure"
+>
+  <p>
+    If you have found a security issue in any Klyna tool, please tell us. We are a small studio
+    and we take this seriously.
+  </p>
+
+  <h2>Where to report</h2>
+  <ul>
+    <li>
+      Email:
+      <a href="mailto:security@klyna.dev">security@klyna.dev</a>
+    </li>
+    <li>
+      PGP key fingerprint:
+      <code>4F1E 9AA0 C3D2 76B1 8C57 31E0 7E2D 5A1B 9F4C 0D2A</code>
+      (full key at <a href="/.well-known/security.txt">/.well-known/security.txt</a>)
+    </li>
+    <li>
+      Backup: open a private security advisory on
+      <a href="https://github.com/klynahq/klyna/security/advisories"
+        >github.com/klynahq/klyna</a
+      >
+    </li>
+  </ul>
+
+  <h2>Our SLA</h2>
+  <ul>
+    <li><strong>Acknowledge:</strong> within 48 hours (business day, Asia/Karachi).</li>
+    <li><strong>Triage and initial assessment:</strong> within 5 business days.</li>
+    <li><strong>Patch:</strong> within 90 days for high/critical, sooner for actively exploited issues.</li>
+    <li><strong>Disclosure:</strong> coordinated; we credit you in the advisory unless you ask us not to.</li>
+  </ul>
+
+  <h2>Scope</h2>
+  <p>
+    <strong>In scope:</strong>
+  </p>
+  <ul>
+    <li>klyna.dev (the marketing site)</li>
+    <li><code>klyna.dev/admin</code> (the studio admin panel)</li>
+    <li><code>pings.klyna.dev</code> (the install-ping endpoint)</li>
+    <li>
+      Source code in any repo under
+      <a href="https://github.com/klynahq">github.com/klynahq</a> &mdash; plugins, apps,
+      extensions, themes
+    </li>
+    <li>Signed release artefacts published on <a href="/downloads">/downloads</a></li>
+  </ul>
+
+  <p>
+    <strong>Out of scope:</strong>
+  </p>
+  <ul>
+    <li>
+      Your own WordPress, Shopify, or browser infrastructure where you have installed a Klyna
+      tool. Misconfigurations there are not our vulnerabilities.
+    </li>
+    <li>
+      Third-party services we depend on (Vercel, Cloudflare, Resend, GitHub, Fastmail) &mdash;
+      report those upstream.
+    </li>
+    <li>
+      Findings that require physical access, social engineering of staff, or a compromised
+      end-user device.
+    </li>
+    <li>Best-practice notes (missing headers we already accept, theoretical CSP weakenings) without a demonstrated impact.</li>
+  </ul>
+
+  <h2>Safe harbour</h2>
+  <p>
+    We will not pursue legal action or law-enforcement involvement against you for security
+    research carried out in good faith, as long as you:
+  </p>
+  <ul>
+    <li>Stay within scope above.</li>
+    <li>Do not access, modify, or exfiltrate data that does not belong to you (use your own test account).</li>
+    <li>Do not run automated scanners that meaningfully degrade service for other users.</li>
+    <li>Do not publicly disclose before we have had a reasonable chance to patch (see SLA above).</li>
+  </ul>
+
+  <h2>Bounty</h2>
+  <p>
+    We do not have a paid bounty programme &mdash; the project is free. We do credit researchers
+    in the advisory and on the
+    <a href="https://github.com/klynahq/klyna/security/advisories">Hall of Fame</a> on GitHub, and
+    we ship Klyna swag for valid high/critical reports while supplies last.
+  </p>
+
+  <h2>CVE coordination</h2>
+  <p>
+    For issues that warrant a CVE, we will request one through GitHub's CNA when we publish the
+    advisory. You are welcome to request your own through MITRE if you prefer; just coordinate
+    the timing with us.
+  </p>
+</LegalLayout>

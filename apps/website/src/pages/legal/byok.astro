@@ -1,0 +1,74 @@
+---
+import LegalLayout from '../../layouts/LegalLayout.astro';
+---
+
+<LegalLayout
+  title="BYOK posture"
+  description="How Klyna handles your bring-your-own-key API credentials. Spoiler: we never see them."
+  heading="BYOK posture"
+>
+  <p>
+    Several Klyna tools talk to AI providers (OpenRouter, Groq, Gemini, Cloudflare Workers AI,
+    Ollama) or other paid APIs. You bring your own key. This page describes exactly what happens
+    to that key.
+  </p>
+
+  <h2>1. The key lives on your infrastructure, not ours</h2>
+  <ul>
+    <li>
+      <strong>WordPress:</strong> stored in the <code>klyna_settings</code> option in your
+      site's database, encrypted with <code>sodium_crypto_secretbox</code> keyed off your
+      <code>AUTH_KEY</code> constant from <code>wp-config.php</code>.
+    </li>
+    <li>
+      <strong>Shopify:</strong> stored in a shop metafield, encrypted with a key derived from
+      your shop's API secret.
+    </li>
+    <li>
+      <strong>Browser extension:</strong> stored in <code>chrome.storage.local</code>, scoped to
+      the extension origin.
+    </li>
+  </ul>
+
+  <h2>2. The key is never proxied through klyna.dev</h2>
+  <p>
+    When a Klyna tool calls a third-party API, the request goes directly from your server (or
+    your browser) to the provider. klyna.dev is not in the path. We do not see the request, the
+    response, the prompt, or the completion.
+  </p>
+
+  <h2>3. The key is never logged</h2>
+  <p>
+    The key is not written to PHP error logs, Shopify app logs, or browser console output.
+    REST endpoints that read settings strip the key field before returning the payload.
+    Frontend admin screens show <code>sk-***************abcd</code> rather than the full key.
+  </p>
+
+  <h2>4. The key is never returned in API responses</h2>
+  <p>
+    The <code>klyna/v1/settings</code> WP REST endpoint and the equivalent Shopify endpoint
+    omit BYOK fields on read. The only way to retrieve the plaintext key is to read the
+    database directly with the encryption key in hand &mdash; which means you, on your server.
+  </p>
+
+  <h2>5. The key is never used for anything you did not ask for</h2>
+  <p>
+    Klyna only calls a provider when you trigger an action that needs it (running an AI
+    suggestion, generating schema, etc.). There are no background calls, no telemetry calls, no
+    "warm-up" calls.
+  </p>
+
+  <h2>6. Rotating and revoking</h2>
+  <p>
+    You can change the key at any time in the plugin/app settings. To revoke completely, delete
+    it from the settings screen and rotate the key on the provider's dashboard. There is no
+    server-side copy for us to delete on our end.
+  </p>
+
+  <h2>7. Your provider's terms still apply</h2>
+  <p>
+    BYOK means you are the customer of OpenRouter / Groq / Gemini / Cloudflare / Ollama &mdash;
+    not us. Their data-handling, training opt-out, and pricing terms are between you and them.
+    We do not receive a share, a referral fee, or a marketing kickback from your usage.
+  </p>
+</LegalLayout>
