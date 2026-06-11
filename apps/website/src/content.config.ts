@@ -22,4 +22,25 @@ const blog = defineCollection({
   }),
 });
 
-export const collections = { blog };
+/**
+ * Help collection — knowledge base articles rendered at /help/[...slug].
+ */
+const help = defineCollection({
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/help' }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string().min(20).max(220),
+    category: z.enum([
+      'getting-started',
+      'wordpress',
+      'shopify',
+      'troubleshooting',
+      'billing',
+      'security',
+    ]),
+    updated: z.coerce.date(),
+    order: z.number().default(100),
+  }),
+});
+
+export const collections = { blog, help };
