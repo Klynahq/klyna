@@ -1,0 +1,136 @@
+---
+import LegalLayout from '../../layouts/LegalLayout.astro';
+---
+
+<LegalLayout
+  title="Privacy Policy"
+  description="What klyna.dev collects, what it never collects, and your rights under GDPR and CCPA."
+  heading="Privacy Policy"
+>
+  <p>
+    Klyna is an indie studio. We do not have an ads team, a growth team, or a data-science team.
+    Almost nothing about you reaches our servers, and the small amount that does is described
+    here in plain English.
+  </p>
+
+  <h2>1. The short version</h2>
+  <ul>
+    <li>No third-party analytics on klyna.dev. No Google Analytics, no Plausible, no Fathom.</li>
+    <li>No tracking cookies. The only cookie we set is a session cookie on the admin panel.</li>
+    <li>
+      BYOK keys (OpenAI, Groq, Gemini, etc.) are stored inside your WordPress or Shopify
+      install. They are never proxied through, copied to, or logged by klyna.dev.
+    </li>
+    <li>
+      We do not see your site's posts, products, customers, orders, search queries, or AI
+      prompts. Klyna tools run inside your environment.
+    </li>
+  </ul>
+
+  <h2>2. What we DO collect</h2>
+
+  <h3>2.1 Anonymous install pings</h3>
+  <p>
+    When a Klyna plugin or app activates, it sends one ping per day to
+    <code>pings.klyna.dev</code>. The payload is:
+  </p>
+  <ul>
+    <li>product slug (e.g. <code>klyna-seo</code>)</li>
+    <li>plugin/app version</li>
+    <li>host platform version (WordPress 6.7, Shopify 2025-07, etc.)</li>
+    <li>site locale (<code>en_US</code>)</li>
+    <li>
+      a one-day hash &mdash; <code>sha256(site_url + daily_salt)</code> &mdash; so we can count
+      one site once per day without knowing which site it is
+    </li>
+  </ul>
+  <p>
+    The country is derived from the request IP at the edge and the IP itself is dropped before
+    anything is written to disk. Raw pings are kept for 7 days, then aggregated and deleted. You
+    can opt out completely by defining <code>KLYNA_NO_PINGS</code> in
+    <code>wp-config.php</code> or setting the equivalent Shopify metafield.
+  </p>
+
+  <h3>2.2 Downloads</h3>
+  <p>
+    When you download a plugin zip or extension from klyna.dev, our CDN logs the request (IP,
+    timestamp, user-agent) for 24 hours of abuse protection. After that the logs are deleted.
+  </p>
+
+  <h3>2.3 Support and contact</h3>
+  <p>
+    When you email <a href="mailto:hello@klyna.dev">hello@klyna.dev</a> or
+    <a href="mailto:security@klyna.dev">security@klyna.dev</a>, or use the form on
+    <a href="/contact">/contact</a>, we store the message, your email address, and any attachments
+    you send. We keep that thread for as long as it takes to help you, and we archive it after.
+  </p>
+
+  <h3>2.4 Admin panel</h3>
+  <p>
+    The admin panel at <code>klyna.dev/admin</code> is for the studio operator only. It stores the
+    operator's email, an argon2id-hashed password, WebAuthn credentials, and an append-only audit
+    log of admin actions.
+  </p>
+
+  <h2>3. What we DO NOT collect</h2>
+  <ul>
+    <li>Visitor analytics on klyna.dev (no pageviews, no sessions, no fingerprints).</li>
+    <li>BYOK API keys (they never leave your WordPress / Shopify database).</li>
+    <li>Your site's content: posts, products, customer records, orders, drafts.</li>
+    <li>Search queries you make inside our plugins.</li>
+    <li>The prompts or completions you send to AI providers via our BYOK flow.</li>
+    <li>Long-term IP addresses (we drop them at the edge before writing).</li>
+  </ul>
+
+  <h2>4. Third parties that touch the data</h2>
+  <p>
+    See the <a href="/legal/dpa">DPA</a> for the full sub-processor list. In short: Vercel hosts
+    the static site, Cloudflare runs DNS and the ping edge, and Resend delivers transactional
+    email. We do not share data with advertisers or data brokers, ever.
+  </p>
+
+  <h2>5. Your rights (GDPR / UK GDPR)</h2>
+  <p>If you are in the EU, EEA, or UK, you have the right to:</p>
+  <ul>
+    <li>ask what we have about you (access)</li>
+    <li>ask us to correct it (rectification)</li>
+    <li>ask us to delete it (erasure)</li>
+    <li>ask us to stop processing it (restriction / objection)</li>
+    <li>get an export of it in a portable format (portability)</li>
+    <li>complain to your supervisory authority if we get it wrong</li>
+  </ul>
+  <p>
+    Because we collect so little, most of these requests resolve in one email. Email
+    <a href="mailto:privacy@klyna.dev">privacy@klyna.dev</a> and we will reply within 30 days.
+    Our lawful basis for the install ping is <em>legitimate interest</em>
+    (knowing how many sites use each tool so we can support them), and you can opt out at any time.
+  </p>
+
+  <h2>6. Your rights (CCPA / CPRA)</h2>
+  <p>
+    If you are a California resident, you have the right to know what personal information we
+    collect, the right to delete it, the right to correct it, and the right to opt out of any
+    sale or sharing. We do not sell or share personal information. Email
+    <a href="mailto:privacy@klyna.dev">privacy@klyna.dev</a> to exercise these rights.
+  </p>
+
+  <h2>7. Children</h2>
+  <p>
+    Klyna tools are aimed at developers and business owners. They are not directed at children
+    under 13 (or under 16 in the EU). If you believe a child has sent us personal information,
+    email us and we will delete it.
+  </p>
+
+  <h2>8. Changes</h2>
+  <p>
+    If we change what we collect or who we share it with, we'll update this page and bump the
+    "Last updated" date.
+  </p>
+
+  <h2>9. Contact the data controller</h2>
+  <p>
+    The data controller for klyna.dev is the studio operator, based in Islamabad, Pakistan.
+    Contact:
+    <a href="mailto:privacy@klyna.dev">privacy@klyna.dev</a>.
+  </p>
+</LegalLayout>

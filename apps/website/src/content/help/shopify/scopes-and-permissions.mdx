@@ -1,0 +1,39 @@
+---
+title: Shopify scopes and permissions
+description: A line-by-line breakdown of every Shopify scope the Klyna app requests, why it needs each one, and what would break if you revoked it.
+category: shopify
+updated: 2026-06-10
+order: 2
+---
+
+Klyna asks for the minimum scopes it needs to run the audit engine and write
+back metafields. Nothing else.
+
+## Read scopes
+
+| Scope | Why we need it |
+| --- | --- |
+| `read_products` | Iterate products to score titles, descriptions, and alt text. |
+| `read_product_listings` | Detect channel-specific overrides. |
+| `read_content` | Read blog articles and pages for the same audit. |
+| `read_themes` | Read the active theme's `theme.liquid` to detect schema duplication. |
+| `read_locales` | Surface multi-language audit results per locale. |
+
+## Write scopes
+
+| Scope | Why we need it |
+| --- | --- |
+| `write_metafields` | Store audit results, schema overrides, and AI suggestions on each resource. |
+| `write_content` | Apply auto-fixes to article bodies (only when you click **Apply**). |
+
+## Scopes we deliberately do not ask for
+
+- `write_customers` — Klyna never touches customer data.
+- `read_orders` / `write_orders` — out of scope for an SEO tool.
+- `write_themes` — auto-fixes never edit your theme files.
+
+## Revoking a scope
+
+You cannot partially revoke a Shopify scope without uninstalling. If you want
+to read-only the app, disable **Auto-fix** in Klyna → Settings — the write
+scope is still granted but unused.

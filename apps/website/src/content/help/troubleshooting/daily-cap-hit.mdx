@@ -1,0 +1,38 @@
+---
+title: Daily AI cap hit
+description: Klyna caps AI calls at 100 per day by default so a stuck suggestion loop cannot drain your provider quota. Here is how to raise, lower, or reset the cap.
+category: troubleshooting
+updated: 2026-06-10
+order: 2
+---
+
+The cap is a safety belt, not a billing line. Klyna does not charge for AI —
+you brought the key, so the cap protects **your** quota.
+
+## What the message looks like
+
+> AI daily cap reached (100 / 100). Resets at midnight UTC.
+
+The audit and auto-fixes that do not need AI keep working.
+
+## Change the cap
+
+- **WordPress:** Klyna → Settings → AI assistant → **Daily call cap**.
+- **Shopify:** Apps → Klyna → Settings → AI → **Daily call cap**.
+
+Set it to `0` to disable AI entirely without removing the key.
+
+## Reset the counter manually
+
+If you want to reset before midnight UTC, in WordPress run:
+
+```bash
+wp option patch update klyna_settings ai_calls_today 0
+```
+
+In Shopify, use the **Reset cap** button at the bottom of the AI settings panel.
+
+## See where the calls went
+
+The Klyna dashboard logs every AI call with the page slug, model, and token
+count. Use this to find the runaway loop before raising the cap.
