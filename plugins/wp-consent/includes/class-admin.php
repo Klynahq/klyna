@@ -587,6 +587,8 @@ final class Admin {
 			<?php submit_button( __( 'Save settings', 'wp-consent' ), 'primary', 'submit', false, array( 'class' => 'klyna-btn-save' ) ); ?>
 		</div>
 	</form>
+			<?php \KlynaConsent\Telemetry::render_form(); ?>
+
 </div>
 <script>
 (function(){
