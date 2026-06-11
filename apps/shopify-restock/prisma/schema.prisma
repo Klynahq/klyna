@@ -127,6 +127,9 @@ model ShopSettings {
   resendGuardHours Int     @default(24)
   // Master switch for outbound alerts (useful while testing).
   alertsEnabled   Boolean  @default(true)
+  // Smart per-customer notification timing - if recipient's local time is
+  // outside the send window the alert is queued until 10am their time.
+  smartTimingEnabled Boolean @default(false)
 
   updatedAt       DateTime @updatedAt
 }
@@ -146,4 +149,52 @@ enum AlertStatus {
   QUEUED
   SENT
   FAILED
+}
+
+// Per-shop AI provider settings (BYOK - bring your own key).
+model AiSettings {
+  shop      String   @id
+  provider  String   @default("off") // off | openrouter | groq | gemini
+  apiKey    String?
+  model     String?
+  dailyCap  Int      @default(100)
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+// Daily AI usage counter (resets per UTC day) for the per-shop cap.
+model AiUsage {
+  shop  String
+  day   String
+  count Int    @default(0)
+
+  @@id([shop, day])
+}
+
+// Cache for AI completions (key = FNV hash from @klyna/ai-client).
+model AiCache {
+  key       String   @id
+  value     String
+  expiresAt DateTime
+}
+
+// Smart-timing notification queue. When a restock fires and the recipient's
+// local time is outside the send window, the alert is parked here and the
+// /api/cron/restock-tick endpoint flushes due rows on each call.
+model QueuedNotification {
+  id             String   @id @default(cuid())
+  shop           String
+  subscriptionId String
+  variantId      String
+  channel        String   // EMAIL | SMS - mirrors the Channel enum as string
+  recipient      String
+  countryCode    String?
+  timezone       String?
+  // When this alert becomes eligible to send (UTC).
+  dueAt          DateTime
+  createdAt      DateTime @default(now())
+  sentAt         DateTime?
+  status         String   @default("QUEUED") // QUEUED | SENT | FAILED
+  error          String?
+
+  @@index([shop, status, dueAt])
 }

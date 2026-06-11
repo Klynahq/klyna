@@ -70,16 +70,25 @@ export default function Dashboard() {
       title: 'Demand report',
       body: 'See which sold-out variants have the most shoppers waiting — your highest-leverage restocks, ranked.',
       to: '/app/demand',
+      ai: false,
+    },
+    {
+      title: 'Smart timing',
+      body: 'Fire restock alerts when each shopper is actually awake. Rule-based per-customer timezone routing, optional AI-drafted subject lines.',
+      to: '/app/timing',
+      ai: true,
     },
     {
       title: 'Subscribers',
       body: 'Browse, filter, and export every waitlist signup. Remove contacts or re-arm them by hand.',
       to: '/app/subscribers',
+      ai: false,
     },
     {
       title: 'Settings',
       body: 'Customize the storefront button copy, collect SMS, toggle consent, and tune the resend guard.',
       to: '/app/settings',
+      ai: false,
     },
   ];
 
@@ -137,11 +146,14 @@ export default function Dashboard() {
         )}
 
         <Layout.Section>
-          <InlineGrid columns={{ xs: 1, md: 3 }} gap="300">
+          <InlineGrid columns={{ xs: 1, md: 4 }} gap="300">
             {tiles.map((t) => (
               <Card key={t.to}>
                 <BlockStack gap="200">
-                  <Text as="h3" variant="headingSm">{t.title}</Text>
+                  <InlineStack gap="200" blockAlign="center">
+                    <Text as="h3" variant="headingSm">{t.title}</Text>
+                    {t.ai && <Badge tone="info">AI</Badge>}
+                  </InlineStack>
                   <Text as="p" variant="bodyMd" tone="subdued">{t.body}</Text>
                   <Link to={t.to}>Open →</Link>
                 </BlockStack>

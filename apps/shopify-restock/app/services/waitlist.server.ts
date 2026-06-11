@@ -8,6 +8,17 @@
 
 import prisma from '../db.server';
 import { deliver } from './notifier.server';
+import { decideSendTime } from '../lib/smart-timing.server';
+
+// Resolve a recipient's ISO country code best-effort. We don't make Admin API
+// calls from inside flushVariant - the locale field captured at signup is the
+// only signal stored on Subscription today. Treat the first two chars of a
+// hyphenated locale (e.g. "en-US") as the country hint when present.
+function countryFromLocale(locale: string | null | undefined): string | null {
+  if (!locale) return null;
+  const m = locale.match(/[-_]([A-Za-z]{2})$/);
+  return m && m[1] ? m[1].toUpperCase() : null;
+}
 
 export interface FlushResult {
   variantId: string;
@@ -15,6 +26,7 @@ export interface FlushResult {
   sent: number;
   failed: number;
   skipped: number;
+  queued: number;
 }
 
 /** Build the public storefront URL for a product, best-effort. */
@@ -29,7 +41,7 @@ export function storefrontProductUrl(shop: string, handle?: string | null): stri
  * touched, and each becomes NOTIFIED once its alert is dispatched.
  */
 export async function flushVariant(shop: string, variantId: string): Promise<FlushResult> {
-  const result: FlushResult = { variantId, attempted: 0, sent: 0, failed: 0, skipped: 0 };
+  const result: FlushResult = { variantId, attempted: 0, sent: 0, failed: 0, skipped: 0, queued: 0 };
 
   const settings = await getShopSettings(shop);
   if (!settings.alertsEnabled) {
@@ -65,6 +77,30 @@ export async function flushVariant(shop: string, variantId: string): Promise<Flu
     if (!recipient) {
       result.skipped += 1;
       continue;
+    }
+
+    // Smart timing: if enabled, defer alerts whose local time is outside the
+    // send window. The cron tick endpoint flushes due rows.
+    if (settings.smartTimingEnabled) {
+      const countryCode = countryFromLocale(sub.locale);
+      const decision = decideSendTime(countryCode);
+      if (!decision.sendNow && decision.dueAt) {
+        await prisma.queuedNotification.create({
+          data: {
+            shop,
+            subscriptionId: sub.id,
+            variantId,
+            channel: sub.channel,
+            recipient,
+            countryCode,
+            timezone: decision.timezone,
+            dueAt: decision.dueAt,
+            status: 'QUEUED',
+          },
+        });
+        result.queued += 1;
+        continue;
+      }
     }
 
     const alert = await prisma.alert.create({
