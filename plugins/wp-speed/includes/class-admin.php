@@ -547,6 +547,8 @@ JS;
 
 				<?php submit_button( __( 'Save changes', 'wp-speed' ) ); ?>
 			</form>
+			<?php \KlynaSpeed\Telemetry::render_form(); ?>
+
 		</div>
 		<?php
 	}

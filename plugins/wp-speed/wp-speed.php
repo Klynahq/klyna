@@ -58,6 +58,7 @@ add_action(
 	'plugins_loaded',
 	function () {
 		( new KlynaSpeed\Plugin() )->boot();
+		\KlynaSpeed\Telemetry::register();
 	}
 );
 
