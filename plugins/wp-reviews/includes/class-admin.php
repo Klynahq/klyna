@@ -75,6 +75,14 @@ final class Admin {
 		);
 		add_submenu_page(
 			self::MENU_SLUG,
+			__( 'Themes', 'wp-reviews' ),
+			__( 'Themes', 'wp-reviews' ),
+			'manage_options',
+			'klyna-reviews-themes',
+			array( $this, 'render_themes' )
+		);
+		add_submenu_page(
+			self::MENU_SLUG,
 			__( 'Settings', 'wp-reviews' ),
 			__( 'Settings', 'wp-reviews' ),
 			'manage_options',
@@ -126,6 +134,15 @@ final class Admin {
 		$out['request_email_subject'] = sanitize_text_field( (string) ( $input['request_email_subject'] ?? '' ) );
 		$out['request_email_body']    = sanitize_textarea_field( (string) ( $input['request_email_body'] ?? '' ) );
 
+		// AI assistant settings.
+		$allowed_providers   = array( 'off', 'openrouter', 'groq', 'gemini', 'cloudflare', 'ollama' );
+		$provider            = sanitize_key( (string) ( $input['ai_provider'] ?? 'off' ) );
+		$out['ai_provider']  = in_array( $provider, $allowed_providers, true ) ? $provider : 'off';
+		$out['ai_model']     = sanitize_text_field( (string) ( $input['ai_model'] ?? '' ) );
+		$out['ai_api_key']   = sanitize_text_field( (string) ( $input['ai_api_key'] ?? '' ) );
+		$out['ai_endpoint']  = sanitize_text_field( (string) ( $input['ai_endpoint'] ?? '' ) );
+		$out['ai_daily_cap'] = $this->clamp_int( $input['ai_daily_cap'] ?? 100, 1, 10000, 100 );
+
 		return $out;
 	}
 
@@ -169,8 +186,50 @@ final class Admin {
 					'empty'     => __( 'Nothing waiting for moderation. Nice and clean.', 'wp-reviews' ),
 					'loading'   => __( 'Loading…', 'wp-reviews' ),
 					'error'     => __( 'Could not load the queue. Reload and try again.', 'wp-reviews' ),
+					'testing'   => __( 'Testing…', 'wp-reviews' ),
+					'ok'        => __( 'Connected.', 'wp-reviews' ),
+					'thinking'  => __( 'Generating themes…', 'wp-reviews' ),
+					'saved'     => __( 'Themes saved.', 'wp-reviews' ),
 				),
 			)
+		);
+
+		wp_add_inline_script(
+			'klyna-reviews-admin',
+			'(function(){
+				var cfg = window.KLYNA_REVIEWS_ADMIN || {};
+				if (window.wp && wp.apiFetch && cfg.nonce) {
+					wp.apiFetch.use(wp.apiFetch.createNonceMiddleware(cfg.nonce));
+				}
+				function post(path, body){
+					return wp.apiFetch({ path: "klyna-reviews/v1" + path, method: "POST", data: body || {} });
+				}
+				var testBtn = document.getElementById("klyna-reviews-ai-test");
+				if (testBtn) {
+					testBtn.addEventListener("click", function(){
+						var out = document.getElementById("klyna-reviews-ai-test-result");
+						out.textContent = cfg.i18n.testing;
+						post("/ai/test").then(function(res){
+							if (res && res.ok) { out.textContent = cfg.i18n.ok + " " + (res.text || "").slice(0,80); }
+							else { out.textContent = (res && res.text) ? res.text : cfg.i18n.error; }
+						}).catch(function(e){ out.textContent = (e && e.message) ? e.message : cfg.i18n.error; });
+					});
+				}
+				var genBtn = document.getElementById("klyna-reviews-themes-generate");
+				if (genBtn) {
+					genBtn.addEventListener("click", function(){
+						var target = genBtn.getAttribute("data-target") || "site";
+						var status = document.getElementById("klyna-reviews-themes-status");
+						status.textContent = cfg.i18n.thinking;
+						genBtn.disabled = true;
+						post("/ai/themes", { target: target }).then(function(res){
+							genBtn.disabled = false;
+							if (res && res.ok) { status.textContent = cfg.i18n.saved; setTimeout(function(){ window.location.reload(); }, 600); }
+							else { status.textContent = (res && res.text) ? res.text : cfg.i18n.error; }
+						}).catch(function(e){ genBtn.disabled = false; status.textContent = (e && e.message) ? e.message : cfg.i18n.error; });
+					});
+				}
+			})();'
 		);
 	}
 
@@ -362,8 +421,149 @@ final class Admin {
 						</tr>
 					</tbody>
 				</table>
+
+				<h2><?php esc_html_e( 'AI assistant', 'wp-reviews' ); ?></h2>
+				<p class="description"><?php esc_html_e( 'Optional. Summarize review themes into a "What customers say" panel and inject them into JSON-LD. Default is Off; the plugin works without an AI key.', 'wp-reviews' ); ?></p>
+				<table class="form-table" role="presentation">
+					<tbody>
+						<tr>
+							<th scope="row"><label for="ai_provider"><?php esc_html_e( 'Provider', 'wp-reviews' ); ?></label></th>
+							<td>
+								<select id="ai_provider" name="<?php echo esc_attr( KLYNA_REVIEWS_OPTION_KEY ); ?>[ai_provider]">
+									<?php
+									$current_provider = (string) ( $settings['ai_provider'] ?? 'off' );
+									$options          = array(
+										'off'        => __( 'Off', 'wp-reviews' ),
+										'openrouter' => 'OpenRouter (free models)',
+										'groq'       => 'Groq (fast & free)',
+										'gemini'     => 'Google Gemini',
+										'cloudflare' => 'Cloudflare Workers AI',
+										'ollama'     => 'Ollama (self-hosted)',
+									);
+									foreach ( $options as $value => $label ) {
+										printf(
+											'<option value="%1$s" %2$s>%3$s</option>',
+											esc_attr( $value ),
+											selected( $current_provider, $value, false ),
+											esc_html( $label )
+										);
+									}
+									?>
+								</select>
+								<p class="description"><?php esc_html_e( 'All five providers ship a free tier.', 'wp-reviews' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="ai_api_key"><?php esc_html_e( 'API key', 'wp-reviews' ); ?></label></th>
+							<td>
+								<input type="password" id="ai_api_key" name="<?php echo esc_attr( KLYNA_REVIEWS_OPTION_KEY ); ?>[ai_api_key]" class="regular-text" autocomplete="new-password" value="<?php echo esc_attr( (string) ( $settings['ai_api_key'] ?? '' ) ); ?>">
+								<p class="description"><?php esc_html_e( 'Required for hosted providers. Not needed for Ollama.', 'wp-reviews' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="ai_model"><?php esc_html_e( 'Model', 'wp-reviews' ); ?></label></th>
+							<td>
+								<input type="text" id="ai_model" name="<?php echo esc_attr( KLYNA_REVIEWS_OPTION_KEY ); ?>[ai_model]" class="regular-text" value="<?php echo esc_attr( (string) ( $settings['ai_model'] ?? '' ) ); ?>">
+								<p class="description"><?php esc_html_e( 'Optional. Defaults: OpenRouter -> llama-3.3-70b-instruct:free, Groq -> llama-3.3-70b-versatile, Gemini -> gemini-2.0-flash, Cloudflare -> @cf/meta/llama-3.1-8b-instruct, Ollama -> llama3.2.', 'wp-reviews' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="ai_endpoint"><?php esc_html_e( 'Endpoint / Account ID', 'wp-reviews' ); ?></label></th>
+							<td>
+								<input type="text" id="ai_endpoint" name="<?php echo esc_attr( KLYNA_REVIEWS_OPTION_KEY ); ?>[ai_endpoint]" class="regular-text" value="<?php echo esc_attr( (string) ( $settings['ai_endpoint'] ?? '' ) ); ?>">
+								<p class="description"><?php esc_html_e( 'For Cloudflare: your Account ID. For Ollama: server URL (e.g. http://localhost:11434).', 'wp-reviews' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="ai_daily_cap"><?php esc_html_e( 'Daily call cap', 'wp-reviews' ); ?></label></th>
+							<td>
+								<input type="number" id="ai_daily_cap" name="<?php echo esc_attr( KLYNA_REVIEWS_OPTION_KEY ); ?>[ai_daily_cap]" class="small-text" min="1" max="10000" value="<?php echo esc_attr( (string) ( $settings['ai_daily_cap'] ?? 100 ) ); ?>">
+								<p class="description"><?php esc_html_e( 'Protects your provider quota. Resets at 00:00 UTC.', 'wp-reviews' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Connection', 'wp-reviews' ); ?></th>
+							<td>
+								<button type="button" class="button" id="klyna-reviews-ai-test"><?php esc_html_e( 'Test connection', 'wp-reviews' ); ?></button>
+								<span id="klyna-reviews-ai-test-result" style="margin-left:10px;"></span>
+							</td>
+						</tr>
+					</tbody>
+				</table>
 				<?php submit_button(); ?>
 			</form>
+		</div>
+		<?php
+	}
+
+	/* ---------------------------------------------------------------------
+	 * Themes admin page
+	 * ------------------------------------------------------------------- */
+
+	public function render_themes(): void {
+		$target = isset( $_GET['target'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['target'] ) ) : 'site'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$reviews_obj = new Reviews();
+		$aggregate   = $reviews_obj->aggregate( $target );
+		$themes      = Themes::get( $target );
+		$ai_enabled  = ( (string) Plugin::setting( 'ai_provider', 'off' ) ) !== 'off';
+		?>
+		<div class="wrap klyna-reviews-wrap">
+			<h1><?php esc_html_e( 'Review themes', 'wp-reviews' ); ?></h1>
+			<p class="klyna-reviews-tagline"><?php esc_html_e( 'AI-generated summary of the top themes across reviews. Needs 5+ reviews per target. Themes are injected into JSON-LD and rendered above the review list.', 'wp-reviews' ); ?></p>
+
+			<form method="get" action="">
+				<input type="hidden" name="page" value="klyna-reviews-themes">
+				<label for="kr-theme-target"><?php esc_html_e( 'Target', 'wp-reviews' ); ?></label>
+				<input type="text" id="kr-theme-target" name="target" value="<?php echo esc_attr( $target ); ?>" class="regular-text">
+				<button type="submit" class="button"><?php esc_html_e( 'Load', 'wp-reviews' ); ?></button>
+			</form>
+
+			<p style="margin-top:14px;">
+				<strong><?php esc_html_e( 'Reviews:', 'wp-reviews' ); ?></strong>
+				<?php echo esc_html( number_format_i18n( $aggregate['count'] ) ); ?>
+				<?php if ( $aggregate['count'] < 5 ) : ?>
+					<em>(<?php esc_html_e( 'need 5+ to summarize', 'wp-reviews' ); ?>)</em>
+				<?php endif; ?>
+			</p>
+
+			<?php if ( ! $ai_enabled ) : ?>
+				<div class="notice notice-warning inline"><p>
+					<?php
+					printf(
+						/* translators: %s: settings page link */
+						wp_kses_post( __( 'AI is off. Enable a provider in <a href="%s">Settings -> AI assistant</a> to generate themes.', 'wp-reviews' ) ),
+						esc_url( admin_url( 'admin.php?page=klyna-reviews-settings' ) )
+					);
+					?>
+				</p></div>
+			<?php endif; ?>
+
+			<p>
+				<button type="button" class="button button-primary"
+					id="klyna-reviews-themes-generate"
+					data-target="<?php echo esc_attr( $target ); ?>"
+					<?php disabled( ! $ai_enabled || $aggregate['count'] < 5 ); ?>>
+					<?php esc_html_e( 'Generate themes with AI', 'wp-reviews' ); ?>
+				</button>
+				<span id="klyna-reviews-themes-status" style="margin-left:10px;"></span>
+			</p>
+
+			<div id="klyna-reviews-themes-panel">
+				<?php if ( empty( $themes ) ) : ?>
+					<p><em><?php esc_html_e( 'No themes saved yet for this target.', 'wp-reviews' ); ?></em></p>
+				<?php else : ?>
+					<ul class="klyna-reviews-themes-list" style="list-style:disc;padding-left:20px;">
+						<?php foreach ( $themes as $t ) : ?>
+							<li style="margin-bottom:10px;">
+								<strong><?php echo esc_html( (string) $t['theme'] ); ?></strong>
+								<?php if ( ! empty( $t['quote'] ) ) : ?>
+									<br><span style="color:#555;">&ldquo;<?php echo esc_html( (string) $t['quote'] ); ?>&rdquo;</span>
+								<?php endif; ?>
+							</li>
+						<?php endforeach; ?>
+					</ul>
+				<?php endif; ?>
+			</div>
 		</div>
 		<?php
 	}

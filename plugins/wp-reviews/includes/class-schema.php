@@ -81,6 +81,32 @@ final class Schema {
 			}
 		}
 
+		// AI-generated theme summary — surfaced for LLMs and rich-snippet description.
+		$themes = Themes::get( $target );
+		if ( ! empty( $themes ) ) {
+			$summary_parts = array();
+			foreach ( $themes as $t ) {
+				if ( ! empty( $t['theme'] ) ) {
+					$summary_parts[] = (string) $t['theme'];
+				}
+			}
+			if ( $summary_parts ) {
+				$node['description'] = sprintf(
+					/* translators: %s: comma-separated list of review themes */
+					__( 'Customers consistently mention: %s.', 'wp-reviews' ),
+					implode( ', ', $summary_parts )
+				);
+				$node['additionalProperty'] = array();
+				foreach ( $themes as $t ) {
+					$node['additionalProperty'][] = array(
+						'@type' => 'PropertyValue',
+						'name'  => 'reviewTheme',
+						'value' => (string) $t['theme'] . ( ! empty( $t['quote'] ) ? ' — ' . (string) $t['quote'] : '' ),
+					);
+				}
+			}
+		}
+
 		$payload = array_merge( array( '@context' => 'https://schema.org' ), $node );
 
 		printf(

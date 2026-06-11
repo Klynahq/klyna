@@ -146,6 +146,7 @@ final class Shortcode {
 		?>
 		<div class="klyna-reviews" data-target="<?php echo esc_attr( $target ); ?>">
 			<?php echo $this->stars_badge( $aggregate ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+			<?php echo $this->themes_panel( $target ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 			<?php echo $this->review_list( $list ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 			<?php if ( $show_form ) : ?>
 				<?php echo $this->review_form( $target ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
@@ -242,6 +243,33 @@ final class Shortcode {
 				<?php endfor; ?>
 			</span>
 		</span>
+		<?php
+		return (string) ob_get_clean();
+	}
+
+	/**
+	 * Render the AI theme-summary bullets above the review list.
+	 */
+	private function themes_panel( string $target ): string {
+		$themes = Themes::get( $target );
+		if ( empty( $themes ) ) {
+			return '';
+		}
+		ob_start();
+		?>
+		<div class="klyna-reviews__themes" aria-label="<?php esc_attr_e( 'What customers say', 'wp-reviews' ); ?>">
+			<h3 class="klyna-reviews__themes-title"><?php esc_html_e( 'What customers say', 'wp-reviews' ); ?></h3>
+			<ul class="klyna-reviews__themes-list">
+				<?php foreach ( $themes as $t ) : ?>
+					<li class="klyna-reviews__theme">
+						<strong class="klyna-reviews__theme-name"><?php echo esc_html( (string) $t['theme'] ); ?></strong>
+						<?php if ( ! empty( $t['quote'] ) ) : ?>
+							<span class="klyna-reviews__theme-quote">&ldquo;<?php echo esc_html( (string) $t['quote'] ); ?>&rdquo;</span>
+						<?php endif; ?>
+					</li>
+				<?php endforeach; ?>
+			</ul>
+		</div>
 		<?php
 		return (string) ob_get_clean();
 	}

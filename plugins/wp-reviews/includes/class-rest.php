@@ -86,6 +86,50 @@ final class Rest {
 
 		register_rest_route(
 			self::NAMESPACE,
+			'/ai/test',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'ai_test' ),
+				'permission_callback' => static fn() => current_user_can( 'manage_options' ),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
+			'/ai/suggest',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'ai_suggest' ),
+				'permission_callback' => static fn() => current_user_can( 'manage_options' ),
+				'args'                => array(
+					'prompt' => array(
+						'type'              => 'string',
+						'required'          => true,
+						'sanitize_callback' => 'sanitize_textarea_field',
+					),
+				),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
+			'/ai/themes',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'ai_themes' ),
+				'permission_callback' => static fn() => current_user_can( 'manage_options' ),
+				'args'                => array(
+					'target' => array(
+						'type'              => 'string',
+						'required'          => true,
+						'sanitize_callback' => 'sanitize_text_field',
+					),
+				),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
 			'/moderation/(?P<id>\d+)',
 			array(
 				'methods'             => 'POST',
@@ -356,6 +400,75 @@ final class Rest {
 				'ok'     => true,
 				'id'     => $id,
 				'action' => $action,
+			),
+			200
+		);
+	}
+
+	/* ---------------------------------------------------------------------
+	 * AI endpoints
+	 * ------------------------------------------------------------------- */
+
+	public function ai_test( \WP_REST_Request $req ): \WP_REST_Response {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return $this->error( 'forbidden', __( 'Not allowed.', 'wp-reviews' ), 403 );
+		}
+		$ai     = new Ai();
+		$result = $ai->complete( 'Reply with the single word: ok' );
+		return new \WP_REST_Response( $result, 200 );
+	}
+
+	public function ai_suggest( \WP_REST_Request $req ): \WP_REST_Response {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return $this->error( 'forbidden', __( 'Not allowed.', 'wp-reviews' ), 403 );
+		}
+		$prompt = (string) $req->get_param( 'prompt' );
+		if ( '' === $prompt ) {
+			return $this->error( 'missing_prompt', __( 'Prompt is required.', 'wp-reviews' ), 422 );
+		}
+		$ai     = new Ai();
+		$result = $ai->complete( $prompt );
+		return new \WP_REST_Response( $result, 200 );
+	}
+
+	public function ai_themes( \WP_REST_Request $req ): \WP_REST_Response {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return $this->error( 'forbidden', __( 'Not allowed.', 'wp-reviews' ), 403 );
+		}
+		$target = sanitize_text_field( (string) $req->get_param( 'target' ) );
+		if ( '' === $target ) {
+			return $this->error( 'missing_target', __( 'Target is required.', 'wp-reviews' ), 422 );
+		}
+
+		$reviews = $this->reviews->get_for_target( $target, 50, 1 );
+		if ( count( $reviews ) < 5 ) {
+			return $this->error( 'not_enough_reviews', __( 'Need at least 5 reviews to summarize themes.', 'wp-reviews' ), 422 );
+		}
+
+		$lines = array();
+		foreach ( $reviews as $r ) {
+			$lines[] = '- (' . (int) $r['rating'] . '/5) ' . wp_strip_all_tags( (string) $r['body'] );
+		}
+		$prompt  = "You are summarizing customer reviews. Identify the top 3 themes across these reviews. ";
+		$prompt .= "For each theme, output exactly two lines in this format:\n";
+		$prompt .= "THEME: <short theme name>\n";
+		$prompt .= "QUOTE: <one short verbatim quote from the reviews illustrating it>\n\n";
+		$prompt .= "Reviews:\n" . implode( "\n", $lines );
+
+		$ai     = new Ai();
+		$result = $ai->complete( $prompt, array( 'max_tokens' => 500 ) );
+		if ( empty( $result['ok'] ) ) {
+			return new \WP_REST_Response( $result, 200 );
+		}
+
+		$themes = Themes::parse( (string) $result['text'] );
+		Themes::save( $target, $themes );
+
+		return new \WP_REST_Response(
+			array(
+				'ok'     => true,
+				'themes' => $themes,
+				'raw'    => $result['text'],
 			),
 			200
 		);
