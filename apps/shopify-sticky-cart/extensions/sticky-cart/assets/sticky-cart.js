@@ -56,6 +56,7 @@
   bindEvents(currentRefs, product, settings, state);
   setupVisibility(root, settings);
   refreshCart();
+  loadRecoverLine();
 
   fetchLiveSettings().then(function (live) {
     if (live) {
@@ -477,6 +478,61 @@
       keepalive: true,
       body: payload,
     }).catch(function () {});
+  }
+
+  // ---------------------------------------------------------------------------
+  // AI cart-recovery one-liner (top banner)
+  // ---------------------------------------------------------------------------
+  function bumpVisitCount() {
+    try {
+      var key = 'klyna_sc_visits';
+      var n = parseInt(window.localStorage.getItem(key) || '0', 10) || 0;
+      n += 1;
+      window.localStorage.setItem(key, String(n));
+      return n;
+    } catch (e) {
+      return 1;
+    }
+  }
+
+  function loadRecoverLine() {
+    var banner = root.querySelector('[data-klyna-sc-recover]');
+    if (!banner) return;
+    var visitCount = bumpVisitCount();
+    fetch('/cart.js', { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
+      .then(function (r) {
+        return r.ok ? r.json() : null;
+      })
+      .then(function (cart) {
+        if (!cart || !cart.items || !cart.items.length) return null;
+        var lines = cart.items.slice(0, 6).map(function (it) {
+          return {
+            title: it.product_title || it.title || '',
+            quantity: it.quantity || 1,
+            price: typeof it.price === 'number' ? it.price / 100 : undefined,
+          };
+        });
+        return fetch(proxyBase + '/recover', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({
+            lines: lines,
+            cartTotal: (cart.total_price || 0) / 100,
+            visitCount: visitCount,
+            currency: cart.currency || undefined,
+          }),
+        });
+      })
+      .then(function (r) {
+        return r && r.ok ? r.json() : null;
+      })
+      .then(function (body) {
+        if (!body || !body.ok || !body.message) return;
+        banner.textContent = body.message;
+        banner.hidden = false;
+      })
+      .catch(function () {});
   }
 
   // ---------------------------------------------------------------------------

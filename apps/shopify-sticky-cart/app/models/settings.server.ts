@@ -6,6 +6,7 @@
 // App Proxy serves to the storefront. Prisma stays authoritative; the metaobject
 // is a read replica that we upsert on every save.
 
+import type { AdminGraphqlClient } from '@shopify/shopify-app-remix/server';
 import prisma from '../db.server';
 
 export type StickyCartSettings = {
@@ -110,10 +111,6 @@ function rowToSettings(row: SettingsRow): StickyCartSettings {
   };
 }
 
-type AdminClient = {
-  graphql: (query: string, opts?: { variables?: unknown }) => Promise<Response>;
-};
-
 /**
  * Push the current settings into a shop metaobject so the storefront can read
  * them. `admin` is the GraphQL client from `authenticate.admin(request)`.
@@ -123,7 +120,7 @@ type AdminClient = {
  * return false rather than throwing.
  */
 export async function syncSettingsMetaobject(
-  admin: AdminClient,
+  admin: { graphql: AdminGraphqlClient },
   settings: StickyCartSettings,
 ): Promise<boolean> {
   const fields = [
@@ -170,7 +167,7 @@ export async function syncSettingsMetaobject(
  * exist yet. Storefront access is enabled so the App Proxy / Liquid could read
  * it directly. Idempotent: re-running returns a "taken" userError we swallow.
  */
-async function ensureMetaobjectDefinition(admin: AdminClient): Promise<void> {
+async function ensureMetaobjectDefinition(admin: { graphql: AdminGraphqlClient }): Promise<void> {
   await admin.graphql(
     `#graphql
     mutation CreateStickyCartDefinition($definition: MetaobjectDefinitionCreateInput!) {

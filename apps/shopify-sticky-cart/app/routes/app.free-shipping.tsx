@@ -169,7 +169,7 @@ export default function FreeShipping() {
                   autoComplete="off"
                   value={form.freeShipMessage}
                   onChange={(v) => set('freeShipMessage', v)}
-                  helpText="Use {{remaining}} for the amount still needed, e.g. “You're {{remaining}} away from free shipping!”"
+                  helpText="Use {{remaining}} for the amount still needed, e.g. 'You're {{remaining}} away from free shipping!'"
                 />
                 <TextField
                   label="Unlocked message"

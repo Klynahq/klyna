@@ -117,7 +117,7 @@ export default function Analytics() {
                 image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
               >
                 <p>
-                  Once the “Klyna Sticky Cart” app embed is active and shoppers reach a
+                  Once the "Klyna Sticky Cart" app embed is active and shoppers reach a
                   product page, impressions and clicks will appear here.
                 </p>
               </EmptyState>

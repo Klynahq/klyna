@@ -16,12 +16,15 @@ import {
 import { authenticate } from '../shopify.server';
 import { getSettings } from '../models/settings.server';
 import { getSummary } from '../models/analytics.server';
+import { getShopAiSettings } from '../lib/ai.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { admin, session } = await authenticate.admin(request);
 
   const settings = await getSettings(session.shop);
   const summary = await getSummary(session.shop, 30);
+  const ai = await getShopAiSettings(session.shop);
+  const aiEnabled = ai.provider !== 'off' && !!ai.apiKey;
 
   // Light connectivity check — confirm the Admin API works and grab the store
   // name + currency to label the dashboard. Failure here is non-fatal.
@@ -43,11 +46,11 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     // ignore — dashboard still renders with the shop domain
   }
 
-  return json({ shop: session.shop, shopName, currency, settings, summary });
+  return json({ shop: session.shop, shopName, currency, settings, summary, aiEnabled, aiProvider: ai.provider });
 };
 
 export default function Dashboard() {
-  const { shop, shopName, currency, settings, summary } = useLoaderData<typeof loader>();
+  const { shop, shopName, currency, settings, summary, aiEnabled, aiProvider } = useLoaderData<typeof loader>();
 
   const fmt = new Intl.NumberFormat(undefined, { style: 'currency', currency });
   const num = new Intl.NumberFormat();
@@ -117,7 +120,18 @@ export default function Dashboard() {
         </Layout.Section>
 
         <Layout.Section>
-          <InlineGrid columns={{ xs: 1, md: 3 }} gap="300">
+          <InlineStack gap="200" blockAlign="center">
+            <Text as="h2" variant="headingMd">Modules</Text>
+            {aiEnabled ? (
+              <Badge tone="success">{`AI · ${aiProvider}`}</Badge>
+            ) : (
+              <Badge tone="info">No AI key set</Badge>
+            )}
+          </InlineStack>
+        </Layout.Section>
+
+        <Layout.Section>
+          <InlineGrid columns={{ xs: 1, md: 2 }} gap="300">
             <Card>
               <BlockStack gap="200">
                 <Text as="h3" variant="headingSm">Sticky bar</Text>
@@ -125,7 +139,7 @@ export default function Dashboard() {
                   Position, what shows in the bar, the call-to-action label and colors,
                   and quick-buy.
                 </Text>
-                <Link to="/app/settings">Edit bar →</Link>
+                <Link to="/app/settings">Edit bar</Link>
               </BlockStack>
             </Card>
             <Card>
@@ -135,7 +149,20 @@ export default function Dashboard() {
                   Set the threshold and the progress-bar copy. Shoppers see how far they
                   are from free delivery in real time.
                 </Text>
-                <Link to="/app/free-shipping">Set threshold →</Link>
+                <Link to="/app/free-shipping">Set threshold</Link>
+              </BlockStack>
+            </Card>
+            <Card>
+              <BlockStack gap="200">
+                <InlineStack gap="150" blockAlign="center">
+                  <Text as="h3" variant="headingSm">Cart recovery</Text>
+                  <Badge tone={aiEnabled ? 'success' : 'attention'}>AI</Badge>
+                </InlineStack>
+                <Text as="p" variant="bodyMd" tone="subdued">
+                  A one-line nudge at the top of the sticky cart. The angle shifts between
+                  free-shipping unlock and social proof based on the cart.
+                </Text>
+                <Link to="/app/recover">{aiEnabled ? 'Preview line' : 'Set up AI'}</Link>
               </BlockStack>
             </Card>
             <Card>
@@ -145,7 +172,7 @@ export default function Dashboard() {
                   Impressions, add-to-cart rate, quick-buy clicks, and your best-converting
                   products from the bar.
                 </Text>
-                <Link to="/app/analytics">View analytics →</Link>
+                <Link to="/app/analytics">View analytics</Link>
               </BlockStack>
             </Card>
           </InlineGrid>
@@ -173,7 +200,7 @@ export default function Dashboard() {
               <Box>
                 <Text as="p" variant="bodySm" tone="subdued">
                   The bar renders through a Theme App Extension. Activate the
-                  “Klyna Sticky Cart” app embed once and it appears on every product
+                  "Klyna Sticky Cart" app embed once and it appears on every product
                   page automatically.{' '}
                   <PolarisLink url="https://help.shopify.com/manual/online-store/themes/theme-structure/extend/apps" external>
                     Learn about app embeds

@@ -1,49 +1,20 @@
-# Klyna Sticky Cart — app config.
-#
-# To use this app:
-#   1. Create a Shopify Partner account at https://partners.shopify.com
-#   2. Run `shopify app config link` from this folder to bind it to your Partner app.
-#      The CLI will overwrite `client_id` below with your actual app key.
-#   3. Run `pnpm dev` (or `shopify app dev`) to start the embedded app on your dev store.
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-# Placeholder — `shopify app config link` rewrites this with your real client_id.
-client_id = "REPLACE_WITH_CLIENT_ID_FROM_PARTNER_DASHBOARD"
-
+client_id = "02ac921ec3c9f022d897a40a87015d96"
 name = "Klyna Sticky Cart"
-handle = "shopify-sticky-cart"
-application_url = "https://klyna.dev"
+application_url = "https://example.com"
 embedded = true
 
-[build]
-automatically_update_urls_on_dev = true
-dev_store_url = ""
-
-[webhooks]
-api_version = "2025-01"
-
-  [[webhooks.subscriptions]]
-  topics = ["app/uninstalled"]
-  uri = "/webhooks/app/uninstalled"
-
-# read_products  — load product/variant data for the bar + analytics labels.
-# write_metaobjects / read_metaobjects — persist storefront widget settings as a
-#   shop-owned metaobject so the theme app extension can read them via App Proxy.
 [access_scopes]
-scopes = "read_products,read_metaobjects,write_metaobjects"
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_metaobjects,read_products,write_metaobjects"
 
 [auth]
-redirect_urls = [
-  "https://klyna.dev/auth/callback",
-  "https://klyna.dev/auth/shopify/callback",
-  "https://klyna.dev/api/auth/callback"
-]
+redirect_urls = [ "https://example.com/api/auth" ]
 
-# App Proxy — the storefront theme block fetches live settings + posts click
-# analytics through this signed proxy (no CORS, no public token needed).
-[app_proxy]
-url = "https://klyna.dev/proxy"
-subpath = "sticky-cart"
-prefix = "apps"
+[webhooks]
+api_version = "2026-07"
 
-[pos]
-embedded = false
+[build]
+include_config_on_deploy = true
+automatically_update_urls_on_dev = true

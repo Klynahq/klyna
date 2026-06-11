@@ -23,6 +23,8 @@ export default function App() {
         <Link to="/app/settings">Sticky bar</Link>
         <Link to="/app/free-shipping">Free shipping</Link>
         <Link to="/app/analytics">Analytics</Link>
+        <Link to="/app/recover">Cart recovery</Link>
+        <Link to="/app/ai">AI assistant</Link>
       </NavMenu>
       <Outlet />
     </AppProvider>

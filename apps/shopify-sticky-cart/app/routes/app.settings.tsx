@@ -285,7 +285,7 @@ export default function StickyBarSettings() {
               <BlockStack gap="200">
                 <Text as="h3" variant="headingSm">Where it appears</Text>
                 <Text as="p" variant="bodySm" tone="subdued">
-                  The bar is delivered by the “Klyna Sticky Cart” theme app embed. Enable
+                  The bar is delivered by the "Klyna Sticky Cart" theme app embed. Enable
                   it once under Online Store → Themes → Customize → App embeds and it
                   shows on every product page.
                 </Text>

@@ -317,3 +317,13 @@
     animation: none;
   }
 }
+
+/* Cart-recovery one-line banner — top of the sticky widget. */
+.klyna-sc__banner {
+  font: 500 12px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  padding: 6px 12px;
+  background: rgba(124, 92, 255, 0.12);
+  color: #4a3fd1;
+  border-bottom: 1px solid rgba(124, 92, 255, 0.24);
+  text-align: center;
+}

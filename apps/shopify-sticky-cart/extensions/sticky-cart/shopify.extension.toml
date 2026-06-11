@@ -9,6 +9,7 @@ api_version = "2025-01"
 [[extensions]]
 name = "Klyna Sticky Cart"
 handle = "sticky-cart"
+uid = "0e5c21e3-848b-99ca-a71e-bd2d139248a0c003d372"
 type = "theme"
 
   [extensions.capabilities]
