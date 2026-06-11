@@ -1,15 +1,17 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
 import { useState } from 'react';
-import { useLoaderData, useNavigation, useSubmit } from '@remix-run/react';
+import { Form, useActionData, useFetcher, useLoaderData, useNavigation, useSubmit } from '@remix-run/react';
 import {
-  BlockStack,
   Banner,
+  BlockStack,
+  Box,
   Button,
   Card,
   Checkbox,
   Divider,
   InlineStack,
   Layout,
+  Link,
   Page,
   Select,
   Text,
@@ -17,16 +19,39 @@ import {
 } from '@shopify/polaris';
 import { authenticate } from '../shopify.server';
 import { getSettings, updateSettings } from '../lib/settings.server';
+import { createAiClient, type AiProvider } from '@klyna/ai-client';
+import { getShopAiSettings, getTodayUsage, saveShopAiSettings } from '../lib/ai.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
   const settings = await getSettings(session.shop);
-  return { settings };
+  const aiSettings = await getShopAiSettings(session.shop);
+  const usedToday = await getTodayUsage(session.shop);
+  return { settings, aiSettings, usedToday };
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { session } = await authenticate.admin(request);
   const form = await request.formData();
+  const intent = String(form.get('intent') ?? 'save');
+
+  if (intent === 'test') {
+    const provider = String(form.get('provider') ?? 'off') as AiProvider;
+    const apiKey = String(form.get('apiKey') ?? '').trim() || undefined;
+    const model = String(form.get('model') ?? '').trim() || undefined;
+    const client = createAiClient({ provider, apiKey, model });
+    const result = await client.test();
+    return json({ test: result });
+  }
+
+  if (intent === 'saveAi') {
+    const provider = String(form.get('provider') ?? 'off') as AiProvider;
+    const apiKey = String(form.get('apiKey') ?? '').trim() || undefined;
+    const model = String(form.get('model') ?? '').trim() || undefined;
+    const dailyCap = Math.max(1, Math.min(10000, Number(form.get('dailyCap') ?? 100) || 100));
+    await saveShopAiSettings(session.shop, { provider, apiKey, model, dailyCap });
+    return json({ savedAi: true });
+  }
 
   await updateSettings(session.shop, {
     defaultDiscountType: String(form.get('defaultDiscountType') ?? 'percentage'),
@@ -41,11 +66,36 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   return json({ ok: true });
 };
 
+const PROVIDER_OPTIONS = [
+  { label: 'Off - no AI assistance', value: 'off' },
+  { label: 'OpenRouter (free models, indefinite)', value: 'openrouter' },
+  { label: 'Groq (2k/day free)', value: 'groq' },
+  { label: 'Google Gemini (1.5k/day free)', value: 'gemini' },
+];
+
+const PROVIDER_HELP: Record<string, { url: string; hint: string }> = {
+  openrouter: {
+    url: 'https://openrouter.ai/keys',
+    hint: 'Free models like Llama 3.3 70B work great. Look for the ":free" suffix.',
+  },
+  groq: {
+    url: 'https://console.groq.com/keys',
+    hint: 'Fastest free tier - around 2,000 requests/day. Default: llama-3.3-70b-versatile.',
+  },
+  gemini: {
+    url: 'https://aistudio.google.com/apikey',
+    hint: '1,500 free requests/day on gemini-2.0-flash. Best for nuance.',
+  },
+};
+
 export default function Settings() {
-  const { settings } = useLoaderData<typeof loader>();
+  const { settings, aiSettings, usedToday } = useLoaderData<typeof loader>();
+  const data = useActionData<typeof action>();
   const submit = useSubmit();
   const nav = useNavigation();
+  const testFetcher = useFetcher<typeof action>();
   const saving = nav.state === 'submitting';
+  const testing = testFetcher.state === 'submitting';
 
   const [defaultDiscountType, setDefaultDiscountType] = useState(settings.defaultDiscountType);
   const [priceDisplay, setPriceDisplay] = useState(settings.priceDisplay);
@@ -55,8 +105,22 @@ export default function Settings() {
   const [showSavingsBadge, setShowSavingsBadge] = useState(settings.showSavingsBadge);
   const [autoFbt, setAutoFbt] = useState(settings.autoFbt);
 
+  const [provider, setProvider] = useState<string>(aiSettings.provider);
+  const [apiKey, setApiKey] = useState(aiSettings.apiKey ?? '');
+  const [model, setModel] = useState(aiSettings.model ?? '');
+  const [dailyCap, setDailyCap] = useState(String(aiSettings.dailyCap));
+
+  const testResult =
+    testFetcher.data && 'test' in testFetcher.data
+      ? (testFetcher.data.test as { ok: boolean; message: string })
+      : null;
+  const savedAi = data && 'savedAi' in data ? data.savedAi : false;
+  const savedStorefront = data && 'ok' in data ? data.ok : false;
+  const help = PROVIDER_HELP[provider];
+
   const save = () => {
     const fd = new FormData();
+    fd.set('intent', 'save');
     fd.set('defaultDiscountType', defaultDiscountType);
     fd.set('priceDisplay', priceDisplay);
     fd.set('widgetHeading', widgetHeading);
@@ -67,11 +131,21 @@ export default function Settings() {
     submit(fd, { method: 'post' });
   };
 
+  const runTest = () => {
+    const fd = new FormData();
+    fd.set('intent', 'test');
+    fd.set('provider', provider);
+    fd.set('apiKey', apiKey);
+    fd.set('model', model);
+    fd.set('dailyCap', dailyCap);
+    testFetcher.submit(fd, { method: 'post' });
+  };
+
   return (
     <Page
       title="Settings"
       backAction={{ url: '/app' }}
-      primaryAction={{ content: 'Save', loading: saving, onAction: save }}
+      primaryAction={{ content: 'Save storefront settings', loading: saving, onAction: save }}
     >
       <Layout>
         <Layout.Section>
@@ -105,8 +179,8 @@ export default function Settings() {
                 label="Bundle price display"
                 helpText="How the discounted price is shown in the product-page block."
                 options={[
-                  { label: 'Single total — one bundle price', value: 'total' },
-                  { label: 'Stacked — strikethrough per item', value: 'stacked' },
+                  { label: 'Single total - one bundle price', value: 'total' },
+                  { label: 'Stacked - strikethrough per item', value: 'stacked' },
                 ]}
                 value={priceDisplay}
                 onChange={setPriceDisplay}
@@ -150,15 +224,125 @@ export default function Settings() {
                 checked={showSavingsBadge}
                 onChange={setShowSavingsBadge}
               />
+              {savedStorefront && <Banner tone="success" title="Storefront settings saved" />}
+            </BlockStack>
+          </Card>
+        </Layout.Section>
+
+        <Layout.Section>
+          <Card>
+            <BlockStack gap="400">
+              <BlockStack gap="100">
+                <Text as="h2" variant="headingMd">AI assistant</Text>
+                <Text as="p" tone="subdued">
+                  Klyna Bundles ships with deterministic frequently-bought-together mining
+                  from order history. Add a free-tier API key below to unlock AI-suggested
+                  bundles - the app proposes curated sets with titles and blurbs from your
+                  co-purchase patterns. Your key stays on this app's database.
+                </Text>
+              </BlockStack>
+
+              <Form method="post">
+                <BlockStack gap="300">
+                  <Select
+                    label="Provider"
+                    options={PROVIDER_OPTIONS}
+                    value={provider}
+                    onChange={setProvider}
+                    name="provider"
+                  />
+
+                  {provider !== 'off' && (
+                    <>
+                      <TextField
+                        label="API key"
+                        type="password"
+                        value={apiKey}
+                        onChange={setApiKey}
+                        name="apiKey"
+                        autoComplete="off"
+                        helpText={
+                          help ? (
+                            <>
+                              <Link url={help.url} target="_blank">Get a free key</Link>
+                              {' '}{help.hint}
+                            </>
+                          ) : null
+                        }
+                      />
+                      <TextField
+                        label="Model (optional)"
+                        value={model}
+                        onChange={setModel}
+                        name="model"
+                        autoComplete="off"
+                        helpText="Leave blank to use the recommended default for this provider."
+                      />
+                      <TextField
+                        label="Daily cap"
+                        type="number"
+                        value={dailyCap}
+                        onChange={setDailyCap}
+                        name="dailyCap"
+                        autoComplete="off"
+                        min={1}
+                        max={10000}
+                        helpText={`Used today: ${usedToday} requests. Resets at 00:00 UTC.`}
+                      />
+                    </>
+                  )}
+
+                  <InlineStack gap="200">
+                    <Button submit variant="primary" loading={saving}>
+                      Save AI settings
+                    </Button>
+                    {provider !== 'off' && (
+                      <Button onClick={runTest} loading={testing} variant="secondary">
+                        Test connection
+                      </Button>
+                    )}
+                    <input type="hidden" name="intent" value="saveAi" />
+                  </InlineStack>
+                </BlockStack>
+              </Form>
+
+              {savedAi && <Banner tone="success" title="AI settings saved" />}
+              {testResult && (
+                <Banner
+                  tone={testResult.ok ? 'success' : 'critical'}
+                  title={testResult.ok ? 'Connection OK' : 'Connection failed'}
+                >
+                  <Text as="p" variant="bodyMd">{testResult.message}</Text>
+                </Banner>
+              )}
+            </BlockStack>
+          </Card>
+        </Layout.Section>
+
+        <Layout.Section>
+          <Card>
+            <BlockStack gap="200">
+              <Text as="h2" variant="headingMd">About this app</Text>
+              <Text as="p" tone="subdued" variant="bodyMd">
+                Klyna Bundles is part of the Klyna indie suite - open, fast, free where it
+                can be. The bundle builder, volume breaks, and FBT mining are deterministic
+                and never need an API key. AI is only used to title and describe suggested
+                bundles, and only when you have added a key.
+              </Text>
+              <Box>
+                <Link url="https://klyna.dev" target="_blank">klyna.dev</Link>
+                {' . '}
+                <Link url="https://github.com/klynahq/klyna" target="_blank">GitHub</Link>
+              </Box>
             </BlockStack>
           </Card>
         </Layout.Section>
 
         <Layout.Section>
           <Banner tone="info">
-            These settings drive the Klyna Bundles theme app extension. After changing
-            them, the block picks up new values on the next storefront page load — add
-            the block in the theme editor under <b>Add block → Apps</b>.
+            Storefront settings drive the Klyna Bundles theme app extension. After changing
+            them, the block picks up new values on the next storefront page load - add
+            the block in the theme editor under Add block - Apps.
           </Banner>
         </Layout.Section>
       </Layout>

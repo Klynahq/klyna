@@ -52,9 +52,13 @@ export function mineFbt(
   for (const basket of baskets) {
     const items = [...new Set(basket.productGids)].sort();
     for (let i = 0; i < items.length; i++) {
-      anchorCount.set(items[i], (anchorCount.get(items[i]) ?? 0) + 1);
+      const a = items[i];
+      if (!a) continue;
+      anchorCount.set(a, (anchorCount.get(a) ?? 0) + 1);
       for (let j = i + 1; j < items.length; j++) {
-        const key = `${items[i]}|${items[j]}`;
+        const b = items[j];
+        if (!b) continue;
+        const key = `${a}|${b}`;
         pairCount.set(key, (pairCount.get(key) ?? 0) + 1);
       }
     }
@@ -86,6 +90,7 @@ export function mineFbt(
   for (const [key, support] of pairCount) {
     if (support < minSupport) continue;
     const [a, b] = key.split('|');
+    if (!a || !b) continue;
     push(a, b, support);
     push(b, a, support);
   }

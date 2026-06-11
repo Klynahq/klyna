@@ -291,7 +291,7 @@ export default function BundleBuilder() {
                     { label: 'Mix & match — customer picks from the pool', value: 'mix_and_match' },
                   ]}
                   selected={[kind]}
-                  onChange={(v) => setKind(v[0])}
+                  onChange={(v) => setKind(v[0] ?? 'fixed')}
                 />
                 {kind === 'mix_and_match' && (
                   <TextField

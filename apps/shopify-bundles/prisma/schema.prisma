@@ -138,3 +138,49 @@ model BundleSale {
   @@index([shop, soldAt])
   @@index([shop, bundleId])
 }
+
+// Per-shop AI provider settings (BYOK - bring your own key).
+model AiSettings {
+  shop      String   @id
+  provider  String   @default("off") // off | openrouter | groq | gemini
+  apiKey    String?
+  model     String?
+  dailyCap  Int      @default(100)
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+// Daily AI usage counter (resets per UTC day) for the per-shop cap.
+model AiUsage {
+  shop  String
+  day   String   // YYYY-MM-DD (UTC)
+  count Int      @default(0)
+
+  @@id([shop, day])
+}
+
+// Cache for AI completions (key = FNV hash from @klyna/ai-client).
+model AiCache {
+  key       String   @id
+  value     String
+  expiresAt DateTime
+}
+
+// AI-suggested bundle mined from co-purchase patterns. Pending until the
+// merchant approves (-> creates a real Bundle) or dismisses.
+model BundleSuggestion {
+  id            String   @id @default(cuid())
+  shop          String
+  anchorGid     String
+  anchorTitle   String
+  // JSON-encoded array of { gid, title } for the recommended companion products.
+  companionsJson String
+  // AI-generated bundle title + short blurb.
+  suggestedTitle String
+  blurb         String   @default("")
+  // Suggested discount percentage (1-50). Default 10.
+  discountPct   Int      @default(10)
+  status        String   @default("pending") // pending | approved | dismissed
+  createdAt     DateTime @default(now())
+
+  @@index([shop, status])
+}

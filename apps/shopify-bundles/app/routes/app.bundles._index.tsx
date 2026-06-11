@@ -134,13 +134,8 @@ export default function BundlesIndex() {
                         </Text>
                         <fetcher.Form method="post">
                           <input type="hidden" name="id" value={b.id} />
-                          <Button
-                            size="slim"
-                            submit
-                            name="intent"
-                            value="toggle"
-                            variant="tertiary"
-                          >
+                          <input type="hidden" name="intent" value="toggle" />
+                          <Button size="slim" submit variant="tertiary">
                             {b.status === 'active' ? 'Pause' : 'Activate'}
                           </Button>
                         </fetcher.Form>

@@ -53,9 +53,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     currency: shopInfo?.currencyCode ?? 'USD',
     metrics: { revenue, discounts, orders, unitsSold, aov },
     bySource: {
-      bundle: money(bySource.bundle),
-      volume: money(bySource.volume),
-      fbt: money(bySource.fbt),
+      bundle: money(bySource.bundle ?? 0),
+      volume: money(bySource.volume ?? 0),
+      fbt: money(bySource.fbt ?? 0),
     },
     counts: { activeBundles, draftBundles, volumeCount, fbtCount },
     hasData: sales.length > 0,
@@ -77,7 +77,13 @@ export default function Dashboard() {
     { label: 'Discount given', value: fmt(metrics.discounts, currency) },
   ];
 
-  const tiles = [
+  const tiles: {
+    title: string;
+    body: string;
+    to: string;
+    badge?: string;
+    ai?: boolean;
+  }[] = [
     {
       title: 'Bundles',
       body: 'Build fixed sets or mix-and-match bundles and apply a percentage or fixed discount.',
@@ -86,7 +92,7 @@ export default function Dashboard() {
     },
     {
       title: 'Volume discounts',
-      body: 'Add quantity-break tiers — buy more, save more — enforced with native automatic discounts.',
+      body: 'Add quantity-break tiers - buy more, save more - enforced with native automatic discounts.',
       to: '/app/volume',
       badge: counts.volumeCount > 0 ? `${counts.volumeCount} tiers` : undefined,
     },
@@ -95,6 +101,12 @@ export default function Dashboard() {
       body: 'Mine order history for product pairs and surface them on the product page.',
       to: '/app/fbt',
       badge: counts.fbtCount > 0 ? `${counts.fbtCount} pairs` : undefined,
+    },
+    {
+      title: 'AI-suggested bundles',
+      body: 'Co-purchase patterns from real orders, titled and described by your free-tier AI provider.',
+      to: '/app/suggest',
+      ai: true,
     },
   ];
 
@@ -110,7 +122,7 @@ export default function Dashboard() {
             <BlockStack gap="200">
               <Text as="h2" variant="headingMd">Lift AOV with bundles & volume breaks.</Text>
               <Text as="p" variant="bodyMd" tone="subdued">
-                Klyna Bundles turns single-item carts into bigger orders — curated
+                Klyna Bundles turns single-item carts into bigger orders - curated
                 bundles, quantity discounts, and data-driven recommendations, all
                 shown on the product page with the savings spelled out.
               </Text>
@@ -158,16 +170,20 @@ export default function Dashboard() {
         </Layout.Section>
 
         <Layout.Section>
-          <InlineGrid columns={{ xs: 1, md: 3 }} gap="300">
+          <InlineGrid columns={{ xs: 1, sm: 2, md: 4 }} gap="300">
             {tiles.map((t) => (
               <Card key={t.to}>
                 <BlockStack gap="200">
                   <InlineStack align="space-between" blockAlign="center">
                     <Text as="h3" variant="headingSm">{t.title}</Text>
-                    {t.badge && <Badge tone="success">{t.badge}</Badge>}
+                    {t.ai ? (
+                      <Badge tone="info">AI</Badge>
+                    ) : t.badge ? (
+                      <Badge tone="success">{t.badge}</Badge>
+                    ) : null}
                   </InlineStack>
                   <Text as="p" variant="bodyMd" tone="subdued">{t.body}</Text>
-                  <Link to={t.to}>Open →</Link>
+                  <Link to={t.to}>Open</Link>
                 </BlockStack>
               </Card>
             ))}
