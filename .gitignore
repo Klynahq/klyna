@@ -20,6 +20,11 @@ pnpm-debug.log*
 .env
 .env.local
 .env.*.local
+apps/admin/.env
+apps/website/.env
+
+# secrets runbook (NEVER commit)
+SECRETS.md
 
 # OS
 .DS_Store

@@ -1,0 +1,87 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const pages = [
+  {
+    href: '/legal/terms',
+    title: 'Terms of Service',
+    blurb: 'What you can expect from Klyna, and what we expect from you.',
+  },
+  {
+    href: '/legal/privacy',
+    title: 'Privacy Policy',
+    blurb: 'What we collect, what we never collect, and how to ask us anything about it.',
+  },
+  {
+    href: '/legal/cookie-policy',
+    title: 'Cookie Policy',
+    blurb: 'klyna.dev is essentially cookieless. The admin panel uses one CSRF cookie.',
+  },
+  {
+    href: '/legal/dpa',
+    title: 'Data Processing Addendum',
+    blurb: 'For businesses processing personal data through Klyna tools.',
+  },
+  {
+    href: '/legal/acceptable-use',
+    title: 'Acceptable Use',
+    blurb: 'A short list of what you cannot do with Klyna tools.',
+  },
+  {
+    href: '/legal/security',
+    title: 'Security & Disclosure',
+    blurb: 'How to report a vulnerability and what to expect when you do.',
+  },
+  {
+    href: '/legal/license',
+    title: 'Licenses',
+    blurb: 'AGPL-3 for plugins, MIT for the marketing site, in plain English.',
+  },
+  {
+    href: '/legal/refunds',
+    title: 'Refunds',
+    blurb: 'Everything is free. There is nothing to refund.',
+  },
+];
+---
+
+<BaseLayout
+  title="Legal — Klyna"
+  description="Klyna legal documents: terms, privacy, security disclosure, licenses, and more."
+>
+  <section class="max-w-5xl mx-auto px-6 pt-20 pb-24">
+    <div
+      class="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-accent)] mb-3"
+    >
+      Legal
+    </div>
+    <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-4">The boring page.</h1>
+    <p class="text-lg text-[color:var(--color-text-muted)] max-w-2xl mb-12">
+      Plain-English documents that cover how Klyna works, what we collect, what we don't, and
+      what you can build on top of our tools. We try to keep these short.
+    </p>
+
+    <div class="grid gap-4 md:grid-cols-2">
+      {
+        pages.map((p) => (
+          <a
+            href={p.href}
+            class="block rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)]/50 p-5 hover:border-[color:var(--color-accent)] transition-colors"
+          >
+            <div class="font-semibold text-[color:var(--color-text)] mb-1">{p.title}</div>
+            <div class="text-sm text-[color:var(--color-text-muted)] leading-relaxed">
+              {p.blurb}
+            </div>
+          </a>
+        ))
+      }
+    </div>
+
+    <p class="mt-12 text-sm text-[color:var(--color-text-dim)]">
+      Need a custom agreement (DPA, NDA, vendor form)? Email
+      <a href="mailto:hello@klyna.dev" class="text-[color:var(--color-accent)] hover:underline"
+        >hello@klyna.dev</a
+      >.
+    </p>
+  </section>
+</BaseLayout>
