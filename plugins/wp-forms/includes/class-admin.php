@@ -117,7 +117,14 @@ final class Admin {
 		$providers = array( 'off', 'openrouter', 'groq', 'gemini', 'cloudflare', 'ollama' );
 		$provider  = (string) ( $input['ai_provider'] ?? 'off' );
 		$out['ai_provider']  = in_array( $provider, $providers, true ) ? $provider : 'off';
-		$out['ai_api_key']   = sanitize_text_field( (string) ( $input['ai_api_key'] ?? '' ) );
+		$submitted_key = sanitize_text_field( (string) ( $input['ai_api_key'] ?? '' ) );
+		$keep_key      = ! empty( $input['ai_api_key_keep'] );
+		if ( '' === $submitted_key && $keep_key ) {
+			$existing          = get_option( KLYNA_FORMS_OPTION_KEY, array() );
+			$out['ai_api_key'] = (string) ( is_array( $existing ) && isset( $existing['ai_api_key'] ) ? $existing['ai_api_key'] : '' );
+		} else {
+			$out['ai_api_key'] = $submitted_key;
+		}
 		$out['ai_model']     = sanitize_text_field( (string) ( $input['ai_model'] ?? '' ) );
 		$out['ai_endpoint']  = sanitize_text_field( (string) ( $input['ai_endpoint'] ?? '' ) );
 		$cap                 = (int) ( $input['ai_daily_cap'] ?? 100 );
@@ -1013,7 +1020,29 @@ final class Admin {
 						<tr>
 							<th scope="row"><label for="ai_api_key"><?php esc_html_e( 'API key', 'wp-forms' ); ?></label></th>
 							<td>
-								<input type="password" id="ai_api_key" name="<?php echo esc_attr( $key ); ?>[ai_api_key]" class="regular-text" value="<?php echo esc_attr( (string) $settings['ai_api_key'] ); ?>" autocomplete="off">
+								<?php
+								$kf_key    = (string) ( $settings['ai_api_key'] ?? '' );
+								$kf_has    = ! empty( $kf_key );
+								$kf_masked = $kf_has ? str_repeat( "\xE2\x80\xA2", 4 ) . ' ' . substr( $kf_key, -4 ) : '';
+								?>
+								<?php if ( $kf_has ) : ?>
+									<div id="kf-ai-key-display">
+										<code style="padding:4px 8px;background:#f0f0f1;border-radius:3px;"><?php echo esc_html( $kf_masked ); ?></code>
+										<button type="button" class="button button-secondary" id="kf-ai-key-replace" style="margin-left:8px;"><?php esc_html_e( 'Replace key', 'wp-forms' ); ?></button>
+									</div>
+									<input type="hidden" name="<?php echo esc_attr( $key ); ?>[ai_api_key_keep]" value="1">
+									<input type="password" id="ai_api_key" name="<?php echo esc_attr( $key ); ?>[ai_api_key]" class="regular-text" value="" autocomplete="new-password" style="display:none;margin-top:8px;">
+									<script>
+									(function(){
+										var btn=document.getElementById('kf-ai-key-replace');
+										var inp=document.getElementById('ai_api_key');
+										var disp=document.getElementById('kf-ai-key-display');
+										if(btn&&inp&&disp){btn.addEventListener('click',function(){inp.style.display='';inp.focus();disp.style.display='none';});}
+									})();
+									</script>
+								<?php else : ?>
+									<input type="password" id="ai_api_key" name="<?php echo esc_attr( $key ); ?>[ai_api_key]" class="regular-text" value="" autocomplete="new-password">
+								<?php endif; ?>
 								<p class="description"><?php esc_html_e( 'Stored in the WordPress options table. Free-tier keys are fine.', 'wp-forms' ); ?></p>
 							</td>
 						</tr>
