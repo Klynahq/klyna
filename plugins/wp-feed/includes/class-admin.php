@@ -545,6 +545,8 @@ final class Admin {
 				</table>
 				<?php submit_button(); ?>
 			</form>
+			<?php \KlynaFeed\Telemetry::render_form(); ?>
+
 		</div>
 		<?php
 	}
