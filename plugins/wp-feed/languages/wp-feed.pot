@@ -1,0 +1,293 @@
+# Copyright (C) 2026 Klyna
+# This file is distributed under the GPL-2.0-or-later license.
+msgid ""
+msgstr ""
+"Project-Id-Version: Klyna Product Feed 0.1.0\n"
+"Report-Msgid-Bugs-To: https://klyna.dev\n"
+"Last-Translator: Klyna <hello@klyna.dev>\n"
+"Language-Team: Klyna <hello@klyna.dev>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-06-11T00:00:00+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: Klyna build tooling\n"
+"X-Domain: wp-feed\n"
+
+#. Plugin Name of the plugin
+msgid "Klyna Product Feed"
+msgstr ""
+
+#. Description of the plugin
+msgid "Tools that help your work get found. WooCommerce product feeds for Google Shopping & Meta, auto-refreshed."
+msgstr ""
+
+#: includes/class-feed-builder.php
+msgid "WooCommerce is not active. Activate WooCommerce to generate product feeds."
+msgstr ""
+
+#. translators: %s: feed attribute name.
+#: includes/class-feed-builder.php
+msgid "Missing required attribute: %s"
+msgstr ""
+
+#: includes/class-feed-builder.php
+msgid "No GTIN, and no MPN+brand fallback. Google may reject this item."
+msgstr ""
+
+#: includes/class-feed-builder.php
+msgid "Description is very short (under 30 characters)."
+msgstr ""
+
+#: includes/class-feed-endpoint.php
+msgid "Invalid or missing feed token."
+msgstr ""
+
+#: includes/class-feed-endpoint.php
+msgid "This feed is disabled in settings."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Klyna Feed"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Dashboard"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Feed health"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Settings"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Regenerating…"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Regenerate now"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Feeds regenerated."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Something went wrong. Check the logs."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Copied!"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Scanning catalog…"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "No issues found. Every product has its required fields."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "WordPress product feeds for Google Shopping & Meta, auto-refreshed. Tools that help your work get found."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "WooCommerce is not active."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Klyna Product Feed needs WooCommerce to read your catalog. Install and activate WooCommerce, then return here."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Google Shopping"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "RSS 2.0 XML feed for Google Merchant Center."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Meta (Facebook & Instagram)"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Product CSV for Meta Commerce Manager."
+msgstr ""
+
+#. translators: %s: human-readable time difference.
+#: includes/class-admin.php
+msgid "Last regenerated %s ago."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Feeds have not been generated yet."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Enabled"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Disabled"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "items"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "warnings"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Not generated yet."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Public feed URL"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Copy"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Klyna scans your catalog for products missing the fields Google and Meta require — GTIN, brand, images, price, and more. Fix these before submitting your feed to avoid disapprovals."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "WooCommerce is not active, so there is no catalog to scan."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Scan catalog"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Klyna Product Feed settings"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Feeds"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Generate Google Shopping XML feed"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Generate Meta (Facebook/Instagram) CSV feed"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Auto-refresh"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Every hour"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Twice daily"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Once a day"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Off (manual only)"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Feeds regenerate on this schedule via WP-Cron. The public feed URL always serves the latest cached copy."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Catalog filters"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Include in-stock products only"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Default brand"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Used when a product has no brand meta value."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Default condition"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "New"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Refurbished"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Used"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Google product category"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "e.g. Apparel & Accessories > Clothing"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Default Google product category. Per-product override: set the _google_product_category meta key."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "GTIN meta key"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "The product meta key holding each product GTIN/UPC/EAN."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Brand meta key"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "The product meta key holding each product brand. Falls back to the default brand above."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Feed security token"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Regenerate token on save (invalidates the current public feed URLs)"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "The token is appended to every public feed URL so the feed is not guessable. Rotate it if a URL leaks."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "No product categories found yet."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Include only these categories (leave empty for all)"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Exclude these categories"
+msgstr ""

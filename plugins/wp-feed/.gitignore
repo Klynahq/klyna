@@ -1,0 +1,7 @@
+# Build artifacts
+wp-feed.zip
+wp-feed/
+
+# OS / editor cruft
+.DS_Store
+*.log

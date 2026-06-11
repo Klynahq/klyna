@@ -1,0 +1,291 @@
+/**
+ * Klyna Product Feed — admin styles.
+ *
+ * Scoped to .klyna-feed-wrap so we never bleed into core admin chrome.
+ * Mirrors the Klyna brand surface (dark neutrals + electric-violet accent)
+ * from packages/ui/src/tokens.ts.
+ */
+
+.klyna-feed-wrap {
+	--klyna-feed-bg: #0b0b0f;
+	--klyna-feed-elevated: #13131a;
+	--klyna-feed-surface: #1a1a23;
+	--klyna-feed-border: #2a2a35;
+	--klyna-feed-text: #f4f4f5;
+	--klyna-feed-muted: #a1a1aa;
+	--klyna-feed-dim: #71717a;
+	--klyna-feed-accent: #7c5cff;
+	--klyna-feed-accent-hover: #9277ff;
+	--klyna-feed-accent-deep: #5b3df0;
+	--klyna-feed-success: #34d399;
+	--klyna-feed-warning: #fbbf24;
+	--klyna-feed-danger: #f87171;
+	--klyna-feed-radius: 12px;
+	--klyna-feed-radius-sm: 8px;
+
+	max-width: 1180px;
+	font-family: "Geist", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.klyna-feed-wrap h1 {
+	font-weight: 650;
+	letter-spacing: -0.01em;
+}
+
+.klyna-feed-tagline {
+	color: var(--klyna-feed-dim);
+	font-size: 14px;
+	max-width: 70ch;
+	margin: 4px 0 20px;
+}
+
+/* Notices ----------------------------------------------------------------- */
+
+.klyna-feed-notice {
+	border-radius: var(--klyna-feed-radius-sm);
+	padding: 14px 16px;
+	margin: 16px 0;
+	font-size: 13px;
+	line-height: 1.5;
+	border: 1px solid var(--klyna-feed-border);
+	background: var(--klyna-feed-elevated);
+	color: var(--klyna-feed-text);
+}
+
+.klyna-feed-notice--warning {
+	border-left: 3px solid var(--klyna-feed-warning);
+}
+
+.klyna-feed-notice strong {
+	display: block;
+	margin-bottom: 2px;
+}
+
+/* Toolbar ----------------------------------------------------------------- */
+
+.klyna-feed-toolbar {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin: 16px 0 24px;
+}
+
+.klyna-feed-status {
+	font-size: 13px;
+	color: var(--klyna-feed-muted);
+}
+
+.klyna-feed-status.is-success {
+	color: var(--klyna-feed-success);
+}
+
+.klyna-feed-status.is-error {
+	color: var(--klyna-feed-danger);
+}
+
+/* Cards ------------------------------------------------------------------- */
+
+.klyna-feed-cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+	gap: 16px;
+}
+
+.klyna-feed-card {
+	background: var(--klyna-feed-elevated);
+	border: 1px solid var(--klyna-feed-border);
+	border-radius: var(--klyna-feed-radius);
+	padding: 20px;
+	color: var(--klyna-feed-text);
+}
+
+.klyna-feed-card__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.klyna-feed-card h2 {
+	margin: 0;
+	font-size: 16px;
+	color: var(--klyna-feed-text);
+}
+
+.klyna-feed-card__desc {
+	color: var(--klyna-feed-muted);
+	font-size: 13px;
+	margin: 6px 0 14px;
+}
+
+.klyna-feed-card__empty {
+	color: var(--klyna-feed-dim);
+	font-style: italic;
+	font-size: 13px;
+}
+
+.klyna-feed-badge {
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	padding: 3px 9px;
+	border-radius: 999px;
+	white-space: nowrap;
+}
+
+.klyna-feed-badge.is-on {
+	background: rgba(124, 92, 255, 0.16);
+	color: var(--klyna-feed-accent-hover);
+}
+
+.klyna-feed-badge.is-off {
+	background: rgba(113, 113, 122, 0.16);
+	color: var(--klyna-feed-dim);
+}
+
+.klyna-feed-stats {
+	display: flex;
+	gap: 20px;
+	margin: 0 0 14px;
+	padding: 0;
+	list-style: none;
+}
+
+.klyna-feed-stats li {
+	color: var(--klyna-feed-muted);
+	font-size: 12px;
+}
+
+.klyna-feed-stats strong {
+	display: block;
+	font-size: 20px;
+	color: var(--klyna-feed-text);
+	font-variant-numeric: tabular-nums;
+}
+
+/* Feed URL row ------------------------------------------------------------ */
+
+.klyna-feed-url {
+	display: flex;
+	gap: 8px;
+}
+
+.klyna-feed-url__input {
+	flex: 1;
+	background: var(--klyna-feed-surface);
+	border: 1px solid var(--klyna-feed-border);
+	border-radius: var(--klyna-feed-radius-sm);
+	color: var(--klyna-feed-muted);
+	padding: 6px 10px;
+	font-family: "Geist Mono", ui-monospace, "SF Mono", monospace;
+	font-size: 12px;
+}
+
+.klyna-feed-url__input:focus {
+	outline: 2px solid var(--klyna-feed-accent);
+	outline-offset: 1px;
+}
+
+/* Meta row ---------------------------------------------------------------- */
+
+.klyna-feed-meta-row {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-top: 24px;
+	color: var(--klyna-feed-muted);
+	font-size: 13px;
+}
+
+/* Health table ------------------------------------------------------------ */
+
+.klyna-feed-health-output {
+	margin-top: 20px;
+}
+
+.klyna-feed-health-summary {
+	display: flex;
+	gap: 24px;
+	margin-bottom: 16px;
+	font-size: 13px;
+	color: var(--klyna-feed-muted);
+}
+
+.klyna-feed-health-summary strong {
+	color: var(--klyna-feed-text);
+}
+
+.klyna-feed-table {
+	width: 100%;
+	border-collapse: collapse;
+	background: var(--klyna-feed-elevated);
+	border: 1px solid var(--klyna-feed-border);
+	border-radius: var(--klyna-feed-radius);
+	overflow: hidden;
+}
+
+.klyna-feed-table th,
+.klyna-feed-table td {
+	text-align: left;
+	padding: 10px 14px;
+	font-size: 13px;
+	border-bottom: 1px solid var(--klyna-feed-border);
+	color: var(--klyna-feed-text);
+}
+
+.klyna-feed-table th {
+	background: var(--klyna-feed-surface);
+	color: var(--klyna-feed-muted);
+	font-weight: 600;
+}
+
+.klyna-feed-table tr:last-child td {
+	border-bottom: none;
+}
+
+.klyna-feed-table .klyna-feed-field {
+	font-family: "Geist Mono", ui-monospace, "SF Mono", monospace;
+	font-size: 12px;
+	color: var(--klyna-feed-warning);
+}
+
+.klyna-feed-empty-ok {
+	color: var(--klyna-feed-success);
+	font-size: 14px;
+	padding: 16px 0;
+}
+
+/* Settings page extras ---------------------------------------------------- */
+
+.klyna-feed-multiselect {
+	min-width: 280px;
+	max-width: 420px;
+}
+
+.klyna-feed-token {
+	display: inline-block;
+	background: #f0f0f1;
+	padding: 4px 10px;
+	border-radius: var(--klyna-feed-radius-sm);
+	font-size: 13px;
+}
+
+.klyna-feed-regen-token {
+	display: block;
+	margin-top: 10px;
+	font-size: 13px;
+}
+
+/* Buttons — tint the primary action with the Klyna accent on our pages. */
+
+.klyna-feed-wrap .button-primary {
+	background: var(--klyna-feed-accent);
+	border-color: var(--klyna-feed-accent-deep);
+}
+
+.klyna-feed-wrap .button-primary:hover,
+.klyna-feed-wrap .button-primary:focus {
+	background: var(--klyna-feed-accent-hover);
+	border-color: var(--klyna-feed-accent-deep);
+}

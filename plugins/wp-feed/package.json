@@ -1,0 +1,10 @@
+{
+  "name": "wp-feed",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Klyna Product Feed — WooCommerce product feeds for Google & Meta. Plain PHP, no build step.",
+  "scripts": {
+    "package": "rm -rf wp-feed wp-feed.zip && mkdir wp-feed && cp -R wp-feed.php uninstall.php readme.txt includes assets languages wp-feed/ && zip -r wp-feed.zip wp-feed >/dev/null && rm -rf wp-feed && echo 'Built: plugins/wp-feed/wp-feed.zip'",
+    "clean": "rm -f wp-feed.zip"
+  }
+}
