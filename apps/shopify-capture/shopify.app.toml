@@ -13,7 +13,19 @@ scopes = "read_customers,read_products,read_themes,write_customers"
 redirect_urls = [ "https://example.com/api/auth" ]
 
 [webhooks]
-api_version = "2026-07"
+api_version = "2025-01"
+
+  [[webhooks.subscriptions]]
+  topics = [ "customers/data_request" ]
+  uri = "/webhooks/customers/data_request"
+
+  [[webhooks.subscriptions]]
+  topics = [ "customers/redact" ]
+  uri = "/webhooks/customers/redact"
+
+  [[webhooks.subscriptions]]
+  topics = [ "shop/redact" ]
+  uri = "/webhooks/shop/redact"
 
 [build]
 include_config_on_deploy = true
