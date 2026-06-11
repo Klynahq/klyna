@@ -36,7 +36,12 @@ spl_autoload_register(
 		$relative = str_replace( 'KlynaTables\\', '', $class );
 		$relative = str_replace( '\\', '/', $relative );
 		$parts    = explode( '/', $relative );
-		$filename = 'class-' . strtolower( preg_replace( '/(?<!^)[A-Z]/', '-$0', array_pop( $parts ) ) ) . '.php';
+		$base     = array_pop( $parts );
+		// Handle both CamelCase (Plugin → plugin) and snake_case (Table_Store → table-store).
+		$kebab    = preg_replace( '/(?<!^)[A-Z]/', '-$0', $base );
+		$kebab    = str_replace( '_', '-', $kebab );
+		$kebab    = preg_replace( '/-+/', '-', $kebab );
+		$filename = 'class-' . strtolower( $kebab ) . '.php';
 		$path     = KLYNA_TABLES_PLUGIN_DIR . 'includes/';
 		if ( $parts ) {
 			$path .= strtolower( implode( '/', $parts ) ) . '/';
