@@ -25,16 +25,22 @@ final class Schema {
 		$settings = Plugin::settings();
 		$graph    = array();
 
-		if ( ! empty( $settings['enable_org_schema'] ) ) {
+		// Defaults: schema-on. The admin UI toggles these but if the option
+		// is empty (fresh install), schema should still ship.
+		$enable_org = (bool) ( $settings['enable_organization'] ?? $settings['enable_org_schema'] ?? true );
+		$enable_article = (bool) ( $settings['enable_schema'] ?? $settings['enable_article_schema'] ?? true );
+
+		if ( $enable_org ) {
 			$graph[] = $this->organization( $settings );
 			$graph[] = $this->website( $settings );
 		}
 
-		if ( is_singular( 'post' ) && ! empty( $settings['enable_article_schema'] ) ) {
+		if ( is_singular( 'post' ) && $enable_article ) {
 			$post = get_post();
 			if ( $post ) {
 				$graph[] = $this->blog_posting( $post, $settings );
-				if ( ! empty( $settings['enable_breadcrumbs'] ) ) {
+				$enable_breadcrumbs = (bool) ( $settings['enable_breadcrumbs'] ?? true );
+				if ( $enable_breadcrumbs ) {
 					$graph[] = $this->breadcrumb( $post );
 				}
 			}
@@ -60,18 +66,25 @@ final class Schema {
 	 */
 	private function organization( array $settings ): array {
 		$home = home_url( '/' );
+		$name = (string) ( $settings['organization_name'] ?? $settings['org_name'] ?? get_bloginfo( 'name' ) );
+		$logo = (string) ( $settings['organization_logo'] ?? $settings['org_logo'] ?? '' );
 		$out  = array(
 			'@type' => 'Organization',
 			'@id'   => $home . '#organization',
-			'name'  => $settings['org_name'] ?? get_bloginfo( 'name' ),
+			'name'  => $name,
 			'url'   => $home,
 		);
-		if ( ! empty( $settings['org_logo'] ) ) {
-			$out['logo'] = $settings['org_logo'];
+		if ( '' !== $logo ) {
+			$out['logo'] = $logo;
 		}
-		$same_as = $this->parse_list( $settings['org_same_as'] ?? '' );
+		$same_as = $this->parse_list( (string) ( $settings['org_same_as'] ?? '' ) );
+		$twitter = (string) ( $settings['twitter_handle'] ?? '' );
+		if ( '' !== $twitter ) {
+			$handle    = ltrim( $twitter, '@' );
+			$same_as[] = 'https://x.com/' . $handle;
+		}
 		if ( $same_as ) {
-			$out['sameAs'] = $same_as;
+			$out['sameAs'] = array_values( array_unique( $same_as ) );
 		}
 		$description = get_bloginfo( 'description' );
 		if ( $description ) {
@@ -90,7 +103,7 @@ final class Schema {
 			'@type'      => 'WebSite',
 			'@id'        => $home . '#website',
 			'url'        => $home,
-			'name'       => $settings['org_name'] ?? get_bloginfo( 'name' ),
+			'name'       => (string) ( $settings['organization_name'] ?? $settings['org_name'] ?? get_bloginfo( 'name' ) ),
 			'publisher'  => array( '@id' => $home . '#organization' ),
 			'inLanguage' => get_bloginfo( 'language' ),
 		);
