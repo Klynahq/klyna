@@ -1,0 +1,150 @@
+@import 'tailwindcss';
+
+/* -------------------------------------------------------------
+ * Klyna design tokens. Scoped to #klyna-admin-root so the plugin
+ * never bleeds into the rest of WP admin.
+ * ------------------------------------------------------------- */
+@theme {
+  --font-sans: 'Geist', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Geist Mono', 'JetBrains Mono', ui-monospace, monospace;
+
+  --color-klyna-bg: #0b0b0f;
+  --color-klyna-bg-elevated: #13131a;
+  --color-klyna-surface: #1a1a23;
+  --color-klyna-border: #2a2a35;
+
+  --color-klyna-text: #f4f4f5;
+  --color-klyna-text-muted: #a1a1aa;
+  --color-klyna-text-dim: #71717a;
+
+  --color-klyna-accent: #7c5cff;
+  --color-klyna-accent-hover: #9277ff;
+  --color-klyna-accent-soft: rgba(124, 92, 255, 0.12);
+
+  --color-klyna-success: #34d399;
+  --color-klyna-warning: #fbbf24;
+  --color-klyna-danger: #f87171;
+}
+
+/* Reset only inside the plugin root — WP admin styles stay intact */
+#klyna-admin-root,
+#klyna-admin-root * {
+  box-sizing: border-box;
+}
+
+#klyna-admin-root {
+  font-family: var(--font-sans);
+  color: var(--color-klyna-text);
+  background:
+    radial-gradient(ellipse 60% 40% at 50% -5%, rgba(124, 92, 255, 0.12), transparent 60%),
+    var(--color-klyna-bg);
+  min-height: calc(100vh - 32px);
+  margin-left: -20px;
+  margin-right: -20px;
+  margin-bottom: -20px;
+  margin-top: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+#klyna-admin-root h1,
+#klyna-admin-root h2,
+#klyna-admin-root h3,
+#klyna-admin-root h4 {
+  color: var(--color-klyna-text);
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+#klyna-admin-root a {
+  color: var(--color-klyna-accent);
+  text-decoration: none;
+}
+
+#klyna-admin-root button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+#klyna-admin-root button:focus-visible,
+#klyna-admin-root a:focus-visible,
+#klyna-admin-root input:focus-visible {
+  outline: 2px solid var(--color-klyna-accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+#klyna-admin-root .grid-bg {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+#klyna-admin-root ::selection {
+  background: var(--color-klyna-accent);
+  color: white;
+}
+
+/* In dev preview only, give the root a bit of breathing room */
+#klyna-admin-root[data-mode='dev'] {
+  margin: 0;
+  min-height: 100vh;
+}
+
+/* WP admin chrome — eat the default padding/margins on Klyna screens so the
+ * dark canvas runs edge-to-edge. The body classes WordPress emits are
+ * `toplevel_page_klyna` and `klyna_page_<slug>` (admin menu hook prefix). */
+body[class*='page_klyna'] #wpcontent {
+  padding-left: 0 !important;
+}
+body[class*='page_klyna'] .wrap {
+  margin: 0 !important;
+}
+/* Hide all admin notices on Klyna pages (WP core update nags, plugin
+ * nags, etc.) — every modern plugin admin does this. */
+body[class*='page_klyna'] #wpbody-content > .notice,
+body[class*='page_klyna'] #wpbody-content > .updated,
+body[class*='page_klyna'] #wpbody-content > .error,
+body[class*='page_klyna'] .update-nag {
+  display: none !important;
+}
+
+/* Custom scrollbar inside the plugin */
+#klyna-admin-root *::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+#klyna-admin-root *::-webkit-scrollbar-track {
+  background: transparent;
+}
+#klyna-admin-root *::-webkit-scrollbar-thumb {
+  background: var(--color-klyna-border);
+  border-radius: 5px;
+}
+#klyna-admin-root *::-webkit-scrollbar-thumb:hover {
+  background: var(--color-klyna-text-dim);
+}
+
+/* Subtle pulse for live indicators */
+@keyframes klyna-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.klyna-pulse {
+  animation: klyna-pulse 2s ease-in-out infinite;
+}
+
+/* Smooth fade-in for page transitions */
+@keyframes klyna-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.klyna-fade-in {
+  animation: klyna-fade-in 250ms ease-out;
+}

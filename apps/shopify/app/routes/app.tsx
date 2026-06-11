@@ -23,6 +23,7 @@ export default function App() {
         <Link to="/app/audit">Audit store</Link>
         <Link to="/app/schema">Schema</Link>
         <Link to="/app/links">Internal links</Link>
+        <Link to="/app/settings">Settings</Link>
       </NavMenu>
       <Outlet />
     </AppProvider>
