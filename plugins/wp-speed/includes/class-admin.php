@@ -118,7 +118,14 @@ final class Admin {
 		$provider            = isset( $input['ai_provider'] ) ? sanitize_key( (string) $input['ai_provider'] ) : 'off';
 		$out['ai_provider']  = in_array( $provider, $providers, true ) ? $provider : 'off';
 		$out['ai_model']     = isset( $input['ai_model'] ) ? sanitize_text_field( (string) $input['ai_model'] ) : '';
-		$out['ai_api_key']   = isset( $input['ai_api_key'] ) ? sanitize_text_field( (string) $input['ai_api_key'] ) : '';
+		$submitted_key = isset( $input['ai_api_key'] ) ? sanitize_text_field( (string) $input['ai_api_key'] ) : '';
+		$keep_key      = ! empty( $input['ai_api_key_keep'] );
+		if ( '' === $submitted_key && $keep_key ) {
+			$existing          = get_option( KLYNA_SPEED_OPTION_KEY, array() );
+			$out['ai_api_key'] = (string) ( is_array( $existing ) && isset( $existing['ai_api_key'] ) ? $existing['ai_api_key'] : '' );
+		} else {
+			$out['ai_api_key'] = $submitted_key;
+		}
 		$out['ai_endpoint']  = isset( $input['ai_endpoint'] ) ? sanitize_text_field( (string) $input['ai_endpoint'] ) : '';
 		$out['ai_daily_cap'] = isset( $input['ai_daily_cap'] )
 			? max( 1, min( 10000, (int) $input['ai_daily_cap'] ) )
@@ -509,7 +516,29 @@ JS;
 						<tr>
 							<th scope="row"><label for="ai_api_key"><?php esc_html_e( 'API key', 'wp-speed' ); ?></label></th>
 							<td>
-								<input type="password" id="ai_api_key" name="<?php echo esc_attr( $opt ); ?>[ai_api_key]" value="<?php echo esc_attr( (string) ( $s['ai_api_key'] ?? '' ) ); ?>" class="regular-text" autocomplete="off">
+								<?php
+								$ws_key    = (string) ( $s['ai_api_key'] ?? '' );
+								$ws_has    = ! empty( $ws_key );
+								$ws_masked = $ws_has ? str_repeat( "\xE2\x80\xA2", 4 ) . ' ' . substr( $ws_key, -4 ) : '';
+								?>
+								<?php if ( $ws_has ) : ?>
+									<div id="ws-ai-key-display">
+										<code style="padding:4px 8px;background:#f0f0f1;border-radius:3px;"><?php echo esc_html( $ws_masked ); ?></code>
+										<button type="button" class="button button-secondary" id="ws-ai-key-replace" style="margin-left:8px;"><?php esc_html_e( 'Replace key', 'wp-speed' ); ?></button>
+									</div>
+									<input type="hidden" name="<?php echo esc_attr( $opt ); ?>[ai_api_key_keep]" value="1">
+									<input type="password" id="ai_api_key" name="<?php echo esc_attr( $opt ); ?>[ai_api_key]" value="" class="regular-text" autocomplete="new-password" style="display:none;margin-top:8px;">
+									<script>
+									(function(){
+										var btn=document.getElementById('ws-ai-key-replace');
+										var inp=document.getElementById('ai_api_key');
+										var disp=document.getElementById('ws-ai-key-display');
+										if(btn&&inp&&disp){btn.addEventListener('click',function(){inp.style.display='';inp.focus();disp.style.display='none';});}
+									})();
+									</script>
+								<?php else : ?>
+									<input type="password" id="ai_api_key" name="<?php echo esc_attr( $opt ); ?>[ai_api_key]" value="" class="regular-text" autocomplete="new-password">
+								<?php endif; ?>
 								<p class="description"><?php esc_html_e( 'Required for hosted providers. Ollama uses the endpoint field instead.', 'wp-speed' ); ?></p>
 							</td>
 						</tr>
