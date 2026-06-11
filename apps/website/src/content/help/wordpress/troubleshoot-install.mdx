@@ -1,0 +1,48 @@
+---
+title: Troubleshoot a WordPress install
+description: Common causes when the Klyna plugin fails to activate, the admin panel does not load, or the editor sidebar does not show up.
+category: wordpress
+updated: 2026-06-10
+order: 1
+---
+
+If activating Klyna throws a fatal error or the admin pages do not render,
+walk through these in order.
+
+## Check PHP version
+
+Klyna requires PHP 8.1 or newer. From your host's control panel or via SSH:
+
+```bash
+php -v
+```
+
+If you are on PHP 7.4 or 8.0, upgrade before re-activating. Most hosts have a
+one-click switcher.
+
+## Check WordPress version
+
+```bash
+wp core version
+```
+
+WordPress 6.4 or newer is required. The block editor uses APIs that did not
+exist in 6.3.
+
+## Re-upload after a partial install
+
+If the zip upload was interrupted, the plugin folder may be incomplete.
+Deactivate, delete via FTP from `wp-content/plugins/klyna`, and re-upload.
+
+## Admin React panel is blank
+
+Open the browser console. If you see `klynaBoot is not defined`, your host is
+caching old asset URLs. Bump the plugin version and hard-reload, or clear the
+host cache.
+
+## Editor sidebar icon missing
+
+The sidebar bundle externalizes React to `wp.element`. If you have another
+plugin that loads its own React in the editor, you may see a hook collision.
+Disable other editor extensions one at a time to find the conflict, then
+report it via [Contact](/contact).
