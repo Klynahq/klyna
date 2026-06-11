@@ -2,7 +2,7 @@
 
 client_id = "02ac921ec3c9f022d897a40a87015d96"
 name = "Klyna Sticky Cart"
-application_url = "https://example.com"
+application_url = "https://klyna-sticky-cart.vercel.app"
 embedded = true
 
 [access_scopes]
@@ -10,11 +10,18 @@ embedded = true
 scopes = "read_metaobjects,read_products,write_metaobjects"
 
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+redirect_urls = [
+  "https://klyna-sticky-cart.vercel.app/auth/callback",
+  "https://klyna-sticky-cart.vercel.app/auth/shopify/callback",
+  "https://klyna-sticky-cart.vercel.app/api/auth/callback"
+]
 
 [webhooks]
-api_version = "2026-07"
+api_version = "2025-01"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
+  uri = "/webhooks/compliance"
 
 [build]
-include_config_on_deploy = true
 automatically_update_urls_on_dev = true

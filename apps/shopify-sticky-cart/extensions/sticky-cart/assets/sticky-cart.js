@@ -104,7 +104,7 @@
         enabled: bool('data-freeship', true),
         threshold: parseFloat(attr('data-freeship-threshold', '0')) || 0,
         color: attr('data-freeship-color', '#34d399'),
-        message: attr('data-freeship-message', "You're {{remaining}} away from free shipping!"),
+        message: attr('data-freeship-message', "You're [remaining] away from free shipping!"),
         successMessage: attr('data-freeship-success', "You've unlocked free shipping!"),
       },
     };
@@ -401,7 +401,8 @@
       refs.el.classList.remove('is-unlocked');
       state.freeShipUnlockSent = false;
       var remaining = formatMoney(remainingCents);
-      var msg = cfg.freeShip.message.replace('{{remaining}}', '<strong>' + escapeHtml(remaining) + '</strong>');
+      var token = '<strong>' + escapeHtml(remaining) + '</strong>';
+      var msg = cfg.freeShip.message.replace('{{remaining}}', token).replace('[remaining]', token);
       refs.ship._msg.innerHTML = msg;
     }
   }
