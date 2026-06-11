@@ -65,6 +65,64 @@ final class InternalLinks {
 	 *
 	 * @return array<int, array<string,mixed>>
 	 */
+	/**
+	 * Return the top-N most semantically similar posts to a given source post,
+	 * sorted by TF-IDF cosine similarity descending.
+	 *
+	 * No threshold cutoff — caller decides if the similarity is high enough
+	 * to act on. Used by the auto-fix engine which always wants SOMETHING.
+	 *
+	 * @return array<array{to_id:int,to_title:string,to_url:string,similarity:float}>
+	 */
+	public function find_similar_posts( int $source_id, int $limit = 5 ): array {
+		$posts = get_posts(
+			array(
+				'post_type'      => 'post',
+				'post_status'    => 'publish',
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+			)
+		);
+		if ( count( $posts ) < 2 ) {
+			return array();
+		}
+
+		$tf_maps = array();
+		$titles  = array();
+		$urls    = array();
+		foreach ( $posts as $pid ) {
+			$post              = get_post( $pid );
+			$content           = wp_strip_all_tags( $post->post_content ?? '' );
+			$tf_maps[ $pid ]   = $this->tf( $this->tokenize( $post->post_title . ' ' . $content ) );
+			$titles[ $pid ]    = $post->post_title;
+			$urls[ $pid ]      = get_permalink( $pid );
+		}
+		$idf = $this->idf( array_values( $tf_maps ) );
+		$tfidf_maps = array();
+		foreach ( $tf_maps as $pid => $map ) {
+			$tfidf_maps[ $pid ] = $this->tfidf( $map, $idf );
+		}
+
+		if ( ! isset( $tfidf_maps[ $source_id ] ) ) {
+			return array();
+		}
+
+		$candidates = array();
+		foreach ( $posts as $pid ) {
+			if ( $pid === $source_id ) {
+				continue;
+			}
+			$candidates[] = array(
+				'to_id'      => $pid,
+				'to_title'   => $titles[ $pid ],
+				'to_url'     => $urls[ $pid ],
+				'similarity' => round( $this->cosine( $tfidf_maps[ $source_id ], $tfidf_maps[ $pid ] ), 3 ),
+			);
+		}
+		usort( $candidates, static fn( $a, $b ) => $b['similarity'] <=> $a['similarity'] );
+		return array_slice( $candidates, 0, max( 1, $limit ) );
+	}
+
 	public function suggest( int $per_page = 5 ): array {
 		$posts = get_posts(
 			array(
