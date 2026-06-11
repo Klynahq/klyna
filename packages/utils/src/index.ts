@@ -24,33 +24,39 @@ export interface Product {
  * The website, dashboard, and any docs hub all import from here.
  */
 export const products: Product[] = [
-  // ─── Original three ───────────────────────────────────────────────────────
+  // ─── Founder trio — the original three, all now in beta with downloads ───
   {
-    slug: 'inspector',
+    slug: 'klyna-inspector',
     name: 'Klyna Inspector',
-    tagline: 'On-page SEO in your browser.',
+    tagline: 'On-page SEO + GEO audit, one click, any page.',
     description:
-      'A browser extension that audits any page in one click — schema, meta, headings, links, performance. Pure client-side, zero tracking.',
-    status: 'soon',
+      'Manifest V3 Chrome extension. Audits the current tab for meta, headings, links, images, schema, OG cards and GEO citation-readiness — pure client-side, zero tracking. Powered by the shared @klyna/core engine.',
+    status: 'beta',
     surface: 'extension',
+    downloadUrl: '/downloads/klyna-inspector.zip',
+    installNote: 'Chrome → chrome://extensions → Load unpacked → select unzipped folder',
   },
   {
-    slug: 'wp-suite',
+    slug: 'wp-seo-suite',
     name: 'Klyna SEO Suite',
-    tagline: 'Autopilot SEO for WordPress.',
+    tagline: 'Autopilot SEO + GEO for WordPress, with AI assistant built in.',
     description:
-      'Internal linking, schema, content freshness and FAQ generation — installed as a single plugin. Runs on your own server.',
-    status: 'soon',
+      'React admin, Gutenberg sidebar, one-click bulk fixes, TF-IDF internal linking, FAQPage detection, Organization/Article/Breadcrumb schema, and a pluggable AI layer (OpenRouter / Groq / Gemini / Cloudflare / Ollama — all free) for content rewrites. Runs on your own server.',
+    status: 'beta',
     surface: 'wordpress',
+    downloadUrl: '/downloads/wp-seo-suite.zip',
+    installNote: 'Plugins → Add New → Upload → Activate',
   },
   {
-    slug: 'shopify',
-    name: 'Klyna for Shopify',
-    tagline: 'Organic growth for stores.',
+    slug: 'shopify-seo-suite',
+    name: 'Klyna SEO for Shopify',
+    tagline: 'Organic growth engine for stores — schema, links, audit.',
     description:
-      'Programmatic product page optimization, schema, internal linking and review collection for Shopify merchants.',
-    status: 'planning',
+      'Embedded Remix + Polaris app. Per-page audit, product Organization/Product JSON-LD, AggregateRating schema, internal-link suggestions across collections, and orphan recovery. OAuth via @shopify/shopify-app-remix, Prisma session storage.',
+    status: 'beta',
     surface: 'shopify',
+    downloadUrl: '/downloads/shopify-seo-suite.zip',
+    installNote: 'Unzip → shopify app config link → pnpm dev',
   },
 
   // ─── 10 Shopify Apps ──────────────────────────────────────────────────────
