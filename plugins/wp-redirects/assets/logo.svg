@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#9277ff"/>
+      <stop offset="100%" stop-color="#5b3df0"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="28" height="28" rx="7" fill="url(#g)"/>
+  <!-- Two curved arrows representing a redirect/swap -->
+  <path d="M10 12 C10 9 14 9 16 11 L20 15" stroke="#fff" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+  <polyline points="17,12 20,15 17,18" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M22 20 C22 23 18 23 16 21 L12 17" stroke="#fff" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+  <polyline points="15,20 12,17 15,14" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

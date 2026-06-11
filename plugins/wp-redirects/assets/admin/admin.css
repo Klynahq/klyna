@@ -1,0 +1,106 @@
+/* Klyna Redirects — admin styles */
+:root {
+  --klyna-bg: #0b0b0f;
+  --klyna-surface: #1a1a23;
+  --klyna-border: #2a2a35;
+  --klyna-text: #f4f4f5;
+  --klyna-muted: #a1a1aa;
+  --klyna-accent: #7c5cff;
+  --klyna-accent-hover: #9277ff;
+  --klyna-danger: #f87171;
+  --klyna-radius: 12px;
+}
+
+.klyna-wrap { max-width: 1100px; }
+
+.klyna-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--klyna-text);
+}
+
+.klyna-card {
+  background: var(--klyna-surface);
+  border: 1px solid var(--klyna-border);
+  border-radius: var(--klyna-radius);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.klyna-card h2 {
+  color: var(--klyna-text);
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 0;
+}
+
+.klyna-muted { color: var(--klyna-muted); }
+
+.klyna-table th,
+.klyna-table td { padding: 10px 12px; vertical-align: middle; }
+
+.klyna-table code {
+  background: #111118;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.85em;
+  color: var(--klyna-accent-hover);
+  word-break: break-all;
+}
+
+.klyna-badge {
+  background: var(--klyna-accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 4px;
+  padding: 1px 5px;
+  vertical-align: middle;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.klyna-disabled td { opacity: 0.5; }
+
+.klyna-btn {
+  background: var(--klyna-accent) !important;
+  border-color: var(--klyna-accent) !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+}
+.klyna-btn:hover {
+  background: var(--klyna-accent-hover) !important;
+  border-color: var(--klyna-accent-hover) !important;
+}
+
+.klyna-btn-sm {
+  background: var(--klyna-accent);
+  border: none;
+  color: #fff;
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.klyna-btn-sm:hover { background: var(--klyna-accent-hover); }
+
+.klyna-inline-input {
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 13px;
+  width: 180px;
+  margin-right: 6px;
+}
+
+.klyna-link-danger {
+  color: var(--klyna-danger) !important;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: inherit;
+}
+.klyna-link-danger:hover { text-decoration: underline; }
