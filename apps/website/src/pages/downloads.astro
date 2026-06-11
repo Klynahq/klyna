@@ -5,6 +5,7 @@ import { products } from '@klyna/utils';
 
 const shopifyApps  = products.filter(p => p.surface === 'shopify'   && p.downloadUrl);
 const wpPlugins    = products.filter(p => p.surface === 'wordpress'  && p.downloadUrl);
+const themes       = products.filter(p => p.surface === 'theme'      && p.downloadUrl);
 const comingSoon   = products.filter(p => !p.downloadUrl && p.status !== 'planning');
 ---
 
@@ -36,6 +37,7 @@ const comingSoon   = products.filter(p => !p.downloadUrl && p.status !== 'planni
       {[
         { n: shopifyApps.length,  label: 'Shopify apps',       color: 'var(--color-accent)' },
         { n: wpPlugins.length,    label: 'WordPress plugins',   color: 'var(--color-success)' },
+        { n: themes.length,       label: 'Themes',              color: 'var(--color-warning)' },
         { n: comingSoon.length,   label: 'In development',      color: 'var(--color-text-dim)' },
       ].map(s => (
         <div class="flex items-baseline gap-2">
@@ -117,6 +119,44 @@ const comingSoon   = products.filter(p => !p.downloadUrl && p.status !== 'planni
       {wpPlugins.map(p => <ProductCard product={p} showDownload={true} />)}
     </div>
   </section>
+
+  <!-- ── Shopify Themes ───────────────────────────────────────────────────────── -->
+  {themes.length > 0 && (
+    <section class="max-w-7xl mx-auto px-6 pb-16">
+      <div class="flex items-end justify-between mb-6">
+        <div>
+          <div class="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-warning)] mb-2">
+            Shopify Themes
+          </div>
+          <h2 class="text-2xl font-bold tracking-tight">{themes.length} theme{themes.length !== 1 ? 's' : ''}</h2>
+        </div>
+        <div class="hidden md:block text-sm text-[color:var(--color-text-dim)] max-w-xs text-right">
+          Shopify OS 2.0. Preview with Shopify CLI — no Partner account required.
+        </div>
+      </div>
+
+      <!-- Install guide callout -->
+      <div class="mb-6 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] p-4 flex gap-4 items-start">
+        <div class="shrink-0 w-8 h-8 rounded-lg bg-[color:var(--color-warning)]/15 flex items-center justify-center mt-0.5">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-warning)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-[color:var(--color-text)] mb-1">How to preview a Shopify theme locally</p>
+          <ol class="text-sm text-[color:var(--color-text-muted)] space-y-0.5 list-decimal list-inside">
+            <li>Unzip the download — the folder inside is the theme root</li>
+            <li>Run <code class="font-mono text-xs bg-white/5 px-1.5 py-0.5 rounded">shopify theme dev --store=your-store.myshopify.com</code> from that folder</li>
+            <li>Shopify CLI opens a preview URL in your browser using your dev store's data</li>
+            <li>Or push to a theme slot: <code class="font-mono text-xs bg-white/5 px-1.5 py-0.5 rounded">shopify theme push --store=your-store.myshopify.com</code></li>
+          </ol>
+          <p class="mt-1.5 text-xs text-[color:var(--color-text-dim)]">Needs: Shopify CLI 3+, a Shopify store (free dev store works). No Node build step — pure Liquid + vanilla JS.</p>
+        </div>
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {themes.map(p => <ProductCard product={p} showDownload={true} />)}
+      </div>
+    </section>
+  )}
 
   <!-- ── Coming soon ────────────────────────────────────────────────────────── -->
   {comingSoon.length > 0 && (

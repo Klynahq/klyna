@@ -284,8 +284,10 @@ export const products: Product[] = [
     tagline: 'Minimal, lightning-fast, high-conversion Shopify theme.',
     description:
       'Refined typography, generous whitespace, sticky buy, trust row, conversion-optimised PDP. A clean premium theme for DTC brands that want Apple-level polish.',
-    status: 'soon',
+    status: 'beta',
     surface: 'theme',
+    downloadUrl: '/downloads/theme-aurora.zip',
+    installNote: 'shopify theme dev --store=<your-store>.myshopify.com',
   },
   {
     slug: 'theme-momentum',
