@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="Klyna Consent logo">
+  <defs>
+    <linearGradient id="klyna-consent-grad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#9277ff"/>
+      <stop offset="100%" stop-color="#5b3df0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded-rect container -->
+  <rect width="32" height="32" rx="7" fill="url(#klyna-consent-grad)"/>
+
+  <!-- Cookie circle outline -->
+  <circle cx="16" cy="15" r="7.5" stroke="#ffffff" stroke-width="2.5" fill="none"/>
+
+  <!-- Cookie texture dots -->
+  <circle cx="13.5" cy="13" r="1.2" fill="#ffffff" opacity="0.7"/>
+  <circle cx="18"   cy="12.5" r="1" fill="#ffffff" opacity="0.7"/>
+  <circle cx="16"   cy="17.5" r="1" fill="#ffffff" opacity="0.7"/>
+  <circle cx="13"   cy="17"   r="0.8" fill="#ffffff" opacity="0.6"/>
+  <circle cx="19"   cy="16.5" r="0.9" fill="#ffffff" opacity="0.6"/>
+
+  <!-- Shield / checkmark glyph overlaid (bottom-right) -->
+  <g transform="translate(19, 19)">
+    <!-- Shield background -->
+    <path d="M6.5 0.5L0.5 2.5v4.5c0 3 2.5 5.5 6 6.5 3.5-1 6-3.5 6-6.5V2.5L6.5 0.5z"
+          fill="#5b3df0" stroke="#ffffff" stroke-width="1.8" stroke-linejoin="round"/>
+    <!-- Checkmark -->
+    <path d="M3.5 6.5l2 2 3.5-3.5"
+          stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+</svg>

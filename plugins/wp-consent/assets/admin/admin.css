@@ -1,0 +1,363 @@
+/**
+ * Klyna Consent — admin.css
+ * Settings page styled with Klyna violet / zinc brand tokens.
+ * Scoped inside .klyna-consent-wrap to avoid bleed into WP admin global styles.
+ */
+
+/* ── Reset & tokens ──────────────────────────────────────────────────────────── */
+.klyna-consent-wrap *,
+.klyna-consent-wrap *::before,
+.klyna-consent-wrap *::after {
+  box-sizing: border-box;
+}
+
+.klyna-consent-wrap {
+  --kca-bg:           #0b0b0f;
+  --kca-surface:      #1a1a23;
+  --kca-surface-alt:  #13131a;
+  --kca-border:       #2a2a35;
+  --kca-text:         #f4f4f5;
+  --kca-muted:        #a1a1aa;
+  --kca-dim:          #71717a;
+  --kca-accent:       #7c5cff;
+  --kca-accent-hover: #9277ff;
+  --kca-accent-deep:  #5b3df0;
+  --kca-accent-soft:  rgba(124, 92, 255, 0.12);
+  --kca-success:      #34d399;
+  --kca-radius:       12px;
+  --kca-radius-sm:    8px;
+  --kca-font:         "Geist", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --kca-shadow:       0 4px 24px rgba(0, 0, 0, 0.35);
+  --kca-transition:   0.15s ease;
+
+  font-family: var(--kca-font);
+  color: var(--kca-text);
+  background: transparent; /* WP admin bg behind */
+  max-width: 860px;
+  padding: 24px 0 60px;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────────── */
+.klyna-consent-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.klyna-consent-logo {
+  flex-shrink: 0;
+  border-radius: 9px;
+  display: block;
+}
+
+.klyna-consent-header__title {
+  font-size: 1.55rem;
+  font-weight: 700;
+  margin: 0 0 2px;
+  color: var(--kca-text);
+  line-height: 1.2;
+}
+
+.klyna-consent-header__sub {
+  font-size: 0.875rem;
+  color: var(--kca-muted);
+  margin: 0;
+}
+
+/* ── Section cards ───────────────────────────────────────────────────────────── */
+.klyna-consent-section {
+  background: var(--kca-surface);
+  border: 1px solid var(--kca-border);
+  border-radius: var(--kca-radius);
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.klyna-consent-section__title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--kca-accent-hover);
+  margin: 0 0 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--kca-border);
+}
+
+.klyna-consent-hint {
+  font-size: 0.83rem;
+  color: var(--kca-muted);
+  margin: -10px 0 16px;
+}
+
+/* ── Form fields ─────────────────────────────────────────────────────────────── */
+.klyna-consent-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.klyna-consent-field:last-child {
+  margin-bottom: 0;
+}
+
+.klyna-consent-label {
+  font-size: 0.855rem;
+  font-weight: 500;
+  color: var(--kca-muted);
+}
+
+.klyna-consent-input,
+.klyna-consent-select,
+.klyna-consent-textarea {
+  background: var(--kca-surface-alt);
+  border: 1px solid var(--kca-border);
+  border-radius: var(--kca-radius-sm);
+  color: var(--kca-text);
+  font-family: var(--kca-font);
+  font-size: 0.9rem;
+  padding: 9px 12px;
+  width: 100%;
+  transition: border-color var(--kca-transition), box-shadow var(--kca-transition);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.klyna-consent-input:focus,
+.klyna-consent-select:focus,
+.klyna-consent-textarea:focus {
+  border-color: var(--kca-accent);
+  box-shadow: 0 0 0 3px var(--kca-accent-soft);
+}
+
+.klyna-consent-input::placeholder,
+.klyna-consent-textarea::placeholder {
+  color: var(--kca-dim);
+}
+
+.klyna-consent-textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.55;
+}
+
+.klyna-consent-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M6 9l6 6 6-6' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 34px;
+  cursor: pointer;
+}
+
+/* 3-column row for short fields */
+.klyna-consent-row3 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .klyna-consent-row3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .klyna-consent-row3 .klyna-consent-field {
+    margin-bottom: 0;
+  }
+}
+
+/* 4-col for colours in appearance */
+@media (min-width: 640px) {
+  .klyna-consent-section:nth-child(2) .klyna-consent-row3 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ── Colour picker row ───────────────────────────────────────────────────────── */
+.klyna-consent-color-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.klyna-consent-color {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 40px;
+  height: 38px;
+  border: 1px solid var(--kca-border);
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+  padding: 2px;
+  flex-shrink: 0;
+}
+
+.klyna-consent-color::-webkit-color-swatch-wrapper { padding: 0; }
+.klyna-consent-color::-webkit-color-swatch { border: none; border-radius: 4px; }
+.klyna-consent-color::-moz-color-swatch { border: none; border-radius: 4px; }
+
+.klyna-consent-color-text {
+  flex: 1;
+  max-width: 110px;
+  font-family: "Geist Mono", "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.85rem;
+}
+
+/* ── Toggle rows (categories + behaviour toggles) ───────────────────────────── */
+.klyna-consent-toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border: 1px solid var(--kca-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.klyna-consent-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  background: var(--kca-surface-alt);
+  cursor: pointer;
+  transition: background var(--kca-transition);
+  user-select: none;
+}
+
+.klyna-consent-toggle-row:first-child {
+  border-radius: 10px 10px 0 0;
+}
+
+.klyna-consent-toggle-row:last-child {
+  border-radius: 0 0 10px 10px;
+}
+
+.klyna-consent-toggle-row + .klyna-consent-toggle-row {
+  border-top: 1px solid var(--kca-border);
+}
+
+.klyna-consent-toggle-row:hover {
+  background: rgba(124, 92, 255, 0.05);
+}
+
+.klyna-consent-toggle-row__info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+
+.klyna-consent-toggle-row__name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--kca-text);
+}
+
+.klyna-consent-toggle-row__desc {
+  font-size: 0.8rem;
+  color: var(--kca-muted);
+  line-height: 1.45;
+}
+
+/* Admin toggle switch UI */
+.klyna-admin-toggle-wrap {
+  position: relative;
+  width: 42px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.klyna-admin-toggle-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.klyna-admin-toggle-ui {
+  display: block;
+  width: 42px;
+  height: 24px;
+  background: var(--kca-border);
+  border-radius: 12px;
+  position: relative;
+  transition: background var(--kca-transition);
+  cursor: pointer;
+}
+
+.klyna-admin-toggle-ui::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform var(--kca-transition);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+.klyna-admin-toggle-input:checked ~ .klyna-admin-toggle-ui {
+  background: var(--kca-accent);
+}
+
+.klyna-admin-toggle-input:checked ~ .klyna-admin-toggle-ui::after {
+  transform: translateX(18px);
+}
+
+.klyna-admin-toggle-input:focus-visible ~ .klyna-admin-toggle-ui {
+  outline: 2px solid var(--kca-accent-hover);
+  outline-offset: 2px;
+}
+
+/* ── Submit row ──────────────────────────────────────────────────────────────── */
+.klyna-consent-submit-row {
+  display: flex;
+  justify-content: flex-start;
+  padding-top: 8px;
+}
+
+/* Override WP's default .button-primary to match Klyna accent */
+.klyna-consent-wrap .klyna-btn-save,
+.klyna-consent-wrap .klyna-btn-save.button-primary {
+  background: var(--kca-accent) !important;
+  border-color: var(--kca-accent-deep) !important;
+  color: #fff !important;
+  border-radius: var(--kca-radius-sm) !important;
+  font-family: var(--kca-font) !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  padding: 10px 22px !important;
+  height: auto !important;
+  line-height: 1 !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+  transition: background var(--kca-transition) !important;
+  cursor: pointer;
+}
+
+.klyna-consent-wrap .klyna-btn-save:hover,
+.klyna-consent-wrap .klyna-btn-save:focus {
+  background: var(--kca-accent-hover) !important;
+  border-color: var(--kca-accent) !important;
+  color: #fff !important;
+}
+
+/* ── WP notices (success / error) ────────────────────────────────────────────── */
+.klyna-consent-wrap .notice {
+  border-left-color: var(--kca-accent);
+  background: var(--kca-surface);
+  color: var(--kca-text);
+  border-radius: var(--kca-radius-sm);
+  margin-bottom: 16px;
+}
+
+.klyna-consent-wrap .notice-success {
+  border-left-color: var(--kca-success);
+}

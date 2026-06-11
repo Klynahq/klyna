@@ -1,0 +1,461 @@
+/**
+ * Klyna Consent — banner.css
+ * Banner + modal + floating re-open button styles.
+ * Uses CSS custom properties for theme colours (set at runtime by banner.js).
+ * Mobile-first, accessible, no external dependencies.
+ */
+
+/* ── Custom properties (defaults — overridden by JS from PHP settings) ──────── */
+:root {
+  --kc-bg:           #1a1a23;
+  --kc-text:         #f4f4f5;
+  --kc-accent:       #7c5cff;
+  --kc-accent-hover: #9277ff;
+  --kc-accent-deep:  #5b3df0;
+  --kc-border:       #2a2a35;
+  --kc-muted:        #a1a1aa;
+  --kc-surface:      #13131a;
+  --kc-radius:       12px;
+  --kc-font:         "Geist", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --kc-shadow:       0 8px 32px rgba(0, 0, 0, 0.45);
+  --kc-z-banner:     99998;
+  --kc-z-modal:      99999;
+  --kc-transition:   0.18s ease;
+}
+
+/* ── Utility: screen-reader only ────────────────────────────────────────────── */
+.klyna-consent-banner .sr-only,
+.klyna-consent-modal .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ── Banner ─────────────────────────────────────────────────────────────────── */
+.klyna-consent-banner {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: var(--kc-z-banner);
+  background: var(--kc-bg);
+  color: var(--kc-text);
+  font-family: var(--kc-font);
+  border-top: 1px solid var(--kc-border);
+  box-shadow: var(--kc-shadow);
+  padding: 16px;
+  box-sizing: border-box;
+  animation: kc-slidein-bottom 0.25s ease both;
+}
+
+.klyna-consent-banner--bottom {
+  bottom: 0;
+  top: auto;
+  border-top: 1px solid var(--kc-border);
+  border-bottom: none;
+  animation-name: kc-slidein-bottom;
+}
+
+.klyna-consent-banner--top {
+  top: 0;
+  bottom: auto;
+  border-bottom: 1px solid var(--kc-border);
+  border-top: none;
+  animation-name: kc-slidein-top;
+}
+
+@keyframes kc-slidein-bottom {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes kc-slidein-top {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+
+.klyna-consent-banner__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (min-width: 768px) {
+  .klyna-consent-banner {
+    padding: 20px 24px;
+  }
+  .klyna-consent-banner__inner {
+    flex-direction: row;
+    align-items: center;
+    gap: 24px;
+  }
+}
+
+.klyna-consent-banner__text {
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--kc-text);
+  flex: 1 1 auto;
+  margin: 0;
+}
+
+.klyna-consent-banner__text a {
+  color: var(--kc-accent-hover);
+  text-decoration: underline;
+}
+
+.klyna-consent-banner__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────────── */
+.klyna-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-family: var(--kc-font);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  transition: background var(--kc-transition), box-shadow var(--kc-transition), color var(--kc-transition);
+  white-space: nowrap;
+}
+
+.klyna-btn:focus-visible {
+  outline: 2px solid var(--kc-accent-hover);
+  outline-offset: 2px;
+}
+
+.klyna-btn--primary {
+  background: var(--kc-accent);
+  color: #fff;
+}
+
+.klyna-btn--primary:hover,
+.klyna-btn--primary:focus-visible {
+  background: var(--kc-accent-hover);
+}
+
+.klyna-btn--primary:active {
+  background: var(--kc-accent-deep);
+}
+
+.klyna-btn--secondary {
+  background: transparent;
+  color: var(--kc-text);
+  border: 1px solid var(--kc-border);
+}
+
+.klyna-btn--secondary:hover,
+.klyna-btn--secondary:focus-visible {
+  border-color: var(--kc-muted);
+  background: rgba(255,255,255,0.05);
+}
+
+.klyna-btn--ghost {
+  background: transparent;
+  color: var(--kc-muted);
+  padding: 9px 12px;
+}
+
+.klyna-btn--ghost:hover,
+.klyna-btn--ghost:focus-visible {
+  color: var(--kc-text);
+}
+
+/* ── Modal backdrop ──────────────────────────────────────────────────────────── */
+.klyna-consent-modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--kc-z-modal);
+  font-family: var(--kc-font);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+@media (min-width: 560px) {
+  .klyna-consent-modal {
+    align-items: center;
+  }
+}
+
+.klyna-consent-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  cursor: pointer;
+}
+
+/* ── Modal box ───────────────────────────────────────────────────────────────── */
+.klyna-consent-modal__box {
+  position: relative;
+  background: var(--kc-bg);
+  color: var(--kc-text);
+  border: 1px solid var(--kc-border);
+  border-radius: var(--kc-radius) var(--kc-radius) 0 0;
+  padding: 24px 20px 28px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--kc-shadow);
+  box-sizing: border-box;
+  overscroll-behavior: contain;
+  animation: kc-modal-in 0.22s ease both;
+}
+
+@media (min-width: 560px) {
+  .klyna-consent-modal__box {
+    border-radius: var(--kc-radius);
+    padding: 32px 28px 36px;
+  }
+}
+
+@keyframes kc-modal-in {
+  from { transform: translateY(24px) scale(0.98); opacity: 0; }
+  to   { transform: translateY(0) scale(1);       opacity: 1; }
+}
+
+.klyna-consent-modal__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: transparent;
+  border: none;
+  color: var(--kc-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--kc-transition), background var(--kc-transition);
+}
+
+.klyna-consent-modal__close:hover,
+.klyna-consent-modal__close:focus-visible {
+  color: var(--kc-text);
+  background: rgba(255,255,255,0.07);
+}
+
+.klyna-consent-modal__close:focus-visible {
+  outline: 2px solid var(--kc-accent-hover);
+  outline-offset: 1px;
+}
+
+.klyna-consent-modal__title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: var(--kc-text);
+  padding-right: 32px;
+}
+
+.klyna-consent-modal__description {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--kc-muted);
+  margin: 0 0 24px;
+}
+
+/* ── Category list ───────────────────────────────────────────────────────────── */
+.klyna-consent-modal__categories {
+  list-style: none;
+  margin: 0 0 24px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border: 1px solid var(--kc-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.klyna-consent-category {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  background: var(--kc-surface);
+  transition: background var(--kc-transition);
+}
+
+.klyna-consent-category:first-child {
+  border-radius: 10px 10px 0 0;
+}
+
+.klyna-consent-category:last-child {
+  border-radius: 0 0 10px 10px;
+}
+
+.klyna-consent-category + .klyna-consent-category {
+  border-top: 1px solid var(--kc-border);
+}
+
+.klyna-consent-category__name {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--kc-text);
+  margin-bottom: 3px;
+}
+
+.klyna-consent-category__desc {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--kc-muted);
+  margin: 0;
+}
+
+/* ── Toggle switch (inside modal) ────────────────────────────────────────────── */
+.klyna-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.klyna-toggle__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.klyna-toggle__track {
+  position: relative;
+  display: block;
+  width: 42px;
+  height: 24px;
+  background: var(--kc-border);
+  border-radius: 12px;
+  transition: background var(--kc-transition);
+  flex-shrink: 0;
+}
+
+.klyna-toggle__thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform var(--kc-transition), background var(--kc-transition);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+/* Checked state */
+.klyna-toggle__input:checked + .klyna-toggle__track {
+  background: var(--kc-accent);
+}
+
+.klyna-toggle__input:checked + .klyna-toggle__track .klyna-toggle__thumb {
+  transform: translateX(18px);
+}
+
+/* Focus ring on keyboard nav */
+.klyna-toggle__input:focus-visible + .klyna-toggle__track {
+  outline: 2px solid var(--kc-accent-hover);
+  outline-offset: 2px;
+}
+
+/* Always-on (locked) toggle */
+.klyna-toggle--locked .klyna-toggle__track {
+  background: var(--kc-accent);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.klyna-toggle--locked .klyna-toggle__thumb {
+  transform: translateX(18px);
+}
+
+.klyna-toggle__label {
+  font-size: 0.8rem;
+  color: var(--kc-muted);
+}
+
+/* ── Modal actions ───────────────────────────────────────────────────────────── */
+.klyna-consent-modal__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+@media (min-width: 420px) {
+  .klyna-consent-modal__actions {
+    flex-direction: row;
+  }
+}
+
+.klyna-consent-modal__actions .klyna-btn {
+  flex: 1;
+  justify-content: center;
+}
+
+/* ── Floating re-open button ─────────────────────────────────────────────────── */
+.klyna-consent-reopen {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: var(--kc-z-banner);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--kc-bg);
+  color: var(--kc-muted);
+  border: 1px solid var(--kc-border);
+  border-radius: 20px;
+  padding: 7px 14px 7px 10px;
+  font-family: var(--kc-font);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: color var(--kc-transition), border-color var(--kc-transition), background var(--kc-transition);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+}
+
+.klyna-consent-reopen:hover,
+.klyna-consent-reopen:focus-visible {
+  color: var(--kc-text);
+  border-color: var(--kc-accent);
+  background: var(--kc-surface);
+}
+
+.klyna-consent-reopen:focus-visible {
+  outline: 2px solid var(--kc-accent-hover);
+  outline-offset: 2px;
+}
+
+/* Prevent layout jump from admin bar */
+@media screen and (max-width: 782px) {
+  body.admin-bar .klyna-consent-banner--top {
+    top: 46px;
+  }
+}
+@media screen and (min-width: 783px) {
+  body.admin-bar .klyna-consent-banner--top {
+    top: 32px;
+  }
+}

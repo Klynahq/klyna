@@ -1,0 +1,240 @@
+# Copyright (C) 2024 Klyna
+# This file is distributed under the same license as the Klyna Consent plugin.
+# Klyna <hello@klyna.dev>, 2024.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Klyna Consent 1.0.0\n"
+"Report-Msgid-Bugs-To: https://klyna.dev\n"
+"POT-Creation-Date: 2024-01-01 00:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: WP-CLI\n"
+"X-Domain: wp-consent\n"
+
+#. Plugin Name of the plugin/theme
+msgid "Klyna Consent"
+msgstr ""
+
+#. Plugin URI of the plugin/theme
+msgid "https://klyna.dev/products/wp-consent"
+msgstr ""
+
+#. Description of the plugin/theme
+msgid "GDPR/ePrivacy cookie consent banner with Google Consent Mode v2, script blocking, geo-aware display, and a fully branded admin UI. Free, no external APIs."
+msgstr ""
+
+#. Author of the plugin/theme
+msgid "Klyna"
+msgstr ""
+
+#. Author URI of the plugin/theme
+msgid "https://klyna.dev"
+msgstr ""
+
+#: includes/class-banner.php
+msgid "Cookie consent"
+msgstr ""
+
+#: includes/class-banner.php
+msgid "Consent options"
+msgstr ""
+
+#: includes/class-banner.php
+msgid "Close preferences"
+msgstr ""
+
+#: includes/class-banner.php
+msgid "Cookie Preferences"
+msgstr ""
+
+#: includes/class-banner.php
+msgid "Choose which cookie categories you allow. Necessary cookies cannot be disabled — they are required for the website to function properly."
+msgstr ""
+
+#: includes/class-banner.php
+msgid "Necessary"
+msgstr ""
+
+#: includes/class-banner.php
+msgid "Essential for the website to function. Cannot be disabled."
+msgstr ""
+
+#: includes/class-banner.php
+msgid "Always enabled"
+msgstr ""
+
+#: includes/class-banner.php
+msgid "Always on"
+msgstr ""
+
+#: includes/class-banner.php
+msgid "Analytics"
+msgstr ""
+
+#: includes/class-banner.php
+msgid "Help us understand how visitors use this site (e.g. Google Analytics, Plausible)."
+msgstr ""
+
+#: includes/class-banner.php
+msgid "Analytics cookies"
+msgstr ""
+
+#: includes/class-banner.php
+msgid "Marketing"
+msgstr ""
+
+#: includes/class-banner.php
+msgid "Used to show relevant ads and measure campaign effectiveness."
+msgstr ""
+
+#: includes/class-banner.php
+msgid "Marketing cookies"
+msgstr ""
+
+#: includes/class-banner.php
+msgid "Preferences"
+msgstr ""
+
+#: includes/class-banner.php
+msgid "Remember your settings and personalisation choices (e.g. language, region)."
+msgstr ""
+
+#: includes/class-banner.php
+msgid "Preferences cookies"
+msgstr ""
+
+#: includes/class-banner.php
+msgid "Save Preferences"
+msgstr ""
+
+#: includes/class-banner.php
+msgid "Accept All"
+msgstr ""
+
+#: includes/class-banner.php
+msgid "Open cookie settings"
+msgstr ""
+
+#: includes/class-banner.php
+msgid "Cookie settings"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Klyna Consent"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "GDPR / ePrivacy cookie consent with Google Consent Mode v2."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "You do not have permission to access this page."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Banner content"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Banner message"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Accept All button text"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Reject All button text"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Manage Preferences text"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Appearance"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Position"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Bottom"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Top"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Banner background"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Banner text colour"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Accent / button colour"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Cookie categories"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "\"Necessary\" is always enabled. Enable only the categories your site uses."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Google Consent Mode v2, Meta Pixel, retargeting."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Integrations & behaviour"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Google Consent Mode v2"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Emits GCM v2 default signals in <head> and updates them on consent. Required for GA4 / Google Ads compliance."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "EU only (geo-restrict)"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Show banner only to EU/EEA/UK visitors detected via Cloudflare CF-IPCountry header. Falls back to always-show if header unavailable."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Floating \"Cookie settings\" button"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Shows a small button after consent is given, allowing users to change preferences at any time."
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Save settings"
+msgstr ""
+
+#: includes/class-admin.php
+msgid "Settings"
+msgstr ""
+
+#: includes/class-rest.php
+msgid "Request body must be a JSON object."
+msgstr ""
