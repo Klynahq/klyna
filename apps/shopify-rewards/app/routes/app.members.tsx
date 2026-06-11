@@ -1,5 +1,5 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
-import { Form, useActionData, useLoaderData, useNavigation } from '@remix-run/react';
+import { Form, Link, useActionData, useLoaderData, useNavigation } from '@remix-run/react';
 import {
   Badge,
   BlockStack,
@@ -251,7 +251,7 @@ export default function Members() {
                   image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
                 >
                   <p>
-                    Press “Sync customers” to enroll existing customers, or let new
+                    Press "Sync customers" to enroll existing customers, or let new
                     signups and paid orders enroll members automatically.
                   </p>
                 </EmptyState>
@@ -269,6 +269,7 @@ export default function Members() {
                   { title: 'Referral code' },
                   { title: 'Adjust' },
                   { title: 'Redeem' },
+                  { title: 'AI email' },
                 ]}
               >
                 {members.map((m, index) => (
@@ -324,6 +325,13 @@ export default function Members() {
                           Create code
                         </Button>
                       </Form>
+                    </IndexTable.Cell>
+                    <IndexTable.Cell>
+                      <Link
+                        to={`/app/customers/${encodeURIComponent(m.customerId)}/unlock-email`}
+                      >
+                        Write
+                      </Link>
                     </IndexTable.Cell>
                   </IndexTable.Row>
                 ))}

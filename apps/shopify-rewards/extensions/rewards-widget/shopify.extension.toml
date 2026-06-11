@@ -10,4 +10,5 @@ api_version = "2025-01"
 [[extensions]]
 name = "Klyna Rewards"
 handle = "rewards-widget"
+uid = "f9b18723-cec7-ef65-e7ac-cb9b62bc19bc0d8c0158"
 type = "theme"

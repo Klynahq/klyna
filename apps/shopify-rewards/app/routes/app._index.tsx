@@ -15,11 +15,14 @@ import {
 import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
 import { getProgram } from '../rewards.server';
+import { getShopAiSettings } from '../lib/ai.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
   const shop = session.shop;
   const program = await getProgram(shop);
+  const ai = await getShopAiSettings(shop);
+  const aiEnabled = ai.provider !== 'off' && !!ai.apiKey;
 
   const [memberCount, outstanding, redemptionCount, referralsConverted, recentEvents] =
     await Promise.all([
@@ -44,6 +47,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       redemptions: redemptionCount,
       referrals: referralsConverted,
     },
+    aiEnabled,
+    aiProvider: ai.provider,
     recentEvents: recentEvents.map((e) => ({
       id: e.id,
       amount: e.amount,
@@ -64,7 +69,7 @@ const REASON_TONE: Record<string, 'success' | 'info' | 'warning' | 'attention'> 
 };
 
 export default function Dashboard() {
-  const { shop, program, stats, recentEvents } = useLoaderData<typeof loader>();
+  const { shop, program, stats, recentEvents, aiEnabled, aiProvider } = useLoaderData<typeof loader>();
 
   const tiles = [
     {
@@ -94,21 +99,25 @@ export default function Dashboard() {
       title: 'Members',
       body: 'See every member, their balance, tier, and award or deduct points by hand.',
       to: '/app/members',
+      cta: 'Open',
     },
     {
       title: 'Tiers',
-      body: 'Define Bronze → Gold thresholds, earn multipliers, and the perks each unlocks.',
+      body: 'Define Bronze to Gold thresholds, earn multipliers, and the perks each unlocks.',
       to: '/app/tiers',
+      cta: 'Open',
     },
     {
       title: 'Referrals',
       body: 'Track referral links and the points awarded when a friend converts.',
       to: '/app/referrals',
+      cta: 'Open',
     },
     {
       title: 'Settings',
       body: 'Tune earning rules, redemption rate, and the storefront widget copy.',
       to: '/app/settings',
+      cta: aiEnabled ? `AI connected via ${aiProvider}` : 'Set up',
     },
   ];
 
@@ -117,9 +126,16 @@ export default function Dashboard() {
       title="Klyna Rewards"
       subtitle={`Connected to ${shop}`}
       titleMetadata={
-        <Badge tone={program.active ? 'success' : 'critical'}>
-          {program.active ? 'Program active' : 'Program paused'}
-        </Badge>
+        <InlineStack gap="200">
+          <Badge tone={program.active ? 'success' : 'critical'}>
+            {program.active ? 'Program active' : 'Program paused'}
+          </Badge>
+          {aiEnabled ? (
+            <Badge tone="success">{`AI · ${aiProvider}`}</Badge>
+          ) : (
+            <Badge tone="info">No AI key set</Badge>
+          )}
+        </InlineStack>
       }
     >
       <Layout>
@@ -158,7 +174,7 @@ export default function Dashboard() {
                 <BlockStack gap="200">
                   <Text as="h3" variant="headingSm">{q.title}</Text>
                   <Text as="p" variant="bodyMd" tone="subdued">{q.body}</Text>
-                  <Link to={q.to}>Open →</Link>
+                  <Link to={q.to}>{q.cta} →</Link>
                 </BlockStack>
               </Card>
             ))}

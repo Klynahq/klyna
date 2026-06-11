@@ -153,3 +153,29 @@ model Referral {
 
   @@index([shop, status])
 }
+
+// Per-shop AI provider settings (BYOK — bring your own key).
+model AiSettings {
+  shop      String   @id
+  provider  String   @default("off") // off | openrouter | groq | gemini
+  apiKey    String?  // user-supplied; stored only on this shop's DB row
+  model     String?
+  dailyCap  Int      @default(100)
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+// Daily AI usage counter (resets per UTC day) for the per-shop cap.
+model AiUsage {
+  shop      String
+  day       String   // YYYY-MM-DD (UTC)
+  count     Int      @default(0)
+
+  @@id([shop, day])
+}
+
+// Cache for AI completions (key = FNV hash from @klyna/ai-client).
+model AiCache {
+  key       String   @id
+  value     String
+  expiresAt DateTime
+}

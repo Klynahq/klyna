@@ -76,7 +76,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         color,
       },
     });
-    return json({ ok: `Tier “${name}” created.` });
+    return json({ ok: `Tier "${name}" created.` });
   }
 
   if (intent === 'update') {
@@ -104,6 +104,81 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   return json({ error: 'Unknown action.' }, { status: 400 });
 };
 
+type TierRow = ReturnType<typeof useLoaderData<typeof loader>>['tiers'][number];
+
+function TierCard({ t, submitting }: { t: TierRow; submitting: boolean }) {
+  const [threshold, setThreshold] = useState(String(t.threshold));
+  const [multiplier, setMultiplier] = useState(String(t.multiplier));
+  const [perkText, setPerkText] = useState(t.perkText);
+
+  return (
+    <Card key={t.id}>
+      <BlockStack gap="300">
+        <InlineStack align="space-between" blockAlign="center">
+          <InlineStack gap="200" blockAlign="center">
+            <span
+              style={{
+                width: 12,
+                height: 12,
+                borderRadius: 4,
+                background: t.color,
+                display: 'inline-block',
+              }}
+            />
+            <Text as="h3" variant="headingMd">{t.name}</Text>
+          </InlineStack>
+          <Badge>{`${t.members} member${t.members === 1 ? '' : 's'}`}</Badge>
+        </InlineStack>
+
+        <Form method="post">
+          <input type="hidden" name="intent" value="update" />
+          <input type="hidden" name="id" value={t.id} />
+          <FormLayout>
+            <FormLayout.Group condensed>
+              <TextField
+                label="Threshold (lifetime pts)"
+                name="threshold"
+                type="number"
+                autoComplete="off"
+                value={threshold}
+                onChange={setThreshold}
+              />
+              <TextField
+                label="Earn multiplier"
+                name="multiplier"
+                type="number"
+                step={0.05}
+                autoComplete="off"
+                value={multiplier}
+                onChange={setMultiplier}
+              />
+            </FormLayout.Group>
+            <TextField
+              label="Perk"
+              name="perkText"
+              autoComplete="off"
+              value={perkText}
+              onChange={setPerkText}
+              multiline={2}
+            />
+            <InlineStack gap="200">
+              <Button submit size="slim" loading={submitting}>Save</Button>
+            </InlineStack>
+          </FormLayout>
+        </Form>
+
+        <Form method="post">
+          <input type="hidden" name="intent" value="delete" />
+          <input type="hidden" name="id" value={t.id} />
+          <Button submit size="slim" tone="critical" variant="tertiary">
+            Remove tier
+          </Button>
+        </Form>
+      </BlockStack>
+    </Card>
+  );
+}
+
 export default function Tiers() {
   const { tiers } = useLoaderData<typeof loader>();
   const data = useActionData<typeof action>();
@@ -120,7 +195,7 @@ export default function Tiers() {
   return (
     <Page title="Tiers" subtitle="Reward loyalty with escalating perks" backAction={{ url: '/app' }}>
       <Layout>
-        {(ok || error) && (
+        {!!(ok || error) && (
           <Layout.Section>
             <Box
               padding="300"
@@ -135,67 +210,7 @@ export default function Tiers() {
         <Layout.Section>
           <InlineGrid columns={{ xs: 1, md: 3 }} gap="300">
             {tiers.map((t) => (
-              <Card key={t.id}>
-                <BlockStack gap="300">
-                  <InlineStack align="space-between" blockAlign="center">
-                    <InlineStack gap="200" blockAlign="center">
-                      <span
-                        style={{
-                          width: 12,
-                          height: 12,
-                          borderRadius: 4,
-                          background: t.color,
-                          display: 'inline-block',
-                        }}
-                      />
-                      <Text as="h3" variant="headingMd">{t.name}</Text>
-                    </InlineStack>
-                    <Badge>{`${t.members} member${t.members === 1 ? '' : 's'}`}</Badge>
-                  </InlineStack>
-
-                  <Form method="post">
-                    <input type="hidden" name="intent" value="update" />
-                    <input type="hidden" name="id" value={t.id} />
-                    <FormLayout>
-                      <FormLayout.Group condensed>
-                        <TextField
-                          label="Threshold (lifetime pts)"
-                          name="threshold"
-                          type="number"
-                          autoComplete="off"
-                          defaultValue={String(t.threshold)}
-                        />
-                        <TextField
-                          label="Earn multiplier"
-                          name="multiplier"
-                          type="number"
-                          step={0.05}
-                          autoComplete="off"
-                          defaultValue={String(t.multiplier)}
-                        />
-                      </FormLayout.Group>
-                      <TextField
-                        label="Perk"
-                        name="perkText"
-                        autoComplete="off"
-                        defaultValue={t.perkText}
-                        multiline={2}
-                      />
-                      <InlineStack gap="200">
-                        <Button submit size="slim" loading={submitting}>Save</Button>
-                      </InlineStack>
-                    </FormLayout>
-                  </Form>
-
-                  <Form method="post">
-                    <input type="hidden" name="intent" value="delete" />
-                    <input type="hidden" name="id" value={t.id} />
-                    <Button submit size="slim" tone="critical" variant="tertiary">
-                      Remove tier
-                    </Button>
-                  </Form>
-                </BlockStack>
-              </Card>
+              <TierCard key={t.id} t={t} submitting={submitting} />
             ))}
           </InlineGrid>
         </Layout.Section>
