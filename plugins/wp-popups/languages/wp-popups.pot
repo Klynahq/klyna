@@ -1,0 +1,363 @@
+# Copyright (C) 2026 Klyna
+# This file is distributed under the GPL-2.0-or-later license.
+msgid ""
+msgstr ""
+"Project-Id-Version: Klyna Popups 0.1.0\n"
+"Report-Msgid-Bugs-To: https://klyna.dev\n"
+"Last-Translator: Klyna <hello@klyna.dev>\n"
+"Language-Team: Klyna <hello@klyna.dev>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-06-11T00:00:00+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: Klyna Popups\n"
+"X-Domain: wp-popups\n"
+
+#. Plugin Name of the plugin
+msgid "Klyna Popups"
+msgstr ""
+
+#. Description of the plugin
+msgid "Tools that help your work get found. Email-capture popups, exit-intent triggers, and targeted on-site offers — no paid APIs."
+msgstr ""
+
+#. Author of the plugin
+msgid "Klyna"
+msgstr ""
+
+msgid "Thanks! Check your inbox."
+msgstr ""
+
+#. Popup post type labels
+msgid "Popups"
+msgstr ""
+
+msgid "Popup"
+msgstr ""
+
+msgid "Add popup"
+msgstr ""
+
+msgid "Add new popup"
+msgstr ""
+
+msgid "Edit popup"
+msgstr ""
+
+msgid "New popup"
+msgstr ""
+
+msgid "View popup"
+msgstr ""
+
+msgid "Search popups"
+msgstr ""
+
+msgid "No popups yet."
+msgstr ""
+
+msgid "No popups in trash."
+msgstr ""
+
+#. Default popup copy
+msgid "Join the list"
+msgstr ""
+
+msgid "Get the good stuff in your inbox."
+msgstr ""
+
+msgid "Subscribe"
+msgstr ""
+
+#. Meta box
+msgid "Popup settings"
+msgstr ""
+
+msgid "%1$s impressions · %2$s conversions · %3$s%% conversion rate"
+msgstr ""
+
+msgid "The popup body uses the editor above. Configure design, triggers, and display rules here."
+msgstr ""
+
+msgid "Status"
+msgstr ""
+
+msgid "Active"
+msgstr ""
+
+msgid "Paused"
+msgstr ""
+
+msgid "Trigger"
+msgstr ""
+
+msgid "After a delay"
+msgstr ""
+
+msgid "On scroll depth"
+msgstr ""
+
+msgid "On exit intent"
+msgstr ""
+
+msgid "On click of element"
+msgstr ""
+
+msgid "Delay (seconds)"
+msgstr ""
+
+msgid "Scroll depth (%)"
+msgstr ""
+
+msgid "Element selector"
+msgstr ""
+
+msgid "Design"
+msgstr ""
+
+msgid "Position"
+msgstr ""
+
+msgid "Center modal"
+msgstr ""
+
+msgid "Top slide-in"
+msgstr ""
+
+msgid "Bottom slide-in"
+msgstr ""
+
+msgid "Bottom-right corner"
+msgstr ""
+
+msgid "Full-width bar"
+msgstr ""
+
+msgid "Animation"
+msgstr ""
+
+msgid "Fade"
+msgstr ""
+
+msgid "Slide"
+msgstr ""
+
+msgid "None"
+msgstr ""
+
+msgid "Theme"
+msgstr ""
+
+msgid "Dark"
+msgstr ""
+
+msgid "Light"
+msgstr ""
+
+msgid "Width (px)"
+msgstr ""
+
+msgid "Dim background overlay"
+msgstr ""
+
+msgid "Show close button"
+msgstr ""
+
+msgid "Collect a name field"
+msgstr ""
+
+msgid "Copy"
+msgstr ""
+
+msgid "Headline"
+msgstr ""
+
+msgid "Subheadline"
+msgstr ""
+
+msgid "Button label"
+msgstr ""
+
+msgid "Image URL (optional)"
+msgstr ""
+
+msgid "Display rules"
+msgstr ""
+
+msgid "Show only on these paths (one per line, * wildcard). Empty = everywhere."
+msgstr ""
+
+msgid "Never show on these paths"
+msgstr ""
+
+msgid "Devices"
+msgstr ""
+
+msgid "Desktop"
+msgstr ""
+
+msgid "Mobile"
+msgstr ""
+
+msgid "Audience"
+msgstr ""
+
+msgid "Everyone"
+msgstr ""
+
+msgid "New visitors"
+msgstr ""
+
+msgid "Returning visitors"
+msgstr ""
+
+msgid "Frequency cap"
+msgstr ""
+
+msgid "Every page view"
+msgstr ""
+
+msgid "Once per session"
+msgstr ""
+
+msgid "Once, ever"
+msgstr ""
+
+msgid "Once every N days"
+msgstr ""
+
+msgid "Days"
+msgstr ""
+
+#. List table columns
+msgid "Impressions"
+msgstr ""
+
+msgid "Conversions"
+msgstr ""
+
+#. REST messages
+msgid "Invalid or expired session token."
+msgstr ""
+
+msgid "This popup is no longer available."
+msgstr ""
+
+msgid "Please enter a valid email address."
+msgstr ""
+
+#. Admin menu + pages
+msgid "Dashboard"
+msgstr ""
+
+msgid "All popups"
+msgstr ""
+
+msgid "Entries"
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+msgid "Email-capture popups, exit-intent triggers, and targeted on-site offers. Built to help your work get found."
+msgstr ""
+
+msgid "Live popups"
+msgstr ""
+
+msgid "Emails captured"
+msgstr ""
+
+msgid "Create a popup"
+msgstr ""
+
+msgid "Write the body in the editor, then pick a trigger, design, and display rules. Time, scroll, exit-intent, or click."
+msgstr ""
+
+msgid "Captured emails"
+msgstr ""
+
+msgid "Every capture is stored locally and (optionally) forwarded to your webhook. Export to CSV any time."
+msgstr ""
+
+msgid "View entries"
+msgstr ""
+
+msgid "Targeting & webhook"
+msgstr ""
+
+msgid "Frequency caps, new vs returning visitors, device rules, and a signed webhook for your CRM — no paid APIs."
+msgstr ""
+
+msgid "Open settings"
+msgstr ""
+
+msgid "Export CSV"
+msgstr ""
+
+msgid "Newest first. Up to 200 shown — use Export CSV for the full list."
+msgstr ""
+
+msgid "No captures yet. Once a visitor submits a popup, their email will appear here."
+msgstr ""
+
+msgid "Email"
+msgstr ""
+
+msgid "Name"
+msgstr ""
+
+msgid "Popup"
+msgstr ""
+
+msgid "Page"
+msgstr ""
+
+msgid "Captured"
+msgstr ""
+
+msgid "You do not have permission to export entries."
+msgstr ""
+
+msgid "Security check failed."
+msgstr ""
+
+msgid "Klyna Popups settings"
+msgstr ""
+
+msgid "Master switch"
+msgstr ""
+
+msgid "Serve popups on the front end"
+msgstr ""
+
+msgid "Turn everything off without un-publishing individual popups."
+msgstr ""
+
+msgid "Privacy"
+msgstr ""
+
+msgid "Respect the browser Do Not Track signal"
+msgstr ""
+
+msgid "Frequency cookie lifetime (days)"
+msgstr ""
+
+msgid "Default window for the \"once every N days\" frequency cap. Individual popups can override."
+msgstr ""
+
+msgid "Success message"
+msgstr ""
+
+msgid "Webhook URL"
+msgstr ""
+
+msgid "Each capture is POSTed here as JSON (event \"popup.capture\"). Non-blocking; failures never affect the visitor."
+msgstr ""
+
+msgid "Webhook signing secret"
+msgstr ""
+
+msgid "If set, requests include an X-Klyna-Signature: sha256=… HMAC of the body."
+msgstr ""

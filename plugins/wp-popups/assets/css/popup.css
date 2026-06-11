@@ -1,0 +1,298 @@
+/**
+ * Klyna Popups — front-end styles.
+ *
+ * Self-contained and namespaced under .klyna-pop so it never collides with the
+ * host theme. Uses the Klyna brand surface (electric violet accent, dark
+ * neutrals) with a light variant for sites that prefer it.
+ */
+.klyna-pop {
+  --klyna-accent: #7c5cff;
+  --klyna-accent-hover: #9277ff;
+  --klyna-accent-deep: #5b3df0;
+  --klyna-radius: 12px;
+  --klyna-radius-sm: 8px;
+
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  display: flex;
+  padding: 24px;
+  font-family: "Geist", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.24s ease;
+}
+
+.klyna-pop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+  background: rgba(11, 11, 15, 0.6);
+}
+
+.klyna-pop.klyna-pop-no-overlay,
+.klyna-pop.klyna-pop-no-overlay.is-open {
+  background: transparent;
+  pointer-events: none;
+}
+
+.klyna-pop.klyna-pop-no-overlay .klyna-pop-modal {
+  pointer-events: auto;
+}
+
+/* ---- Positions --------------------------------------------------------- */
+
+.klyna-pop-center {
+  align-items: center;
+  justify-content: center;
+}
+
+.klyna-pop-top {
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.klyna-pop-bottom {
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.klyna-pop-corner {
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+.klyna-pop-bar {
+  align-items: flex-start;
+  justify-content: stretch;
+  padding: 0;
+}
+
+.klyna-pop-bar .klyna-pop-modal {
+  max-width: none !important;
+  width: 100%;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.klyna-pop-bar .klyna-pop-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.klyna-pop-bar .klyna-pop-form {
+  margin-top: 0;
+  flex-direction: row;
+}
+
+/* ---- Modal ------------------------------------------------------------- */
+
+.klyna-pop-modal {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  border-radius: var(--klyna-radius);
+  padding: 28px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  box-sizing: border-box;
+}
+
+.klyna-pop-theme-dark .klyna-pop-modal {
+  background: #13131a;
+  border: 1px solid #2a2a35;
+  color: #f4f4f5;
+}
+
+.klyna-pop-theme-light .klyna-pop-modal {
+  background: #ffffff;
+  border: 1px solid #e5e5e9;
+  color: #18181b;
+}
+
+.klyna-pop-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--klyna-radius-sm);
+  margin-bottom: 16px;
+}
+
+.klyna-pop-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.55;
+  transition: opacity 0.15s ease;
+}
+
+.klyna-pop-close:hover {
+  opacity: 1;
+}
+
+.klyna-pop-headline {
+  margin: 0 0 6px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.klyna-pop-subhead {
+  margin: 0 0 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  opacity: 0.8;
+}
+
+.klyna-pop-body {
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.klyna-pop-body p:last-child {
+  margin-bottom: 0;
+}
+
+/* ---- Form -------------------------------------------------------------- */
+
+.klyna-pop-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.klyna-pop-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 14px;
+  border-radius: var(--klyna-radius-sm);
+  font-size: 14px;
+  border: 1px solid #2a2a35;
+  background: #1a1a23;
+  color: #f4f4f5;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.klyna-pop-theme-light .klyna-pop-input {
+  background: #fafafa;
+  border-color: #e5e5e9;
+  color: #18181b;
+}
+
+.klyna-pop-input:focus {
+  border-color: var(--klyna-accent);
+  box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.25);
+}
+
+.klyna-pop-button {
+  appearance: none;
+  border: none;
+  border-radius: var(--klyna-radius-sm);
+  padding: 12px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  background: var(--klyna-accent);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.klyna-pop-button:hover {
+  background: var(--klyna-accent-hover);
+}
+
+.klyna-pop-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.klyna-pop-feedback {
+  margin: 2px 0 0;
+  font-size: 13px;
+  min-height: 18px;
+}
+
+.klyna-pop-feedback.is-error {
+  color: #f87171;
+}
+
+.klyna-pop-feedback.is-success {
+  color: #34d399;
+}
+
+.klyna-pop-form.is-done .klyna-pop-input,
+.klyna-pop-form.is-done .klyna-pop-button {
+  display: none;
+}
+
+/* ---- Animations -------------------------------------------------------- */
+
+.klyna-anim-fade .klyna-pop-modal {
+  transform: translateY(8px) scale(0.98);
+  opacity: 0;
+  transition: transform 0.26s ease, opacity 0.26s ease;
+}
+
+.klyna-anim-fade.is-open .klyna-pop-modal {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+.klyna-anim-slide.klyna-pop-top .klyna-pop-modal {
+  transform: translateY(-110%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.klyna-anim-slide.klyna-pop-bottom .klyna-pop-modal,
+.klyna-anim-slide.klyna-pop-corner .klyna-pop-modal {
+  transform: translateY(110%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.klyna-anim-slide.is-open .klyna-pop-modal {
+  transform: translateY(0);
+}
+
+.klyna-anim-none .klyna-pop-modal {
+  transition: none;
+}
+
+/* ---- Responsive -------------------------------------------------------- */
+
+@media (max-width: 600px) {
+  .klyna-pop {
+    padding: 12px;
+  }
+
+  .klyna-pop-modal {
+    max-width: 100% !important;
+    padding: 22px;
+  }
+
+  .klyna-pop-bar .klyna-pop-content,
+  .klyna-pop-bar .klyna-pop-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .klyna-pop,
+  .klyna-pop-modal {
+    transition: opacity 0.01s linear !important;
+  }
+}
