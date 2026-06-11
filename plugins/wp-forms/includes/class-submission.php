@@ -21,6 +21,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 final class Submission {
 
+	/** Max submissions allowed per IP per window. */
+	private const RATE_LIMIT  = 10;
+	private const RATE_WINDOW = HOUR_IN_SECONDS;
+
 	public function register(): void {
 		add_action( 'rest_api_init', array( $this, 'register_routes' ) );
 	}
@@ -54,6 +58,11 @@ final class Submission {
 
 		if ( ! $post || KLYNA_FORMS_POST_TYPE !== $post->post_type || 'publish' !== $post->post_status ) {
 			return $this->fail( __( 'This form is no longer available.', 'wp-forms' ), 404 );
+		}
+
+		// Per-IP rate limit — silent gate before honeypot to limit abuse.
+		if ( ! self::check_rate_limit() ) {
+			return $this->fail( __( 'Too many submissions. Please try again later.', 'wp-forms' ), 429 );
 		}
 
 		// Nonce check — bound to the specific form.
@@ -105,6 +114,22 @@ final class Submission {
 		do_action( 'klyna_forms_submission', $form_id, $values, $entry_id );
 
 		return $this->success_response( $form_id, false );
+	}
+
+	/**
+	 * Per-IP transient rate limit for the public submit endpoint.
+	 * Mirrors the wp-booking pattern: a transient stores a hit counter
+	 * keyed by sha1(ip), expiring after RATE_WINDOW seconds.
+	 */
+	private static function check_rate_limit(): bool {
+		$ip   = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '0.0.0.0';
+		$key  = 'klyna_forms_rate_' . sha1( $ip );
+		$hits = (int) get_transient( $key );
+		if ( $hits >= self::RATE_LIMIT ) {
+			return false;
+		}
+		set_transient( $key, $hits + 1, self::RATE_WINDOW );
+		return true;
 	}
 
 	/**
