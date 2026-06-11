@@ -20,6 +20,7 @@ final class Plugin {
 		( new Redirector() )->register();
 		( new Monitor() )->register();
 		( new SlugWatcher() )->register();
+		( new Rest() )->register();
 
 		if ( is_admin() ) {
 			( new Admin() )->register();

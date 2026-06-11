@@ -67,6 +67,14 @@ class Admin {
 			KLYNA_REDIRECTS_VERSION,
 			true
 		);
+		wp_localize_script(
+			'klyna-redirects-admin',
+			'klynaRedirectsBoot',
+			array(
+				'restUrl' => esc_url_raw( rest_url( 'wp-redirects/v1/' ) ),
+				'nonce'   => wp_create_nonce( 'wp_rest' ),
+			)
+		);
 	}
 
 	public function page_redirects(): void {
@@ -213,19 +221,25 @@ class Admin {
 							<th><?php esc_html_e( 'Action', 'wp-redirects' ); ?></th>
 						</tr></thead>
 						<tbody>
-						<?php foreach ( $rows as $row ) : ?>
+						<?php
+						$ai_on = ! empty( Plugin::settings()['ai_provider'] ) && 'off' !== Plugin::settings()['ai_provider'];
+						foreach ( $rows as $row ) : ?>
 							<tr>
 								<td><code><?php echo esc_html( $row['url'] ); ?></code></td>
 								<td><?php echo esc_html( number_format_i18n( $row['hit_count'] ) ); ?></td>
 								<td><?php echo esc_html( $row['last_seen'] ); ?></td>
 								<td>
-									<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+									<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="klyna-404-row" data-url="<?php echo esc_attr( $row['url'] ); ?>">
 										<?php wp_nonce_field( 'klyna_from_404_' . $row['id'], '_nonce_404' ); ?>
 										<input type="hidden" name="action" value="klyna_redirects_from_404">
 										<input type="hidden" name="log_id" value="<?php echo esc_attr( $row['id'] ); ?>">
 										<input type="hidden" name="source" value="<?php echo esc_attr( str_replace( home_url(), '', $row['url'] ) ); ?>">
-										<input type="text" name="destination" placeholder="/new-url/" class="klyna-inline-input" required>
-										<button type="submit" class="button klyna-btn-sm"><?php esc_html_e( 'Create 301', 'wp-redirects' ); ?></button>
+										<input type="text" name="destination" placeholder="/new-url/" class="klyna-inline-input klyna-destination" required>
+										<?php if ( $ai_on ) : ?>
+											<button type="button" class="button klyna-btn-sm klyna-suggest-btn"><?php esc_html_e( 'Suggest target', 'wp-redirects' ); ?></button>
+										<?php endif; ?>
+										<button type="submit" class="button button-primary klyna-btn-sm"><?php esc_html_e( 'Create 301', 'wp-redirects' ); ?></button>
+										<span class="klyna-suggest-status" aria-live="polite"></span>
 									</form>
 								</td>
 							</tr>
@@ -276,6 +290,52 @@ class Admin {
 						<tr>
 							<th><label for="log_retention_days"><?php esc_html_e( '404 Log Retention (days)', 'wp-redirects' ); ?></label></th>
 							<td><input type="number" id="log_retention_days" name="log_retention_days" value="<?php echo esc_attr( $s['log_retention_days'] ?? 90 ); ?>" min="7" max="365" class="small-text"></td>
+						</tr>
+					</table>
+
+					<h2><?php esc_html_e( 'AI Assistant (optional)', 'wp-redirects' ); ?></h2>
+					<p class="klyna-muted"><?php esc_html_e( 'When enabled, the 404 Monitor shows a Suggest target button that asks your chosen AI provider to pick the most likely intended page from the 30 most-recent published posts.', 'wp-redirects' ); ?></p>
+					<table class="form-table">
+						<tr>
+							<th><label for="ai_provider"><?php esc_html_e( 'Provider', 'wp-redirects' ); ?></label></th>
+							<td>
+								<select id="ai_provider" name="ai_provider">
+									<option value="off" <?php selected( $s['ai_provider'] ?? 'off', 'off' ); ?>><?php esc_html_e( 'Off', 'wp-redirects' ); ?></option>
+									<?php foreach ( Ai::provider_catalog() as $key => $info ) : ?>
+										<option value="<?php echo esc_attr( $key ); ?>" <?php selected( $s['ai_provider'] ?? '', $key ); ?>><?php echo esc_html( $info['label'] ); ?></option>
+									<?php endforeach; ?>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<th><label for="ai_api_key"><?php esc_html_e( 'API Key', 'wp-redirects' ); ?></label></th>
+							<td><input type="password" id="ai_api_key" name="ai_api_key" value="<?php echo esc_attr( $s['ai_api_key'] ?? '' ); ?>" class="regular-text" autocomplete="off"></td>
+						</tr>
+						<tr>
+							<th><label for="ai_model"><?php esc_html_e( 'Model (optional)', 'wp-redirects' ); ?></label></th>
+							<td>
+								<input type="text" id="ai_model" name="ai_model" value="<?php echo esc_attr( $s['ai_model'] ?? '' ); ?>" class="regular-text" placeholder="<?php esc_attr_e( 'Leave blank to use the provider default.', 'wp-redirects' ); ?>">
+								<p class="description"><?php esc_html_e( 'Each provider has a sensible default model; only override if you know what you want.', 'wp-redirects' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th><label for="ai_endpoint"><?php esc_html_e( 'Endpoint / Account ID', 'wp-redirects' ); ?></label></th>
+							<td>
+								<input type="text" id="ai_endpoint" name="ai_endpoint" value="<?php echo esc_attr( $s['ai_endpoint'] ?? '' ); ?>" class="regular-text">
+								<p class="description"><?php esc_html_e( 'Required for Cloudflare (account ID) and Ollama (e.g. http://localhost:11434).', 'wp-redirects' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th><label for="ai_daily_cap"><?php esc_html_e( 'Daily Call Cap', 'wp-redirects' ); ?></label></th>
+							<td><input type="number" id="ai_daily_cap" name="ai_daily_cap" value="<?php echo esc_attr( $s['ai_daily_cap'] ?? 100 ); ?>" min="1" max="10000" class="small-text"></td>
+						</tr>
+						<tr>
+							<th><?php esc_html_e( 'Test Connection', 'wp-redirects' ); ?></th>
+							<td>
+								<button type="button" class="button" id="klyna-ai-test"><?php esc_html_e( 'Test connection', 'wp-redirects' ); ?></button>
+								<span id="klyna-ai-test-status" class="klyna-muted" style="margin-left:8px"></span>
+								<p class="description"><?php esc_html_e( 'Save first, then click Test to verify your provider credentials work.', 'wp-redirects' ); ?></p>
+							</td>
 						</tr>
 					</table>
 					<?php submit_button( __( 'Save Settings', 'wp-redirects' ), 'klyna-btn' ); ?>
@@ -349,12 +409,22 @@ class Admin {
 		if ( ! current_user_can( 'manage_options' ) || ! check_admin_referer( 'klyna_redirects_settings', '_nonce_settings' ) ) {
 			wp_die( esc_html__( 'Not allowed.', 'wp-redirects' ) );
 		}
+		$allowed_providers = array_merge( array( 'off' ), array_keys( Ai::provider_catalog() ) );
+		$provider          = sanitize_text_field( wp_unslash( $_POST['ai_provider'] ?? 'off' ) );
+		if ( ! in_array( $provider, $allowed_providers, true ) ) {
+			$provider = 'off';
+		}
 		$settings = array(
 			'enable_redirects'   => isset( $_POST['enable_redirects'] ),
 			'log_404'            => isset( $_POST['log_404'] ),
 			'auto_redirect_slug' => isset( $_POST['auto_redirect_slug'] ),
 			'monitor_logged_in'  => isset( $_POST['monitor_logged_in'] ),
 			'log_retention_days' => absint( $_POST['log_retention_days'] ?? 90 ),
+			'ai_provider'        => $provider,
+			'ai_api_key'         => sanitize_text_field( wp_unslash( $_POST['ai_api_key'] ?? '' ) ),
+			'ai_model'           => sanitize_text_field( wp_unslash( $_POST['ai_model'] ?? '' ) ),
+			'ai_endpoint'        => esc_url_raw( wp_unslash( $_POST['ai_endpoint'] ?? '' ) ),
+			'ai_daily_cap'       => max( 1, absint( $_POST['ai_daily_cap'] ?? 100 ) ),
 		);
 		update_option( KLYNA_REDIRECTS_OPTION_KEY, $settings );
 		wp_redirect( add_query_arg( 'saved', '1', admin_url( 'admin.php?page=klyna-redirects-settings' ) ) );
