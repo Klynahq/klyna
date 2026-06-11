@@ -295,8 +295,10 @@ export const products: Product[] = [
     tagline: 'Bold, editorial Shopify theme for big catalogs and brand storytelling.',
     description:
       'Oversized headlines, full-bleed imagery, strong grid, lookbook sections, mega-menu for large catalogs. Built for fashion, streetwear and brand-led DTC.',
-    status: 'soon',
+    status: 'beta',
     surface: 'theme',
+    downloadUrl: '/downloads/theme-momentum.zip',
+    installNote: 'shopify theme dev --store=<your-store>.myshopify.com',
   },
 ];
 
