@@ -1,0 +1,41 @@
+---
+title: Bring your own AI key
+description: Klyna supports five free-tier AI providers. You bring the key, the key stays on your server, and Klyna never proxies prompts through our infrastructure.
+category: getting-started
+updated: 2026-06-10
+order: 4
+---
+
+The Klyna AI assistant is opt-in and BYOK — bring your own key. The key lives
+in your own WordPress or Shopify database, never on klyna.dev.
+
+## Supported providers
+
+All five are free at the tier Klyna uses by default. Pick whichever you already
+have an account with.
+
+| Provider | Free model used by default | Where to get a key |
+| --- | --- | --- |
+| OpenRouter | `meta-llama/llama-3.1-8b-instruct:free` | openrouter.ai/keys |
+| Groq | `llama-3.1-8b-instant` | console.groq.com/keys |
+| Google Gemini | `gemini-1.5-flash` | aistudio.google.com/apikey |
+| Cloudflare Workers AI | `@cf/meta/llama-3.1-8b-instruct` | dash.cloudflare.com (Workers AI) |
+| Ollama (local) | `llama3.1:8b` | install [ollama.com](https://ollama.com) |
+
+## Where to paste it
+
+- **WordPress:** Klyna → Settings → AI assistant.
+- **Shopify:** Apps → Klyna → Settings → AI.
+- **Extension:** Options → AI key.
+
+## Daily cap
+
+By default Klyna stops at 100 AI calls per day so a runaway suggestion loop
+cannot drain your quota. Raise or lower it in the same settings panel
+(`klyna_settings.ai_daily_cap`).
+
+## What never gets sent
+
+Page content goes to the provider you chose, scoped to the audit prompt only.
+Klyna never sees your key, your prompt, or the response. If you delete the key
+the assistant disables itself on the next page load.
