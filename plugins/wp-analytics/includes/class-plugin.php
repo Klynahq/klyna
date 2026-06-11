@@ -46,6 +46,11 @@ final class Plugin {
 			'exclude_admins'  => true,
 			'retention_days'  => 365,
 			'hash_salt'       => '',
+			'ai_provider'     => 'off',
+			'ai_api_key'      => '',
+			'ai_model'        => '',
+			'ai_endpoint'     => '',
+			'ai_daily_cap'    => 100,
 		);
 		$settings = get_option( KLYNA_ANALYTICS_OPTION_KEY, array() );
 		$settings = is_array( $settings ) ? $settings : array();

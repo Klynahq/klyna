@@ -73,6 +73,53 @@ final class Rest {
 
 		register_rest_route(
 			self::NAMESPACE,
+			'/ai/test',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'ai_test' ),
+				'permission_callback' => array( $this, 'can_manage' ),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
+			'/ai/suggest',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'ai_suggest' ),
+				'permission_callback' => array( $this, 'can_manage' ),
+				'args'                => array(
+					'context' => array(
+						'type'              => 'string',
+						'required'          => true,
+						'sanitize_callback' => 'sanitize_textarea_field',
+					),
+				),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
+			'/insight/weekly',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'insight_get' ),
+				'permission_callback' => array( $this, 'can_manage' ),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
+			'/insight/weekly/regenerate',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'insight_regenerate' ),
+				'permission_callback' => array( $this, 'can_manage' ),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
 			'/stats/timeseries',
 			array(
 				'methods'             => 'GET',
@@ -94,6 +141,69 @@ final class Rest {
 	 */
 	public function can_read(): bool {
 		return current_user_can( 'manage_options' );
+	}
+
+	/**
+	 * Capability + REST nonce gate for AI / insight endpoints.
+	 */
+	public function can_manage( \WP_REST_Request $req ): bool {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return false;
+		}
+		$nonce = $req->get_header( 'x_wp_nonce' );
+		if ( ! $nonce ) {
+			$nonce = (string) $req->get_param( '_wpnonce' );
+		}
+		return (bool) wp_verify_nonce( (string) $nonce, 'wp_rest' );
+	}
+
+	public function ai_test( \WP_REST_Request $req ): \WP_REST_Response {
+		unset( $req );
+		$result = ( new Ai() )->test();
+		$code   = ! empty( $result['ok'] ) ? 200 : 400;
+		return new \WP_REST_Response( $result, $code );
+	}
+
+	public function ai_suggest( \WP_REST_Request $req ): \WP_REST_Response {
+		$context = (string) $req->get_param( 'context' );
+		if ( '' === trim( $context ) ) {
+			return new \WP_REST_Response(
+				array( 'ok' => false, 'reason' => 'empty_context', 'text' => 'Context is required.' ),
+				400
+			);
+		}
+		$settings = Plugin::settings();
+		if ( 'off' === ( $settings['ai_provider'] ?? 'off' ) ) {
+			return new \WP_REST_Response(
+				array( 'ok' => false, 'reason' => 'provider_off', 'text' => 'AI provider is set to Off.' ),
+				400
+			);
+		}
+		$result = ( new Ai() )->complete( $context );
+		$code   = ! empty( $result['ok'] ) ? 200 : 400;
+		return new \WP_REST_Response( $result, $code );
+	}
+
+	public function insight_get( \WP_REST_Request $req ): \WP_REST_Response {
+		unset( $req );
+		$cached = Insight::get_cached();
+		return new \WP_REST_Response(
+			array(
+				'ok'       => true,
+				'cached'   => null !== $cached,
+				'insight'  => $cached,
+				'usage'    => Ai::usage(),
+				'provider' => (string) ( Plugin::settings()['ai_provider'] ?? 'off' ),
+			),
+			200
+		);
+	}
+
+	public function insight_regenerate( \WP_REST_Request $req ): \WP_REST_Response {
+		unset( $req );
+		$result = Insight::regenerate();
+		$code   = ! empty( $result['ok'] ) ? 200 : 400;
+		return new \WP_REST_Response( $result, $code );
 	}
 
 	/**
