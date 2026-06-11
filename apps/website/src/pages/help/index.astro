@@ -1,0 +1,141 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const articles = await getCollection('help');
+
+const categories = [
+  { slug: 'getting-started', label: 'Getting started' },
+  { slug: 'wordpress', label: 'WordPress' },
+  { slug: 'shopify', label: 'Shopify' },
+  { slug: 'troubleshooting', label: 'Troubleshooting' },
+  { slug: 'billing', label: 'Billing' },
+  { slug: 'security', label: 'Security' },
+] as const;
+
+const grouped = categories.map((cat) => ({
+  ...cat,
+  items: articles
+    .filter((a) => a.data.category === cat.slug)
+    .sort((a, b) => a.data.order - b.data.order),
+}));
+
+const searchIndex = articles.map((a) => ({
+  id: a.id,
+  title: a.data.title,
+  description: a.data.description,
+  category: a.data.category,
+  url: `/help/${a.id.replace(/\.mdx?$/, '')}`,
+}));
+---
+
+<BaseLayout
+  title="Help center — Klyna"
+  description="Guides, troubleshooting, and answers for every Klyna product. Search the help center or browse by topic."
+>
+  <section class="max-w-5xl mx-auto px-6 pt-20 pb-24">
+    <div class="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-accent)] mb-3">
+      Help center
+    </div>
+    <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-4">How can we help?</h1>
+    <p class="text-[color:var(--color-text-muted)] text-lg max-w-2xl mb-10">
+      Setup guides, troubleshooting, and answers for every Klyna product. Search below or browse
+      by topic.
+    </p>
+
+    <div class="relative mb-12">
+      <input
+        id="help-search"
+        type="search"
+        placeholder="Search the help center..."
+        autocomplete="off"
+        class="w-full px-4 py-3 rounded-lg bg-[color:var(--color-surface)] border border-[color:var(--color-border)] focus:border-[color:var(--color-accent)] focus:outline-none text-base"
+      />
+      <ul
+        id="help-results"
+        class="hidden mt-3 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface-elevated)] overflow-hidden divide-y divide-[color:var(--color-border)]/50"
+      >
+      </ul>
+    </div>
+
+    <div id="help-categories" class="grid gap-6 md:grid-cols-2">
+      {
+        grouped.map((cat) =>
+          cat.items.length === 0 ? null : (
+            <div class="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-6">
+              <h2 class="text-sm font-semibold uppercase tracking-wider text-[color:var(--color-accent)] mb-4">
+                {cat.label}
+              </h2>
+              <ul class="space-y-3">
+                {cat.items.map((a) => (
+                  <li>
+                    <a
+                      href={`/help/${a.id.replace(/\.mdx?$/, '')}`}
+                      class="block group"
+                    >
+                      <div class="font-medium group-hover:text-[color:var(--color-accent)] transition-colors">
+                        {a.data.title}
+                      </div>
+                      <div class="text-sm text-[color:var(--color-text-muted)] mt-1">
+                        {a.data.description}
+                      </div>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )
+        )
+      }
+    </div>
+
+    <div class="mt-14 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-6 text-center">
+      <p class="text-[color:var(--color-text-muted)]">
+        Cannot find what you need?
+        <a href="/contact" class="text-[color:var(--color-accent)] hover:underline ml-1">
+          Contact us →
+        </a>
+      </p>
+    </div>
+  </section>
+
+  <script type="application/json" id="help-index" set:html={JSON.stringify(searchIndex)} />
+
+  <script is:inline>
+    (() => {
+      const input = document.getElementById('help-search');
+      const results = document.getElementById('help-results');
+      const cats = document.getElementById('help-categories');
+      const raw = document.getElementById('help-index');
+      if (!input || !results || !raw || !cats) return;
+      const data = JSON.parse(raw.textContent || '[]');
+      input.addEventListener('input', () => {
+        const q = input.value.trim().toLowerCase();
+        if (!q) {
+          results.classList.add('hidden');
+          results.innerHTML = '';
+          cats.classList.remove('hidden');
+          return;
+        }
+        const hits = data
+          .filter(
+            (a) =>
+              a.title.toLowerCase().includes(q) ||
+              a.description.toLowerCase().includes(q) ||
+              a.category.toLowerCase().includes(q)
+          )
+          .slice(0, 12);
+        cats.classList.add('hidden');
+        results.classList.remove('hidden');
+        results.innerHTML = hits.length
+          ? hits
+              .map(
+                (a) =>
+                  `<li><a href="${a.url}" class="block px-4 py-3 hover:bg-white/5"><div class="font-medium">${a.title}</div><div class="text-sm text-[color:var(--color-text-muted)] mt-0.5">${a.description}</div></a></li>`
+              )
+              .join('')
+          : '<li class="px-4 py-6 text-center text-sm text-[color:var(--color-text-muted)]">No matches. Try the <a href="/contact" class="text-[color:var(--color-accent)] hover:underline">contact form</a>.</li>';
+      });
+    })();
+  </script>
+</BaseLayout>

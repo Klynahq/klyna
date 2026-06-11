@@ -1,0 +1,41 @@
+---
+title: AI key rejected or "unauthorized" error
+description: When the AI assistant reports an invalid key, the issue is almost always a copy-paste problem, an expired key, or a model the free tier does not include.
+category: troubleshooting
+updated: 2026-06-10
+order: 1
+---
+
+## Check the key has no whitespace
+
+Paste managers often add a trailing newline. In the Klyna settings field,
+click into the input, press **End**, then backspace any trailing space.
+
+## Verify with a curl
+
+Run a single request from your terminal to confirm the key is live. Example
+for OpenRouter:
+
+```bash
+curl https://openrouter.ai/api/v1/models \
+  -H "Authorization: Bearer $YOUR_KEY"
+```
+
+A `401` means the key itself is invalid. A `200` means Klyna's call needs a
+closer look.
+
+## Check the model name
+
+The default model can roll over when a provider deprecates a free tier. If
+your provider recently changed names, update the model field in Klyna →
+Settings → AI assistant.
+
+## Re-generate the key
+
+Most providers let you rotate keys instantly. Delete the old key, generate a
+new one, paste it into Klyna, and save.
+
+## Daily cap hit
+
+A "rejected" error can also mean you have hit the configured daily cap. See
+[Daily cap hit](/help/troubleshooting/daily-cap-hit).
