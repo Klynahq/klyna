@@ -28,17 +28,22 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKTREES_PARENT="$(dirname "$ROOT")"
 
 # slug → Partners app display name (no "Shopify" — Shopify rejects that word)
-declare -A APP_NAMES
-APP_NAMES["shopify-bundles"]="Klyna Bundles"
-APP_NAMES["shopify-upsell"]="Klyna Upsell"
-APP_NAMES["shopify-rewards"]="Klyna Rewards"
-APP_NAMES["shopify-reviews"]="Klyna Reviews"
-APP_NAMES["shopify-urgency"]="Klyna Urgency"
-APP_NAMES["shopify-restock"]="Klyna Back-in-Stock"
-APP_NAMES["shopify-wishlist"]="Klyna Wishlist"
-APP_NAMES["shopify-feed"]="Klyna Feed"
-APP_NAMES["shopify-sticky-cart"]="Klyna Sticky Cart"
-APP_NAMES["shopify-capture"]="Klyna Capture"
+# Uses a case statement instead of declare -A to stay compatible with macOS bash 3.2.
+app_name_for() {
+  case "$1" in
+    shopify-bundles)     echo "Klyna Bundles" ;;
+    shopify-upsell)      echo "Klyna Upsell" ;;
+    shopify-rewards)     echo "Klyna Rewards" ;;
+    shopify-reviews)     echo "Klyna Reviews" ;;
+    shopify-urgency)     echo "Klyna Urgency" ;;
+    shopify-restock)     echo "Klyna Back-in-Stock" ;;
+    shopify-wishlist)    echo "Klyna Wishlist" ;;
+    shopify-feed)        echo "Klyna Feed" ;;
+    shopify-sticky-cart) echo "Klyna Sticky Cart" ;;
+    shopify-capture)     echo "Klyna Capture" ;;
+    *)                   echo "Klyna $(echo "$1" | sed 's/shopify-//' | sed 's/-/ /g' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)}1')" ;;
+  esac
+}
 
 APPS=(
   "shopify-bundles"
@@ -71,7 +76,7 @@ echo ""
 # Step 2: Install + link each app
 for slug in "${APPS[@]}"; do
   app_dir="$WORKTREES_PARENT/klyna-${slug}/apps/${slug}"
-  app_name="${APP_NAMES[$slug]}"
+  app_name="$(app_name_for "$slug")"
 
   if [ ! -d "$app_dir" ]; then
     echo "⚠ Worktree not found: $app_dir — skipping"
