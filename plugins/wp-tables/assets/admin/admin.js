@@ -213,8 +213,83 @@
 		var grid = buildGrid( data );
 		var csvPanel = buildCsvPanel( table );
 		var configPanel = buildConfigPanel( config );
+		var insightPanel = buildInsightPanel( table );
 
-		return [ titleRow, toolbar, csvPanel, grid, configPanel ];
+		return [ titleRow, toolbar, csvPanel, grid, configPanel, insightPanel ];
+	}
+
+	function buildInsightPanel( table ) {
+		var insight = table.insight || { text: '', updated: 0, enabled: false };
+		var statusEl = h( 'span', { class: 'klyna-ai-status', id: 'klyna-ai-status' }, [] );
+		var textEl   = h( 'p', { class: 'klyna-ai-text', id: 'klyna-ai-text' }, [ insight.text || __( 'No insight yet. Click "Generate insight" to summarize this table with AI.', 'wp-tables' ) ] );
+
+		var toggle = h( 'label', { class: 'klyna-ai-toggle' }, [
+			h( 'input', {
+				type: 'checkbox',
+				checked: insight.enabled ? 'checked' : null,
+				onChange: function ( e ) {
+					var enabled = !! e.target.checked;
+					api( '/tables/' + table.id + '/insight-toggle', { method: 'POST', data: { enabled: enabled } } )
+						.then( function ( r ) {
+							table.insight = table.insight || {};
+							table.insight.enabled = !! r.enabled;
+							flash( enabled ? __( 'Insight will show on the front-end.', 'wp-tables' ) : __( 'Insight hidden on the front-end.', 'wp-tables' ) );
+						} )
+						.catch( function () { flash( __( 'Could not save toggle.', 'wp-tables' ) ); } );
+				}
+			} ),
+			' ' + __( 'Show this insight at the top of the front-end table', 'wp-tables' )
+		] );
+
+		var generateBtn = h( 'button', {
+			class: 'button button-primary',
+			onClick: function () {
+				var btn = document.getElementById( 'klyna-ai-generate' );
+				if ( btn ) { btn.disabled = true; btn.textContent = __( 'Generating…', 'wp-tables' ); }
+				document.getElementById( 'klyna-ai-status' ).textContent = '';
+				api( '/tables/' + table.id + '/insight', { method: 'POST' } )
+					.then( function ( r ) {
+						if ( r && r.insight ) {
+							table.insight = table.insight || {};
+							table.insight.text = r.insight;
+							table.insight.updated = Math.floor( Date.now() / 1000 );
+							var t = document.getElementById( 'klyna-ai-text' );
+							if ( t ) { t.textContent = r.insight; }
+							flash( __( 'Insight generated.', 'wp-tables' ) );
+						}
+					} )
+					.catch( function ( err ) {
+						var msg = ( err && err.message ) ? err.message : __( 'Failed to generate insight.', 'wp-tables' );
+						document.getElementById( 'klyna-ai-status' ).textContent = msg;
+					} )
+					.finally( function () {
+						var b = document.getElementById( 'klyna-ai-generate' );
+						if ( b ) { b.disabled = false; b.textContent = __( 'Generate insight', 'wp-tables' ); }
+					} );
+			},
+			id: 'klyna-ai-generate'
+		}, [ __( 'Generate insight', 'wp-tables' ) ] );
+
+		var clearBtn = h( 'button', {
+			class: 'button',
+			onClick: function () {
+				if ( ! window.confirm( __( 'Remove the saved insight?', 'wp-tables' ) ) ) { return; }
+				api( '/tables/' + table.id + '/insight', { method: 'DELETE' } )
+					.then( function () {
+						table.insight = { text: '', updated: 0, enabled: false };
+						render();
+						flash( __( 'Insight cleared.', 'wp-tables' ) );
+					} );
+			}
+		}, [ __( 'Clear', 'wp-tables' ) ] );
+
+		return h( 'div', { class: 'klyna-ai-panel' }, [
+			h( 'h3', {}, [ __( 'AI insight', 'wp-tables' ) ] ),
+			h( 'p', { class: 'description' }, [ __( 'Generate a single-paragraph plain-English summary of this table. Requires an AI provider configured in Klyna Tables → Settings.', 'wp-tables' ) ] ),
+			h( 'div', { class: 'klyna-ai-actions' }, [ generateBtn, ' ', clearBtn, ' ', statusEl ] ),
+			textEl,
+			h( 'div', { class: 'klyna-ai-toggle-wrap' }, [ toggle ] )
+		] );
 	}
 
 	function buildGrid( data ) {

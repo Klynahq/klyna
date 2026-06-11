@@ -215,10 +215,91 @@ final class Admin {
 								<?php endif; ?>
 							</td>
 						</tr>
+						<tr>
+							<th scope="row" colspan="2"><h2 style="margin:24px 0 4px;"><?php esc_html_e( 'AI assistant', 'wp-tables' ); ?></h2><p class="description"><?php esc_html_e( 'Pick a provider, paste your API key, and Klyna Tables can generate a one-paragraph plain-English insight for any table. Default: off. Plugin works fully without AI.', 'wp-tables' ); ?></p></th>
+						</tr>
+						<tr>
+							<th scope="row"><label for="ai_provider"><?php esc_html_e( 'Provider', 'wp-tables' ); ?></label></th>
+							<td>
+								<select id="ai_provider" name="<?php echo esc_attr( KLYNA_TABLES_OPTION_KEY ); ?>[ai_provider]">
+									<?php
+									$current_provider = (string) ( $settings['ai_provider'] ?? 'off' );
+									$choices          = array( 'off' => __( 'Off', 'wp-tables' ) );
+									foreach ( Ai::provider_catalog() as $pk => $pdef ) {
+										$choices[ $pk ] = (string) $pdef['label'];
+									}
+									foreach ( $choices as $val => $label ) {
+										printf(
+											'<option value="%1$s" %2$s>%3$s</option>',
+											esc_attr( $val ),
+											selected( $current_provider, $val, false ),
+											esc_html( $label )
+										);
+									}
+									?>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="ai_api_key"><?php esc_html_e( 'API key', 'wp-tables' ); ?></label></th>
+							<td>
+								<input type="password" id="ai_api_key" class="regular-text" name="<?php echo esc_attr( KLYNA_TABLES_OPTION_KEY ); ?>[ai_api_key]" value="<?php echo esc_attr( (string) ( $settings['ai_api_key'] ?? '' ) ); ?>" autocomplete="off">
+								<p class="description"><?php esc_html_e( 'Stored in wp_options. Leave blank for Ollama.', 'wp-tables' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="ai_model"><?php esc_html_e( 'Model', 'wp-tables' ); ?></label></th>
+							<td>
+								<input type="text" id="ai_model" class="regular-text" name="<?php echo esc_attr( KLYNA_TABLES_OPTION_KEY ); ?>[ai_model]" value="<?php echo esc_attr( (string) ( $settings['ai_model'] ?? '' ) ); ?>" placeholder="<?php esc_attr_e( 'Leave blank to use the provider default', 'wp-tables' ); ?>">
+								<p class="description"><?php esc_html_e( 'Each provider has a sensible default; override only if you need a specific model.', 'wp-tables' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="ai_endpoint"><?php esc_html_e( 'Endpoint / account ID', 'wp-tables' ); ?></label></th>
+							<td>
+								<input type="text" id="ai_endpoint" class="regular-text" name="<?php echo esc_attr( KLYNA_TABLES_OPTION_KEY ); ?>[ai_endpoint]" value="<?php echo esc_attr( (string) ( $settings['ai_endpoint'] ?? '' ) ); ?>">
+								<p class="description"><?php esc_html_e( 'Ollama: http://localhost:11434. Cloudflare: your Account ID. Ignored otherwise.', 'wp-tables' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="ai_daily_cap"><?php esc_html_e( 'Daily cap', 'wp-tables' ); ?></label></th>
+							<td>
+								<input type="number" min="1" max="10000" id="ai_daily_cap" class="small-text" name="<?php echo esc_attr( KLYNA_TABLES_OPTION_KEY ); ?>[ai_daily_cap]" value="<?php echo esc_attr( (string) ( $settings['ai_daily_cap'] ?? 100 ) ); ?>">
+								<p class="description"><?php esc_html_e( 'Max AI calls per day across all tables. Resets at 00:00 UTC.', 'wp-tables' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Test connection', 'wp-tables' ); ?></th>
+							<td>
+								<button type="button" class="button" id="klyna-tables-ai-test"><?php esc_html_e( 'Run test', 'wp-tables' ); ?></button>
+								<span id="klyna-tables-ai-test-result" style="margin-left:10px;"></span>
+								<p class="description"><?php esc_html_e( 'Save settings first, then run a tiny prompt to verify the credentials.', 'wp-tables' ); ?></p>
+							</td>
+						</tr>
 					</tbody>
 				</table>
 				<?php submit_button(); ?>
 			</form>
+			<script>
+			(function(){
+				var btn = document.getElementById('klyna-tables-ai-test');
+				var out = document.getElementById('klyna-tables-ai-test-result');
+				if(!btn) return;
+				btn.addEventListener('click', function(){
+					out.textContent = <?php echo wp_json_encode( __( 'Testing…', 'wp-tables' ) ); ?>;
+					btn.disabled = true;
+					fetch(<?php echo wp_json_encode( esc_url_raw( rest_url( 'klyna-tables/v1/ai/test' ) ) ); ?>, {
+						method: 'POST',
+						headers: { 'X-WP-Nonce': <?php echo wp_json_encode( wp_create_nonce( 'wp_rest' ) ); ?>, 'Content-Type': 'application/json' }
+					}).then(function(r){ return r.json().then(function(j){ return { ok:r.ok, body:j }; }); })
+					.then(function(res){
+						out.textContent = (res.ok && res.body.ok) ? (<?php echo wp_json_encode( __( 'OK: ', 'wp-tables' ) ); ?> + (res.body.text || '')) : (<?php echo wp_json_encode( __( 'Failed: ', 'wp-tables' ) ); ?> + (res.body.reason || res.body.text || 'error'));
+					})
+					.catch(function(e){ out.textContent = 'Error: ' + e.message; })
+					.finally(function(){ btn.disabled = false; });
+				});
+			})();
+			</script>
 		</div>
 		<?php
 	}

@@ -58,6 +58,11 @@ final class Plugin {
 			'striped'               => true,
 			'accent'                => '#7c5cff',
 			'woo_columns'           => array( 'image', 'title', 'price', 'cart' ),
+			'ai_provider'           => 'off',
+			'ai_api_key'            => '',
+			'ai_model'              => '',
+			'ai_endpoint'           => '',
+			'ai_daily_cap'          => 100,
 		);
 	}
 }

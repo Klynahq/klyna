@@ -104,6 +104,66 @@ final class Rest {
 
 		register_rest_route(
 			self::NAMESPACE,
+			'/tables/(?P<id>\d+)/insight',
+			array(
+				array(
+					'methods'             => 'POST',
+					'callback'            => array( $this, 'generate_insight' ),
+					'permission_callback' => $can_edit,
+				),
+				array(
+					'methods'             => 'DELETE',
+					'callback'            => array( $this, 'clear_insight' ),
+					'permission_callback' => $can_edit,
+				),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
+			'/tables/(?P<id>\d+)/insight-toggle',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'toggle_insight' ),
+				'permission_callback' => $can_edit,
+				'args'                => array(
+					'enabled' => array(
+						'type'     => 'boolean',
+						'required' => true,
+					),
+				),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
+			'/ai/test',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'ai_test' ),
+				'permission_callback' => $can_edit,
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
+			'/ai/suggest',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'ai_suggest' ),
+				'permission_callback' => $can_edit,
+				'args'                => array(
+					'prompt' => array(
+						'type'              => 'string',
+						'required'          => true,
+						'sanitize_callback' => 'sanitize_textarea_field',
+					),
+				),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
 			'/settings',
 			array(
 				array(
@@ -258,6 +318,24 @@ final class Rest {
 			$out['accent'] = $accent ?: '#7c5cff';
 		}
 
+		if ( isset( $input['ai_provider'] ) ) {
+			$allowed = array( 'off', 'openrouter', 'groq', 'gemini', 'cloudflare', 'ollama' );
+			$prov    = sanitize_key( (string) $input['ai_provider'] );
+			$out['ai_provider'] = in_array( $prov, $allowed, true ) ? $prov : 'off';
+		}
+		if ( isset( $input['ai_api_key'] ) ) {
+			$out['ai_api_key'] = sanitize_text_field( (string) $input['ai_api_key'] );
+		}
+		if ( isset( $input['ai_model'] ) ) {
+			$out['ai_model'] = sanitize_text_field( (string) $input['ai_model'] );
+		}
+		if ( isset( $input['ai_endpoint'] ) ) {
+			$out['ai_endpoint'] = sanitize_text_field( (string) $input['ai_endpoint'] );
+		}
+		if ( isset( $input['ai_daily_cap'] ) ) {
+			$out['ai_daily_cap'] = max( 1, min( 10000, (int) $input['ai_daily_cap'] ) );
+		}
+
 		if ( isset( $input['woo_columns'] ) && is_array( $input['woo_columns'] ) ) {
 			$allowed = array( 'image', 'title', 'sku', 'category', 'price', 'stock', 'cart' );
 			$out['woo_columns'] = array_values(
@@ -269,6 +347,143 @@ final class Rest {
 		}
 
 		return $out;
+	}
+
+	public function ai_test(): \WP_REST_Response {
+		$ai     = new Ai();
+		$result = $ai->test();
+		$status = ! empty( $result['ok'] ) ? 200 : 400;
+		return new \WP_REST_Response(
+			array(
+				'ok'     => ! empty( $result['ok'] ),
+				'text'   => (string) ( $result['text'] ?? '' ),
+				'reason' => (string) ( $result['reason'] ?? '' ),
+			),
+			$status
+		);
+	}
+
+	public function ai_suggest( \WP_REST_Request $req ): \WP_REST_Response {
+		$prompt = (string) $req->get_param( 'prompt' );
+		if ( '' === trim( $prompt ) ) {
+			return new \WP_REST_Response( array( 'message' => __( 'Prompt is required.', 'wp-tables' ) ), 400 );
+		}
+		$ai     = new Ai();
+		$result = $ai->complete( $prompt );
+		$status = ! empty( $result['ok'] ) ? 200 : 400;
+		return new \WP_REST_Response(
+			array(
+				'ok'     => ! empty( $result['ok'] ),
+				'text'   => (string) ( $result['text'] ?? '' ),
+				'reason' => (string) ( $result['reason'] ?? '' ),
+				'cached' => ! empty( $result['cached'] ),
+			),
+			$status
+		);
+	}
+
+	public function generate_insight( \WP_REST_Request $req ): \WP_REST_Response {
+		$id = (int) $req->get_param( 'id' );
+		if ( ! $this->store->exists( $id ) ) {
+			return new \WP_REST_Response( array( 'message' => __( 'Table not found.', 'wp-tables' ) ), 404 );
+		}
+		$data    = $this->store->get_data( $id );
+		$columns = $data['columns'] ?? array();
+		$rows    = $data['rows'] ?? array();
+		if ( empty( $columns ) || empty( $rows ) ) {
+			return new \WP_REST_Response( array( 'message' => __( 'Add some data before generating an insight.', 'wp-tables' ) ), 422 );
+		}
+
+		$csv = $this->table_to_csv( $columns, $rows, 5000 );
+		$title = get_the_title( $id );
+
+		$prompt  = "You are a data analyst. Read the following CSV table titled \"$title\" and write exactly one paragraph of 40-80 words summarizing what the data shows. Include specific numeric observations (totals, ranges, top values, notable comparisons). Do not invent values that are not present. Plain text only, no markdown, no preamble.\n\nCSV:\n" . $csv;
+
+		$ai     = new Ai();
+		$result = $ai->complete( $prompt, array( 'max_tokens' => 300, 'temperature' => 0.4 ) );
+		if ( empty( $result['ok'] ) ) {
+			return new \WP_REST_Response(
+				array(
+					'ok'     => false,
+					'reason' => (string) ( $result['reason'] ?? 'error' ),
+					'message' => (string) ( $result['text'] ?? __( 'AI request failed.', 'wp-tables' ) ),
+				),
+				400
+			);
+		}
+
+		$text = sanitize_textarea_field( (string) $result['text'] );
+		update_post_meta( $id, '_wp_tables_insight', $text );
+		update_post_meta( $id, '_wp_tables_insight_at', time() );
+
+		return new \WP_REST_Response(
+			array(
+				'ok'      => true,
+				'insight' => $text,
+				'cached'  => ! empty( $result['cached'] ),
+			),
+			200
+		);
+	}
+
+	public function clear_insight( \WP_REST_Request $req ): \WP_REST_Response {
+		$id = (int) $req->get_param( 'id' );
+		if ( ! $this->store->exists( $id ) ) {
+			return new \WP_REST_Response( array( 'message' => __( 'Table not found.', 'wp-tables' ) ), 404 );
+		}
+		delete_post_meta( $id, '_wp_tables_insight' );
+		delete_post_meta( $id, '_wp_tables_insight_at' );
+		return new \WP_REST_Response( array( 'ok' => true ), 200 );
+	}
+
+	public function toggle_insight( \WP_REST_Request $req ): \WP_REST_Response {
+		$id = (int) $req->get_param( 'id' );
+		if ( ! $this->store->exists( $id ) ) {
+			return new \WP_REST_Response( array( 'message' => __( 'Table not found.', 'wp-tables' ) ), 404 );
+		}
+		$enabled = (bool) $req->get_param( 'enabled' );
+		update_post_meta( $id, '_wp_tables_insight_enabled', $enabled ? '1' : '0' );
+		return new \WP_REST_Response( array( 'ok' => true, 'enabled' => $enabled ), 200 );
+	}
+
+	/**
+	 * Serialize columns + rows to a CSV string, truncated to a char cap.
+	 *
+	 * @param array<int, array<string,string>> $columns
+	 * @param array<int, array<int,string>>    $rows
+	 */
+	private function table_to_csv( array $columns, array $rows, int $cap ): string {
+		$labels = array();
+		foreach ( $columns as $col ) {
+			$labels[] = (string) ( $col['label'] ?? '' );
+		}
+		$lines = array( $this->csv_row( $labels ) );
+		foreach ( $rows as $row ) {
+			$lines[] = $this->csv_row( array_map( 'strval', (array) $row ) );
+			if ( strlen( implode( "\n", $lines ) ) >= $cap ) {
+				break;
+			}
+		}
+		$out = implode( "\n", $lines );
+		if ( strlen( $out ) > $cap ) {
+			$out = substr( $out, 0, $cap );
+		}
+		return $out;
+	}
+
+	/**
+	 * @param array<int,string> $fields
+	 */
+	private function csv_row( array $fields ): string {
+		$escaped = array();
+		foreach ( $fields as $field ) {
+			$clean = wp_strip_all_tags( $field );
+			if ( false !== strpbrk( $clean, ",\"\n" ) ) {
+				$clean = '"' . str_replace( '"', '""', $clean ) . '"';
+			}
+			$escaped[] = $clean;
+		}
+		return implode( ',', $escaped );
 	}
 
 	/**
@@ -284,6 +499,11 @@ final class Rest {
 			'data'      => $this->store->get_data( $id ),
 			'config'    => $this->store->get_config( $id ),
 			'shortcode' => sprintf( '[klyna_table id="%d"]', $id ),
+			'insight'   => array(
+				'text'    => (string) get_post_meta( $id, '_wp_tables_insight', true ),
+				'updated' => (int) get_post_meta( $id, '_wp_tables_insight_at', true ),
+				'enabled' => '1' === (string) get_post_meta( $id, '_wp_tables_insight_enabled', true ),
+			),
 		);
 	}
 

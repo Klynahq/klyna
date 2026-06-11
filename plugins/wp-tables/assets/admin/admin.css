@@ -443,3 +443,17 @@
 	background: #fff;
 	vertical-align: middle;
 }
+
+.klyna-ai-panel {
+	margin-top: 20px;
+	padding: 16px 18px;
+	border: 1px solid #dcdcde;
+	border-left: 4px solid #7c5cff;
+	background: #fff;
+	border-radius: 6px;
+}
+.klyna-ai-panel h3 { margin: 0 0 4px; }
+.klyna-ai-actions { margin: 10px 0 12px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.klyna-ai-text { background: #f6f7f7; padding: 10px 12px; border-radius: 4px; line-height: 1.55; margin: 0 0 12px; }
+.klyna-ai-status { color: #b32d2e; font-size: 12px; }
+.klyna-ai-toggle { display: inline-flex; align-items: center; gap: 6px; }

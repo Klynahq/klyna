@@ -284,3 +284,25 @@
 		--klyna-stripe: rgba( 255, 255, 255, 0.04 );
 	}
 }
+
+.klyna-table-insight {
+	border-left: 4px solid var( --klyna-accent, #7c5cff );
+	background: rgba( 124, 92, 255, 0.07 );
+	padding: 14px 18px;
+	margin: 0 0 16px;
+	border-radius: 8px;
+	font-size: 0.95em;
+	line-height: 1.55;
+}
+.klyna-table-insight-label {
+	display: inline-block;
+	font-size: 0.7em;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var( --klyna-accent, #7c5cff );
+	margin-bottom: 4px;
+}
+.klyna-table-insight p {
+	margin: 0;
+}

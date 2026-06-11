@@ -36,7 +36,20 @@ final class Renderer {
 		$config = $this->resolve_config( $this->store->get_config( $table_id ), $overrides );
 		$title  = get_the_title( $table_id );
 
-		return $this->render_grid( $data['columns'], $data['rows'], $config, $title, 'table-' . $table_id );
+		$insight_html = '';
+		$enabled      = '1' === (string) get_post_meta( $table_id, '_wp_tables_insight_enabled', true );
+		$text         = (string) get_post_meta( $table_id, '_wp_tables_insight', true );
+		if ( $enabled && '' !== trim( $text ) ) {
+			$accent       = Plugin::settings()['accent'];
+			$insight_html = sprintf(
+				'<div class="klyna-table-insight" role="note" style="--klyna-accent:%1$s"><span class="klyna-table-insight-label">%2$s</span><p>%3$s</p></div>',
+				esc_attr( $accent ),
+				esc_html__( 'AI insight', 'wp-tables' ),
+				esc_html( $text )
+			);
+		}
+
+		return $insight_html . $this->render_grid( $data['columns'], $data['rows'], $config, $title, 'table-' . $table_id );
 	}
 
 	/**
