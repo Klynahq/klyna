@@ -57,6 +57,7 @@ add_action(
 	'plugins_loaded',
 	function () {
 		( new KlynaBooking\Plugin() )->boot();
+		\KlynaBooking\Telemetry::register();
 	}
 );
 

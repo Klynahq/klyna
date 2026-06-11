@@ -441,6 +441,8 @@ final class Admin {
 
 				<?php submit_button( __( 'Save settings', 'wp-booking' ) ); ?>
 			</form>
+			<?php \KlynaBooking\Telemetry::render_form(); ?>
+
 			<script>
 			(function(){
 				var btn = document.getElementById('kb-ai-test');
