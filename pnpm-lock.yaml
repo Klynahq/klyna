@@ -70,6 +70,9 @@ importers:
 
   apps/shopify:
     dependencies:
+      '@klyna/ai-client':
+        specifier: workspace:*
+        version: link:../../packages/ai-client
       '@klyna/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -216,6 +219,15 @@ importers:
       vite:
         specifier: ^6.0.5
         version: 6.4.3(@types/node@24.13.1)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0)
+
+  packages/ai-client:
+    devDependencies:
+      '@klyna/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
 
   packages/core:
     devDependencies:
