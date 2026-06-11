@@ -1,0 +1,46 @@
+---
+title: Embedded app shows a blank screen or "Example Domain"
+description: When the Klyna Shopify app loads as a blank iframe or the page reads "Example Domain", the App Bridge handoff has failed. Here is how to fix it.
+category: shopify
+updated: 2026-06-10
+order: 1
+---
+
+A blank embedded iframe or the literal text **"Example Domain"** inside the
+Klyna panel almost always means App Bridge could not reach the app URL. The
+iframe falls back to `example.com`, which renders the IANA placeholder page.
+
+## Confirm the symptom
+
+Right-click inside the blank area and choose **Inspect**. If the iframe `src`
+points to `https://example.com` or fails to load with a CSP error, this guide
+applies.
+
+## Fix 1 — re-authenticate the install
+
+The session token may have expired.
+
+1. In Shopify admin, open **Settings → Apps and sales channels**.
+2. Click **Klyna → Uninstall**.
+3. Reinstall from the listing or from the install link in your welcome email.
+
+## Fix 2 — allow the app URL in your browser
+
+Some privacy extensions (uBlock Origin, Privacy Badger) block third-party
+iframes inside `admin.shopify.com`. Allow `klyna.dev` and `*.klyna.dev` in the
+extension's site settings.
+
+## Fix 3 — check Partner dashboard URLs
+
+If you self-host the app, verify in Partners:
+
+- **App URL** is the public HTTPS URL of your server.
+- **Allowed redirection URLs** includes `/auth/callback`.
+
+If either is set to `https://example.com` (the Partners default), the App
+Bridge handshake falls through to that placeholder.
+
+## Still stuck?
+
+[Contact us](/contact) with your `myshopify.com` domain and a screenshot of
+the browser console. We can verify the install record from our side.
