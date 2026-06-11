@@ -13,7 +13,8 @@ import {
   Text,
 } from '@shopify/polaris';
 import { authenticate } from '../shopify.server';
-import { formatMoney, getShopStats, type OfferStats } from '../models/offers.server';
+import { getShopStats, type OfferStats } from '../models/offers.server';
+import { formatMoney } from '../lib/format';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);

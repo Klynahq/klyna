@@ -13,7 +13,8 @@ import {
 } from '@shopify/polaris';
 import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
-import { formatMoney, getShopStats } from '../models/offers.server';
+import { getShopStats } from '../models/offers.server';
+import { formatMoney } from '../lib/format';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
