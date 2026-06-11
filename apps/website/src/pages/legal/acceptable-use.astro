@@ -1,0 +1,66 @@
+---
+import LegalLayout from '../../layouts/LegalLayout.astro';
+---
+
+<LegalLayout
+  title="Acceptable Use Policy"
+  description="What you can and cannot do with Klyna tools."
+  heading="Acceptable Use Policy"
+>
+  <p>
+    Klyna tools are free and open. We want them used widely, including in commercial work. The
+    short list below is what makes us pull a release, ban a user from the admin panel, or refuse
+    support.
+  </p>
+
+  <h2>You may not use Klyna tools to:</h2>
+  <ul>
+    <li>
+      <strong>Spam search engines.</strong> Mass-produce thin or AI-spun pages, doorway pages,
+      cloaked content, or hidden text designed to manipulate rankings.
+    </li>
+    <li>
+      <strong>Cloak.</strong> Show different content to search engines than to humans.
+    </li>
+    <li>
+      <strong>Scrape competitors at scale.</strong> Klyna's audit tools are for sites you own or
+      have written permission to audit. Using them to slurp data from third-party properties at
+      high rate is out.
+    </li>
+    <li>
+      <strong>Resell our free tools as paid.</strong> You can charge for setup, hosting,
+      consulting, or a custom theme that bundles Klyna; you cannot relabel a Klyna plugin and
+      sell it as if it were yours. (The license technically allows forks; this policy is about
+      the Klyna name and brand goodwill.)
+    </li>
+    <li>
+      <strong>Harm other users.</strong> Don't use Klyna infrastructure (ping endpoint, support,
+      admin panel) to attack, harass, or DDoS anyone &mdash; including us.
+    </li>
+    <li>
+      <strong>Process illegal content.</strong> Don't run Klyna on sites that host CSAM,
+      non-consensual intimate imagery, or content that is unlawful where the site is hosted.
+    </li>
+    <li>
+      <strong>Bypass our security controls.</strong> Don't try to forge install pings, fake
+      site identifiers, or extract data from <code>klyna.dev/admin</code> if you are not the
+      operator. Security research under our <a href="/legal/security">disclosure policy</a> is
+      welcome and safe-harboured.
+    </li>
+  </ul>
+
+  <h2>What happens if you do</h2>
+  <p>
+    We may block your install pings, refuse support, revoke access to admin features, and (for
+    serious or repeated abuse) publish a notice in the relevant plugin/app changelog. We will
+    not "brick" your install &mdash; you can keep running an unsupported copy &mdash; but we
+    will withdraw services we control.
+  </p>
+
+  <h2>Report abuse</h2>
+  <p>
+    See someone using Klyna for spam SEO or scraping?
+    <a href="mailto:abuse@klyna.dev">abuse@klyna.dev</a>. Security issues:
+    <a href="mailto:security@klyna.dev">security@klyna.dev</a>.
+  </p>
+</LegalLayout>
