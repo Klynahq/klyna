@@ -168,3 +168,29 @@ model Impression {
   @@unique([shop, widgetType, timerId, scarcityId, day])
   @@index([shop, day])
 }
+
+// Per-shop AI provider settings (BYOK — bring your own key).
+model AiSettings {
+  shop      String   @id
+  provider  String   @default("off")
+  apiKey    String?
+  model     String?
+  dailyCap  Int      @default(100)
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+// Daily AI usage counter (resets per UTC day) for the per-shop cap.
+model AiUsage {
+  shop      String
+  day       String
+  count     Int      @default(0)
+
+  @@id([shop, day])
+}
+
+// Cache for AI completions (key = FNV hash from @klyna/ai-client).
+model AiCache {
+  key       String   @id
+  value     String
+  expiresAt DateTime
+}

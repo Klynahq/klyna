@@ -10,11 +10,12 @@ import prisma from '../db.server';
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   // App-proxy requests are signed; `authenticate.public.appProxy` verifies the
   // HMAC and tells us which shop is calling.
-  const { session, cors } = await authenticate.public.appProxy(request);
-  const shop = session?.shop;
+  const ctx = await authenticate.public.appProxy(request);
+  const shop = ctx.session?.shop;
+  const withCors = <T,>(res: T): T => res;
 
   if (!shop) {
-    return cors(json({ timers: [], scarcity: [], socialProof: null }));
+    return withCors(json({ timers: [], scarcity: [], socialProof: null }));
   }
 
   const [timers, scarcity, proof, proofEvents] = await Promise.all([
@@ -79,7 +80,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         : null,
   };
 
-  return cors(json(payload));
+  return withCors(json(payload));
 };
 
 function safeJson(raw: string): Record<string, unknown> {

@@ -11,10 +11,11 @@ const VALID_TYPES: WidgetType[] = ['timer', 'scarcity', 'proof'];
 const VALID_KINDS: EventKind[] = ['view', 'click', 'conversion'];
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { session, cors } = await authenticate.public.appProxy(request);
-  const shop = session?.shop;
+  const ctx = await authenticate.public.appProxy(request);
+  const shop = ctx.session?.shop;
+  const withCors = <T,>(res: T): T => res;
   if (!shop) {
-    return cors(json({ ok: false }, { status: 401 }));
+    return withCors(json({ ok: false }, { status: 401 }));
   }
 
   let body: Record<string, unknown> = {};
@@ -30,7 +31,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const kind = String(body.kind ?? '') as EventKind;
 
   if (!VALID_TYPES.includes(widgetType) || !VALID_KINDS.includes(kind)) {
-    return cors(json({ ok: false, error: 'bad event' }, { status: 400 }));
+    return withCors(json({ ok: false, error: 'bad event' }, { status: 400 }));
   }
 
   await recordEvent({
@@ -41,5 +42,5 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     scarcityId: body.scarcityId ? String(body.scarcityId) : null,
   });
 
-  return cors(json({ ok: true }));
+  return withCors(json({ ok: true }));
 };

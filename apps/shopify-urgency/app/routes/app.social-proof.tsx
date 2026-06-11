@@ -185,6 +185,10 @@ export default function SocialProof() {
   const [enabled, setEnabled] = useState(config.enabled);
   const [source, setSource] = useState(config.source);
   const [position, setPosition] = useState(config.position);
+  const [template, setTemplate] = useState(config.template);
+  const [displaySeconds, setDisplaySeconds] = useState(String(config.displaySeconds));
+  const [intervalSeconds, setIntervalSeconds] = useState(String(config.intervalSeconds));
+  const [maxAgeHours, setMaxAgeHours] = useState(String(config.maxAgeHours));
 
   const previewName = recent[0]?.firstName ?? 'Sarah';
   const previewCity = recent[0]?.city ?? 'Austin';
@@ -267,6 +271,10 @@ export default function SocialProof() {
                 <input type="hidden" name="enabled" value={String(enabled)} />
                 <input type="hidden" name="source" value={source} />
                 <input type="hidden" name="position" value={position} />
+                <input type="hidden" name="template" value={template} />
+                <input type="hidden" name="displaySeconds" value={displaySeconds} />
+                <input type="hidden" name="intervalSeconds" value={intervalSeconds} />
+                <input type="hidden" name="maxAgeHours" value={maxAgeHours} />
                 <FormLayout>
                   <Select
                     label="Status"
@@ -289,8 +297,8 @@ export default function SocialProof() {
                   />
                   <TextField
                     label="Message template"
-                    name="template"
-                    defaultValue={config.template}
+                    value={template}
+                    onChange={setTemplate}
                     autoComplete="off"
                     helpText="Tokens: {name}, {city}, {product}."
                   />
@@ -308,28 +316,28 @@ export default function SocialProof() {
                   <FormLayout.Group>
                     <TextField
                       label="Seconds visible"
-                      name="displaySeconds"
                       type="number"
                       min={2}
                       max={30}
-                      defaultValue={String(config.displaySeconds)}
+                      value={displaySeconds}
+                      onChange={setDisplaySeconds}
                       autoComplete="off"
                     />
                     <TextField
                       label="Seconds between popups"
-                      name="intervalSeconds"
                       type="number"
                       min={4}
                       max={120}
-                      defaultValue={String(config.intervalSeconds)}
+                      value={intervalSeconds}
+                      onChange={setIntervalSeconds}
                       autoComplete="off"
                     />
                     <TextField
                       label="Max order age (hours)"
-                      name="maxAgeHours"
                       type="number"
                       min={1}
-                      defaultValue={String(config.maxAgeHours)}
+                      value={maxAgeHours}
+                      onChange={setMaxAgeHours}
                       autoComplete="off"
                     />
                   </FormLayout.Group>

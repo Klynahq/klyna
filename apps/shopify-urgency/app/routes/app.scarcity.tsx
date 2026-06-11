@@ -312,6 +312,10 @@ function ScarcityEditor({
   onCancel: () => void;
 }) {
   const [productGid, setProductGid] = useState(rule.productGid);
+  const [name, setName] = useState(rule.name);
+  const [threshold, setThreshold] = useState(String(rule.threshold));
+  const [hideAtOrBelow, setHideAtOrBelow] = useState(String(rule.hideAtOrBelow));
+  const [template, setTemplate] = useState(rule.template);
 
   const productOptions = [
     { label: 'All products', value: '' },
@@ -329,11 +333,15 @@ function ScarcityEditor({
           <input type="hidden" name="intent" value="save" />
           {rule.id && <input type="hidden" name="id" value={rule.id} />}
           <input type="hidden" name="productGid" value={productGid} />
+          <input type="hidden" name="name" value={name} />
+          <input type="hidden" name="threshold" value={threshold} />
+          <input type="hidden" name="hideAtOrBelow" value={hideAtOrBelow} />
+          <input type="hidden" name="template" value={template} />
           <FormLayout>
             <TextField
               label="Internal name"
-              name="name"
-              defaultValue={rule.name}
+              value={name}
+              onChange={setName}
               autoComplete="off"
             />
             <Select
@@ -346,26 +354,26 @@ function ScarcityEditor({
             <FormLayout.Group>
               <TextField
                 label="Show when stock is at or below"
-                name="threshold"
                 type="number"
                 min={1}
-                defaultValue={String(rule.threshold)}
+                value={threshold}
+                onChange={setThreshold}
                 autoComplete="off"
               />
               <TextField
                 label="But hide if at or below"
-                name="hideAtOrBelow"
                 type="number"
                 min={0}
-                defaultValue={String(rule.hideAtOrBelow)}
+                value={hideAtOrBelow}
+                onChange={setHideAtOrBelow}
                 autoComplete="off"
-                helpText="Avoid alarming “Only 1 left” messages."
+                helpText='Avoid alarming "Only 1 left" messages.'
               />
             </FormLayout.Group>
             <TextField
               label="Badge template"
-              name="template"
-              defaultValue={rule.template}
+              value={template}
+              onChange={setTemplate}
               autoComplete="off"
               helpText="Use {count} for the live quantity."
             />

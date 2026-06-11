@@ -1,6 +1,6 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
 import { useCallback, useState } from 'react';
-import { useActionData, useLoaderData, useNavigation, useSubmit } from '@remix-run/react';
+import { Link, useActionData, useLoaderData, useNavigation, useSubmit } from '@remix-run/react';
 import {
   Badge,
   BlockStack,
@@ -175,6 +175,7 @@ function blankTimer(): TimerRow {
     accentColor: '#7c5cff',
     enabled: true,
     targeting: '{}',
+    totals: { views: 0, clicks: 0, conversions: 0 },
   };
 }
 
@@ -252,6 +253,9 @@ export default function Timers() {
                           <Badge>{styleLabel(t.style)}</Badge>
                         </InlineStack>
                         <InlineStack gap="200">
+                          <Link to={`/app/timers/${t.id}/dynamic-copy`}>
+                            <Button>AI dynamic copy</Button>
+                          </Link>
                           <Button onClick={() => startEdit(t)}>Edit</Button>
                           <Button
                             onClick={() =>
@@ -315,6 +319,11 @@ function TimerEditor({
   const target = safeTargeting(timer.targeting);
   const [style, setStyle] = useState(timer.style);
   const [expireAction, setExpireAction] = useState(timer.expireAction);
+  const [name, setName] = useState(timer.name);
+  const [headline, setHeadline] = useState(timer.headline);
+  const [subtext, setSubtext] = useState(timer.subtext);
+  const [evergreenMinutes, setEvergreenMinutes] = useState(String(timer.evergreenMinutes));
+  const [expireMessage, setExpireMessage] = useState(timer.expireMessage);
 
   return (
     <Card>
@@ -323,28 +332,34 @@ function TimerEditor({
         <PolarisForm method="post" onSubmit={() => undefined}>
           <input type="hidden" name="intent" value="save" />
           {timer.id && <input type="hidden" name="id" value={timer.id} />}
-          {/* Polaris Select is controlled-only and doesn't post a value with the
-              native form, so mirror the controlled fields into hidden inputs. */}
+          {/* Polaris fields are controlled-only and Button does not accept
+              `name`, so we mirror every controlled field into a hidden input
+              that the native form actually posts. */}
           <input type="hidden" name="style" value={style} />
           <input type="hidden" name="expireAction" value={expireAction} />
+          <input type="hidden" name="name" value={name} />
+          <input type="hidden" name="headline" value={headline} />
+          <input type="hidden" name="subtext" value={subtext} />
+          <input type="hidden" name="evergreenMinutes" value={evergreenMinutes} />
+          <input type="hidden" name="expireMessage" value={expireMessage} />
           <FormLayout>
             <TextField
               label="Internal name"
-              name="name"
-              defaultValue={timer.name}
+              value={name}
+              onChange={setName}
               autoComplete="off"
-              helpText="Only you see this — e.g. “Black Friday banner”."
+              helpText='Only you see this. For example: "Black Friday banner".'
             />
             <TextField
               label="Headline"
-              name="headline"
-              defaultValue={timer.headline}
+              value={headline}
+              onChange={setHeadline}
               autoComplete="off"
             />
             <TextField
               label="Subtext"
-              name="subtext"
-              defaultValue={timer.subtext}
+              value={subtext}
+              onChange={setSubtext}
               autoComplete="off"
             />
 
@@ -373,10 +388,10 @@ function TimerEditor({
             {style === 'evergreen' && (
               <TextField
                 label="Countdown length (minutes)"
-                name="evergreenMinutes"
                 type="number"
                 min={1}
-                defaultValue={String(timer.evergreenMinutes)}
+                value={evergreenMinutes}
+                onChange={setEvergreenMinutes}
                 autoComplete="off"
                 helpText="Each visitor sees a fresh countdown of this many minutes."
               />
@@ -391,8 +406,8 @@ function TimerEditor({
             {expireAction === 'message' && (
               <TextField
                 label="Expiry message"
-                name="expireMessage"
-                defaultValue={timer.expireMessage}
+                value={expireMessage}
+                onChange={setExpireMessage}
                 autoComplete="off"
               />
             )}

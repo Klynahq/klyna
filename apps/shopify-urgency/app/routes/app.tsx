@@ -24,6 +24,7 @@ export default function App() {
         <Link to="/app/scarcity">Stock scarcity</Link>
         <Link to="/app/social-proof">Social proof</Link>
         <Link to="/app/analytics">Analytics</Link>
+        <Link to="/app/settings">Settings</Link>
       </NavMenu>
       <Outlet />
     </AppProvider>

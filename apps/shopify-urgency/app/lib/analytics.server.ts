@@ -42,11 +42,29 @@ export async function recordEvent(params: {
         ? { clicks: { increment: 1 } }
         : { conversions: { increment: 1 } };
 
+  // Prisma composite unique keys do not accept null, but our schema permits null
+  // for timerId / scarcityId. Coerce to empty strings for the where clause and
+  // store the same sentinel so the row is found on subsequent increments.
+  const timerKey = timerId ?? '';
+  const scarcityKey = scarcityId ?? '';
   await prisma.impression.upsert({
     where: {
-      shop_widgetType_timerId_scarcityId_day: { shop, widgetType, timerId, scarcityId, day },
+      shop_widgetType_timerId_scarcityId_day: {
+        shop,
+        widgetType,
+        timerId: timerKey,
+        scarcityId: scarcityKey,
+        day,
+      },
     },
-    create: { shop, widgetType, timerId, scarcityId, day, ...createCounts },
+    create: {
+      shop,
+      widgetType,
+      timerId: timerKey || null,
+      scarcityId: scarcityKey || null,
+      day,
+      ...createCounts,
+    },
     update: updateCounts,
   });
 }
