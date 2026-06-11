@@ -19,7 +19,7 @@ import {
 } from '@shopify/polaris';
 import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
-import { ctr, type Totals } from '../lib/analytics.server';
+import { ctr, type Totals } from '../lib/analytics-shared';
 
 type TimerRow = {
   id: string;

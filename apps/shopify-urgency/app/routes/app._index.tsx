@@ -14,7 +14,8 @@ import {
 import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
 import { getShopAiSettings } from '../lib/ai.server';
-import { ctr, totalsForShop } from '../lib/analytics.server';
+import { totalsForShop } from '../lib/analytics.server';
+import { ctr } from '../lib/analytics-shared';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);

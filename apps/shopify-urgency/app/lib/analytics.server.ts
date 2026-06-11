@@ -6,13 +6,12 @@
 
 import prisma from '../db.server';
 
-export type WidgetType = 'timer' | 'scarcity' | 'proof';
-export type EventKind = 'view' | 'click' | 'conversion';
+import type { Totals, WidgetType, EventKind } from './analytics-shared';
+import { dayKey } from './analytics-shared';
+export type { WidgetType, EventKind, Totals } from './analytics-shared';
+export { dayKey, ctr } from './analytics-shared';
 
 /** UTC YYYY-MM-DD bucket key for a given date (defaults to now). */
-export function dayKey(date: Date = new Date()): string {
-  return date.toISOString().slice(0, 10);
-}
 
 /**
  * Increment the running view/click/conversion totals for a widget on a day.
@@ -69,8 +68,6 @@ export async function recordEvent(params: {
   });
 }
 
-export type Totals = { views: number; clicks: number; conversions: number };
-
 /** Sum impression counts for a shop over the last `days` days. */
 export async function totalsForShop(shop: string, days = 30): Promise<Totals> {
   const since = dayKey(new Date(Date.now() - days * 86_400_000));
@@ -89,6 +86,3 @@ export async function totalsForShop(shop: string, days = 30): Promise<Totals> {
 }
 
 /** Click-through rate as a 0–100 percentage, guarded against divide-by-zero. */
-export function ctr(t: Totals): number {
-  return t.views === 0 ? 0 : Math.round((t.clicks / t.views) * 1000) / 10;
-}

@@ -12,7 +12,8 @@ import {
 } from '@shopify/polaris';
 import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
-import { ctr, dayKey, totalsForShop, type Totals } from '../lib/analytics.server';
+import { totalsForShop } from '../lib/analytics.server';
+import { ctr, dayKey, type Totals } from '../lib/analytics-shared';
 
 type DailyRow = { day: string; views: number; clicks: number; conversions: number };
 
