@@ -387,6 +387,8 @@ final class Admin {
 					$ai_provider = (string) ( $settings['ai_provider'] ?? 'off' );
 					$ai_model    = (string) ( $settings['ai_model'] ?? '' );
 					$ai_key      = (string) ( $settings['ai_api_key'] ?? '' );
+					$ai_has_key  = ! empty( $ai_key );
+					$ai_masked   = $ai_has_key ? str_repeat( "\xE2\x80\xA2", 4 ) . ' ' . substr( $ai_key, -4 ) : '';
 					$ai_endpoint = (string) ( $settings['ai_endpoint'] ?? '' );
 					$ai_cap      = (int) ( $settings['ai_daily_cap'] ?? 100 );
 					$catalog     = Ai::provider_catalog();
@@ -408,7 +410,29 @@ final class Admin {
 							<tr>
 								<th scope="row"><label for="kb-ai-api-key"><?php esc_html_e( 'API key', 'wp-booking' ); ?></label></th>
 								<td>
-									<input type="password" id="kb-ai-api-key" class="regular-text" name="<?php echo esc_attr( KLYNA_BOOKING_OPTION_KEY ); ?>[ai_api_key]" value="<?php echo esc_attr( $ai_key ); ?>" autocomplete="off">
+									<?php if ( $ai_has_key ) : ?>
+										<div class="kb-ai-key-display">
+											<code style="padding:4px 8px;background:#f0f0f1;border-radius:3px;"><?php echo esc_html( $ai_masked ); ?></code>
+											<button type="button" class="button button-secondary" id="kb-ai-key-replace" style="margin-left:8px;"><?php esc_html_e( 'Replace key', 'wp-booking' ); ?></button>
+										</div>
+										<input type="hidden" name="<?php echo esc_attr( KLYNA_BOOKING_OPTION_KEY ); ?>[ai_api_key_keep]" value="1">
+										<input type="password" id="kb-ai-api-key" class="regular-text" name="<?php echo esc_attr( KLYNA_BOOKING_OPTION_KEY ); ?>[ai_api_key]" value="" autocomplete="new-password" style="display:none;margin-top:8px;">
+										<script>
+										(function(){
+											var btn = document.getElementById('kb-ai-key-replace');
+											var inp = document.getElementById('kb-ai-api-key');
+											if (btn && inp) {
+												btn.addEventListener('click', function(){
+													inp.style.display = '';
+													inp.focus();
+													btn.parentNode.style.display = 'none';
+												});
+											}
+										})();
+										</script>
+									<?php else : ?>
+										<input type="password" id="kb-ai-api-key" class="regular-text" name="<?php echo esc_attr( KLYNA_BOOKING_OPTION_KEY ); ?>[ai_api_key]" value="" autocomplete="new-password">
+									<?php endif; ?>
 									<p class="description"><?php esc_html_e( 'Stored in your site options; never sent anywhere except the provider.', 'wp-booking' ); ?></p>
 								</td>
 							</tr>
