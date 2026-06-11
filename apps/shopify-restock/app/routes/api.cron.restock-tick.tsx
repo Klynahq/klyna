@@ -4,6 +4,7 @@
 // Any QueuedNotification whose dueAt has passed is delivered through the same
 // notifier the live path uses, and the subscription is flipped to NOTIFIED.
 
+import { timingSafeEqual } from 'node:crypto';
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
 import prisma from '../db.server';
 import { deliver } from '../services/notifier.server';
@@ -16,7 +17,10 @@ function authorized(request: Request): boolean {
     request.headers.get('x-scheduler-secret') ??
     request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ??
     '';
-  return header === secret;
+  const a = Buffer.from(header);
+  const b = Buffer.from(secret);
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
 }
 
 async function tick() {
