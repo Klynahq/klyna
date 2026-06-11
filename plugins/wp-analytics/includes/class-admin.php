@@ -294,6 +294,8 @@ final class Admin {
 				</table>
 				<?php submit_button(); ?>
 			</form>
+			<?php \KlynaAnalytics\Telemetry::render_form(); ?>
+
 
 			<div class="klyna-an-card">
 				<div class="klyna-an-card-head">

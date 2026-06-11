@@ -58,6 +58,7 @@ add_action(
 	'plugins_loaded',
 	function () {
 		( new KlynaAnalytics\Plugin() )->boot();
+		\KlynaAnalytics\Telemetry::register();
 	}
 );
 
