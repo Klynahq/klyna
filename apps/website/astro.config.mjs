@@ -3,10 +3,14 @@ import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
+import vercel from '@astrojs/vercel';
 
 export default defineConfig({
   site: 'https://klyna.dev',
+  // Hybrid: most pages prerender to static; the download tracker opts out
+  // with `export const prerender = false` and runs as a Vercel function.
   output: 'static',
+  adapter: vercel(),
   integrations: [
     mdx(),
     sitemap({
