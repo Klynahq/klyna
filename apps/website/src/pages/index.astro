@@ -7,6 +7,8 @@ import { products } from '@klyna/utils';
 import { getPublishedPosts, formatDate } from '../utils/blog.ts';
 
 const latestPosts = (await getPublishedPosts()).slice(0, 3);
+// Show the first 3 beta Shopify apps as hero products on the homepage
+const heroProducts = products.filter(p => p.status === 'beta' && p.surface === 'shopify').slice(0, 3);
 ---
 
 <BaseLayout>
@@ -18,18 +20,28 @@ const latestPosts = (await getPublishedPosts()).slice(0, 3);
         <div class="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-accent)] mb-2">
           The lineup
         </div>
-        <h2 class="text-3xl md:text-4xl font-bold tracking-tight">First three products in build.</h2>
+        <h2 class="text-3xl md:text-4xl font-bold tracking-tight">22-product fleet — now in beta.</h2>
       </div>
       <a
         href="/products"
         class="hidden md:inline-flex text-sm text-[color:var(--color-text-muted)] hover:text-white"
       >
-        See full roadmap →
+        See all products →
       </a>
     </div>
 
     <div class="grid gap-4 md:grid-cols-3">
-      {products.map((p) => <ProductCard product={p} />)}
+      {heroProducts.map((p) => <ProductCard product={p} />)}
+    </div>
+
+    <div class="mt-5 flex items-center gap-4">
+      <a href="/products" class="text-sm text-[color:var(--color-text-muted)] hover:text-white transition-colors">
+        See all 22 products →
+      </a>
+      <span class="text-[color:var(--color-border)]">·</span>
+      <a href="/downloads" class="text-sm text-[color:var(--color-warning)] hover:underline">
+        Team downloads →
+      </a>
     </div>
   </section>
 
