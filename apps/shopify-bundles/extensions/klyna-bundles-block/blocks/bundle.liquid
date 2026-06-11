@@ -1,0 +1,72 @@
+{% comment %}
+  Klyna Bundles — product-page bundle + frequently-bought-together block.
+
+  Drop this block onto the product template (Theme editor → Add block → Apps →
+  Klyna Bundles). It renders a placeholder, then `klyna-bundles.js` fetches the
+  product's active bundle, FBT recommendations, and volume tiers from the app
+  proxy and hydrates the UI. All discount math is computed server-side and
+  mirrors the admin preview exactly.
+{% endcomment %}
+
+<div
+  class="klyna-bundles"
+  data-klyna-bundles
+  data-product-gid="gid://shopify/Product/{{ product.id }}"
+  data-proxy="{{ shop.url }}/apps/klyna-bundles"
+  data-show-bundle="{{ block.settings.show_bundle }}"
+  data-show-fbt="{{ block.settings.show_fbt }}"
+  data-show-volume="{{ block.settings.show_volume }}"
+  style="--klyna-accent: {{ block.settings.accent_color }};"
+>
+  <div class="klyna-bundles__loading" data-klyna-loading>
+    <span class="klyna-bundles__spinner" aria-hidden="true"></span>
+    <span>{{ block.settings.loading_text | default: 'Loading offers…' }}</span>
+  </div>
+  <div class="klyna-bundles__content" data-klyna-content hidden></div>
+</div>
+
+{{ 'klyna-bundles.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'klyna-bundles.js' | asset_url }}" defer></script>
+
+{% schema %}
+{
+  "name": "Klyna Bundles",
+  "target": "section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Display"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_bundle",
+      "label": "Show bundle offer",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_fbt",
+      "label": "Show frequently bought together",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_volume",
+      "label": "Show volume discount table",
+      "default": true
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent color",
+      "default": "#7c5cff"
+    },
+    {
+      "type": "text",
+      "id": "loading_text",
+      "label": "Loading text",
+      "default": "Loading offers…"
+    }
+  ]
+}
+{% endschema %}

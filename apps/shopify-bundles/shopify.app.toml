@@ -1,0 +1,56 @@
+# Klyna Bundles — app config.
+#
+# To use this app:
+#   1. Create a Shopify Partner account at https://partners.shopify.com
+#   2. Run `shopify app config link` from this folder to bind it to your Partner app.
+#      The CLI will overwrite `client_id` below with your actual app key.
+#   3. Run `pnpm dev` (or `shopify app dev`) to start the embedded app on your dev store.
+
+# Placeholder — `shopify app config link` rewrites this with your real client_id.
+client_id = "REPLACE_WITH_CLIENT_ID_FROM_PARTNER_DASHBOARD"
+
+name = "Klyna Bundles"
+handle = "shopify-bundles"
+application_url = "https://klyna.dev"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = ""
+
+[webhooks]
+api_version = "2025-01"
+
+  [[webhooks.subscriptions]]
+  topics = ["app/uninstalled"]
+  uri = "/webhooks/app/uninstalled"
+
+  [[webhooks.subscriptions]]
+  topics = ["orders/create"]
+  uri = "/webhooks/orders/create"
+
+[access_scopes]
+# read_products / write_products — read the catalog for the builder, create the
+#   discount/automatic discount functions metafields and bundle parent records.
+# read_orders — mine order history for frequently-bought-together pairs.
+# read_discounts / write_discounts — create and manage the volume-break and
+#   bundle automatic discounts.
+scopes = "read_products,write_products,read_orders,read_discounts,write_discounts"
+
+# App proxy — exposes the public storefront data endpoint at
+# https://<shop>/apps/klyna-bundles, forwarded to /api/storefront. The theme
+# app extension calls this to render bundle + FBT data on the product page.
+[app_proxy]
+url = "https://klyna.dev/api/storefront"
+subpath = "klyna-bundles"
+prefix = "apps"
+
+[auth]
+redirect_urls = [
+  "https://klyna.dev/auth/callback",
+  "https://klyna.dev/auth/shopify/callback",
+  "https://klyna.dev/api/auth/callback"
+]
+
+[pos]
+embedded = false

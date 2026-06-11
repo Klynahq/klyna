@@ -1,0 +1,140 @@
+// Klyna Bundles — Prisma schema.
+// Backs Shopify session storage plus the bundle / discount-tier / FBT and
+// analytics state this app owns.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+}
+
+// A merchant-defined bundle. `kind` is "fixed" (a curated set sold together)
+// or "mix_and_match" (customer picks N items from a pool). Discount math is
+// derived from `discountType` + `discountValue`.
+model Bundle {
+  id            String        @id @default(cuid())
+  shop          String
+  title         String
+  handle        String
+  kind          String        @default("fixed") // "fixed" | "mix_and_match"
+  status        String        @default("draft")  // "draft" | "active" | "paused"
+  discountType  String        @default("percentage") // "percentage" | "fixed_amount"
+  discountValue Float         @default(10)
+  // For mix_and_match: how many items the customer must pick from `items`.
+  minItems      Int           @default(0)
+  // Optional product the bundle is "attached" to on the storefront block.
+  productGid    String?
+  imageUrl      String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  items         BundleItem[]
+
+  @@index([shop, status])
+  @@unique([shop, handle])
+}
+
+// A single product/variant that participates in a bundle.
+model BundleItem {
+  id          String  @id @default(cuid())
+  bundleId    String
+  bundle      Bundle  @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  productGid  String
+  variantGid  String?
+  title       String
+  imageUrl    String?
+  price       Float   @default(0)
+  quantity    Int     @default(1)
+  position    Int     @default(0)
+
+  @@index([bundleId])
+}
+
+// Volume / quantity-break discount tiers attached to a single product. Each
+// row is one break point ("buy 3+, save 10%").
+model VolumeTier {
+  id            String   @id @default(cuid())
+  shop          String
+  productGid    String
+  productTitle  String
+  minQuantity   Int
+  discountType  String   @default("percentage") // "percentage" | "fixed_amount"
+  discountValue Float
+  label         String?
+  createdAt     DateTime @default(now())
+
+  @@index([shop, productGid])
+}
+
+// A cached frequently-bought-together pair mined from order history. `support`
+// is the number of orders containing both; `confidence` is support / orders
+// containing the anchor.
+model FbtPair {
+  id              String   @id @default(cuid())
+  shop            String
+  anchorGid       String
+  anchorTitle     String
+  recommendedGid  String
+  recommendedTitle String
+  recommendedImage String?
+  recommendedPrice Float   @default(0)
+  support         Int      @default(0)
+  confidence      Float    @default(0)
+  computedAt      DateTime @default(now())
+
+  @@index([shop, anchorGid])
+  @@unique([shop, anchorGid, recommendedGid])
+}
+
+// Per-shop display + discount defaults for the storefront widget.
+model ShopSettings {
+  id                 String   @id @default(cuid())
+  shop               String   @unique
+  defaultDiscountType String  @default("percentage")
+  // "stacked" shows each item with a strikethrough; "total" shows one bundle price.
+  priceDisplay       String   @default("total")
+  widgetHeading      String   @default("Frequently bought together")
+  bundleHeading      String   @default("Complete the set & save")
+  accentColor        String   @default("#7c5cff")
+  showSavingsBadge   Boolean  @default(true)
+  autoFbt            Boolean  @default(true)
+  updatedAt          DateTime @updatedAt
+}
+
+// Append-only ledger of bundle-attributed revenue, written by the
+// orders/create webhook (or the manual recompute). Powers the home analytics.
+model BundleSale {
+  id           String   @id @default(cuid())
+  shop         String
+  bundleId     String?
+  orderGid     String
+  source       String   @default("bundle") // "bundle" | "volume" | "fbt"
+  itemsSold    Int      @default(0)
+  grossAmount  Float    @default(0)
+  discountAmount Float  @default(0)
+  currency     String   @default("USD")
+  soldAt       DateTime @default(now())
+
+  @@index([shop, soldAt])
+  @@index([shop, bundleId])
+}

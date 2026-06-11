@@ -1,0 +1,13 @@
+# Klyna Bundles — theme app extension.
+#
+# Renders the bundle, frequently-bought-together, and volume-break widgets on
+# the product page. The blocks fetch live data from the app proxy
+# (/apps/klyna-bundles → /api/storefront) so prices and recommendations always
+# match what's configured in the admin.
+
+api_version = "2025-01"
+
+[[extensions]]
+name = "Klyna Bundles"
+handle = "klyna-bundles-block"
+type = "theme"

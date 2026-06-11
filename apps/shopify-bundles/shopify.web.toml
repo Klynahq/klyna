@@ -1,0 +1,6 @@
+name = "klyna-bundles-web"
+roles = ["frontend", "backend"]
+webhooks_path = "/webhooks"
+
+[commands]
+dev = "pnpm exec remix vite:dev"
