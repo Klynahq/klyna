@@ -58,6 +58,7 @@ add_action(
 	'plugins_loaded',
 	function () {
 		( new KlynaRedirects\Plugin() )->boot();
+		\KlynaRedirects\Telemetry::register();
 	}
 );
 

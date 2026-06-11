@@ -340,6 +340,8 @@ class Admin {
 					</table>
 					<?php submit_button( __( 'Save Settings', 'wp-redirects' ), 'klyna-btn' ); ?>
 				</form>
+			<?php \KlynaRedirects\Telemetry::render_form(); ?>
+
 			</div>
 		</div>
 		<?php
