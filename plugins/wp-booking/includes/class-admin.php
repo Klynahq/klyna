@@ -129,7 +129,13 @@ final class Admin {
 			$out['ai_model'] = sanitize_text_field( (string) $input['ai_model'] );
 		}
 		if ( isset( $input['ai_api_key'] ) ) {
-			$out['ai_api_key'] = sanitize_text_field( (string) $input['ai_api_key'] );
+			$submitted = sanitize_text_field( (string) $input['ai_api_key'] );
+			$keep      = ! empty( $input['ai_api_key_keep'] );
+			if ( '' === $submitted && $keep ) {
+				$out['ai_api_key'] = (string) ( $existing['ai_api_key'] ?? '' );
+			} else {
+				$out['ai_api_key'] = $submitted;
+			}
 		}
 		if ( isset( $input['ai_endpoint'] ) ) {
 			$out['ai_endpoint'] = esc_url_raw( (string) $input['ai_endpoint'] );

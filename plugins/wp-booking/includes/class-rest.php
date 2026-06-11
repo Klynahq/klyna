@@ -78,7 +78,7 @@ final class Rest {
 			array(
 				'methods'             => \WP_REST_Server::READABLE,
 				'callback'            => array( $this, 'list_bookings' ),
-				'permission_callback' => array( $this, 'check_admin' ),
+				'permission_callback' => array( $this, 'check_admin_nonce' ),
 				'args'                => array(
 					'status'   => array( 'type' => 'string' ),
 					'paged'    => array(
@@ -132,7 +132,7 @@ final class Rest {
 			array(
 				'methods'             => \WP_REST_Server::EDITABLE,
 				'callback'            => array( $this, 'update_status' ),
-				'permission_callback' => array( $this, 'check_admin' ),
+				'permission_callback' => array( $this, 'check_admin_nonce' ),
 				'args'                => array(
 					'id'     => array(
 						'type'              => 'integer',
