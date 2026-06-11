@@ -1,0 +1,14 @@
+# Klyna Feed — theme app extension.
+#
+# Adds an app block merchants can drop onto the product template. It renders an
+# "Also available on" channel strip (Google / Meta / TikTok / Pinterest) and,
+# optionally, a Product JSON-LD block that mirrors the same fields Klyna puts in
+# the feed — so the product carries consistent structured data on-page and in
+# the syndicated feed.
+
+api_version = "2025-01"
+
+[[extensions]]
+name = "Klyna Feed badge"
+handle = "klyna-feed-badge"
+type = "theme"

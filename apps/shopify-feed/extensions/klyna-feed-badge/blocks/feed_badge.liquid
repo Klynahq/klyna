@@ -1,0 +1,172 @@
+{% comment %}
+  Klyna Feed — "Also available on" badge + optional Product JSON-LD.
+
+  Drop this block onto the product template. The channel strip reassures
+  shoppers (and bots) that the product is syndicated to the major channels;
+  the JSON-LD mirrors the fields Klyna emits in the feed so on-page structured
+  data and the feed stay consistent.
+{% endcomment %}
+
+<div
+  class="klyna-feed-badge"
+  data-klyna-feed
+  style="--klyna-accent: {{ block.settings.accent_color }};"
+>
+  {% if block.settings.show_strip %}
+    <div class="klyna-feed-badge__strip">
+      {% if block.settings.heading != blank %}
+        <span class="klyna-feed-badge__label">{{ block.settings.heading }}</span>
+      {% endif %}
+      <ul class="klyna-feed-badge__channels" role="list">
+        {% if block.settings.show_google %}
+          <li class="klyna-feed-badge__chip">Google Shopping</li>
+        {% endif %}
+        {% if block.settings.show_meta %}
+          <li class="klyna-feed-badge__chip">Instagram &amp; Facebook</li>
+        {% endif %}
+        {% if block.settings.show_tiktok %}
+          <li class="klyna-feed-badge__chip">TikTok Shop</li>
+        {% endif %}
+        {% if block.settings.show_pinterest %}
+          <li class="klyna-feed-badge__chip">Pinterest</li>
+        {% endif %}
+      </ul>
+    </div>
+  {% endif %}
+
+  {% if block.settings.emit_jsonld %}
+    {%- assign current_variant = product.selected_or_first_available_variant -%}
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org/",
+        "@type": "Product",
+        "name": {{ product.title | json }},
+        "description": {{ product.description | strip_html | truncate: 500 | json }},
+        "sku": {{ current_variant.sku | json }},
+        {% if current_variant.barcode != blank %}"gtin": {{ current_variant.barcode | json }},{% endif %}
+        "brand": {
+          "@type": "Brand",
+          "name": {{ product.vendor | json }}
+        },
+        "image": [
+          {% if product.featured_image %}{{ product.featured_image | image_url: width: 1200 | prepend: "https:" | json }}{% endif %}
+        ],
+        "url": {{ product.url | prepend: request.origin | json }},
+        "offers": {
+          "@type": "Offer",
+          "priceCurrency": {{ cart.currency.iso_code | json }},
+          "price": {{ current_variant.price | money_without_currency | strip_html | json }},
+          "availability": "{% if current_variant.available %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}",
+          "url": {{ product.url | prepend: request.origin | json }}
+        }
+      }
+    </script>
+  {% endif %}
+</div>
+
+{% stylesheet %}
+  .klyna-feed-badge {
+    margin: 16px 0;
+    font-family: inherit;
+  }
+  .klyna-feed-badge__strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+  .klyna-feed-badge__label {
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0.7;
+  }
+  .klyna-feed-badge__channels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .klyna-feed-badge__chip {
+    font-size: 12px;
+    line-height: 1;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--klyna-accent, #7c5cff) 35%, transparent);
+    color: var(--klyna-accent, #7c5cff);
+    background: color-mix(in srgb, var(--klyna-accent, #7c5cff) 8%, transparent);
+    white-space: nowrap;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Klyna Feed badge",
+  "target": "section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Channel strip"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_strip",
+      "label": "Show \"also available on\" strip",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Strip heading",
+      "default": "Also available on"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_google",
+      "label": "Show Google Shopping",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_meta",
+      "label": "Show Instagram & Facebook",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_tiktok",
+      "label": "Show TikTok Shop",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_pinterest",
+      "label": "Show Pinterest",
+      "default": true
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent color",
+      "default": "#7c5cff"
+    },
+    {
+      "type": "header",
+      "content": "Structured data"
+    },
+    {
+      "type": "checkbox",
+      "id": "emit_jsonld",
+      "label": "Emit Product JSON-LD (matches the feed mapping)",
+      "info": "Keeps on-page structured data consistent with the syndicated feed. Disable if your theme already outputs Product schema.",
+      "default": false
+    }
+  ],
+  "presets": [
+    {
+      "name": "Klyna Feed badge"
+    }
+  ]
+}
+{% endschema %}

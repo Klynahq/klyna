@@ -1,0 +1,121 @@
+// Klyna Feed — Prisma schema.
+// Backs Shopify session storage plus the feed configs, generated runs, and
+// per-shop settings this app owns.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+}
+
+// One configured feed per channel (or several per channel if the merchant
+// wants multiple). Holds the channel target, format, mapping, and rules.
+model Feed {
+  id        String   @id @default(cuid())
+  shop      String
+  name      String
+  // "google" | "meta" | "tiktok" | "pinterest"
+  channel   String
+  // "xml" (Google Shopping RSS 2.0) | "csv" (Meta/TikTok/Pinterest)
+  format    String
+  enabled   Boolean  @default(true)
+
+  // Public delivery: ts is a per-feed unguessable token folded into the URL.
+  token     String   @unique
+
+  // Locale / currency baked into the feed output.
+  language  String   @default("en")
+  currency  String   @default("USD")
+
+  // JSON blobs (SQLite has no JSON type, so we serialize):
+  //  fieldMap     — Record<feedField, { source, metafield?, fallback? }>
+  //  taxonomyMap  — Record<shopifyType|collection, googleCategoryId>
+  //  includeRules — { status, publishedOnly, requireImage, collectionIds, tags, minPrice, maxPrice }
+  fieldMap     String @default("{}")
+  taxonomyMap  String @default("{}")
+  includeRules String @default("{}")
+
+  // Scheduled refresh. interval is minutes; 0 disables auto refresh.
+  refreshEveryMin Int       @default(360)
+  lastRefreshAt   DateTime?
+  nextRefreshAt   DateTime?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  runs FeedRun[]
+
+  @@index([shop])
+  @@index([nextRefreshAt])
+}
+
+// A single generated snapshot of a feed. We persist the rendered body so the
+// public delivery route can serve it instantly without re-querying Shopify,
+// plus the health stats computed at generation time.
+model FeedRun {
+  id        String   @id @default(cuid())
+  feedId    String
+  shop      String
+
+  // The rendered feed payload (XML or CSV text).
+  body      String
+  // "text/xml" | "text/csv"
+  contentType String
+
+  itemCount     Int
+  includedCount Int
+  excludedCount Int
+  warningCount  Int
+
+  // Serialized FeedHealth — { score, issues: HealthIssue[] }
+  health    String   @default("{}")
+
+  // "ok" | "warn" | "error"
+  status    String   @default("ok")
+  error     String?
+
+  // What triggered it: "manual" | "scheduled" | "webhook"
+  trigger   String   @default("manual")
+
+  createdAt DateTime @default(now())
+
+  feed Feed @relation(fields: [feedId], references: [id], onDelete: Cascade)
+
+  @@index([feedId, createdAt])
+  @@index([shop])
+}
+
+// Per-shop settings (one row per shop). Holds the default taxonomy edition and
+// the global metafield namespace the merchant uses for feed overrides.
+model ShopSettings {
+  shop               String   @id
+  // Metafield namespace scanned for per-product feed overrides.
+  metafieldNamespace String   @default("klyna_feed")
+  // Default Google product category applied when no taxonomy match is found.
+  defaultGoogleCategory String?
+  // Whether scheduled refresh is globally paused for this shop.
+  schedulePaused     Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
