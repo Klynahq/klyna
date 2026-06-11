@@ -1,0 +1,122 @@
+---
+import LegalLayout from '../../layouts/LegalLayout.astro';
+---
+
+<LegalLayout
+  title="Data Processing Addendum"
+  description="DPA for businesses processing personal data via Klyna tools."
+  heading="Data Processing Addendum"
+>
+  <p>
+    This Data Processing Addendum ("DPA") supplements the
+    <a href="/legal/terms">Terms of Service</a> between Klyna (the "Processor") and you, the
+    business or person installing a Klyna tool on a site that processes personal data of EU,
+    UK, or California residents (the "Controller"). It is pre-signed by Klyna by being
+    published here. You accept it by continuing to use the Klyna tools.
+  </p>
+
+  <p>
+    A signed PDF copy is available on request at
+    <a href="mailto:privacy@klyna.dev">privacy@klyna.dev</a>. Most customers don't need one; this
+    page is the operative document.
+  </p>
+
+  <h2>1. Roles</h2>
+  <p>
+    <strong>You</strong> are the Controller of personal data processed through your WordPress
+    site, Shopify store, or browser session. <strong>Klyna</strong> acts as a Processor only
+    where we receive personal data on our infrastructure &mdash; primarily the anonymous install
+    ping described in the <a href="/legal/privacy">Privacy Policy</a>. The Klyna plugin or app
+    itself runs on your infrastructure and is not a transfer of data to us.
+  </p>
+
+  <h2>2. Scope and subject matter</h2>
+  <ul>
+    <li><strong>Subject matter:</strong> the provision of the Klyna tools to the Controller.</li>
+    <li>
+      <strong>Duration:</strong> as long as the Controller uses a Klyna tool that sends data to
+      our endpoints.
+    </li>
+    <li>
+      <strong>Nature and purpose:</strong> aggregate install metrics, support, and security.
+    </li>
+    <li>
+      <strong>Types of data:</strong> daily hashed site identifier, plugin/app version, host
+      platform version, locale, country derived from IP and then discarded.
+    </li>
+    <li>
+      <strong>Categories of data subjects:</strong> the Controller and its system administrators.
+      We do not process the Controller's end-users' personal data on our servers.
+    </li>
+  </ul>
+
+  <h2>3. Klyna's obligations</h2>
+  <ul>
+    <li>Process personal data only on documented instructions from the Controller (this DPA).</li>
+    <li>Ensure personnel with access are bound by confidentiality.</li>
+    <li>Implement appropriate technical and organisational measures (see Annex II).</li>
+    <li>Assist the Controller with data-subject requests and DPIAs to the extent we can.</li>
+    <li>Notify the Controller of a personal-data breach without undue delay (within 72 hours where feasible).</li>
+    <li>Delete or return personal data at the end of the engagement, unless retention is required by law.</li>
+  </ul>
+
+  <h2>4. Sub-processors (Annex I)</h2>
+  <p>Klyna uses the following sub-processors to deliver the service. We will update this list before adding a new one and you can object at <a href="mailto:privacy@klyna.dev">privacy@klyna.dev</a>.</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Sub-processor</th>
+        <th>Purpose</th>
+        <th>Location</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Vercel Inc.</td><td>Static hosting of klyna.dev and admin panel</td><td>USA / EU edge</td></tr>
+      <tr><td>Cloudflare, Inc.</td><td>DNS, WAF, and the ping endpoint edge</td><td>Global edge</td></tr>
+      <tr><td>Resend, Inc.</td><td>Transactional email (support replies, admin auth)</td><td>USA</td></tr>
+      <tr><td>GitHub, Inc.</td><td>Source code hosting, release artefacts</td><td>USA</td></tr>
+      <tr><td>Fastmail Pty Ltd</td><td>Inbox for hello@klyna.dev / security@klyna.dev</td><td>Australia / USA</td></tr>
+    </tbody>
+  </table>
+
+  <h2>5. International transfers</h2>
+  <p>
+    Where personal data is transferred out of the EEA, UK, or Switzerland, the transfer is
+    covered by the European Commission's Standard Contractual Clauses (Module Two,
+    Controller-to-Processor, version of 4 June 2021) and the UK Addendum to the EU SCCs. Those
+    clauses are incorporated by reference; the data exporter is the Controller and the data
+    importer is Klyna.
+  </p>
+
+  <h2>6. Security measures (Annex II)</h2>
+  <ul>
+    <li>TLS 1.2+ in transit; AES-256 at rest on managed providers.</li>
+    <li>BYOK keys encrypted in your DB with <code>sodium_crypto_secretbox</code> tied to your <code>AUTH_KEY</code> / Shopify shop secret. Never returned in REST responses, never logged.</li>
+    <li>Argon2id password hashing and WebAuthn-required login on the admin panel.</li>
+    <li>15-minute idle session timeout, IP-bound session cookies, 5-req/min login rate-limit.</li>
+    <li>WAF rate-limit on the ping endpoint (1 req/site/day), IP dropped before write, payloads &gt;2KB rejected.</li>
+    <li>Dependabot and <code>npm/composer/bundle audit</code> in CI; release blocked on high-severity findings.</li>
+    <li>Signed release artefacts (cosign) with checksums published on <code>/downloads</code>.</li>
+    <li>Quarterly internal pentest of each Klyna repo; results summarised on <a href="/legal/security">/legal/security</a>.</li>
+  </ul>
+
+  <h2>7. Audits</h2>
+  <p>
+    Klyna will respond to reasonable written audit questionnaires once per twelve-month period.
+    Because the studio is small, we cannot host on-site audits, but we will provide our latest
+    security summary and SOC-style attestation from sub-processors where they publish one.
+  </p>
+
+  <h2>8. Liability</h2>
+  <p>
+    Liability under this DPA is subject to the limits in the
+    <a href="/legal/terms">Terms of Service</a>.
+  </p>
+
+  <h2>9. Signature</h2>
+  <p>
+    This DPA is signed by Klyna on the "Effective" date above by publication on klyna.dev. The
+    Controller accepts it by continuing to use Klyna tools after that date. A countersigned PDF
+    is available on request.
+  </p>
+</LegalLayout>
