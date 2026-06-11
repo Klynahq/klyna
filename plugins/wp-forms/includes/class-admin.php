@@ -1049,6 +1049,8 @@ final class Admin {
 
 				<?php submit_button(); ?>
 			</form>
+			<?php \KlynaForms\Telemetry::render_form(); ?>
+
 		</div>
 		<?php
 	}

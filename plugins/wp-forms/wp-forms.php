@@ -59,6 +59,7 @@ add_action(
 	'plugins_loaded',
 	function () {
 		( new KlynaForms\Plugin() )->boot();
+		\KlynaForms\Telemetry::register();
 	}
 );
 
