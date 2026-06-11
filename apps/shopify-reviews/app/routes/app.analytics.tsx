@@ -45,7 +45,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   let sum = 0;
   for (const r of published) {
     const star = Math.min(5, Math.max(1, r.rating));
-    distribution[star - 1] += 1;
+    distribution[star - 1] = (distribution[star - 1] ?? 0) + 1;
     sum += star;
   }
   const publishedCount = published.length;
@@ -124,7 +124,7 @@ export default function Analytics() {
                 <Text as="h2" variant="headingMd">Star distribution</Text>
                 <BlockStack gap="200">
                   {[5, 4, 3, 2, 1].map((star) => {
-                    const count = a.distribution[star - 1];
+                    const count = a.distribution[star - 1] ?? 0;
                     const pct = Math.round((count / totalDist) * 100);
                     return (
                       <InlineStack key={star} gap="300" blockAlign="center" wrap={false}>

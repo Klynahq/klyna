@@ -141,6 +141,79 @@ importers:
         specifier: ^5.1.0
         version: 5.1.4(typescript@5.9.3)(vite@5.4.21(@types/node@22.19.20)(lightningcss@1.32.0))
 
+  apps/shopify-reviews:
+    dependencies:
+      '@klyna/ai-client':
+        specifier: workspace:*
+        version: link:../../packages/ai-client
+      '@klyna/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@prisma/client':
+        specifier: ^6.0.0
+        version: 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)
+      '@remix-run/node':
+        specifier: ^2.15.0
+        version: 2.17.5(typescript@5.9.3)
+      '@remix-run/react':
+        specifier: ^2.15.0
+        version: 2.17.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3)
+      '@remix-run/serve':
+        specifier: ^2.15.0
+        version: 2.17.5(typescript@5.9.3)
+      '@shopify/app-bridge-react':
+        specifier: ^4.1.6
+        version: 4.2.11(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@shopify/polaris':
+        specifier: ^13.9.0
+        version: 13.9.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@shopify/shopify-app-remix':
+        specifier: ^3.7.0
+        version: 3.8.5(@remix-run/node@2.17.5(typescript@5.9.3))(@remix-run/react@2.17.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@shopify/polaris@13.9.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(typescript@5.9.3)
+      '@shopify/shopify-app-session-storage-prisma':
+        specifier: ^6.0.0
+        version: 6.0.9(@prisma/client@6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3))(@shopify/shopify-api@11.14.1)(@shopify/shopify-app-session-storage@3.0.20(@shopify/shopify-api@11.14.1))(prisma@6.19.3(typescript@5.9.3))
+      isbot:
+        specifier: ^5.1.0
+        version: 5.1.42
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+    devDependencies:
+      '@klyna/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
+      '@remix-run/dev':
+        specifier: ^2.15.0
+        version: 2.17.5(@remix-run/react@2.17.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@remix-run/serve@2.17.5(typescript@5.9.3))(@types/node@22.19.20)(jiti@2.7.0)(lightningcss@1.32.0)(typescript@5.9.3)(vite@5.4.21(@types/node@22.19.20)(lightningcss@1.32.0))(yaml@2.9.0)
+      '@shopify/cli':
+        specifier: ^3.71.0
+        version: 3.94.3
+      '@types/node':
+        specifier: ^22.10.0
+        version: 22.19.20
+      '@types/react':
+        specifier: ^18.3.12
+        version: 18.3.31
+      '@types/react-dom':
+        specifier: ^18.3.1
+        version: 18.3.7(@types/react@18.3.31)
+      prisma:
+        specifier: ^6.0.0
+        version: 6.19.3(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vite:
+        specifier: ^5.4.0
+        version: 5.4.21(@types/node@22.19.20)(lightningcss@1.32.0)
+      vite-tsconfig-paths:
+        specifier: ^5.1.0
+        version: 5.1.4(typescript@5.9.3)(vite@5.4.21(@types/node@22.19.20)(lightningcss@1.32.0))
+
   apps/website:
     dependencies:
       '@astrojs/mdx':

@@ -220,7 +220,7 @@ export default function Requests() {
                     <input type="hidden" name="intent" value="schedule" />
                     <input type="hidden" name="orders" value={JSON.stringify(selectedOrders)} />
                     <Button submit variant="primary" disabled={selectedOrders.length === 0} loading={busy}>
-                      Schedule {selectedOrders.length || ''} request{selectedOrders.length === 1 ? '' : 's'}
+                      Schedule {String(selectedOrders.length || '')} request{selectedOrders.length === 1 ? '' : 's'}
                     </Button>
                   </Form>
                   <Form method="post">

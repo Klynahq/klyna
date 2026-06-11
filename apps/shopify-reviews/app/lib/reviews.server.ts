@@ -41,7 +41,7 @@ export async function recomputeProductRating(
   let sum = 0;
   for (const r of reviews) {
     const star = Math.min(5, Math.max(1, r.rating));
-    distribution[star - 1] += 1;
+    distribution[star - 1] = (distribution[star - 1] ?? 0) + 1;
     sum += star;
   }
   const count = reviews.length;

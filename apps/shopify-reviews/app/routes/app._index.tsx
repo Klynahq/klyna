@@ -14,12 +14,13 @@ import {
 import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
 import { roundRating } from '../lib/reviews.server';
+import { getShopAiSettings } from '../lib/ai.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
   const shop = session.shop;
 
-  const [pending, published, requestsScheduled, ratingAgg, recent] = await Promise.all([
+  const [pending, published, requestsScheduled, ratingAgg, recent, ai, topProduct] = await Promise.all([
     prisma.review.count({ where: { shop, status: 'pending' } }),
     prisma.review.count({ where: { shop, status: 'published' } }),
     prisma.reviewRequest.count({ where: { shop, status: 'scheduled' } }),
@@ -33,6 +34,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       orderBy: { createdAt: 'desc' },
       take: 5,
     }),
+    getShopAiSettings(shop),
+    prisma.productRating.findFirst({
+      where: { shop },
+      orderBy: { reviewCount: 'desc' },
+      select: { productId: true },
+    }),
   ]);
 
   return {
@@ -45,6 +52,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       totalRated: ratingAgg._count,
     },
     recent,
+    aiEnabled: ai.provider !== 'off' && !!ai.apiKey,
+    aiProvider: ai.provider,
+    topProductId: topProduct?.productId ?? null,
   };
 };
 
@@ -56,9 +66,13 @@ function statusTone(status: string): 'attention' | 'success' | 'critical' | 'inf
 }
 
 export default function Dashboard() {
-  const { shop, stats, recent } = useLoaderData<typeof loader>();
+  const { shop, stats, recent, aiEnabled, aiProvider, topProductId } = useLoaderData<typeof loader>();
 
-  const tiles = [
+  const themesTo = topProductId
+    ? `/app/products/${encodeURIComponent(topProductId)}/themes`
+    : '/app/settings';
+
+  const tiles: { title: string; body: string; to: string; badge?: string; ai?: boolean }[] = [
     {
       title: 'Moderation queue',
       body: 'Approve, reply to, or reject incoming photo + star reviews before they go live.',
@@ -72,10 +86,15 @@ export default function Dashboard() {
       badge: stats.requestsScheduled > 0 ? `${stats.requestsScheduled} scheduled` : undefined,
     },
     {
+      title: 'Review themes',
+      body: 'Summarize what customers keep mentioning about a product into the top three themes with representative quotes.',
+      to: themesTo,
+      ai: true,
+    },
+    {
       title: 'Analytics',
       body: 'Track rating trends, response rate, photo coverage, and top-reviewed products.',
       to: '/app/analytics',
-      badge: undefined,
     },
   ];
 
@@ -92,9 +111,16 @@ export default function Dashboard() {
         <Layout.Section>
           <Card>
             <BlockStack gap="200">
-              <Text as="h2" variant="headingMd">Reviews that build trust and rank.</Text>
+              <InlineStack gap="200" blockAlign="center">
+                <Text as="h2" variant="headingMd">Reviews that build trust and rank.</Text>
+                {aiEnabled ? (
+                  <Badge tone="success">{`AI · ${aiProvider}`}</Badge>
+                ) : (
+                  <Badge tone="info">No AI key set</Badge>
+                )}
+              </InlineStack>
               <Text as="p" variant="bodyMd" tone="subdued">
-                Collect verified star + photo reviews, ask buyers automatically after
+                Collect verified star and photo reviews, ask buyers automatically after
                 fulfillment, and publish AggregateRating schema so Google shows your
                 stars in search. No data leaves your store.
               </Text>
@@ -116,16 +142,19 @@ export default function Dashboard() {
         </Layout.Section>
 
         <Layout.Section>
-          <InlineGrid columns={{ xs: 1, md: 3 }} gap="300">
+          <InlineGrid columns={{ xs: 1, md: 2 }} gap="300">
             {tiles.map((t) => (
-              <Card key={t.to}>
+              <Card key={t.to + t.title}>
                 <BlockStack gap="200">
                   <InlineStack align="space-between" blockAlign="center">
-                    <Text as="h3" variant="headingSm">{t.title}</Text>
+                    <InlineStack gap="200" blockAlign="center">
+                      <Text as="h3" variant="headingSm">{t.title}</Text>
+                      {t.ai && <Badge tone={aiEnabled ? 'success' : 'info'}>AI</Badge>}
+                    </InlineStack>
                     {t.badge && <Badge tone="attention">{t.badge}</Badge>}
                   </InlineStack>
                   <Text as="p" variant="bodyMd" tone="subdued">{t.body}</Text>
-                  <Link to={t.to}>Open →</Link>
+                  <Link to={t.to}>Open</Link>
                 </BlockStack>
               </Card>
             ))}

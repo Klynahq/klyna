@@ -1,5 +1,6 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
 import { Form, useActionData, useLoaderData, useNavigation, useSearchParams } from '@remix-run/react';
+import { useState } from 'react';
 import {
   Badge,
   BlockStack,
@@ -143,7 +144,7 @@ export default function Moderation() {
             <Tabs
               tabs={tabsWithCounts}
               selected={selectedTab}
-              onSelect={(i) => setSearchParams({ status: TABS[i].id })}
+              onSelect={(i) => setSearchParams({ status: TABS[i]?.id ?? 'pending' })}
             >
               <Box padding="400">
                 {error && (
@@ -238,24 +239,7 @@ export default function Moderation() {
                               </Form>
                             </InlineStack>
 
-                            <Form method="post">
-                              <input type="hidden" name="id" value={r.id} />
-                              <input type="hidden" name="intent" value="reply" />
-                              <InlineStack gap="200" blockAlign="end" wrap={false}>
-                                <Box width="100%">
-                                  <TextField
-                                    label="Merchant reply"
-                                    labelHidden
-                                    name="reply"
-                                    autoComplete="off"
-                                    multiline={2}
-                                    defaultValue={r.reply ?? ''}
-                                    placeholder="Reply publicly to this review…"
-                                  />
-                                </Box>
-                                <Button submit loading={busy}>Save reply</Button>
-                              </InlineStack>
-                            </Form>
+                            <ReplyForm reviewId={r.id} initial={r.reply ?? ''} busy={busy} />
                           </BlockStack>
                         </Box>
                       );
@@ -268,5 +252,30 @@ export default function Moderation() {
         </Layout.Section>
       </Layout>
     </Page>
+  );
+}
+
+function ReplyForm({ reviewId, initial, busy }: { reviewId: string; initial: string; busy: boolean }) {
+  const [value, setValue] = useState(initial);
+  return (
+    <Form method="post">
+      <input type="hidden" name="id" value={reviewId} />
+      <input type="hidden" name="intent" value="reply" />
+      <input type="hidden" name="reply" value={value} />
+      <InlineStack gap="200" blockAlign="end" wrap={false}>
+        <Box width="100%">
+          <TextField
+            label="Merchant reply"
+            labelHidden
+            autoComplete="off"
+            multiline={2}
+            value={value}
+            onChange={setValue}
+            placeholder="Reply publicly to this review"
+          />
+        </Box>
+        <Button submit loading={busy}>Save reply</Button>
+      </InlineStack>
+    </Form>
   );
 }
