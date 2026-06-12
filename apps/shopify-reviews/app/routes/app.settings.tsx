@@ -19,7 +19,7 @@ import {
 import { useState } from 'react';
 import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
-import { createAiClient, type AiProvider } from '@klyna/ai-client';
+import { createAiClient, type AiProvider } from '~/lib/klyna-ai-client';
 import { getShopAiSettings, getTodayUsage, saveShopAiSettings } from '../lib/ai.server';
 
 const DEFAULTS = {

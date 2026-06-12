@@ -2,7 +2,7 @@
   "name": "shopify-reviews",
   "version": "0.1.0",
   "private": true,
-  "description": "Klyna Reviews — Photo reviews, UGC & rich-snippet stars that build trust and rank.",
+  "description": "Klyna Reviews \u2014 Photo reviews, UGC & rich-snippet stars that build trust and rank.",
   "type": "module",
   "scripts": {
     "build": "remix vite:build",
@@ -18,8 +18,6 @@
     "setup": "pnpm prisma:generate && pnpm prisma:migrate"
   },
   "dependencies": {
-    "@klyna/ai-client": "workspace:*",
-    "@klyna/core": "workspace:*",
     "@prisma/client": "^6.0.0",
     "@remix-run/node": "^2.15.0",
     "@remix-run/react": "^2.15.0",
@@ -33,7 +31,6 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@klyna/tsconfig": "workspace:*",
     "@remix-run/dev": "^2.15.0",
     "@shopify/cli": "^3.71.0",
     "@types/node": "^22.10.0",
@@ -43,5 +40,8 @@
     "typescript": "^5.7.2",
     "vite": "^5.4.0",
     "vite-tsconfig-paths": "^5.1.0"
+  },
+  "engines": {
+    "node": "22.x"
   }
 }
