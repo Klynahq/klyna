@@ -2,7 +2,7 @@
   "name": "admin",
   "version": "0.1.0",
   "private": true,
-  "description": "Klyna admin panel — magic-link auth, downloads/installs/tickets dashboards.",
+  "description": "Klyna admin panel \u2014 magic-link auth, downloads/installs/tickets dashboards.",
   "type": "module",
   "scripts": {
     "build": "remix vite:build",
@@ -15,7 +15,6 @@
     "setup": "pnpm prisma:generate && pnpm prisma:push"
   },
   "dependencies": {
-    "@klyna/ui": "workspace:*",
     "@prisma/client": "^6.0.0",
     "@remix-run/node": "^2.15.0",
     "@remix-run/react": "^2.15.0",
@@ -25,7 +24,6 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@klyna/tsconfig": "workspace:*",
     "@remix-run/dev": "^2.15.0",
     "@tailwindcss/vite": "^4.0.0",
     "@types/node": "^22.10.0",
@@ -36,5 +34,8 @@
     "typescript": "^5.7.2",
     "vite": "^5.4.0",
     "vite-tsconfig-paths": "^5.1.0"
+  },
+  "engines": {
+    "node": "22.x"
   }
 }
