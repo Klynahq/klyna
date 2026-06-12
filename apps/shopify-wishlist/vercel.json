@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "remix",
-  "installCommand": "corepack enable && pnpm install --no-frozen-lockfile",
-  "buildCommand": "pnpm --filter shopify-wishlist exec prisma generate && pnpm --filter shopify-wishlist build",
-  "outputDirectory": "apps/shopify-wishlist/build"
+  "installCommand": "npm install",
+  "buildCommand": "npx prisma generate && npx remix vite:build",
+  "outputDirectory": "build"
 }
