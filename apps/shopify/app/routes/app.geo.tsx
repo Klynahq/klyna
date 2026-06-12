@@ -102,7 +102,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   type CollData = {
     data: {
       collections: {
-        nodes: { title: string; handle: string }[];
+        nodes: { title: string; handle: string; onlineStoreUrl: string | null }[];
       };
     };
   };
@@ -128,7 +128,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       }
     }`),
     admin.graphql(`{
-      collections(first: 30) { nodes { title handle } }
+      collections(first: 30) { nodes { title handle onlineStoreUrl } }
     }`),
   ]);
 
@@ -290,7 +290,7 @@ function buildLlmsTxt(
   storeUrl: string,
   myDomain: string,
   products: { title: string; handle: string; onlineStoreUrl: string | null; priceRangeV2: { minVariantPrice: { amount: string; currencyCode: string } }; descriptionHtml: string }[],
-  collections: { title: string; handle: string }[],
+  collections: { title: string; handle: string; onlineStoreUrl: string | null }[],
   pages: { title: string; handle: string }[],
   articles: { title: string; handle: string; blog: { handle: string } }[],
 ): string {
@@ -309,7 +309,7 @@ function buildLlmsTxt(
     lines.push('## Collections');
     lines.push('');
     for (const c of collections.slice(0, 20)) {
-      const url = `${storeUrl}/collections/${c.handle}`;
+      const url = c.onlineStoreUrl ?? `https://${myDomain}/collections/${c.handle}`;
       lines.push(`- [${c.title}](${url})`);
     }
     lines.push('');
