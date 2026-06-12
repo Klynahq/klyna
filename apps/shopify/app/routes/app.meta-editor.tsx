@@ -71,14 +71,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session, admin } = await authenticate.admin(request);
   const shop = session.shop;
 
-  type ShopData = { data: { shop: { primaryDomain: { url: string } } } };
-  const shopRes = await admin.graphql(`{ shop { primaryDomain { url } } }`);
-  const shopJson = (await shopRes.json()) as ShopData;
-  const baseUrl = shopJson.data.shop.primaryDomain.url.replace(/\/$/, '');
-
   type P = { id: string; handle: string; title: string; onlineStoreUrl: string | null; seo: { title: string | null; description: string | null } };
-  type C = { id: string; handle: string; title: string; seo: { title: string | null; description: string | null } };
-  type Pg = { id: string; handle: string; title: string };
+  type C = { id: string; handle: string; title: string; onlineStoreUrl: string | null; seo: { title: string | null; description: string | null } };
+  type Pg = { id: string; handle: string; title: string; onlineStoreUrl: string | null };
 
   const [products, collections, pages] = await Promise.all([
     paginateGql<P>(
@@ -96,7 +91,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       `query ($cursor: String) {
         collections(first: 50, after: $cursor) {
           pageInfo { hasNextPage endCursor }
-          nodes { id handle title seo { title description } }
+          nodes { id handle title onlineStoreUrl seo { title description } }
         }
       }`,
       (d) => (d as { collections: { nodes: C[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } } }).collections,
@@ -106,7 +101,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       `query ($cursor: String) {
         pages(first: 50, after: $cursor) {
           pageInfo { hasNextPage endCursor }
-          nodes { id handle title }
+          nodes { id handle title onlineStoreUrl }
         }
       }`,
       (d) => (d as { pages: { nodes: Pg[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } } }).pages,
@@ -115,8 +110,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   const rows: MetaRow[] = [
     ...products.map((p) => ({ id: p.id, handle: p.handle, title: p.title, seoTitle: p.seo.title, seoDescription: p.seo.description, url: p.onlineStoreUrl, type: 'product' as const })),
-    ...collections.map((c) => ({ id: c.id, handle: c.handle, title: c.title, seoTitle: c.seo.title, seoDescription: c.seo.description, url: `${baseUrl}/collections/${c.handle}`, type: 'collection' as const })),
-    ...pages.map((pg) => ({ id: pg.id, handle: pg.handle, title: pg.title, seoTitle: null, seoDescription: null, url: `${baseUrl}/pages/${pg.handle}`, type: 'page' as const })),
+    ...collections.map((c) => ({ id: c.id, handle: c.handle, title: c.title, seoTitle: c.seo.title, seoDescription: c.seo.description, url: c.onlineStoreUrl, type: 'collection' as const })),
+    ...pages.map((pg) => ({ id: pg.id, handle: pg.handle, title: pg.title, seoTitle: null, seoDescription: null, url: pg.onlineStoreUrl, type: 'page' as const })),
   ];
 
   return json({ shop, rows });

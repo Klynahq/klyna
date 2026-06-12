@@ -67,8 +67,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const myDomain = shopJson.data.shop.myshopifyDomain;
 
   type ProductNode = { handle: string; onlineStoreUrl: string | null };
-  type CollectionNode = { handle: string };
-  type PageNode = { handle: string };
+  type CollectionNode = { handle: string; onlineStoreUrl: string | null };
+  type PageNode = { handle: string; onlineStoreUrl: string | null };
 
   const [products, collections, pages] = await Promise.all([
     paginateGql<ProductNode>(
@@ -86,7 +86,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       `query ($cursor: String) {
         collections(first: 50, after: $cursor) {
           pageInfo { hasNextPage endCursor }
-          nodes { handle }
+          nodes { handle onlineStoreUrl }
         }
       }`,
       (d) => (d as { collections: { nodes: CollectionNode[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } } }).collections,
@@ -96,7 +96,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       `query ($cursor: String) {
         pages(first: 50, after: $cursor) {
           pageInfo { hasNextPage endCursor }
-          nodes { handle }
+          nodes { handle onlineStoreUrl }
         }
       }`,
       (d) => (d as { pages: { nodes: PageNode[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } } }).pages,
@@ -106,8 +106,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const allUrls: string[] = [
     baseUrl, // homepage
     ...products.map((p) => p.onlineStoreUrl ?? `https://${myDomain}/products/${p.handle}`),
-    ...collections.map((c) => `${baseUrl}/collections/${c.handle}`),
-    ...pages.map((pg) => `${baseUrl}/pages/${pg.handle}`),
+    ...collections.map((c) => c.onlineStoreUrl ?? `https://${myDomain}/collections/${c.handle}`),
+    ...pages.map((pg) => pg.onlineStoreUrl ?? `https://${myDomain}/pages/${pg.handle}`),
   ].filter(Boolean);
 
   // Deduplicate

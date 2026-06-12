@@ -273,6 +273,7 @@ export default function Dashboard() {
           </Layout.Section>
         )}
 
+
         {/* Store Score */}
         <Layout.Section>
           <Card>
@@ -409,12 +410,6 @@ export default function Dashboard() {
                       <ProgressBar progress={p.score} tone="critical" size="small" />
                     </BlockStack>
                   ))}
-                </BlockStack>
-                <Button url="/app/bulk" variant="plain">View all pages →</Button>
-              </BlockStack>
-            </Card>
-          </Layout.Section>
-        )}
 
         {/* Score history */}
         {scoreHistory.length > 1 && (
