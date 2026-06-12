@@ -8,3 +8,4 @@ build/
 .shopify/
 public/build/
 klyna-shopify-seo-suite.zip
+.vercel
