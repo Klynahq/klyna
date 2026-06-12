@@ -3,7 +3,7 @@
 // Each Shopify session gets its own AI client backed by the AiSettings row
 // for the shop. Cache and quota are also DB-backed so they survive restarts.
 
-import { createAiClient, type AiProvider, type AiClient } from '@klyna/ai-client';
+import { createAiClient, type AiProvider, type AiClient } from '~/lib/klyna-ai-client';
 import prisma from '../db.server';
 
 export type ShopAiSettings = {
