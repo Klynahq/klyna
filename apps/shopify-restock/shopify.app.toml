@@ -7,7 +7,7 @@
 #   3. Run `pnpm dev` (or `shopify app dev`) to start the embedded app on your dev store.
 
 # Placeholder - `shopify app config link` rewrites this with your real client_id.
-client_id = "REPLACE_WITH_CLIENT_ID_FROM_PARTNER_DASHBOARD"
+client_id = "39090fee679968ddbfe1cce940c10656"
 
 name = "Klyna Back-in-Stock"
 handle = "shopify-restock"
