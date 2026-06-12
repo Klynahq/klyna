@@ -7,7 +7,7 @@
 #   3. Run `pnpm dev` (or `shopify app dev`) to start the embedded app on your dev store.
 
 # Placeholder — `shopify app config link` rewrites this with your real client_id.
-client_id = "REPLACE_WITH_CLIENT_ID_FROM_PARTNER_DASHBOARD"
+client_id = "570b92e0a46f613063a6ef2ef1d25680"
 
 name = "Klyna Urgency"
 handle = "shopify-urgency"
