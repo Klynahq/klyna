@@ -1,17 +1,29 @@
 {
-  "extends": "@klyna/tsconfig/base.json",
+  "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    "jsx": "react-jsx",
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "allowSyntheticDefaultImports": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
     "types": ["@remix-run/node", "vite/client", "node"],
     "baseUrl": ".",
-    "paths": {
-      "~/*": ["./app/*"]
-    },
-    "declaration": false,
-    "declarationMap": false,
-    "isolatedDeclarations": false,
-    "composite": false
+    "paths": { "~/*": ["./app/*"] },
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "preserveWatchOutput": true
   },
   "include": ["app/**/*", "vite.config.ts"],
   "exclude": ["node_modules", "build"]
