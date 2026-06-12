@@ -8,3 +8,5 @@ build/
 .shopify/
 public/build/
 .vercel
+.env.prod
+.env.production
