@@ -25,7 +25,7 @@ import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
 import { fetchRecentOrderBaskets, type CatalogProduct } from '../lib/admin.server';
 import { getAiClientForShop, getShopAiSettings } from '../lib/ai.server';
-import { PROMPTS } from '@klyna/ai-client';
+import { PROMPTS } from '~/lib/klyna-ai-client';
 
 type Companion = { gid: string; title: string };
 
