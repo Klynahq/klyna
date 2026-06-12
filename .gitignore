@@ -42,3 +42,5 @@ Thumbs.db
 .cache/
 *.tsbuildinfo
 .vercel
+.env.prod
+.env.production
