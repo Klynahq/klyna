@@ -9,7 +9,7 @@
 // Results are cached per cart hash for 1h so a noisy storefront does not blow
 // through the daily AI quota.
 
-import { createAiClient } from '@klyna/ai-client';
+import { createAiClient } from '~/lib/klyna-ai-client';
 import prisma from '../db.server';
 import { getShopAiSettings } from './ai.server';
 
