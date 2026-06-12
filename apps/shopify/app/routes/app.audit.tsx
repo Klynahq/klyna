@@ -14,7 +14,7 @@ import {
   Text,
 } from '@shopify/polaris';
 import { auditPage, type AuditResult } from '@klyna/core';
-import { PROMPTS } from '@klyna/ai-client';
+import { PROMPTS } from '~/lib/klyna-ai-client';
 import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
 import {
