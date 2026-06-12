@@ -20,7 +20,7 @@ import {
 import { authenticate } from '../shopify.server';
 import { getShopSettings } from '../services/waitlist.server';
 import prisma from '../db.server';
-import { createAiClient, type AiProvider } from '@klyna/ai-client';
+import { createAiClient, type AiProvider } from '~/lib/klyna-ai-client';
 import { getShopAiSettings, getTodayUsage, saveShopAiSettings } from '../lib/ai.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
