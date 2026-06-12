@@ -29,11 +29,12 @@ api_version = "2025-01"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "read_content,read_orders,read_products,read_themes"
+scopes = "read_content,write_content,read_orders,read_products,write_products,read_themes,write_metaobjects,read_metaobjects"
 
 [auth]
 redirect_urls = [
   "https://klyna-seo.vercel.app/auth/callback",
   "https://klyna-seo.vercel.app/auth/shopify/callback",
   "https://klyna-seo.vercel.app/api/auth/callback",
+  "https://klyna-seo.vercel.app/auth/login",
 ]

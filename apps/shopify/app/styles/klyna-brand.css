@@ -1,0 +1,134 @@
+/* ─────────────────────────────────────────────
+   Klyna brand overrides for Polaris 13
+   Accent: #7c5cff  Hover: #9277ff  Deep: #5b3df0
+   ───────────────────────────────────────────── */
+
+/* ── Primary buttons → Klyna violet ── */
+.Polaris-Button--variantPrimary {
+  background: linear-gradient(135deg, #7c5cff 0%, #5b3df0 100%) !important;
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(124, 92, 255, 0.35) !important;
+  color: #fff !important;
+}
+.Polaris-Button--variantPrimary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #9277ff 0%, #7c5cff 100%) !important;
+  box-shadow: 0 4px 16px rgba(124, 92, 255, 0.45) !important;
+}
+.Polaris-Button--variantPrimary:active:not(:disabled) {
+  background: linear-gradient(135deg, #5b3df0 0%, #4a2fd4 100%) !important;
+}
+
+/* ── Plain/tertiary button links → violet ── */
+.Polaris-Button--variantPlain {
+  color: #7c5cff !important;
+}
+.Polaris-Button--variantPlain:hover:not(:disabled) {
+  color: #9277ff !important;
+  background: rgba(124, 92, 255, 0.08) !important;
+}
+
+/* ── Polaris links → violet ── */
+.Polaris-Link,
+.Polaris-Link:visited {
+  color: #7c5cff !important;
+}
+.Polaris-Link:hover {
+  color: #9277ff !important;
+}
+
+/* ── Focus ring → violet ── */
+:focus-visible {
+  outline-color: #7c5cff !important;
+}
+.Polaris-TextField__Input:focus {
+  border-color: #7c5cff !important;
+  box-shadow: 0 0 0 2px rgba(124, 92, 255, 0.25) !important;
+}
+
+/* ── Info-tone badges → Klyna violet tint ── */
+.Polaris-Badge--toneInfo {
+  --pc-badge-color: #7c5cff;
+  background: rgba(124, 92, 255, 0.12) !important;
+  color: #7c5cff !important;
+}
+.Polaris-Badge--toneMagic {
+  background: rgba(124, 92, 255, 0.15) !important;
+  color: #9277ff !important;
+}
+
+/* ── Progress bar primary → violet ── */
+.Polaris-ProgressBar__Indicator--colorPrimary {
+  background: linear-gradient(90deg, #7c5cff, #9277ff) !important;
+}
+
+/* ── Nav menu active link underline → violet ── */
+.Polaris-Navigation__Item--selected::before {
+  background: #7c5cff !important;
+}
+
+/* ── Spinner → violet ── */
+.Polaris-Spinner svg circle {
+  stroke: #7c5cff !important;
+}
+
+/* ── Checkbox checked → violet ── */
+.Polaris-Checkbox__Input:checked + .Polaris-Checkbox__Backdrop {
+  background: #7c5cff !important;
+  border-color: #7c5cff !important;
+}
+
+/* ── Tabs selected underline → violet ── */
+.Polaris-Tabs__Tab--selected .Polaris-Tabs__Title::after {
+  background: #7c5cff !important;
+}
+
+/* ── Klyna branded page header strip ── */
+.klyna-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  background: linear-gradient(90deg, rgba(124, 92, 255, 0.08) 0%, transparent 100%);
+  border-bottom: 1px solid rgba(124, 92, 255, 0.15);
+  margin-bottom: 4px;
+}
+.klyna-header__logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+.klyna-header__wordmark {
+  font-family: -apple-system, 'Inter', system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  background: linear-gradient(135deg, #7c5cff, #9277ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.klyna-header__tagline {
+  font-size: 12px;
+  color: #a1a1aa;
+  margin-left: auto;
+}
+
+/* ── Score pill component ── */
+.klyna-score-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  border: 3px solid currentColor;
+}
+.klyna-score-pill--a { color: #22c55e; border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.08); }
+.klyna-score-pill--b { color: #84cc16; border-color: rgba(132,204,22,0.3); background: rgba(132,204,22,0.08); }
+.klyna-score-pill--c { color: #f59e0b; border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.08); }
+.klyna-score-pill--d { color: #f97316; border-color: rgba(249,115,22,0.3); background: rgba(249,115,22,0.08); }
+.klyna-score-pill--f { color: #ef4444; border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.08); }
