@@ -2,6 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "remix",
   "installCommand": "pnpm install --frozen-lockfile",
-  "buildCommand": "pnpm --filter shopify exec prisma generate && pnpm --filter shopify exec remix vite:build",
+  "buildCommand": "pnpm --filter shopify exec prisma generate && pnpm --filter shopify exec prisma db push --skip-generate && pnpm --filter shopify exec remix vite:build",
   "outputDirectory": "apps/shopify/build"
 }
