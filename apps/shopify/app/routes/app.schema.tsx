@@ -362,9 +362,9 @@ export default function SchemaPage() {
                   custom-liquid blocks.
                 </Text>
                 <Text as="p" tone="subdued">
-                  App Store version note: Klyna stores this configuration now and generates the
-                  markup immediately. A theme app extension can automate placement later without
-                  changing the saved settings.
+                  Klyna stores these settings and generates the markup immediately from live shop
+                  data. Place the snippets through Shopify&apos;s theme editor or custom-liquid
+                  blocks on the matching templates.
                 </Text>
               </BlockStack>
             </BlockStack>
