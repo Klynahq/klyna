@@ -1,6 +1,6 @@
+import { linking } from '@klyna/core';
 import { type LoaderFunctionArgs, json } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
-import { useState } from 'react';
 import {
   Badge,
   BlockStack,
@@ -14,7 +14,7 @@ import {
   Page,
   Text,
 } from '@shopify/polaris';
-import { linking } from '@klyna/core';
+import { useState } from 'react';
 import { authenticate } from '../shopify.server';
 
 type LinkSuggestion = linking.LinkSuggestion;
@@ -35,8 +35,8 @@ function stripHtml(html: string): string {
 function extractLinks(html: string, baseUrl: string): string[] {
   const links: string[] = [];
   const re = /href=["']([^"']+)["']/gi;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(html)) !== null) {
+  let m = re.exec(html);
+  while (m !== null) {
     const href = m[1] ?? '';
     if (href.startsWith('/')) {
       try {
@@ -48,6 +48,7 @@ function extractLinks(html: string, baseUrl: string): string[] {
     } else if (href.startsWith(baseUrl)) {
       links.push(href);
     }
+    m = re.exec(html);
   }
   return links;
 }
@@ -55,57 +56,80 @@ function extractLinks(html: string, baseUrl: string): string[] {
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session, admin } = await authenticate.admin(request);
 
-  type ShopRes = { data: { shop: { primaryDomain: { url: string }; myshopifyDomain: string } } };
-  const shopRes = await admin.graphql(`{ shop { primaryDomain { url } myshopifyDomain } }`);
-  const { data: { shop: shopData } } = (await shopRes.json()) as ShopRes;
+  type ShopRes = { data: { shop: { primaryDomain: { url: string } } } };
+  const shopRes = await admin.graphql('{ shop { primaryDomain { url } } }');
+  const {
+    data: { shop: shopData },
+  } = (await shopRes.json()) as ShopRes;
   const baseUrl = shopData.primaryDomain.url.replace(/\/$/, '');
 
   // Fetch content from Admin API (no storefront fetch needed)
-  type P = { id: string; handle: string; title: string; descriptionHtml: string };
-  type C = { id: string; handle: string; title: string; descriptionHtml: string };
-  type Pg = { id: string; handle: string; title: string; body: string };
+  type P = {
+    id: string;
+    handle: string;
+    title: string;
+    descriptionHtml: string;
+    onlineStoreUrl: string | null;
+  };
+  type C = {
+    id: string;
+    handle: string;
+    title: string;
+    descriptionHtml: string;
+    onlineStoreUrl: string | null;
+  };
+  type Pg = {
+    id: string;
+    handle: string;
+    title: string;
+    body: string;
+    onlineStoreUrl: string | null;
+  };
 
   const [productsRes, collectionsRes, pagesRes] = await Promise.all([
     admin.graphql(`{
       products(first: 50) {
-        nodes { id handle title descriptionHtml }
+        nodes { id handle title descriptionHtml onlineStoreUrl }
       }
     }`),
     admin.graphql(`{
       collections(first: 30) {
-        nodes { id handle title descriptionHtml }
+        nodes { id handle title descriptionHtml onlineStoreUrl }
       }
     }`),
     admin.graphql(`{
       pages(first: 30) {
-        nodes { id handle title body }
+        nodes { id handle title body onlineStoreUrl }
       }
     }`),
   ]);
 
   const productsJson = (await productsRes.json()) as { data: { products: { nodes: P[] } } };
-  const collectionsJson = (await collectionsRes.json()) as { data: { collections: { nodes: C[] } } };
+  const collectionsJson = (await collectionsRes.json()) as {
+    data: { collections: { nodes: C[] } };
+  };
   const pagesJson = (await pagesRes.json()) as { data: { pages: { nodes: Pg[] } } };
 
   const pages: linking.LinkingPage[] = [
     ...productsJson.data.products.nodes.map((p) => {
-      const url = `${baseUrl}/products/${p.handle}`;
+      const url = p.onlineStoreUrl ?? `${baseUrl}/products/${p.handle}`;
       const text = stripHtml(p.descriptionHtml);
       return { url, title: p.title, text, outLinks: extractLinks(p.descriptionHtml, baseUrl) };
     }),
     ...collectionsJson.data.collections.nodes.map((c) => {
-      const url = `${baseUrl}/collections/${c.handle}`;
+      const url = c.onlineStoreUrl ?? `${baseUrl}/collections/${c.handle}`;
       const text = stripHtml(c.descriptionHtml);
       return { url, title: c.title, text, outLinks: extractLinks(c.descriptionHtml, baseUrl) };
     }),
     ...pagesJson.data.pages.nodes.map((pg) => {
-      const url = `${baseUrl}/pages/${pg.handle}`;
+      const url = pg.onlineStoreUrl ?? `${baseUrl}/pages/${pg.handle}`;
       const text = stripHtml(pg.body);
       return { url, title: pg.title, text, outLinks: extractLinks(pg.body, baseUrl) };
     }),
   ];
 
-  const suggestions = pages.length >= 2 ? linking.suggestLinks(pages, { perPage: 5, minSimilarity: 0.05 }) : [];
+  const suggestions =
+    pages.length >= 2 ? linking.suggestLinks(pages, { perPage: 5, minSimilarity: 0.05 }) : [];
   const orphans = pages.length >= 2 ? linking.findOrphans(pages) : [];
 
   // Sort suggestions by similarity desc, take top 50
@@ -131,9 +155,7 @@ export default function LinksPage() {
   const { suggestions, orphans, pageCount } = useLoaderData<typeof loader>();
   const [filter, setFilter] = useState<'all' | 'high'>('all');
 
-  const filtered = suggestions.filter((s) =>
-    filter === 'high' ? s.similarity >= 0.15 : true,
-  );
+  const filtered = suggestions.filter((s) => (filter === 'high' ? s.similarity >= 0.15 : true));
 
   const simBadge = (sim: number) => {
     if (sim >= 0.3) return { label: 'Strong', tone: 'success' as const };
@@ -149,11 +171,13 @@ export default function LinksPage() {
             <BlockStack gap="300">
               <InlineStack align="space-between" blockAlign="center">
                 <BlockStack gap="100">
-                  <Text as="h2" variant="headingMd">Semantic link suggestions</Text>
+                  <Text as="h2" variant="headingMd">
+                    Semantic link suggestions
+                  </Text>
                   <Text as="p" tone="subdued">
                     Klyna analyses {pageCount} pages using TF-IDF cosine similarity and surfaces the
-                    strongest missing internal links. Add them to increase topical authority and help
-                    Google discover more pages.
+                    strongest missing internal links. Add them to increase topical authority and
+                    help Google discover more pages.
                   </Text>
                 </BlockStack>
                 <InlineStack gap="200">
@@ -164,7 +188,7 @@ export default function LinksPage() {
                       variant={filter === f ? 'primary' : 'secondary'}
                       onClick={() => setFilter(f)}
                     >
-                      {f === 'all' ? `All (${suggestions.length})` : `High confidence`}
+                      {f === 'all' ? `All (${suggestions.length})` : 'High confidence'}
                     </Button>
                   ))}
                 </InlineStack>
@@ -180,9 +204,15 @@ export default function LinksPage() {
                 {/* Header */}
                 <Box padding="300" background="bg-surface-secondary">
                   <InlineGrid columns={['oneThird', 'oneThird', 'oneThird']} gap="200">
-                    <Text as="p" variant="bodySm" fontWeight="semibold" tone="subdued">From page</Text>
-                    <Text as="p" variant="bodySm" fontWeight="semibold" tone="subdued">Should link to</Text>
-                    <Text as="p" variant="bodySm" fontWeight="semibold" tone="subdued">Suggested anchor · Relevance</Text>
+                    <Text as="p" variant="bodySm" fontWeight="semibold" tone="subdued">
+                      From page
+                    </Text>
+                    <Text as="p" variant="bodySm" fontWeight="semibold" tone="subdued">
+                      Should link to
+                    </Text>
+                    <Text as="p" variant="bodySm" fontWeight="semibold" tone="subdued">
+                      Suggested anchor · Relevance
+                    </Text>
                   </InlineGrid>
                 </Box>
                 <Divider />
@@ -222,7 +252,9 @@ export default function LinksPage() {
                                 &quot;{s.suggestedAnchor}&quot;
                               </Text>
                             </Box>
-                            <Badge tone={badge.tone} size="small">{badge.label}</Badge>
+                            <Badge tone={badge.tone} size="small">
+                              {badge.label}
+                            </Badge>
                           </InlineStack>
                           <Text as="p" variant="bodySm" tone="subdued">
                             {Math.round(s.similarity * 100)}% similarity
@@ -241,7 +273,8 @@ export default function LinksPage() {
           <Layout.Section>
             <Card>
               <Text as="p" tone="subdued">
-                No high-confidence suggestions found. Switch to &quot;All&quot; to see weaker matches.
+                No high-confidence suggestions found. Switch to &quot;All&quot; to see weaker
+                matches.
               </Text>
             </Card>
           </Layout.Section>
@@ -251,11 +284,13 @@ export default function LinksPage() {
           <Layout.Section>
             <Card>
               <BlockStack gap="200">
-                <Text as="h2" variant="headingMd">No link suggestions</Text>
+                <Text as="h2" variant="headingMd">
+                  No link suggestions
+                </Text>
                 <Text as="p" tone="subdued">
-                  All your pages are already well-interlinked, or their content doesn&apos;t overlap enough
-                  to suggest additional links. Add more descriptive content to product and collection pages
-                  to improve semantic matching.
+                  All your pages are already well-interlinked, or their content doesn&apos;t overlap
+                  enough to suggest additional links. Add more descriptive content to product and
+                  collection pages to improve semantic matching.
                 </Text>
               </BlockStack>
             </Card>
@@ -278,12 +313,15 @@ export default function LinksPage() {
             <Card>
               <BlockStack gap="300">
                 <InlineStack align="space-between" blockAlign="center">
-                  <Text as="h2" variant="headingMd">Orphaned pages</Text>
+                  <Text as="h2" variant="headingMd">
+                    Orphaned pages
+                  </Text>
                   <Badge tone="critical">{`${orphans.length} pages`}</Badge>
                 </InlineStack>
                 <Text as="p" tone="subdued">
-                  These pages have no internal links pointing to them. Google may struggle to discover
-                  and index them. Link to them from related products, collections, or pages.
+                  These pages have no internal links pointing to them. Google may struggle to
+                  discover and index them. Link to them from related products, collections, or
+                  pages.
                 </Text>
                 <BlockStack gap="100">
                   {orphans.map((url) => (

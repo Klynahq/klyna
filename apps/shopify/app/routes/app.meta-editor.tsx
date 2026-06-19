@@ -94,9 +94,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     id: string;
     handle: string;
     title: string;
+    onlineStoreUrl: string | null;
     seo: { title: string | null; description: string | null };
   };
-  type Pg = { id: string; handle: string; title: string };
+  type Pg = { id: string; handle: string; title: string; onlineStoreUrl: string | null };
 
   const [products, collections, pages] = await Promise.all([
     paginateGql<P>(
@@ -119,7 +120,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       `query ($cursor: String) {
         collections(first: 50, after: $cursor) {
           pageInfo { hasNextPage endCursor }
-          nodes { id handle title seo { title description } }
+          nodes { id handle title onlineStoreUrl seo { title description } }
         }
       }`,
       (d) =>
@@ -137,7 +138,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       `query ($cursor: String) {
         pages(first: 50, after: $cursor) {
           pageInfo { hasNextPage endCursor }
-          nodes { id handle title }
+          nodes { id handle title onlineStoreUrl }
         }
       }`,
       (d) =>
@@ -165,7 +166,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       title: c.title,
       seoTitle: c.seo.title,
       seoDescription: c.seo.description,
-      url: `${baseUrl}/collections/${c.handle}`,
+      url: c.onlineStoreUrl ?? `${baseUrl}/collections/${c.handle}`,
       type: 'collection' as const,
     })),
     ...pages.map((pg) => ({
@@ -174,7 +175,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       title: pg.title,
       seoTitle: null,
       seoDescription: null,
-      url: `${baseUrl}/pages/${pg.handle}`,
+      url: pg.onlineStoreUrl ?? `${baseUrl}/pages/${pg.handle}`,
       type: 'page' as const,
     })),
   ];
