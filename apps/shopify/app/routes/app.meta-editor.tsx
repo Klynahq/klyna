@@ -1,6 +1,5 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
 import { useFetcher, useLoaderData } from '@remix-run/react';
-import { useCallback, useState } from 'react';
 import {
   Badge,
   Banner,
@@ -17,8 +16,9 @@ import {
   Text,
   TextField,
 } from '@shopify/polaris';
-import { authenticate } from '../shopify.server';
+import { useCallback, useEffect, useState } from 'react';
 import prisma from '../db.server';
+import { authenticate } from '../shopify.server';
 
 type MetaRow = {
   id: string;
@@ -30,7 +30,11 @@ type MetaRow = {
   type: 'product' | 'collection' | 'page';
 };
 
-function scoreField(value: string | null, min: number, max: number): 'good' | 'short' | 'missing' | 'long' {
+function scoreField(
+  value: string | null,
+  min: number,
+  max: number,
+): 'good' | 'short' | 'missing' | 'long' {
   if (!value || value.trim() === '') return 'missing';
   const len = value.trim().length;
   if (len < min) return 'short';
@@ -51,7 +55,10 @@ function fieldBadge(score: 'good' | 'short' | 'missing' | 'long') {
 async function paginateGql<T>(
   admin: { graphql: (q: string, o?: { variables?: Record<string, unknown> }) => Promise<Response> },
   query: string,
-  extract: (d: unknown) => { nodes: T[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } },
+  extract: (d: unknown) => {
+    nodes: T[];
+    pageInfo: { hasNextPage: boolean; endCursor: string | null };
+  },
   max = 250,
 ): Promise<T[]> {
   const all: T[] = [];
@@ -72,12 +79,23 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const shop = session.shop;
 
   type ShopData = { data: { shop: { primaryDomain: { url: string } } } };
-  const shopRes = await admin.graphql(`{ shop { primaryDomain { url } } }`);
+  const shopRes = await admin.graphql('{ shop { primaryDomain { url } } }');
   const shopJson = (await shopRes.json()) as ShopData;
   const baseUrl = shopJson.data.shop.primaryDomain.url.replace(/\/$/, '');
 
-  type P = { id: string; handle: string; title: string; onlineStoreUrl: string | null; seo: { title: string | null; description: string | null } };
-  type C = { id: string; handle: string; title: string; seo: { title: string | null; description: string | null } };
+  type P = {
+    id: string;
+    handle: string;
+    title: string;
+    onlineStoreUrl: string | null;
+    seo: { title: string | null; description: string | null };
+  };
+  type C = {
+    id: string;
+    handle: string;
+    title: string;
+    seo: { title: string | null; description: string | null };
+  };
   type Pg = { id: string; handle: string; title: string };
 
   const [products, collections, pages] = await Promise.all([
@@ -89,7 +107,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
           nodes { id handle title onlineStoreUrl seo { title description } }
         }
       }`,
-      (d) => (d as { products: { nodes: P[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } } }).products,
+      (d) =>
+        (
+          d as {
+            products: { nodes: P[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } };
+          }
+        ).products,
     ),
     paginateGql<C>(
       admin,
@@ -99,7 +122,15 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
           nodes { id handle title seo { title description } }
         }
       }`,
-      (d) => (d as { collections: { nodes: C[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } } }).collections,
+      (d) =>
+        (
+          d as {
+            collections: {
+              nodes: C[];
+              pageInfo: { hasNextPage: boolean; endCursor: string | null };
+            };
+          }
+        ).collections,
     ),
     paginateGql<Pg>(
       admin,
@@ -109,14 +140,43 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
           nodes { id handle title }
         }
       }`,
-      (d) => (d as { pages: { nodes: Pg[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } } }).pages,
+      (d) =>
+        (
+          d as {
+            pages: { nodes: Pg[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } };
+          }
+        ).pages,
     ),
   ]);
 
   const rows: MetaRow[] = [
-    ...products.map((p) => ({ id: p.id, handle: p.handle, title: p.title, seoTitle: p.seo.title, seoDescription: p.seo.description, url: p.onlineStoreUrl, type: 'product' as const })),
-    ...collections.map((c) => ({ id: c.id, handle: c.handle, title: c.title, seoTitle: c.seo.title, seoDescription: c.seo.description, url: `${baseUrl}/collections/${c.handle}`, type: 'collection' as const })),
-    ...pages.map((pg) => ({ id: pg.id, handle: pg.handle, title: pg.title, seoTitle: null, seoDescription: null, url: `${baseUrl}/pages/${pg.handle}`, type: 'page' as const })),
+    ...products.map((p) => ({
+      id: p.id,
+      handle: p.handle,
+      title: p.title,
+      seoTitle: p.seo.title,
+      seoDescription: p.seo.description,
+      url: p.onlineStoreUrl,
+      type: 'product' as const,
+    })),
+    ...collections.map((c) => ({
+      id: c.id,
+      handle: c.handle,
+      title: c.title,
+      seoTitle: c.seo.title,
+      seoDescription: c.seo.description,
+      url: `${baseUrl}/collections/${c.handle}`,
+      type: 'collection' as const,
+    })),
+    ...pages.map((pg) => ({
+      id: pg.id,
+      handle: pg.handle,
+      title: pg.title,
+      seoTitle: null,
+      seoDescription: null,
+      url: `${baseUrl}/pages/${pg.handle}`,
+      type: 'page' as const,
+    })),
   ];
 
   return json({ shop, rows });
@@ -133,27 +193,45 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   try {
     if (type === 'product') {
-      await admin.graphql(
+      const res = await admin.graphql(
         `mutation klynaProductSeo($input: ProductInput!) {
           productUpdate(input: $input) {
             product { id }
             userErrors { field message }
           }
         }`,
-        { variables: { input: { id, seo: { title: seoTitle ?? '', description: seoDescription ?? '' } } } },
+        {
+          variables: {
+            input: { id, seo: { title: seoTitle ?? '', description: seoDescription ?? '' } },
+          },
+        },
       );
+      const gql = (await res.json()) as {
+        data: { productUpdate: { userErrors: { message: string }[] } };
+      };
+      const error = gql.data.productUpdate.userErrors[0];
+      if (error) return json({ error: error.message, id }, { status: 400 });
     } else if (type === 'collection') {
-      await admin.graphql(
+      const res = await admin.graphql(
         `mutation klynaCollSeo($input: CollectionInput!) {
           collectionUpdate(input: $input) {
             collection { id }
             userErrors { field message }
           }
         }`,
-        { variables: { input: { id, seo: { title: seoTitle ?? '', description: seoDescription ?? '' } } } },
+        {
+          variables: {
+            input: { id, seo: { title: seoTitle ?? '', description: seoDescription ?? '' } },
+          },
+        },
       );
+      const gql = (await res.json()) as {
+        data: { collectionUpdate: { userErrors: { message: string }[] } };
+      };
+      const error = gql.data.collectionUpdate.userErrors[0];
+      if (error) return json({ error: error.message, id }, { status: 400 });
     } else if (type === 'page') {
-      await admin.graphql(
+      const res = await admin.graphql(
         `mutation klynaPageSeoMeta($ownerId: ID!, $title: String!, $desc: String!) {
           metafieldsSet(metafields: [
             { ownerId: $ownerId, namespace: "global", key: "title_tag",       type: "single_line_text_field", value: $title }
@@ -162,14 +240,24 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         }`,
         { variables: { ownerId: id, title: seoTitle ?? '', desc: seoDescription ?? '' } },
       );
+      const gql = (await res.json()) as {
+        data: { metafieldsSet: { userErrors: { message: string }[] } };
+      };
+      const error = gql.data.metafieldsSet.userErrors[0];
+      if (error) return json({ error: error.message, id }, { status: 400 });
     }
 
-    await prisma.fixLog.createMany({
-      data: [
-        ...(seoTitle ? [{ shop, resourceId: id, url: id, field: 'seo.title', newValue: seoTitle }] : []),
-        ...(seoDescription ? [{ shop, resourceId: id, url: id, field: 'seo.description', newValue: seoDescription }] : []),
-      ],
-    });
+    const logRows = [
+      ...(seoTitle
+        ? [{ shop, resourceId: id, url: id, field: 'seo.title', newValue: seoTitle }]
+        : []),
+      ...(seoDescription
+        ? [{ shop, resourceId: id, url: id, field: 'seo.description', newValue: seoDescription }]
+        : []),
+    ];
+    if (logRows.length > 0) {
+      await prisma.fixLog.createMany({ data: logRows });
+    }
 
     return json({ saved: true, id });
   } catch (err) {
@@ -180,9 +268,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 type RowEditorProps = {
   row: MetaRow;
   onSaved: (id: string) => void;
+  saved: boolean;
 };
 
-function RowEditor({ row, onSaved }: RowEditorProps) {
+function RowEditor({ row, onSaved, saved }: RowEditorProps) {
   const fetcher = useFetcher<{ saved?: boolean; error?: string; id?: string }>();
   const [title, setTitle] = useState(row.seoTitle ?? '');
   const [desc, setDesc] = useState(row.seoDescription ?? '');
@@ -190,11 +279,13 @@ function RowEditor({ row, onSaved }: RowEditorProps) {
   const titleScore = scoreField(title, 30, 60);
   const descScore = scoreField(desc, 80, 160);
   const isSaving = fetcher.state === 'submitting';
-  const justSaved = fetcher.data?.saved && fetcher.data.id === row.id;
+  const justSaved = saved || (fetcher.data?.saved && fetcher.data.id === row.id);
 
-  if (justSaved && !fetcher.data?.error) {
-    onSaved(row.id);
-  }
+  useEffect(() => {
+    if (fetcher.data?.saved && fetcher.data.id === row.id && !fetcher.data.error) {
+      onSaved(row.id);
+    }
+  }, [fetcher.data, onSaved, row.id]);
 
   const save = () => {
     const fd = new FormData();
@@ -212,21 +303,31 @@ function RowEditor({ row, onSaved }: RowEditorProps) {
     <BlockStack gap="200">
       <InlineStack align="space-between" blockAlign="center">
         <BlockStack gap="050">
-          <Text as="p" variant="bodyMd" fontWeight="semibold">{row.title}</Text>
-          <Text as="p" variant="bodySm" tone="subdued">/{row.handle}</Text>
+          <Text as="p" variant="bodyMd" fontWeight="semibold">
+            {row.title}
+          </Text>
+          <Text as="p" variant="bodySm" tone="subdued">
+            /{row.handle}
+          </Text>
         </BlockStack>
         {justSaved ? (
           <Badge tone="success">Saved</Badge>
         ) : (
-          <Button size="slim" onClick={save} loading={isSaving}>Save</Button>
+          <Button size="slim" onClick={save} loading={isSaving}>
+            Save
+          </Button>
         )}
       </InlineStack>
 
       <InlineGrid columns={2} gap="200">
         <BlockStack gap="100">
           <InlineStack gap="100" blockAlign="center">
-            <Text as="p" variant="bodySm" tone="subdued">SEO title ({title.length}/60)</Text>
-            <Badge tone={titleBadge.tone} size="small">{titleBadge.label}</Badge>
+            <Text as="p" variant="bodySm" tone="subdued">
+              SEO title ({title.length}/60)
+            </Text>
+            <Badge tone={titleBadge.tone} size="small">
+              {titleBadge.label}
+            </Badge>
           </InlineStack>
           <TextField
             label=""
@@ -241,8 +342,12 @@ function RowEditor({ row, onSaved }: RowEditorProps) {
         </BlockStack>
         <BlockStack gap="100">
           <InlineStack gap="100" blockAlign="center">
-            <Text as="p" variant="bodySm" tone="subdued">Meta description ({desc.length}/160)</Text>
-            <Badge tone={descBadge.tone} size="small">{descBadge.label}</Badge>
+            <Text as="p" variant="bodySm" tone="subdued">
+              Meta description ({desc.length}/160)
+            </Text>
+            <Badge tone={descBadge.tone} size="small">
+              {descBadge.label}
+            </Badge>
           </InlineStack>
           <TextField
             label=""
@@ -267,7 +372,9 @@ function RowEditor({ row, onSaved }: RowEditorProps) {
           borderColor="border"
         >
           <BlockStack gap="050">
-            <Text as="p" variant="bodySm" tone="subdued">SERP preview</Text>
+            <Text as="p" variant="bodySm" tone="subdued">
+              SERP preview
+            </Text>
             <Text as="p" variant="bodyMd" tone="magic">
               {(title || row.title).slice(0, 60)}
             </Text>
@@ -275,14 +382,18 @@ function RowEditor({ row, onSaved }: RowEditorProps) {
               {row.url ?? `/${row.type}s/${row.handle}`}
             </Text>
             <Text as="p" variant="bodyMd">
-              {(desc || 'No meta description set — Google will pull a snippet from page content.').slice(0, 160)}
+              {(
+                desc || 'No meta description set — Google will pull a snippet from page content.'
+              ).slice(0, 160)}
             </Text>
           </BlockStack>
         </Box>
       )}
 
       {fetcher.data?.error && (
-        <Text as="p" tone="critical" variant="bodySm">{fetcher.data.error}</Text>
+        <Text as="p" tone="critical" variant="bodySm">
+          {fetcher.data.error}
+        </Text>
       )}
     </BlockStack>
   );
@@ -294,9 +405,21 @@ export default function MetaEditorPage() {
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
 
   const tabs = [
-    { id: 'products', content: `Products (${rows.filter((r) => r.type === 'product').length})`, panelID: 'products-panel' },
-    { id: 'collections', content: `Collections (${rows.filter((r) => r.type === 'collection').length})`, panelID: 'collections-panel' },
-    { id: 'pages', content: `Pages (${rows.filter((r) => r.type === 'page').length})`, panelID: 'pages-panel' },
+    {
+      id: 'products',
+      content: `Products (${rows.filter((r) => r.type === 'product').length})`,
+      panelID: 'products-panel',
+    },
+    {
+      id: 'collections',
+      content: `Collections (${rows.filter((r) => r.type === 'collection').length})`,
+      panelID: 'collections-panel',
+    },
+    {
+      id: 'pages',
+      content: `Pages (${rows.filter((r) => r.type === 'page').length})`,
+      panelID: 'pages-panel',
+    },
   ];
 
   const typeMap = ['product', 'collection', 'page'] as const;
@@ -317,10 +440,12 @@ export default function MetaEditorPage() {
             <BlockStack gap="300">
               <InlineStack align="space-between" blockAlign="center">
                 <BlockStack gap="100">
-                  <Text as="h2" variant="headingMd">SEO titles + meta descriptions</Text>
+                  <Text as="h2" variant="headingMd">
+                    SEO titles + meta descriptions
+                  </Text>
                   <Text as="p" tone="subdued">
-                    Edit and preview how your pages appear in Google. Changes save directly to Shopify.
-                    Green = optimal length · Amber = too short or long · Red = missing.
+                    Edit and preview how your pages appear in Google. Changes save directly to
+                    Shopify. Green = optimal length · Amber = too short or long · Red = missing.
                   </Text>
                 </BlockStack>
                 {missing.length > 0 && (
@@ -345,7 +470,7 @@ export default function MetaEditorPage() {
               currentRows.map((row, i) => (
                 <Card key={row.id}>
                   <BlockStack gap="300">
-                    <RowEditor row={row} onSaved={onSaved} />
+                    <RowEditor row={row} onSaved={onSaved} saved={savedIds.has(row.id)} />
                     {i < currentRows.length - 1 && <Divider />}
                   </BlockStack>
                 </Card>

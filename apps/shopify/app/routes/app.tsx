@@ -1,4 +1,4 @@
-import type { HeadersFunction, LoaderFunctionArgs } from '@remix-run/node';
+import { type HeadersFunction, type LoaderFunctionArgs, redirect } from '@remix-run/node';
 import { Link, Outlet, useLoaderData, useRouteError } from '@remix-run/react';
 import { boundary } from '@shopify/shopify-app-remix/server';
 import { AppProvider } from '@shopify/shopify-app-remix/react';
@@ -13,6 +13,15 @@ export const links = () => [
 ];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const url = new URL(request.url);
+  if (
+    url.searchParams.get('shop') &&
+    !url.searchParams.get('host') &&
+    !url.searchParams.get('id_token')
+  ) {
+    throw redirect(`/auth/login?${url.searchParams.toString()}`);
+  }
+
   await authenticate.admin(request);
   return { apiKey: process.env.SHOPIFY_API_KEY ?? '' };
 };

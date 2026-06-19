@@ -1,16 +1,40 @@
-import { type ActionFunctionArgs, json } from '@remix-run/node';
 import { auditPage } from '@klyna/core';
-import { authenticate } from '../shopify.server';
+import { type ActionFunctionArgs, json } from '@remix-run/node';
 import prisma from '../db.server';
+import { authenticate } from '../shopify.server';
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { session } = await authenticate.admin(request);
   const shop = session.shop;
   const form = await request.formData();
   const urls = form.getAll('url').map(String).filter(Boolean);
+  const totalUrls = Math.max(
+    urls.length,
+    Number(form.get('totalUrls') ?? urls.length) || urls.length,
+  );
+  const completedBefore = Math.max(0, Number(form.get('completedBefore') ?? 0) || 0);
 
   if (urls.length === 0) {
     return json({ results: [] });
+  }
+
+  let scan = await prisma.bulkScan.findFirst({
+    where: { shop, status: 'running' },
+    orderBy: { startedAt: 'desc' },
+  });
+
+  if (completedBefore === 0) {
+    await prisma.bulkScan.updateMany({
+      where: { shop, status: 'running' },
+      data: { status: 'failed', finishedAt: new Date() },
+    });
+    scan = await prisma.bulkScan.create({
+      data: { shop, status: 'running', totalUrls, scannedUrls: 0 },
+    });
+  } else if (!scan) {
+    scan = await prisma.bulkScan.create({
+      data: { shop, status: 'running', totalUrls, scannedUrls: completedBefore },
+    });
   }
 
   const results = await Promise.allSettled(
@@ -52,7 +76,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           url,
           score: 0,
           grade: 'F',
-          errors: 0,
+          errors: 1,
           warnings: 0,
           ok: false as const,
           error: err instanceof Error ? err.message : 'Fetch failed',
@@ -61,7 +85,37 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }),
   );
 
+  const rows = results.map((r) =>
+    r.status === 'fulfilled'
+      ? r.value
+      : {
+          url: '',
+          ok: false as const,
+          score: 0,
+          grade: 'F',
+          errors: 1,
+          warnings: 0,
+          error: 'Internal error',
+        },
+  );
+  const scannedUrls = Math.min(totalUrls, completedBefore + urls.length);
+  const successfulScores = rows.filter((r) => r.ok).map((r) => r.score);
+  const avgScore =
+    successfulScores.length > 0
+      ? successfulScores.reduce((sum, score) => sum + score, 0) / successfulScores.length
+      : null;
+
+  await prisma.bulkScan.update({
+    where: { id: scan.id },
+    data: {
+      scannedUrls,
+      totalUrls,
+      ...(avgScore !== null ? { avgScore } : {}),
+      ...(scannedUrls >= totalUrls ? { status: 'done', finishedAt: new Date() } : {}),
+    },
+  });
+
   return json({
-    results: results.map((r) => (r.status === 'fulfilled' ? r.value : { url: '', ok: false, error: 'Internal error' })),
+    results: rows,
   });
 };

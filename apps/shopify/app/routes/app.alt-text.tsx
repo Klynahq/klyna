@@ -1,6 +1,5 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
 import { useFetcher, useLoaderData, useRevalidator } from '@remix-run/react';
-import { useCallback, useState } from 'react';
 import {
   Badge,
   Banner,
@@ -18,8 +17,9 @@ import {
   TextField,
   Thumbnail,
 } from '@shopify/polaris';
-import { authenticate } from '../shopify.server';
+import { useCallback, useEffect, useState } from 'react';
 import prisma from '../db.server';
+import { authenticate } from '../shopify.server';
 
 type ImageRow = {
   imageId: string;
@@ -67,7 +67,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       { variables: { cursor } },
     );
     const json = (await res.json()) as {
-      data: { products: { pageInfo: { hasNextPage: boolean; endCursor: string | null }; nodes: ProductNode[] } };
+      data: {
+        products: {
+          pageInfo: { hasNextPage: boolean; endCursor: string | null };
+          nodes: ProductNode[];
+        };
+      };
     };
     const { nodes, pageInfo } = json.data.products;
 
@@ -91,7 +96,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   }
 
   // Total image count (including ones with alt text)
-  const fixedRes = await admin.graphql(`{ shop { id } }`);
+  const fixedRes = await admin.graphql('{ shop { id } }');
   void fixedRes;
 
   return json({ shop, images: allImages });
@@ -117,7 +122,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       }`,
       { variables: { productId, image: { id: imageId, altText } } },
     );
-    const gqlJson = (await res.json()) as { data: { productImageUpdate: { userErrors: { message: string }[] } } };
+    const gqlJson = (await res.json()) as {
+      data: { productImageUpdate: { userErrors: { message: string }[] } };
+    };
     const errors = gqlJson.data.productImageUpdate.userErrors;
     if (errors.length > 0) {
       return json({ error: errors[0]?.message ?? 'Update failed' });
@@ -149,11 +156,19 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           }`,
           { variables: { productId, image: { id: imageId, altText } } },
         );
-        const gqlJson2 = (await res.json()) as { data: { productImageUpdate: { userErrors: { message: string }[] } } };
+        const gqlJson2 = (await res.json()) as {
+          data: { productImageUpdate: { userErrors: { message: string }[] } };
+        };
         if (gqlJson2.data.productImageUpdate.userErrors.length === 0) {
           applied.push(imageId);
           await prisma.fixLog.create({
-            data: { shop, resourceId: productId ?? '', url: imageId, field: 'altText', newValue: altText },
+            data: {
+              shop,
+              resourceId: productId ?? '',
+              url: imageId,
+              field: 'altText',
+              newValue: altText,
+            },
           });
         }
       }),
@@ -167,14 +182,20 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 export default function AltTextPage() {
   const { images } = useLoaderData<typeof loader>();
-  const fetcher = useFetcher<{ updated?: boolean; updatedAll?: boolean; count?: number; imageId?: string; error?: string }>();
+  const fetcher = useFetcher<{
+    updated?: boolean;
+    updatedAll?: boolean;
+    count?: number;
+    imageId?: string;
+    error?: string;
+  }>();
   const revalidator = useRevalidator();
 
   const [edits, setEdits] = useState<Record<string, string>>({});
   const [applied, setApplied] = useState<Set<string>>(new Set());
   const [bulkRunning, setBulkRunning] = useState(false);
 
-  const getAlt = (img: ImageRow) => edits[img.imageId] ?? img.suggested;
+  const getAlt = useCallback((img: ImageRow) => edits[img.imageId] ?? img.suggested, [edits]);
 
   const updateOne = useCallback(
     (img: ImageRow) => {
@@ -185,7 +206,7 @@ export default function AltTextPage() {
       fd.set('altText', getAlt(img));
       fetcher.submit(fd, { method: 'post' });
     },
-    [fetcher, edits],
+    [fetcher, getAlt],
   );
 
   const updateAll = useCallback(() => {
@@ -193,20 +214,25 @@ export default function AltTextPage() {
     const fd = new FormData();
     fd.set('intent', 'update-all');
     const pending = images.filter((img) => !applied.has(img.imageId));
-    pending.forEach((img) => {
+    for (const img of pending) {
       fd.append('pair', `${img.productId}|${img.imageId}|${getAlt(img)}`);
-    });
+    }
     fetcher.submit(fd, { method: 'post' });
-  }, [fetcher, images, applied, edits]);
+  }, [fetcher, images, applied, getAlt]);
 
-  // Track applied images
-  if (fetcher.data?.updated && fetcher.data.imageId && !applied.has(fetcher.data.imageId)) {
-    setApplied((prev) => new Set([...prev, fetcher.data!.imageId!]));
-  }
-  if (fetcher.data?.updatedAll) {
-    setBulkRunning(false);
-    void revalidator.revalidate();
-  }
+  useEffect(() => {
+    if (fetcher.data?.updated && fetcher.data.imageId) {
+      setApplied((prev) => {
+        if (prev.has(fetcher.data!.imageId!)) return prev;
+        return new Set([...prev, fetcher.data!.imageId!]);
+      });
+    }
+
+    if (fetcher.data?.updatedAll) {
+      setBulkRunning(false);
+      void revalidator.revalidate();
+    }
+  }, [fetcher.data, revalidator]);
 
   const pending = images.filter((img) => !applied.has(img.imageId));
   const busy = fetcher.state === 'submitting';
@@ -219,15 +245,19 @@ export default function AltTextPage() {
             <BlockStack gap="300">
               <InlineStack align="space-between" blockAlign="center">
                 <BlockStack gap="100">
-                  <Text as="h2" variant="headingMd">Missing alt text</Text>
+                  <Text as="h2" variant="headingMd">
+                    Missing alt text
+                  </Text>
                   <Text as="p" tone="subdued">
-                    Alt text is read by screen readers and used by Google to understand product images.
-                    Klyna auto-generates descriptive alt text from your product names.
+                    Alt text is read by screen readers and used by Google to understand product
+                    images. Klyna auto-generates descriptive alt text from your product names.
                   </Text>
                 </BlockStack>
                 <InlineStack gap="200" blockAlign="center">
                   <Badge tone={pending.length === 0 ? 'success' : 'critical'}>
-                    {pending.length === 0 ? 'All images have alt text' : `${pending.length} missing`}
+                    {pending.length === 0
+                      ? 'All images have alt text'
+                      : `${pending.length} missing`}
                   </Badge>
                   {pending.length > 0 && (
                     <Button
@@ -245,9 +275,7 @@ export default function AltTextPage() {
               {fetcher.data?.updatedAll && (
                 <Banner tone="success" title={`Applied alt text to ${fetcher.data.count} images`} />
               )}
-              {fetcher.data?.error && (
-                <Banner tone="critical" title={fetcher.data.error} />
-              )}
+              {fetcher.data?.error && <Banner tone="critical" title={fetcher.data.error} />}
             </BlockStack>
           </Card>
         </Layout.Section>
@@ -259,8 +287,12 @@ export default function AltTextPage() {
                 {/* Header */}
                 <Box padding="300" background="bg-surface-secondary">
                   <InlineStack align="space-between">
-                    <Text as="p" variant="bodySm" fontWeight="semibold" tone="subdued">Product / Image</Text>
-                    <Text as="p" variant="bodySm" fontWeight="semibold" tone="subdued">Alt text</Text>
+                    <Text as="p" variant="bodySm" fontWeight="semibold" tone="subdued">
+                      Product / Image
+                    </Text>
+                    <Text as="p" variant="bodySm" fontWeight="semibold" tone="subdued">
+                      Alt text
+                    </Text>
                   </InlineStack>
                 </Box>
                 <Divider />
@@ -302,7 +334,9 @@ export default function AltTextPage() {
                                 label=""
                                 labelHidden
                                 value={getAlt(img)}
-                                onChange={(v) => setEdits((prev) => ({ ...prev, [img.imageId]: v }))}
+                                onChange={(v) =>
+                                  setEdits((prev) => ({ ...prev, [img.imageId]: v }))
+                                }
                                 autoComplete="off"
                                 disabled={isApplied || isBusy}
                                 connectedRight={

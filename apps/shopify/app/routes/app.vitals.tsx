@@ -1,6 +1,5 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
-import { Form, useFetcher, useLoaderData } from '@remix-run/react';
-import { useState } from 'react';
+import { useFetcher, useLoaderData } from '@remix-run/react';
 import {
   Badge,
   Banner,
@@ -18,6 +17,7 @@ import {
   Text,
   TextField,
 } from '@shopify/polaris';
+import { useState } from 'react';
 import { authenticate } from '../shopify.server';
 
 // ── Types from PageSpeed Insights API ─────────────────────────────────────────
@@ -76,7 +76,11 @@ type VitalsResult = {
 
 const PSI_URL = 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed';
 
-function parsePsi(data: PsiResponse, url: string, strategy: 'mobile' | 'desktop'): VitalsResult | null {
+function parsePsi(
+  data: PsiResponse,
+  url: string,
+  strategy: 'mobile' | 'desktop',
+): VitalsResult | null {
   if (!data.lighthouseResult) return null;
   const { audits, categories } = data.lighthouseResult;
   const perfScore = Math.round((categories.performance?.score ?? 0) * 100);
@@ -107,26 +111,56 @@ function parsePsi(data: PsiResponse, url: string, strategy: 'mobile' | 'desktop'
     .slice(0, 8);
 
   const thirdParty = (get('third-party-summary').details?.items ?? [])
-    .map((i) => ({ entity: String(i.entity ?? i.label ?? ''), blockingTime: i.blockingTime ?? 0, size: i.size ?? i.totalBytes ?? 0 }))
+    .map((i) => ({
+      entity: String(i.entity ?? i.label ?? ''),
+      blockingTime: i.blockingTime ?? 0,
+      size: i.size ?? i.totalBytes ?? 0,
+    }))
     .filter((i) => i.entity)
     .slice(0, 10);
 
   const metrics = data.loadingExperience?.metrics ?? {};
-  const fieldLcp = metrics['LARGEST_CONTENTFUL_PAINT_MS']
-    ? { value: metrics['LARGEST_CONTENTFUL_PAINT_MS']!.percentile, category: metrics['LARGEST_CONTENTFUL_PAINT_MS']!.category }
+  const fieldLcp = metrics.LARGEST_CONTENTFUL_PAINT_MS
+    ? {
+        value: metrics.LARGEST_CONTENTFUL_PAINT_MS!.percentile,
+        category: metrics.LARGEST_CONTENTFUL_PAINT_MS!.category,
+      }
     : null;
-  const fieldCls = metrics['CUMULATIVE_LAYOUT_SHIFT_SCORE']
-    ? { value: metrics['CUMULATIVE_LAYOUT_SHIFT_SCORE']!.percentile, category: metrics['CUMULATIVE_LAYOUT_SHIFT_SCORE']!.category }
+  const fieldCls = metrics.CUMULATIVE_LAYOUT_SHIFT_SCORE
+    ? {
+        value: metrics.CUMULATIVE_LAYOUT_SHIFT_SCORE!.percentile,
+        category: metrics.CUMULATIVE_LAYOUT_SHIFT_SCORE!.category,
+      }
     : null;
 
-  return { url, strategy, perfScore, lcp, cls, fcp, tbt, si, lcpScore, clsScore, renderBlocking, unusedJs, unusedCss, thirdParty, fieldLcp, fieldCls };
+  return {
+    url,
+    strategy,
+    perfScore,
+    lcp,
+    cls,
+    fcp,
+    tbt,
+    si,
+    lcpScore,
+    clsScore,
+    renderBlocking,
+    unusedJs,
+    unusedCss,
+    thirdParty,
+    fieldLcp,
+    fieldCls,
+  };
 }
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session, admin } = await authenticate.admin(request);
   type ShopRes = { data: { shop: { primaryDomain: { url: string } } } };
-  const shopRes = await admin.graphql(`{ shop { primaryDomain { url } } }`);
-  const storeUrl = ((await shopRes.json()) as ShopRes).data.shop.primaryDomain.url.replace(/\/$/, '');
+  const shopRes = await admin.graphql('{ shop { primaryDomain { url } } }');
+  const storeUrl = ((await shopRes.json()) as ShopRes).data.shop.primaryDomain.url.replace(
+    /\/$/,
+    '',
+  );
   return json({ storeUrl });
 };
 
@@ -134,7 +168,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   await authenticate.admin(request);
   const form = await request.formData();
   const url = String(form.get('url') ?? '').trim();
-  const strategy = (String(form.get('strategy') ?? 'mobile')) as 'mobile' | 'desktop';
 
   if (!url) return json({ error: 'URL is required' }, { status: 400 });
 
@@ -149,16 +182,31 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       desktopRes.json() as Promise<PsiResponse>,
     ]);
 
-    if (mobileData.error) {
-      return json({ error: mobileData.error.message }, { status: 400 });
+    if (mobileData.error || desktopData.error) {
+      return json(
+        {
+          error:
+            mobileData.error?.message ?? desktopData.error?.message ?? 'PageSpeed analysis failed',
+        },
+        { status: 400 },
+      );
     }
 
     const mobile = parsePsi(mobileData, url, 'mobile');
     const desktop = parsePsi(desktopData, url, 'desktop');
+    if (!mobile || !desktop) {
+      return json(
+        { error: 'PageSpeed did not return Lighthouse data for this URL' },
+        { status: 400 },
+      );
+    }
 
     return json({ mobile, desktop });
   } catch (err) {
-    return json({ error: err instanceof Error ? err.message : 'Failed to fetch PageSpeed data' }, { status: 500 });
+    return json(
+      { error: err instanceof Error ? err.message : 'Failed to fetch PageSpeed data' },
+      { status: 500 },
+    );
   }
 };
 
@@ -196,15 +244,28 @@ function ScoreGauge({ score, label }: { score: number; label: string }) {
   return (
     <BlockStack gap="100" inlineAlign="center">
       <Box
-        background={tone === 'success' ? 'bg-fill-success' : tone === 'warning' ? 'bg-fill-caution' : 'bg-fill-critical'}
+        background={
+          tone === 'success'
+            ? 'bg-fill-success'
+            : tone === 'warning'
+              ? 'bg-fill-caution'
+              : 'bg-fill-critical'
+        }
         borderRadius="full"
         padding="400"
       >
-        <Text as="p" variant="heading2xl" fontWeight="bold" tone={tone === 'success' ? 'success' : tone === 'warning' ? 'caution' : 'critical'}>
+        <Text
+          as="p"
+          variant="heading2xl"
+          fontWeight="bold"
+          tone={tone === 'success' ? 'success' : tone === 'warning' ? 'caution' : 'critical'}
+        >
           {score}
         </Text>
       </Box>
-      <Text as="p" variant="bodySm" tone="subdued">{label}</Text>
+      <Text as="p" variant="bodySm" tone="subdued">
+        {label}
+      </Text>
     </BlockStack>
   );
 }
@@ -223,7 +284,9 @@ function MetricRow({
   const lab = scoreTone(score);
   return (
     <InlineStack align="space-between" blockAlign="center">
-      <Text as="p" variant="bodyMd">{label}</Text>
+      <Text as="p" variant="bodyMd">
+        {label}
+      </Text>
       <InlineStack gap="200" blockAlign="center">
         {field && (
           <Badge tone={fieldTone(field.category)} size="small">
@@ -233,7 +296,11 @@ function MetricRow({
         {value && <Badge tone={lab}>{value}</Badge>}
         {score !== null && (
           <Box minWidth="80px">
-            <ProgressBar progress={Math.round(score * 100)} tone={lab === 'success' ? 'primary' : lab === 'warning' ? 'highlight' : 'critical'} size="small" />
+            <ProgressBar
+              progress={Math.round(score * 100)}
+              tone={lab === 'success' ? 'primary' : lab === 'warning' ? 'highlight' : 'critical'}
+              size="small"
+            />
           </Box>
         )}
       </InlineStack>
@@ -245,14 +312,31 @@ function VitalsCard({ result }: { result: VitalsResult }) {
   return (
     <BlockStack gap="400">
       <InlineStack align="space-between" blockAlign="center">
-        <Text as="h3" variant="headingMd">{result.strategy === 'mobile' ? '📱 Mobile' : '🖥 Desktop'}</Text>
-        <Badge tone={perfTone(result.perfScore)} size="large">{`Performance: ${result.perfScore}`}</Badge>
+        <Text as="h3" variant="headingMd">
+          {result.strategy === 'mobile' ? '📱 Mobile' : '🖥 Desktop'}
+        </Text>
+        <Badge
+          tone={perfTone(result.perfScore)}
+          size="large"
+        >{`Performance: ${result.perfScore}`}</Badge>
       </InlineStack>
 
       <BlockStack gap="200">
-        <Text as="h4" variant="headingSm">Core Web Vitals</Text>
-        <MetricRow label="Largest Contentful Paint (LCP)" value={result.lcp} score={result.lcpScore} field={result.fieldLcp} />
-        <MetricRow label="Cumulative Layout Shift (CLS)" value={result.cls} score={result.clsScore} field={result.fieldCls} />
+        <Text as="h4" variant="headingSm">
+          Core Web Vitals
+        </Text>
+        <MetricRow
+          label="Largest Contentful Paint (LCP)"
+          value={result.lcp}
+          score={result.lcpScore}
+          field={result.fieldLcp}
+        />
+        <MetricRow
+          label="Cumulative Layout Shift (CLS)"
+          value={result.cls}
+          score={result.clsScore}
+          field={result.fieldCls}
+        />
         <MetricRow label="First Contentful Paint (FCP)" value={result.fcp} score={null} />
         <MetricRow label="Total Blocking Time (TBT)" value={result.tbt} score={null} />
         <MetricRow label="Speed Index" value={result.si} score={null} />
@@ -263,17 +347,27 @@ function VitalsCard({ result }: { result: VitalsResult }) {
           <Divider />
           <BlockStack gap="200">
             <InlineStack align="space-between" blockAlign="center">
-              <Text as="h4" variant="headingSm">Third-party script impact</Text>
-              <Text as="p" variant="bodySm" tone="subdued">Shopify apps often cause this</Text>
+              <Text as="h4" variant="headingSm">
+                Third-party script impact
+              </Text>
+              <Text as="p" variant="bodySm" tone="subdued">
+                Shopify apps often cause this
+              </Text>
             </InlineStack>
             {result.thirdParty.map((t, i) => (
               <InlineStack key={String(i)} align="space-between" blockAlign="center">
-                <Text as="p" variant="bodyMd">{t.entity}</Text>
+                <Text as="p" variant="bodyMd">
+                  {t.entity}
+                </Text>
                 <InlineStack gap="200">
                   {t.blockingTime > 0 && (
-                    <Badge tone={t.blockingTime > 250 ? 'critical' : 'warning'}>{`${ms(t.blockingTime)} blocking`}</Badge>
+                    <Badge
+                      tone={t.blockingTime > 250 ? 'critical' : 'warning'}
+                    >{`${ms(t.blockingTime)} blocking`}</Badge>
                   )}
-                  <Text as="p" variant="bodySm" tone="subdued">{kb(t.size)}</Text>
+                  <Text as="p" variant="bodySm" tone="subdued">
+                    {kb(t.size)}
+                  </Text>
                 </InlineStack>
               </InlineStack>
             ))}
@@ -285,7 +379,9 @@ function VitalsCard({ result }: { result: VitalsResult }) {
         <>
           <Divider />
           <BlockStack gap="200">
-            <Text as="h4" variant="headingSm">Render-blocking resources</Text>
+            <Text as="h4" variant="headingSm">
+              Render-blocking resources
+            </Text>
             {result.renderBlocking.slice(0, 5).map((r, i) => (
               <InlineStack key={String(i)} align="space-between" blockAlign="center">
                 <Text as="p" variant="bodySm" breakWord>
@@ -302,7 +398,9 @@ function VitalsCard({ result }: { result: VitalsResult }) {
         <>
           <Divider />
           <BlockStack gap="200">
-            <Text as="h4" variant="headingSm">Unused code (savings)</Text>
+            <Text as="h4" variant="headingSm">
+              Unused code (savings)
+            </Text>
             {[...result.unusedJs, ...result.unusedCss].slice(0, 6).map((r, i) => (
               <InlineStack key={String(i)} align="space-between" blockAlign="center">
                 <Text as="p" variant="bodySm" breakWord>
@@ -333,14 +431,16 @@ export default function VitalsPage() {
           <Card>
             <BlockStack gap="300">
               <BlockStack gap="100">
-                <Text as="h2" variant="headingMd">Google PageSpeed Insights</Text>
+                <Text as="h2" variant="headingMd">
+                  Google PageSpeed Insights
+                </Text>
                 <Text as="p" tone="subdued">
-                  Powered by the free Google PageSpeed Insights API — no key required.
-                  Returns real Lighthouse scores + field data from Chrome UX Report.
-                  Run it on your homepage, best-selling product, or slowest collection.
+                  Powered by the free Google PageSpeed Insights API — no key required. Returns real
+                  Lighthouse scores + field data from Chrome UX Report. Run it on your homepage,
+                  best-selling product, or slowest collection.
                 </Text>
               </BlockStack>
-              <Form method="post">
+              <fetcher.Form method="post">
                 <InlineStack gap="200" blockAlign="end">
                   <Box minWidth="400px">
                     <TextField
@@ -356,7 +456,7 @@ export default function VitalsPage() {
                     Analyze
                   </Button>
                 </InlineStack>
-              </Form>
+              </fetcher.Form>
             </BlockStack>
           </Card>
         </Layout.Section>
@@ -377,7 +477,9 @@ export default function VitalsPage() {
         {result?.error && (
           <Layout.Section>
             <Banner tone="critical" title="Analysis failed">
-              <Text as="p" variant="bodyMd">{result.error}</Text>
+              <Text as="p" variant="bodyMd">
+                {result.error}
+              </Text>
             </Banner>
           </Layout.Section>
         )}
@@ -388,28 +490,35 @@ export default function VitalsPage() {
             <Layout.Section>
               <Card>
                 <BlockStack gap="300">
-                  <Text as="h2" variant="headingMd">Performance at a glance</Text>
+                  <Text as="h2" variant="headingMd">
+                    Performance at a glance
+                  </Text>
                   <InlineGrid columns={2} gap="600">
                     <ScoreGauge score={result.mobile.perfScore} label="Mobile" />
                     <ScoreGauge score={result.desktop.perfScore} label="Desktop" />
                   </InlineGrid>
                   <Banner
                     tone={
-                      result.mobile.perfScore >= 90 ? 'success' :
-                      result.mobile.perfScore >= 50 ? 'warning' : 'critical'
+                      result.mobile.perfScore >= 90
+                        ? 'success'
+                        : result.mobile.perfScore >= 50
+                          ? 'warning'
+                          : 'critical'
                     }
                     title={
-                      result.mobile.perfScore >= 90 ? 'Excellent performance' :
-                      result.mobile.perfScore >= 50 ? 'Room for improvement' :
-                      'Performance is hurting your SEO'
+                      result.mobile.perfScore >= 90
+                        ? 'Excellent performance'
+                        : result.mobile.perfScore >= 50
+                          ? 'Room for improvement'
+                          : 'Performance is hurting your SEO'
                     }
                   >
                     <Text as="p" variant="bodyMd">
                       {result.mobile.perfScore < 50
                         ? 'Google uses page speed as a ranking signal. A score below 50 on mobile is actively hurting your rankings. Check the third-party scripts section — Shopify apps are often the culprit.'
                         : result.mobile.perfScore < 90
-                        ? 'Your store is loading reasonably well but there are specific improvements below that could push you into the green zone.'
-                        : 'Your store loads fast. Keep monitoring after installing new apps — each one adds JavaScript that slows your storefront.'}
+                          ? 'Your store is loading reasonably well but there are specific improvements below that could push you into the green zone.'
+                          : 'Your store loads fast. Keep monitoring after installing new apps — each one adds JavaScript that slows your storefront.'}
                     </Text>
                   </Banner>
                 </BlockStack>
@@ -432,14 +541,22 @@ export default function VitalsPage() {
             <Layout.Section>
               <Card>
                 <BlockStack gap="300">
-                  <Text as="h2" variant="headingMd">What to fix first</Text>
+                  <Text as="h2" variant="headingMd">
+                    What to fix first
+                  </Text>
                   <BlockStack gap="200">
-                    {result.mobile.thirdParty.filter(t => t.blockingTime > 200).length > 0 && (
+                    {result.mobile.thirdParty.filter((t) => t.blockingTime > 200).length > 0 && (
                       <InlineStack align="space-between" blockAlign="center">
                         <BlockStack gap="050">
-                          <Text as="p" variant="bodyMd" fontWeight="semibold">Slow third-party scripts</Text>
+                          <Text as="p" variant="bodyMd" fontWeight="semibold">
+                            Slow third-party scripts
+                          </Text>
                           <Text as="p" variant="bodySm" tone="subdued">
-                            {result.mobile.thirdParty.filter(t => t.blockingTime > 200).map(t => t.entity).join(', ')} — consider removing unused apps
+                            {result.mobile.thirdParty
+                              .filter((t) => t.blockingTime > 200)
+                              .map((t) => t.entity)
+                              .join(', ')}{' '}
+                            — consider removing unused apps
                           </Text>
                         </BlockStack>
                         <Badge tone="critical">High impact</Badge>
@@ -448,20 +565,26 @@ export default function VitalsPage() {
                     {result.mobile.renderBlocking.length > 0 && (
                       <InlineStack align="space-between" blockAlign="center">
                         <BlockStack gap="050">
-                          <Text as="p" variant="bodyMd" fontWeight="semibold">Render-blocking resources</Text>
+                          <Text as="p" variant="bodyMd" fontWeight="semibold">
+                            Render-blocking resources
+                          </Text>
                           <Text as="p" variant="bodySm" tone="subdued">
-                            {result.mobile.renderBlocking.length} resources delay first paint. Defer or inline critical CSS.
+                            {result.mobile.renderBlocking.length} resources delay first paint. Defer
+                            or inline critical CSS.
                           </Text>
                         </BlockStack>
                         <Badge tone="warning">Medium impact</Badge>
                       </InlineStack>
                     )}
-                    {(result.mobile.unusedJs.length + result.mobile.unusedCss.length) > 0 && (
+                    {result.mobile.unusedJs.length + result.mobile.unusedCss.length > 0 && (
                       <InlineStack align="space-between" blockAlign="center">
                         <BlockStack gap="050">
-                          <Text as="p" variant="bodyMd" fontWeight="semibold">Unused JavaScript + CSS</Text>
+                          <Text as="p" variant="bodyMd" fontWeight="semibold">
+                            Unused JavaScript + CSS
+                          </Text>
                           <Text as="p" variant="bodySm" tone="subdued">
-                            {result.mobile.unusedJs.length + result.mobile.unusedCss.length} files with unused code. Remove or lazy-load.
+                            {result.mobile.unusedJs.length + result.mobile.unusedCss.length} files
+                            with unused code. Remove or lazy-load.
                           </Text>
                         </BlockStack>
                         <Badge tone="warning">Medium impact</Badge>
@@ -470,9 +593,12 @@ export default function VitalsPage() {
                     {(result.mobile.lcpScore ?? 0) < 0.5 && (
                       <InlineStack align="space-between" blockAlign="center">
                         <BlockStack gap="050">
-                          <Text as="p" variant="bodyMd" fontWeight="semibold">Slow LCP — hero image</Text>
+                          <Text as="p" variant="bodyMd" fontWeight="semibold">
+                            Slow LCP — hero image
+                          </Text>
                           <Text as="p" variant="bodySm" tone="subdued">
-                            LCP {result.mobile.lcp} is below Google&apos;s 2.5s threshold. Optimize your hero image (WebP, preload, lazy-load below-fold images).
+                            LCP {result.mobile.lcp} is below Google&apos;s 2.5s threshold. Optimize
+                            your hero image (WebP, preload, lazy-load below-fold images).
                           </Text>
                         </BlockStack>
                         <Badge tone="critical">High impact</Badge>
