@@ -76,6 +76,29 @@ type VitalsResult = {
 
 const PSI_URL = 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed';
 
+function normalizeHttpUrl(rawUrl: string) {
+  try {
+    const url = new URL(rawUrl.startsWith('http') ? rawUrl : `https://${rawUrl}`);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+    return url.href;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchPageSpeed(url: string, strategy: 'mobile' | 'desktop'): Promise<PsiResponse> {
+  const res = await fetch(`${PSI_URL}?url=${encodeURIComponent(url)}&strategy=${strategy}`, {
+    signal: AbortSignal.timeout(45_000),
+  });
+  const data = (await res.json().catch(() => null)) as PsiResponse | null;
+
+  if (!res.ok) {
+    return { error: { message: data?.error?.message ?? `PageSpeed returned HTTP ${res.status}` } };
+  }
+
+  return data ?? { error: { message: 'PageSpeed returned an empty response' } };
+}
+
 function parsePsi(
   data: PsiResponse,
   url: string,
@@ -167,19 +190,16 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 export const action = async ({ request }: ActionFunctionArgs) => {
   await authenticate.admin(request);
   const form = await request.formData();
-  const url = String(form.get('url') ?? '').trim();
+  const rawUrl = String(form.get('url') ?? '').trim();
+  const url = normalizeHttpUrl(rawUrl);
 
-  if (!url) return json({ error: 'URL is required' }, { status: 400 });
+  if (!rawUrl) return json({ error: 'URL is required' }, { status: 400 });
+  if (!url) return json({ error: 'Enter a valid http or https URL' }, { status: 400 });
 
   try {
-    const [mobileRes, desktopRes] = await Promise.all([
-      fetch(`${PSI_URL}?url=${encodeURIComponent(url)}&strategy=mobile`),
-      fetch(`${PSI_URL}?url=${encodeURIComponent(url)}&strategy=desktop`),
-    ]);
-
     const [mobileData, desktopData] = await Promise.all([
-      mobileRes.json() as Promise<PsiResponse>,
-      desktopRes.json() as Promise<PsiResponse>,
+      fetchPageSpeed(url, 'mobile'),
+      fetchPageSpeed(url, 'desktop'),
     ]);
 
     if (mobileData.error || desktopData.error) {
