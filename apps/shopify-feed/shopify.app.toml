@@ -4,6 +4,7 @@ client_id = "c62d723996fab365ffef98056499f368"
 application_url = "https://klyna-feed.vercel.app"
 embedded = true
 name = "Klyna Feed"
+handle = "klyna-feed"
 
 [webhooks]
 api_version = "2025-01"
@@ -44,4 +45,5 @@ redirect_urls = [
 ]
 
 [build]
-automatically_update_urls_on_dev = true
+automatically_update_urls_on_dev = false
+include_config_on_deploy = true
