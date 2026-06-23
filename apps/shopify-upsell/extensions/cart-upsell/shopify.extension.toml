@@ -3,7 +3,7 @@
 # Renders the cart upsell widget. Merchants add the "Klyna Upsell" block to
 # their cart drawer / cart page from the theme editor; no theme code required.
 
-api_version = "2025-01"
+api_version = "2026-04"
 
 [[extensions]]
 name = "Klyna Upsell"

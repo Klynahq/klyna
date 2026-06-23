@@ -9,7 +9,7 @@
 # offer-fetch + accept flow against the same /api/offers endpoint the cart
 # widget uses; run `shopify app dev` to build and preview it.
 
-api_version = "2025-01"
+api_version = "2026-04"
 
 [[extensions]]
 name = "Klyna Upsell — Post-purchase"
