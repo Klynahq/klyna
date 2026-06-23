@@ -5,7 +5,7 @@
 # The block renders only when the selected variant is sold out, captures
 # email/SMS interest, and POSTs it to the app's /api/subscribe endpoint.
 
-api_version = "2025-01"
+api_version = "2026-04"
 
 [[extensions]]
 name = "Klyna Notify me"

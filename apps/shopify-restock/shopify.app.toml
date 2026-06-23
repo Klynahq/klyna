@@ -20,7 +20,7 @@ dev_store_url = ""
 include_config_on_deploy = true
 
 [webhooks]
-api_version = "2025-01"
+api_version = "2026-04"
 
   [[webhooks.subscriptions]]
   topics = ["app/uninstalled"]
