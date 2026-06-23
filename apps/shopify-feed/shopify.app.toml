@@ -7,7 +7,7 @@ name = "Klyna Feed"
 handle = "klyna-feed"
 
 [webhooks]
-api_version = "2025-01"
+api_version = "2026-04"
 
   [[webhooks.subscriptions]]
   compliance_topics = [ "customers/data_request" ]

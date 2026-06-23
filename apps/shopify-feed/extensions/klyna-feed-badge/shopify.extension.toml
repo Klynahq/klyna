@@ -6,7 +6,7 @@
 # the feed — so the product carries consistent structured data on-page and in
 # the syndicated feed.
 
-api_version = "2025-01"
+api_version = "2026-04"
 
 [[extensions]]
 name = "Klyna Feed badge"
