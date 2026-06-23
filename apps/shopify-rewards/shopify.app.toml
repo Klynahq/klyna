@@ -4,6 +4,7 @@ client_id = "5562b3e17b36882181d43367a6f87631"
 application_url = "https://klyna-rewards.vercel.app"
 embedded = true
 name = "Klyna Rewards"
+handle = "klyna-rewards"
 
 [webhooks]
 api_version = "2026-07"
@@ -24,4 +25,5 @@ redirect_urls = [
 ]
 
 [build]
-automatically_update_urls_on_dev = true
+automatically_update_urls_on_dev = false
+include_config_on_deploy = true
