@@ -2,6 +2,7 @@
 
 client_id = "02ac921ec3c9f022d897a40a87015d96"
 name = "Klyna Sticky Cart"
+handle = "klyna-sticky-cart"
 application_url = "https://klyna-sticky-cart.vercel.app"
 embedded = true
 
@@ -24,4 +25,5 @@ api_version = "2025-01"
   uri = "/webhooks/compliance"
 
 [build]
-automatically_update_urls_on_dev = true
+automatically_update_urls_on_dev = false
+include_config_on_deploy = true
