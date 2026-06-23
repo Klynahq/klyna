@@ -2,6 +2,7 @@
   "name": "shopify-restock",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@9.15.0",
   "description": "Klyna Back-in-Stock \u2014 restock alerts & waitlists that recover lost sold-out demand.",
   "type": "module",
   "scripts": {
