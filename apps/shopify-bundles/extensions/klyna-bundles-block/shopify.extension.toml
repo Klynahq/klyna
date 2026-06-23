@@ -5,7 +5,7 @@
 # (/apps/klyna-bundles → /api/storefront) so prices and recommendations always
 # match what's configured in the admin.
 
-api_version = "2025-01"
+api_version = "2026-04"
 
 [[extensions]]
 name = "Klyna Bundles"
