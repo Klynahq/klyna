@@ -1,18 +1,20 @@
 import '@shopify/shopify-app-remix/adapters/node';
 import {
-  ApiVersion,
   AppDistribution,
   shopifyApp,
+  type ApiVersion,
 } from '@shopify/shopify-app-remix/server';
 import { PrismaSessionStorage } from '@shopify/shopify-app-session-storage-prisma';
 import prisma from './db.server';
 
+const SHOPIFY_API_VERSION = '2026-04' as ApiVersion;
+
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY ?? '',
   apiSecretKey: process.env.SHOPIFY_API_SECRET ?? '',
-  apiVersion: ApiVersion.January25,
+  apiVersion: SHOPIFY_API_VERSION,
   scopes: process.env.SCOPES?.split(','),
-  appUrl: process.env.SHOPIFY_APP_URL ?? 'https://klyna.dev',
+  appUrl: process.env.SHOPIFY_APP_URL ?? 'https://klyna-feed.vercel.app',
   authPathPrefix: '/auth',
   sessionStorage: new PrismaSessionStorage(prisma),
   distribution: AppDistribution.AppStore,
@@ -23,7 +25,7 @@ const shopify = shopifyApp({
 });
 
 export default shopify;
-export const apiVersion = ApiVersion.January25;
+export const apiVersion = SHOPIFY_API_VERSION;
 
 // Re-export the most common helpers behind opaque any-typed wrappers so
 // callers do not pay the cost of TS trying to inline cross-package types.
