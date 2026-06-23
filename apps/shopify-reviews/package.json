@@ -2,6 +2,7 @@
   "name": "shopify-reviews",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@9.15.0",
   "description": "Klyna Reviews \u2014 Photo reviews, UGC & rich-snippet stars that build trust and rank.",
   "type": "module",
   "scripts": {
