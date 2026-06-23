@@ -52,7 +52,7 @@ pnpm install
 # 2. Create the Prisma SQLite DB (session storage + widget data)
 cp .env.example .env
 pnpm prisma:generate
-pnpm prisma:migrate   # creates dev.sqlite
+pnpm prisma:migrate   # applies the Postgres schema
 
 # 3. Link to a Shopify app (creates one in your Partner account or links existing)
 pnpm shopify app config link
