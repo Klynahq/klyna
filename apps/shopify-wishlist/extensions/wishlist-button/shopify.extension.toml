@@ -7,7 +7,7 @@
 #     Theme settings → App embeds) that loads the shared wishlist drawer +
 #     guest-save script site-wide.
 
-api_version = "2025-01"
+api_version = "2026-04"
 
 [[extensions]]
 name = "Klyna Wishlist button"
