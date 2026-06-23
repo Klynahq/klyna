@@ -136,7 +136,7 @@ export default function Subscribers() {
 
   const onTabChange = useCallback(
     (index: number) => {
-      const next = TABS[index].id;
+      const next = TABS[index]?.id ?? 'ALL';
       setSearchParams(next === 'ALL' ? {} : { status: next });
     },
     [setSearchParams],
