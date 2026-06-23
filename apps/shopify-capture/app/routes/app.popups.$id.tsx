@@ -76,7 +76,7 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
       .map((label, i) => ({
         label: label.trim(),
         discountCode: (codes[i] ?? '').trim(),
-        weight: Number.isFinite(weights[i]) ? Math.max(0, weights[i]) : 1,
+        weight: Number.isFinite(weights[i] ?? NaN) ? Math.max(0, weights[i] ?? 0) : 1,
         color: colors[i] ?? '#7c5cff',
       }))
       .filter((s) => s.label.length > 0);
