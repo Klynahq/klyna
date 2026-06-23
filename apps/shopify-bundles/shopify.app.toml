@@ -10,7 +10,7 @@
 client_id = "08d624eacf014ae9ee9ffe44f5a6bf62"
 
 name = "Klyna Bundles"
-handle = "shopify-bundles"
+handle = "klyna-bundles"
 application_url = "https://klyna-bundles.vercel.app"
 embedded = true
 
@@ -63,4 +63,4 @@ uri = "/webhooks/shop/redact"
 
 [build]
 include_config_on_deploy = true
-automatically_update_urls_on_dev = true
+automatically_update_urls_on_dev = false
