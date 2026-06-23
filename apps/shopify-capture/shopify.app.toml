@@ -2,31 +2,45 @@
 
 client_id = "1eacc2bec267d1e592448ead6e5c2777"
 name = "Klyna Capture"
-application_url = "https://example.com"
+handle = "klyna-capture"
+application_url = "https://klyna-capture.vercel.app"
 embedded = true
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
 scopes = "read_customers,read_products,read_themes,write_customers"
 
+[app_proxy]
+url = "https://klyna-capture.vercel.app/proxy"
+subpath = "klyna-capture"
+prefix = "apps"
+
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+redirect_urls = [
+  "https://klyna-capture.vercel.app/auth/callback",
+  "https://klyna-capture.vercel.app/auth/shopify/callback",
+  "https://klyna-capture.vercel.app/api/auth/callback"
+]
 
 [webhooks]
 api_version = "2025-01"
 
   [[webhooks.subscriptions]]
-  topics = [ "customers/data_request" ]
+  topics = [ "app/uninstalled" ]
+  uri = "/webhooks/app/uninstalled"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = [ "customers/data_request" ]
   uri = "/webhooks/customers/data_request"
 
   [[webhooks.subscriptions]]
-  topics = [ "customers/redact" ]
+  compliance_topics = [ "customers/redact" ]
   uri = "/webhooks/customers/redact"
 
   [[webhooks.subscriptions]]
-  topics = [ "shop/redact" ]
+  compliance_topics = [ "shop/redact" ]
   uri = "/webhooks/shop/redact"
 
 [build]
 include_config_on_deploy = true
-automatically_update_urls_on_dev = true
+automatically_update_urls_on_dev = false
