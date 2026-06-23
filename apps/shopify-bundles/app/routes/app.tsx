@@ -22,8 +22,6 @@ export default function App() {
         <Link to="/app" rel="home">Dashboard</Link>
         <Link to="/app/bundles">Bundles</Link>
         <Link to="/app/volume">Volume discounts</Link>
-        <Link to="/app/fbt">Frequently bought together</Link>
-        <Link to="/app/suggest">AI suggestions</Link>
         <Link to="/app/settings">Settings</Link>
       </NavMenu>
       <Outlet />

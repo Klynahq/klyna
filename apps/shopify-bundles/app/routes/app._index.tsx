@@ -25,7 +25,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   const since = new Date(Date.now() - WINDOW_DAYS * 24 * 60 * 60 * 1000);
 
-  const [shopInfo, sales, activeBundles, draftBundles, volumeCount, fbtCount] =
+  const [shopInfo, sales, activeBundles, draftBundles, volumeCount] =
     await Promise.all([
       getShopInfo(admin).catch(() => null),
       prisma.bundleSale.findMany({
@@ -35,7 +35,6 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       prisma.bundle.count({ where: { shop, status: 'active' } }),
       prisma.bundle.count({ where: { shop, status: 'draft' } }),
       prisma.volumeTier.count({ where: { shop } }),
-      prisma.fbtPair.count({ where: { shop } }),
     ]);
 
   const revenue = money(sales.reduce((s, r) => s + r.grossAmount, 0));
@@ -57,7 +56,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       volume: money(bySource.volume ?? 0),
       fbt: money(bySource.fbt ?? 0),
     },
-    counts: { activeBundles, draftBundles, volumeCount, fbtCount },
+    counts: { activeBundles, draftBundles, volumeCount },
     hasData: sales.length > 0,
   };
 };
@@ -96,18 +95,6 @@ export default function Dashboard() {
       to: '/app/volume',
       badge: counts.volumeCount > 0 ? `${counts.volumeCount} tiers` : undefined,
     },
-    {
-      title: 'Frequently bought together',
-      body: 'Mine order history for product pairs and surface them on the product page.',
-      to: '/app/fbt',
-      badge: counts.fbtCount > 0 ? `${counts.fbtCount} pairs` : undefined,
-    },
-    {
-      title: 'AI-suggested bundles',
-      body: 'Co-purchase patterns from real orders, titled and described by your free-tier AI provider.',
-      to: '/app/suggest',
-      ai: true,
-    },
   ];
 
   return (
@@ -123,8 +110,8 @@ export default function Dashboard() {
               <Text as="h2" variant="headingMd">Lift AOV with bundles & volume breaks.</Text>
               <Text as="p" variant="bodyMd" tone="subdued">
                 Klyna Bundles turns single-item carts into bigger orders - curated
-                bundles, quantity discounts, and data-driven recommendations, all
-                shown on the product page with the savings spelled out.
+                bundles and quantity discounts, all shown on the product page
+                with the savings spelled out.
               </Text>
             </BlockStack>
           </Card>
@@ -160,9 +147,8 @@ export default function Dashboard() {
                 </BlockStack>
               ) : (
                 <Text as="p" tone="subdued">
-                  No bundle-attributed sales yet. Once a bundle, volume tier, or FBT
-                  recommendation converts, revenue shows up here. Sales are recorded
-                  from the orders webhook (or the recompute on each feature page).
+                  No bundle-attributed sales yet. Once a bundle or volume tier
+                  converts, revenue shows up here after sales attribution is enabled.
                 </Text>
               )}
             </BlockStack>

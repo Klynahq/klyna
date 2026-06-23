@@ -1,12 +1,6 @@
-// AI-suggested bundles mined from co-purchase patterns.
-//
-// The action runs in two phases. "generate" pulls the last 250 orders via
-// Admin GraphQL, builds a co-purchase frequency map, picks the top 3 companion
-// products per anchor, and calls the per-shop AI client with the productBundle
-// prompt. Each non-empty response becomes a BundleSuggestion row. "approve"
-// promotes a suggestion to a real Bundle + BundleItems. "dismiss" marks it
-// dismissed. The page is a Polaris Page that renders pending suggestions in
-// Cards with Approve and Dismiss buttons.
+// AI-suggested bundles. Generation is disabled in the default public-safe app
+// configuration because order-history mining requires protected customer data
+// approval. Existing suggestions can still be approved or dismissed.
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
 import { useLoaderData, useNavigation, useSubmit } from '@remix-run/react';
 import {
@@ -23,9 +17,7 @@ import {
 } from '@shopify/polaris';
 import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
-import { fetchRecentOrderBaskets, type CatalogProduct } from '../lib/admin.server';
-import { getAiClientForShop, getShopAiSettings } from '../lib/ai.server';
-import { PROMPTS } from '~/lib/klyna-ai-client';
+import { getShopAiSettings } from '../lib/ai.server';
 
 type Companion = { gid: string; title: string };
 
@@ -82,49 +74,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   return {
     aiOff: aiSettings.provider === 'off',
     suggestions,
+    orderHistoryEnabled: false,
   };
 };
 
-// Parse the BUNDLE: ... / REASON: ... structured response from
-// PROMPTS.productBundle. Falls back to first non-empty line as title and the
-// remainder as blurb so a slightly-off model still produces something useful.
-function parseBundleResponse(
-  raw: string,
-  anchorTitle: string,
-  companionTitles: string[],
-): { title: string; blurb: string } {
-  const text = raw.trim();
-  if (!text) {
-    return {
-      title: `${anchorTitle} bundle`,
-      blurb: `Bought together with ${companionTitles.slice(0, 2).join(' and ')}.`,
-    };
-  }
-  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-  let title = '';
-  let blurb = '';
-  for (const line of lines) {
-    const m = /^bundle\s*:\s*(.+)$/i.exec(line);
-    if (m && m[1]) {
-      title = m[1].trim();
-      continue;
-    }
-    const r = /^reason\s*:\s*(.+)$/i.exec(line);
-    if (r && r[1]) {
-      blurb = r[1].trim();
-      continue;
-    }
-  }
-  if (!title) title = lines[0] ?? `${anchorTitle} bundle`;
-  if (!blurb) blurb = lines.slice(1).join(' ') || `Bought together with ${companionTitles.slice(0, 2).join(' and ')}.`;
-  // Strip surrounding quotes if any.
-  title = title.replace(/^["'`]|["'`]$/g, '').slice(0, 120);
-  blurb = blurb.replace(/^["'`]|["'`]$/g, '').slice(0, 240);
-  return { title, blurb };
-}
-
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { admin, session } = await authenticate.admin(request);
+  const { session } = await authenticate.admin(request);
   const shop = session.shop;
   const form = await request.formData();
   const intent = String(form.get('intent') ?? 'generate');
@@ -202,126 +157,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 
   // intent === 'generate'
-  const aiSettings = await getShopAiSettings(shop);
-  if (aiSettings.provider === 'off') {
-    return json({ ok: false, error: 'Enable AI in Settings first.' }, { status: 200 });
-  }
-
-  const { baskets, products } = await fetchRecentOrderBaskets(admin, 250);
-  if (baskets.length === 0) {
-    return json({ ok: false, error: 'No orders found to analyze yet.' }, { status: 200 });
-  }
-
-  // Build co-purchase frequency map.
-  const coPurchase = new Map<string, Map<string, number>>();
-  for (const basket of baskets) {
-    const ids = basket.productGids;
-    for (let i = 0; i < ids.length; i++) {
-      const a = ids[i];
-      if (!a) continue;
-      let row = coPurchase.get(a);
-      if (!row) {
-        row = new Map<string, number>();
-        coPurchase.set(a, row);
-      }
-      for (let j = 0; j < ids.length; j++) {
-        if (i === j) continue;
-        const b = ids[j];
-        if (!b) continue;
-        row.set(b, (row.get(b) ?? 0) + 1);
-      }
-    }
-  }
-
-  const titleFor = (gid: string): string => {
-    const p = products.get(gid);
-    return p?.title ?? 'Product';
-  };
-
-  // Cap the number of anchors processed in a single run so we never exhaust the
-  // AI quota in one click. 8 calls per generate keeps usage predictable.
-  const MAX_ANCHORS_PER_RUN = 8;
-
-  // Skip anchors that already have a pending or approved suggestion - merchant
-  // hasn't acted on the last one yet.
-  const existing = await prisma.bundleSuggestion.findMany({
-    where: { shop, status: { in: ['pending', 'approved'] } },
-    select: { anchorGid: true },
-  });
-  const skip = new Set(existing.map((r) => r.anchorGid));
-
-  // Rank anchors by total co-purchase volume.
-  const ranked: { anchor: string; total: number }[] = [];
-  for (const [anchor, others] of coPurchase) {
-    if (skip.has(anchor)) continue;
-    let total = 0;
-    for (const v of others.values()) total += v;
-    if (total > 0) ranked.push({ anchor, total });
-  }
-  ranked.sort((a, b) => b.total - a.total);
-
-  const ai = await getAiClientForShop(shop);
-  let created = 0;
-  let lastError: string | undefined;
-
-  for (const { anchor } of ranked.slice(0, MAX_ANCHORS_PER_RUN)) {
-    const others = coPurchase.get(anchor);
-    if (!others) continue;
-    const top = [...others.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 3)
-      .map(([gid]) => gid);
-    if (top.length === 0) continue;
-
-    const anchorTitle = titleFor(anchor);
-    const coTitles = top.map(titleFor);
-
-    const out = await ai.complete({
-      prompt: PROMPTS.productBundle(anchorTitle, coTitles),
-      maxTokens: 200,
-      temperature: 0.4,
-    });
-    if (out.error) {
-      lastError = out.error;
-      // Keep going on per-call errors when they look retryable, otherwise stop.
-      if (out.error.toLowerCase().includes('cap reached') || out.error.toLowerCase().includes('disabled')) {
-        break;
-      }
-      continue;
-    }
-
-    const { title, blurb } = parseBundleResponse(out.text, anchorTitle, coTitles);
-
-    const companions: Companion[] = top
-      .map((gid) => {
-        const p: CatalogProduct | undefined = products.get(gid);
-        return p ? { gid, title: p.title } : { gid, title: titleFor(gid) };
-      });
-
-    await prisma.bundleSuggestion.create({
-      data: {
-        shop,
-        anchorGid: anchor,
-        anchorTitle,
-        companionsJson: JSON.stringify(companions),
-        suggestedTitle: title,
-        blurb,
-        discountPct: 10,
-      },
-    });
-    created++;
-  }
-
   return json({
-    ok: true,
-    analyzed: baskets.length,
-    created,
-    error: created === 0 ? lastError : undefined,
+    ok: false,
+    error: 'Order-history suggestions require protected customer data approval before they can be generated.',
   });
 };
 
 export default function Suggest() {
-  const { aiOff, suggestions } = useLoaderData<typeof loader>();
+  const { aiOff, suggestions, orderHistoryEnabled } = useLoaderData<typeof loader>();
   const submit = useSubmit();
   const nav = useNavigation();
   const busy = nav.state === 'submitting';
@@ -352,7 +195,7 @@ export default function Suggest() {
       backAction={{ url: '/app' }}
       subtitle="Bundles mined from your real co-purchase patterns, then titled and described by your AI provider."
       primaryAction={
-        aiOff
+        aiOff || !orderHistoryEnabled
           ? undefined
           : {
               content: 'Generate suggestions',
@@ -362,7 +205,19 @@ export default function Suggest() {
       }
     >
       <Layout>
-        {aiOff && (
+        {!orderHistoryEnabled && (
+          <Layout.Section>
+            <Banner tone="warning" title="AI suggestions are not enabled">
+              <Text as="p" variant="bodyMd">
+                Generating suggestions requires order-history access, which Shopify
+                treats as protected customer data. Core bundles and volume discounts
+                are available without that approval.
+              </Text>
+            </Banner>
+          </Layout.Section>
+        )}
+
+        {aiOff && orderHistoryEnabled && (
           <Layout.Section>
             <Banner
               tone="warning"
@@ -377,7 +232,7 @@ export default function Suggest() {
           </Layout.Section>
         )}
 
-        {!aiOff && (
+        {!aiOff && orderHistoryEnabled && (
           <Layout.Section>
             <Banner tone="info">
               Klyna reads the last 250 orders, finds the products most often bought
@@ -388,7 +243,7 @@ export default function Suggest() {
           </Layout.Section>
         )}
 
-        {!aiOff && suggestions.length === 0 ? (
+        {!aiOff && orderHistoryEnabled && suggestions.length === 0 ? (
           <Layout.Section>
             <Card>
               <EmptyState

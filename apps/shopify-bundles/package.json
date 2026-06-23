@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "Tools that help your work get found.",
+  "packageManager": "pnpm@9.15.0",
   "type": "module",
   "scripts": {
     "build": "remix vite:build",

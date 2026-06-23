@@ -10,4 +10,5 @@ api_version = "2025-01"
 [[extensions]]
 name = "Klyna Bundles"
 handle = "klyna-bundles-block"
+uid = "83139d33-1633-ec95-a491-33bb68e5bae064df9b95"
 type = "theme"

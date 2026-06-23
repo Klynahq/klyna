@@ -103,7 +103,6 @@ export default function Settings() {
   const [bundleHeading, setBundleHeading] = useState(settings.bundleHeading);
   const [accentColor, setAccentColor] = useState(settings.accentColor);
   const [showSavingsBadge, setShowSavingsBadge] = useState(settings.showSavingsBadge);
-  const [autoFbt, setAutoFbt] = useState(settings.autoFbt);
 
   const [provider, setProvider] = useState<string>(aiSettings.provider);
   const [apiKey, setApiKey] = useState(aiSettings.apiKey ?? '');
@@ -127,7 +126,6 @@ export default function Settings() {
     fd.set('bundleHeading', bundleHeading);
     fd.set('accentColor', accentColor);
     if (showSavingsBadge) fd.set('showSavingsBadge', 'on');
-    if (autoFbt) fd.set('autoFbt', 'on');
     submit(fd, { method: 'post' });
   };
 
@@ -160,12 +158,6 @@ export default function Settings() {
                 ]}
                 value={defaultDiscountType}
                 onChange={setDefaultDiscountType}
-              />
-              <Checkbox
-                label="Auto-refresh frequently-bought-together pairs"
-                helpText="Recompute recommendations from order history on a schedule."
-                checked={autoFbt}
-                onChange={setAutoFbt}
               />
             </BlockStack>
           </Card>
@@ -235,10 +227,9 @@ export default function Settings() {
               <BlockStack gap="100">
                 <Text as="h2" variant="headingMd">AI assistant</Text>
                 <Text as="p" tone="subdued">
-                  Klyna Bundles ships with deterministic frequently-bought-together mining
-                  from order history. Add a free-tier API key below to unlock AI-suggested
-                  bundles - the app proposes curated sets with titles and blurbs from your
-                  co-purchase patterns. Your key stays on this app's database.
+                  Add a free-tier API key below for future AI-assisted copy and bundle
+                  naming. Order-history suggestions stay disabled until protected
+                  customer data access is approved in Shopify.
                 </Text>
               </BlockStack>
 

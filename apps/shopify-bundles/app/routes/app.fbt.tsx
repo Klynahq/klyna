@@ -1,10 +1,9 @@
-import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
-import { useLoaderData, useNavigation, useSubmit } from '@remix-run/react';
+import { type LoaderFunctionArgs } from '@remix-run/node';
+import { useLoaderData } from '@remix-run/react';
 import {
   Badge,
   BlockStack,
   Banner,
-  Button,
   Card,
   EmptyState,
   InlineStack,
@@ -15,8 +14,6 @@ import {
 } from '@shopify/polaris';
 import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
-import { fetchRecentOrderBaskets } from '../lib/admin.server';
-import { mineFbt, type ProductMeta } from '../lib/fbt';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
@@ -44,68 +41,20 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   return { groups: [...grouped.values()], lastComputed, pairCount: pairs.length };
 };
 
-export const action = async ({ request }: ActionFunctionArgs) => {
-  const { admin, session } = await authenticate.admin(request);
-  const shop = session.shop;
-
-  // Pull recent orders, mine pairs, persist.
-  const { baskets, products } = await fetchRecentOrderBaskets(admin, 250);
-  if (baskets.length === 0) {
-    return json({ ok: false, error: 'No orders found to analyze yet.' }, { status: 200 });
-  }
-
-  const meta = new Map<string, ProductMeta>();
-  for (const [gid, p] of products) {
-    meta.set(gid, { title: p.title, imageUrl: p.imageUrl, price: p.price });
-  }
-
-  const recommendations = mineFbt(baskets, meta, { minSupport: 2, perAnchor: 4 });
-
-  await prisma.fbtPair.deleteMany({ where: { shop } });
-  if (recommendations.length > 0) {
-    await prisma.fbtPair.createMany({
-      data: recommendations.map((r) => ({
-        shop,
-        anchorGid: r.anchorGid,
-        anchorTitle: r.anchorTitle,
-        recommendedGid: r.recommendedGid,
-        recommendedTitle: r.recommendedTitle,
-        recommendedImage: r.recommendedImage,
-        recommendedPrice: r.recommendedPrice,
-        support: r.support,
-        confidence: r.confidence,
-      })),
-    });
-  }
-
-  return json({
-    ok: true,
-    analyzed: baskets.length,
-    found: recommendations.length,
-  });
-};
-
 export default function Fbt() {
   const { groups, lastComputed, pairCount } = useLoaderData<typeof loader>();
-  const submit = useSubmit();
-  const nav = useNavigation();
-  const computing = nav.state === 'submitting';
-
-  const recompute = () => submit(new FormData(), { method: 'post' });
 
   return (
     <Page
       title="Frequently bought together"
       backAction={{ url: '/app' }}
-      subtitle="Mined from your real order history — no external data."
-      primaryAction={{ content: 'Recompute from orders', loading: computing, onAction: recompute }}
+      subtitle="Optional order-history recommendations."
     >
       <Layout>
         <Layout.Section>
-          <Banner tone="info">
-            Klyna scans up to 250 recent orders and counts which products are bought
-            together. Pairs seen in at least 2 orders become recommendations that the
-            storefront block shows on the product page.
+          <Banner tone="warning" title="Order-history recommendations are not enabled">
+            This feature needs Shopify protected customer data approval because it
+            analyzes orders. Bundles and volume discounts work without that approval.
           </Banner>
         </Layout.Section>
 
@@ -114,12 +63,11 @@ export default function Fbt() {
             <Card>
               <EmptyState
                 heading="No recommendations yet"
-                action={{ content: 'Recompute from orders', onAction: recompute, loading: computing }}
                 image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
               >
                 <p>
-                  Run the analysis to mine frequently-bought-together pairs from your
-                  order history. You need a handful of multi-item orders for pairs to surface.
+                  Re-enable order access after protected data approval to mine
+                  frequently-bought-together pairs from real orders.
                 </p>
               </EmptyState>
             </Card>
