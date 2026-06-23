@@ -54,8 +54,7 @@ api_version = "2025-01"
 
 [access_scopes]
 # read_products + read_inventory power the demand report and the inventory webhook.
-# read_customers powers smart per-customer notification timing (timezone lookup).
-scopes = "read_products,read_inventory,read_customers"
+scopes = "read_products,read_inventory"
 
 [auth]
 redirect_urls = [
