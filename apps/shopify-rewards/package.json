@@ -2,6 +2,7 @@
   "name": "shopify-rewards",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@9.15.0",
   "description": "Klyna Rewards \u2014 loyalty points, tiers & referrals that bring customers back. Built on Remix + Shopify App Bridge + Polaris.",
   "type": "module",
   "scripts": {
