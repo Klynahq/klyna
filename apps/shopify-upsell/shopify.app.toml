@@ -2,6 +2,7 @@
 
 client_id = "7cede999b6d21fcbcabf544952de3c48"
 name = "Klyna Upsell"
+handle = "klyna-upsell"
 application_url = "https://klyna-shopify-upsell.vercel.app"
 embedded = true
 
@@ -40,4 +41,5 @@ api_version = "2025-01"
   uri = "/webhooks/shop/redact"
 
 [build]
-automatically_update_urls_on_dev = true
+automatically_update_urls_on_dev = false
+include_config_on_deploy = true
