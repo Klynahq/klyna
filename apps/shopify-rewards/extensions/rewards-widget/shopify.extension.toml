@@ -5,7 +5,7 @@
 # The block fetches the shopper's balance, tier, and referral code through the
 # app proxy (/apps/rewards/widget/state) and renders a rewards panel.
 
-api_version = "2025-01"
+api_version = "2026-04"
 
 [[extensions]]
 name = "Klyna Rewards"
