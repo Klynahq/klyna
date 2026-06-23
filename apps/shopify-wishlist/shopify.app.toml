@@ -2,6 +2,7 @@
 
 client_id = "ce967ef55bafcdeb9823498ffedb17c7"
 name = "Klyna Wishlist"
+handle = "klyna-wishlist"
 application_url = "https://klyna-wishlist.vercel.app"
 embedded = true
 
@@ -19,9 +20,22 @@ redirect_urls = [
 [webhooks]
 api_version = "2025-01"
 
-[[webhooks.subscriptions]]
-compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
-uri = "/webhooks/compliance"
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "/webhooks/app/uninstalled"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = [ "customers/data_request" ]
+  uri = "/webhooks/customers/data_request"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = [ "customers/redact" ]
+  uri = "/webhooks/customers/redact"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = [ "shop/redact" ]
+  uri = "/webhooks/shop/redact"
 
 [build]
-automatically_update_urls_on_dev = true
+automatically_update_urls_on_dev = false
+include_config_on_deploy = true
