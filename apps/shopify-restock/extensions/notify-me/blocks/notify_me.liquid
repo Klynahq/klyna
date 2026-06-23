@@ -16,7 +16,7 @@
   class="klyna-bis"
   id="klyna-bis-{{ block.id }}"
   data-klyna-bis
-  data-endpoint="{{ block.settings.app_url | default: 'https://klyna.dev' }}/api/subscribe"
+  data-endpoint="{{ block.settings.app_url | default: 'https://klyna-shopify-restock.vercel.app' }}/api/subscribe"
   data-shop="{{ shop.permanent_domain }}"
   data-product-id="{{ product.id }}"
   data-product-title="{{ product.title | escape }}"
@@ -94,7 +94,7 @@
       "id": "app_url",
       "label": "App URL",
       "info": "Your installed app's public URL (the application_url from shopify.app.toml). The widget posts signups here.",
-      "default": "https://klyna.dev"
+      "default": "https://klyna-shopify-restock.vercel.app"
     },
     {
       "type": "header",
