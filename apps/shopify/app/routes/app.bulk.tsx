@@ -67,9 +67,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const shopJson = (await shopRes.json()) as ShopData;
   const baseUrl = shopJson.data.shop.primaryDomain.url.replace(/\/$/, '');
 
-  type ProductNode = { handle: string; onlineStoreUrl: string | null };
-  type CollectionNode = { handle: string; onlineStoreUrl: string | null };
-  type PageNode = { handle: string; onlineStoreUrl: string | null };
+  type ProductNode = { handle: string };
+  type CollectionNode = { handle: string };
+  type PageNode = { handle: string };
 
   const [products, collections, pages] = await Promise.all([
     paginateGql<ProductNode>(
@@ -77,7 +77,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       `query ($cursor: String) {
         products(first: 50, after: $cursor) {
           pageInfo { hasNextPage endCursor }
-          nodes { handle onlineStoreUrl }
+          nodes { handle }
         }
       }`,
       (d) =>
@@ -95,7 +95,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       `query ($cursor: String) {
         collections(first: 50, after: $cursor) {
           pageInfo { hasNextPage endCursor }
-          nodes { handle onlineStoreUrl }
+          nodes { handle }
         }
       }`,
       (d) =>
@@ -113,7 +113,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       `query ($cursor: String) {
         pages(first: 50, after: $cursor) {
           pageInfo { hasNextPage endCursor }
-          nodes { handle onlineStoreUrl }
+          nodes { handle }
         }
       }`,
       (d) =>
@@ -130,9 +130,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   const allUrls: string[] = [
     baseUrl, // homepage
-    ...products.map((p) => p.onlineStoreUrl ?? `${baseUrl}/products/${p.handle}`),
-    ...collections.map((c) => c.onlineStoreUrl ?? `${baseUrl}/collections/${c.handle}`),
-    ...pages.map((pg) => pg.onlineStoreUrl ?? `${baseUrl}/pages/${pg.handle}`),
+    ...products.map((p) => `${baseUrl}/products/${p.handle}`),
+    ...collections.map((c) => `${baseUrl}/collections/${c.handle}`),
+    ...pages.map((pg) => `${baseUrl}/pages/${pg.handle}`),
   ].filter(Boolean);
 
   // Deduplicate

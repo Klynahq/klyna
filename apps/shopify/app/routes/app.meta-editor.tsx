@@ -87,17 +87,15 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     id: string;
     handle: string;
     title: string;
-    onlineStoreUrl: string | null;
     seo: { title: string | null; description: string | null };
   };
   type C = {
     id: string;
     handle: string;
     title: string;
-    onlineStoreUrl: string | null;
     seo: { title: string | null; description: string | null };
   };
-  type Pg = { id: string; handle: string; title: string; onlineStoreUrl: string | null };
+  type Pg = { id: string; handle: string; title: string };
 
   const [products, collections, pages] = await Promise.all([
     paginateGql<P>(
@@ -105,7 +103,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       `query ($cursor: String) {
         products(first: 50, after: $cursor) {
           pageInfo { hasNextPage endCursor }
-          nodes { id handle title onlineStoreUrl seo { title description } }
+          nodes { id handle title seo { title description } }
         }
       }`,
       (d) =>
@@ -120,7 +118,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       `query ($cursor: String) {
         collections(first: 50, after: $cursor) {
           pageInfo { hasNextPage endCursor }
-          nodes { id handle title onlineStoreUrl seo { title description } }
+          nodes { id handle title seo { title description } }
         }
       }`,
       (d) =>
@@ -138,7 +136,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       `query ($cursor: String) {
         pages(first: 50, after: $cursor) {
           pageInfo { hasNextPage endCursor }
-          nodes { id handle title onlineStoreUrl }
+          nodes { id handle title }
         }
       }`,
       (d) =>
@@ -157,7 +155,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       title: p.title,
       seoTitle: p.seo.title,
       seoDescription: p.seo.description,
-      url: p.onlineStoreUrl,
+      url: `${baseUrl}/products/${p.handle}`,
       type: 'product' as const,
     })),
     ...collections.map((c) => ({
@@ -166,7 +164,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       title: c.title,
       seoTitle: c.seo.title,
       seoDescription: c.seo.description,
-      url: c.onlineStoreUrl ?? `${baseUrl}/collections/${c.handle}`,
+      url: `${baseUrl}/collections/${c.handle}`,
       type: 'collection' as const,
     })),
     ...pages.map((pg) => ({
@@ -175,7 +173,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       title: pg.title,
       seoTitle: null,
       seoDescription: null,
-      url: pg.onlineStoreUrl ?? `${baseUrl}/pages/${pg.handle}`,
+      url: `${baseUrl}/pages/${pg.handle}`,
       type: 'page' as const,
     })),
   ];

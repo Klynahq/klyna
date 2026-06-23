@@ -69,37 +69,34 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     handle: string;
     title: string;
     descriptionHtml: string;
-    onlineStoreUrl: string | null;
   };
   type C = {
     id: string;
     handle: string;
     title: string;
     descriptionHtml: string;
-    onlineStoreUrl: string | null;
   };
   type Pg = {
     id: string;
     handle: string;
     title: string;
     body: string;
-    onlineStoreUrl: string | null;
   };
 
   const [productsRes, collectionsRes, pagesRes] = await Promise.all([
     admin.graphql(`{
       products(first: 50) {
-        nodes { id handle title descriptionHtml onlineStoreUrl }
+        nodes { id handle title descriptionHtml }
       }
     }`),
     admin.graphql(`{
       collections(first: 30) {
-        nodes { id handle title descriptionHtml onlineStoreUrl }
+        nodes { id handle title descriptionHtml }
       }
     }`),
     admin.graphql(`{
       pages(first: 30) {
-        nodes { id handle title body onlineStoreUrl }
+        nodes { id handle title body }
       }
     }`),
   ]);
@@ -112,17 +109,17 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   const pages: linking.LinkingPage[] = [
     ...productsJson.data.products.nodes.map((p) => {
-      const url = p.onlineStoreUrl ?? `${baseUrl}/products/${p.handle}`;
+      const url = `${baseUrl}/products/${p.handle}`;
       const text = stripHtml(p.descriptionHtml);
       return { url, title: p.title, text, outLinks: extractLinks(p.descriptionHtml, baseUrl) };
     }),
     ...collectionsJson.data.collections.nodes.map((c) => {
-      const url = c.onlineStoreUrl ?? `${baseUrl}/collections/${c.handle}`;
+      const url = `${baseUrl}/collections/${c.handle}`;
       const text = stripHtml(c.descriptionHtml);
       return { url, title: c.title, text, outLinks: extractLinks(c.descriptionHtml, baseUrl) };
     }),
     ...pagesJson.data.pages.nodes.map((pg) => {
-      const url = pg.onlineStoreUrl ?? `${baseUrl}/pages/${pg.handle}`;
+      const url = `${baseUrl}/pages/${pg.handle}`;
       const text = stripHtml(pg.body);
       return { url, title: pg.title, text, outLinks: extractLinks(pg.body, baseUrl) };
     }),

@@ -115,7 +115,6 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
           handle: string;
           title: string;
           body: string;
-          onlineStoreUrl: string | null;
         }[];
       };
     };
@@ -129,7 +128,6 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
           title: string;
           handle: string;
           descriptionHtml: string;
-          onlineStoreUrl: string | null;
           priceRangeV2: { minVariantPrice: { amount: string; currencyCode: string } };
         }[];
       };
@@ -139,7 +137,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   type CollData = {
     data: {
       collections: {
-        nodes: { title: string; handle: string; onlineStoreUrl: string | null }[];
+        nodes: { title: string; handle: string }[];
       };
     };
   };
@@ -154,18 +152,18 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       }
     }`),
     admin.graphql(`{
-      pages(first: 50) { nodes { id handle title body onlineStoreUrl } }
+      pages(first: 50) { nodes { id handle title body } }
     }`),
     admin.graphql(`{
       products(first: 50) {
         nodes {
-          id title handle descriptionHtml onlineStoreUrl
+          id title handle descriptionHtml
           priceRangeV2 { minVariantPrice { amount currencyCode } }
         }
       }
     }`),
     admin.graphql(`{
-      collections(first: 30) { nodes { title handle onlineStoreUrl } }
+      collections(first: 30) { nodes { title handle } }
     }`),
   ]);
 
@@ -336,12 +334,11 @@ function buildLlmsTxt(
   products: {
     title: string;
     handle: string;
-    onlineStoreUrl: string | null;
     priceRangeV2: { minVariantPrice: { amount: string; currencyCode: string } };
     descriptionHtml: string;
   }[],
-  collections: { title: string; handle: string; onlineStoreUrl: string | null }[],
-  pages: { title: string; handle: string; onlineStoreUrl: string | null }[],
+  collections: { title: string; handle: string }[],
+  pages: { title: string; handle: string }[],
   articles: { title: string; handle: string; blog: { handle: string } }[],
 ): string {
   const lines: string[] = [];
@@ -359,7 +356,7 @@ function buildLlmsTxt(
     lines.push('## Collections');
     lines.push('');
     for (const c of collections.slice(0, 20)) {
-      const url = c.onlineStoreUrl ?? `${storeUrl}/collections/${c.handle}`;
+      const url = `${storeUrl}/collections/${c.handle}`;
       lines.push(`- [${c.title}](${url})`);
     }
     lines.push('');
@@ -369,7 +366,7 @@ function buildLlmsTxt(
     lines.push('## Products');
     lines.push('');
     for (const p of products.slice(0, 50)) {
-      const url = p.onlineStoreUrl ?? `${storeUrl}/products/${p.handle}`;
+      const url = `${storeUrl}/products/${p.handle}`;
       const price = `${p.priceRangeV2.minVariantPrice.currencyCode} ${p.priceRangeV2.minVariantPrice.amount}`;
       const desc = p.descriptionHtml
         .replace(/<[^>]+>/g, ' ')
@@ -386,7 +383,7 @@ function buildLlmsTxt(
     lines.push('## Key Pages');
     lines.push('');
     for (const p of keyPages) {
-      const url = p.onlineStoreUrl ?? `${storeUrl}/pages/${p.handle}`;
+      const url = `${storeUrl}/pages/${p.handle}`;
       lines.push(`- [${p.title}](${url})`);
     }
     lines.push('');
