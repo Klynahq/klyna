@@ -10,12 +10,12 @@
 client_id = "39090fee679968ddbfe1cce940c10656"
 
 name = "Klyna Back-in-Stock"
-handle = "shopify-restock"
+handle = "klyna-back-in-stock"
 application_url = "https://klyna-shopify-restock.vercel.app"
 embedded = true
 
 [build]
-automatically_update_urls_on_dev = true
+automatically_update_urls_on_dev = false
 dev_store_url = ""
 include_config_on_deploy = true
 
