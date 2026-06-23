@@ -2,6 +2,7 @@
   "name": "shopify-urgency",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@9.15.0",
   "description": "Klyna Urgency \u2014 countdown timers, low-stock scarcity & live social-proof popups. Tools that help your work get found.",
   "type": "module",
   "scripts": {
