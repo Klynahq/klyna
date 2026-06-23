@@ -2,6 +2,7 @@
   "name": "shopify-sticky-cart",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@9.15.0",
   "description": "Klyna Sticky Cart \u2014 sticky add-to-cart, quick-buy & free-shipping progress bar. Tools that help your work get found.",
   "type": "module",
   "scripts": {
