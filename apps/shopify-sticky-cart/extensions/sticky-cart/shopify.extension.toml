@@ -4,7 +4,7 @@
 # under Online Store → Themes → Customize → App embeds; it then renders on every
 # product page with no theme code changes.
 
-api_version = "2025-01"
+api_version = "2026-04"
 
 [[extensions]]
 name = "Klyna Sticky Cart"
