@@ -3,7 +3,7 @@
 // Swap to a real Postgres later by:
 //   1. setting DATABASE_URL to a postgres:// URL in env
 //   2. flipping prisma/schema.prisma datasource provider to "postgresql"
-import { existsSync, copyFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { execSync } from "node:child_process";
 
 const SQLITE_PATH = "/tmp/dev.sqlite";
