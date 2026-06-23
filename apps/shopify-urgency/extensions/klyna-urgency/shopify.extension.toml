@@ -11,4 +11,5 @@ type = "theme"
 [[extensions]]
 name = "Klyna Urgency"
 handle = "klyna-urgency"
+uid = "0aa2b874-97ed-9b7c-0c2f-488c123a1089d18404f1"
 type = "theme"
