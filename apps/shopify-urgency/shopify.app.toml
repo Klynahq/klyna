@@ -27,21 +27,20 @@ api_version = "2025-01"
   uri = "/webhooks/app/uninstalled"
 
   [[webhooks.subscriptions]]
-  topics = ["customers/data_request"]
+  compliance_topics = ["customers/data_request"]
   uri = "/webhooks/customers/data_request"
 
   [[webhooks.subscriptions]]
-  topics = ["customers/redact"]
+  compliance_topics = ["customers/redact"]
   uri = "/webhooks/customers/redact"
 
   [[webhooks.subscriptions]]
-  topics = ["shop/redact"]
+  compliance_topics = ["shop/redact"]
   uri = "/webhooks/shop/redact"
 
 # Scarcity & social-proof need products, inventory levels, and orders.
-# Theme app extension blocks need theme read access.
 [access_scopes]
-scopes = "read_products,read_inventory,read_orders,read_themes"
+scopes = "read_products,read_inventory,read_orders"
 
 [auth]
 redirect_urls = [
