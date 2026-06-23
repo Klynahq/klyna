@@ -2,6 +2,7 @@
   "name": "shopify-capture",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@9.15.0",
   "description": "Klyna Capture \u2014 Email & SMS popups, spin-to-win & exit-intent that grow your list.",
   "type": "module",
   "scripts": {
