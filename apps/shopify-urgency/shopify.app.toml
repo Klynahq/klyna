@@ -10,12 +10,13 @@
 client_id = "570b92e0a46f613063a6ef2ef1d25680"
 
 name = "Klyna Urgency"
-handle = "shopify-urgency"
+handle = "klyna-urgency"
 application_url = "https://klyna-urgency.vercel.app"
 embedded = true
 
 [build]
-automatically_update_urls_on_dev = true
+automatically_update_urls_on_dev = false
+include_config_on_deploy = true
 dev_store_url = ""
 
 [webhooks]
