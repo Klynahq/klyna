@@ -11,7 +11,7 @@
 <div
   class="klyna-upsell"
   data-klyna-upsell
-  data-app-url="{{ block.settings.app_url | default: 'https://klyna.dev' }}"
+  data-app-url="{{ block.settings.app_url | default: 'https://klyna-shopify-upsell.vercel.app' }}"
   data-shop="{{ shop.permanent_domain }}"
   data-currency="{{ cart.currency.symbol | default: '$' }}"
   data-cart-total="{{ cart.total_price }}"
@@ -50,7 +50,7 @@
       "type": "url",
       "id": "app_url",
       "label": "App URL",
-      "info": "The public URL of your Klyna Upsell app (e.g. https://klyna.dev). Leave default unless self-hosting."
+      "info": "The public URL of your Klyna Upsell app (e.g. https://klyna-shopify-upsell.vercel.app). Leave default unless self-hosting."
     },
     {
       "type": "color",

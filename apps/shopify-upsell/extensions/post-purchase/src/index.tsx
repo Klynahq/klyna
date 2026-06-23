@@ -9,7 +9,7 @@
  *      re-entry, then logs the accept back to the app.
  *
  * The app base URL is injected at build time via `process.env.KLYNA_APP_URL`
- * (the Shopify CLI passes it through), falling back to klyna.dev.
+ * (the Shopify CLI passes it through), falling back to the production app URL.
  */
 import {
   extend,
@@ -27,7 +27,7 @@ import {
 } from '@shopify/post-purchase-ui-extensions-react';
 import { useState } from 'react';
 
-const APP_URL = (process.env.KLYNA_APP_URL || 'https://klyna.dev').replace(/\/+$/, '');
+const APP_URL = (process.env.KLYNA_APP_URL || 'https://klyna-shopify-upsell.vercel.app').replace(/\/+$/, '');
 
 interface KlynaOffer {
   offerId: string;
