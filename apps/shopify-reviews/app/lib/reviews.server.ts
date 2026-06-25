@@ -6,7 +6,6 @@
 //
 // Pure-ish: the aggregation is pure, the metafield sync takes a GraphQL client.
 
-import { schema } from '@klyna/core';
 import prisma from '../db.server';
 
 export const METAFIELD_NAMESPACE = 'klyna_reviews';
@@ -134,8 +133,8 @@ export async function refreshProductRating(
 
 /**
  * Build the AggregateRating + Product JSON-LD for a product page. Reuses the
- * shared @klyna/core schema builder so rich-snippet output stays identical to
- * the WordPress plugin and marketing site.
+ * Build the same Product schema shape used across Klyna surfaces, while keeping
+ * this deployable app self-contained.
  */
 export function buildProductJsonLd(input: {
   name: string;
@@ -144,18 +143,23 @@ export function buildProductJsonLd(input: {
   image?: string;
   aggregate: Aggregate;
 }): Record<string, unknown> {
-  return schema.buildProduct({
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
     name: input.name,
     description: input.description,
-    url: input.url,
-    image: input.image,
+    ...(input.image ? { image: input.image } : {}),
+    ...(input.url ? { url: input.url } : {}),
     ...(input.aggregate.reviewCount > 0
       ? {
-          ratingValue: input.aggregate.ratingValue,
-          reviewCount: input.aggregate.reviewCount,
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: input.aggregate.ratingValue,
+            reviewCount: input.aggregate.reviewCount,
+          },
         }
       : {}),
-  });
+  };
 }
 
 /** Stable, URL-safe token for a review-request magic link. */
