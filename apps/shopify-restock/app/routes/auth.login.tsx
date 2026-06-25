@@ -14,7 +14,10 @@ import { login } from '../shopify.server';
 
 export const links = () => [{ rel: 'stylesheet', href: polarisStyles }];
 
-export const loader = async (_args: LoaderFunctionArgs) => json({});
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const errors = await login(request);
+  return json({ errors });
+};
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const errors = await login(request);
