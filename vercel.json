@@ -2,6 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "remix",
   "installCommand": "corepack enable && corepack prepare pnpm@9.15.0 --activate && pnpm install --frozen-lockfile",
-  "buildCommand": "pnpm --filter shopify-rewards exec prisma generate && pnpm --filter shopify-rewards exec prisma db push --skip-generate && pnpm --filter shopify-rewards build",
+  "buildCommand": "pnpm --filter shopify-rewards exec prisma generate && pnpm --filter shopify-rewards build",
   "outputDirectory": "apps/shopify-rewards/build"
 }
