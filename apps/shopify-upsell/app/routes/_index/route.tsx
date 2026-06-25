@@ -1,5 +1,5 @@
 import type { LoaderFunctionArgs } from '@remix-run/node';
-import { Form, redirect, useLoaderData } from '@remix-run/react';
+import { Form, useLoaderData } from '@remix-run/react';
 import { login } from '../../shopify.server';
 
 import styles from './styles.module.css';
@@ -7,7 +7,8 @@ import styles from './styles.module.css';
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url);
   if (url.searchParams.get('shop')) {
-    throw redirect(`/app?${url.searchParams.toString()}`);
+    const errors = await login(request);
+    return { errors, showForm: Boolean(login) };
   }
   return { showForm: Boolean(login) };
 };
