@@ -12,6 +12,9 @@ importers:
 
   .:
     dependencies:
+      '@remix-run/node':
+        specifier: ^2.15.0
+        version: 2.17.5(typescript@5.9.3)
       isbot:
         specifier: ^5.1.0
         version: 5.1.42
