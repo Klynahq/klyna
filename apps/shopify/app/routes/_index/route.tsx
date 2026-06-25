@@ -11,7 +11,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   }
 
   if (url.searchParams.get('shop')) {
-    throw redirect(`/auth/login?${url.searchParams.toString()}`);
+    const errors = await login(request);
+    return { errors, showForm: Boolean(login) };
   }
 
   return { showForm: Boolean(login) };
