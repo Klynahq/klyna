@@ -1,6 +1,19 @@
-import { Links, Meta, Outlet, Scripts, ScrollRestoration } from '@remix-run/react';
+import {
+  Links,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+  useMatches,
+} from '@remix-run/react';
 
 export default function App() {
+  const matches = useMatches();
+  const shouldHydrate = matches.every((match) => {
+    const handle = match.handle as { hydrate?: boolean } | undefined;
+    return handle?.hydrate !== false;
+  });
+
   return (
     <html lang="en">
       <head>
@@ -16,8 +29,12 @@ export default function App() {
       </head>
       <body>
         <Outlet />
-        <ScrollRestoration />
-        <Scripts />
+        {shouldHydrate && (
+          <>
+            <ScrollRestoration />
+            <Scripts />
+          </>
+        )}
       </body>
     </html>
   );

@@ -3,6 +3,7 @@ import { Form, useActionData, useLoaderData } from '@remix-run/react';
 import { login } from '../shopify.server';
 
 export const links = () => [];
+export const handle = { hydrate: false };
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url);
