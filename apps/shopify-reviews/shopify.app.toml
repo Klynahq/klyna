@@ -11,7 +11,7 @@ client_id = "de9d1c425289b2900e2b8ef5392b3f79"
 
 name = "Klyna Reviews"
 handle = "klyna-reviews"
-application_url = "https://klyna-shopify-reviews.vercel.app"
+application_url = "https://klyna-shopify-reviews.vercel.app/app"
 embedded = true
 
 [build]
