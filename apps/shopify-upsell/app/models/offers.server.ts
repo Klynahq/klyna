@@ -6,10 +6,10 @@
 import prisma from '../db.server';
 
 export type TriggerType = 'product' | 'collection' | 'cart_value';
-export type Placement = 'cart' | 'post_purchase';
+export type Placement = 'cart';
 
 export const TRIGGER_TYPES: TriggerType[] = ['product', 'collection', 'cart_value'];
-export const PLACEMENTS: Placement[] = ['cart', 'post_purchase'];
+export const PLACEMENTS: Placement[] = ['cart'];
 
 // Variant-level rollup for the analytics dashboard.
 export interface VariantStats {
@@ -18,9 +18,9 @@ export interface VariantStats {
   productTitle: string;
   impressions: number;
   accepts: number;
-  // Accepts that were confirmed by an orders/create webhook.
+  // Accepts recorded by the storefront widget.
   conversions: number;
-  // Confirmed revenue in minor units.
+  // Revenue attribution is reserved for the protected-data release.
   revenue: number;
   // accepts / impressions.
   conversionRate: number;

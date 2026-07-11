@@ -196,9 +196,9 @@ export default function Settings() {
             <BlockStack gap="200">
               <Text as="h2" variant="headingMd">About this app</Text>
               <Text as="p" tone="subdued" variant="bodyMd">
-                Klyna Upsell shows the right cross-sell at the right moment — in
-                the cart drawer and on the post-purchase page — and measures what
-                each offer earned. Rules and analytics work without AI. The AI
+                Klyna Upsell shows the right cross-sell at the right moment in
+                the cart drawer and measures impressions, accepts, and offer
+                performance. Rules and analytics work without AI. The AI
                 assistant is opt-in and used only to draft upsell headlines from
                 cart contents and live inventory when you ask for one.
               </Text>

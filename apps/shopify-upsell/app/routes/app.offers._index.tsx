@@ -23,7 +23,6 @@ const TRIGGER_LABEL: Record<string, string> = {
 
 const PLACEMENT_LABEL: Record<string, string> = {
   cart: 'Cart drawer',
-  post_purchase: 'Post-purchase',
 };
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {

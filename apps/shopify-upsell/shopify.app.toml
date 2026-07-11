@@ -8,7 +8,7 @@ embedded = true
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "read_discounts,read_inventory,read_orders,read_products,write_discounts"
+scopes = "read_discounts,read_inventory,read_products,write_discounts"
 
 [auth]
 redirect_urls = [
@@ -25,10 +25,6 @@ api_version = "2026-04"
   uri = "/webhooks/app/uninstalled"
 
   [[webhooks.subscriptions]]
-  topics = ["orders/create"]
-  uri = "/webhooks/orders/create"
-
-  [[webhooks.subscriptions]]
   compliance_topics = ["customers/data_request"]
   uri = "/webhooks/customers/data_request"
 
@@ -42,4 +38,3 @@ api_version = "2026-04"
 
 [build]
 automatically_update_urls_on_dev = false
-include_config_on_deploy = true

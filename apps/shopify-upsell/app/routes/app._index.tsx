@@ -65,7 +65,7 @@ export default function Dashboard() {
     },
     {
       title: 'Settings',
-      body: 'Cart widget theme extension, post-purchase placement, and the AI assistant.',
+      body: 'Cart widget theme extension, in-cart offer rules, and the AI assistant.',
       to: '/app/settings',
       ai: false,
     },
@@ -84,9 +84,9 @@ export default function Dashboard() {
                 </Badge>
               </InlineStack>
               <Text as="p" variant="bodyMd" tone="subdued">
-                Klyna Upsell shows the right cross-sell at the right moment — in
-                the cart drawer and on the post-purchase page — then measures
-                exactly what each offer earned you. Start by creating an offer.
+                Klyna Upsell shows the right cross-sell at the right moment in
+                the cart drawer, then measures impressions and accepts for each
+                offer. Start by creating an offer.
               </Text>
             </BlockStack>
           </Card>

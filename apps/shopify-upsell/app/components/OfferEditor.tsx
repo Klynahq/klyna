@@ -35,7 +35,7 @@ export interface OfferEditorValues {
   triggerType: 'product' | 'collection' | 'cart_value';
   triggerValue: string;
   triggerLabel: string;
-  placement: 'cart' | 'post_purchase';
+  placement: 'cart';
   splitA: number;
   a: PickedProduct;
   b: PickedProduct | null;
@@ -234,10 +234,9 @@ export function OfferEditor({
                   name="placement"
                   options={[
                     { label: 'In-cart widget (cart drawer)', value: 'cart' },
-                    { label: 'Post-purchase (thank-you page)', value: 'post_purchase' },
                   ]}
                   value={values.placement}
-                  onChange={(v) => set('placement', v as OfferEditorValues['placement'])}
+                  onChange={() => set('placement', 'cart')}
                 />
               </BlockStack>
             </Card>

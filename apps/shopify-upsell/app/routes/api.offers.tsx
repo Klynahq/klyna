@@ -14,9 +14,8 @@ import { pickVariant } from '../models/offers.server';
 //        → the single best-matching offer + the A/B variant to render, and
 //          logs an impression.
 //   POST /api/offers  { offerId, variantId, type: 'accept'|'decline' }
-//        → logs an accept/decline event. The orders/create webhook is the
-//          authoritative source for revenue; the event is marked verified
-//          only after that webhook attaches an orderGid + revenue.
+//        → logs an accept/decline event. Revenue attribution is reserved for
+//          the protected-data release; the launch build does not read orders.
 
 function csv(value: string | null): string[] {
   return (value ?? '').split(',').map((s) => s.trim()).filter(Boolean);
@@ -139,10 +138,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     return json({ ok: false }, { status: 404 });
   }
 
-  // Revenue is intentionally NOT taken from the client. The orders/create
-  // webhook is the authoritative source — it backfills `revenue` and
-  // `orderGid` on the matching event row. Until then the event row has
-  // revenue: 0, which the analytics layer treats as unverified.
+  // Revenue is intentionally NOT taken from the client. The launch build tracks
+  // accepts only; order-backed revenue attribution is reserved for the
+  // protected-data release.
   await prisma.offerEvent.create({
     data: {
       shop,
