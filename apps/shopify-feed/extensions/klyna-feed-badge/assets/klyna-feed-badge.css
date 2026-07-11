@@ -1,0 +1,37 @@
+.klyna-feed-badge {
+  margin: 16px 0;
+  font-family: inherit;
+}
+
+.klyna-feed-badge__strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.klyna-feed-badge__label {
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.klyna-feed-badge__channels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.klyna-feed-badge__chip {
+  font-size: 12px;
+  line-height: 1;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--klyna-accent, #7c5cff) 35%, transparent);
+  color: var(--klyna-accent, #7c5cff);
+  background: color-mix(in srgb, var(--klyna-accent, #7c5cff) 8%, transparent);
+  white-space: nowrap;
+}
