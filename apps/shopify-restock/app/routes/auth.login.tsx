@@ -13,6 +13,7 @@ import polarisStyles from '@shopify/polaris/build/esm/styles.css?url';
 import { login } from '../shopify.server';
 
 export const links = () => [{ rel: 'stylesheet', href: polarisStyles }];
+export const handle = { hydrate: false };
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const errors = await login(request);
