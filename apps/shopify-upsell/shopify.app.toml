@@ -3,7 +3,7 @@
 client_id = "7cede999b6d21fcbcabf544952de3c48"
 name = "Klyna Upsell"
 handle = "klyna-upsell"
-application_url = "https://klyna-shopify-upsell.vercel.app"
+application_url = "https://klyna-shopify-upsell.vercel.app/app"
 embedded = true
 
 [access_scopes]
