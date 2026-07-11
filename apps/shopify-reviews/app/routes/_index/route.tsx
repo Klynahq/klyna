@@ -23,8 +23,8 @@ export default function App() {
         <h1 className={styles.heading}>Klyna Reviews</h1>
         <p className={styles.text}>
           Photo reviews, UGC &amp; rich-snippet stars that build trust and rank.
-          Collect verified reviews, automate review requests after fulfillment,
-          and show Google your star ratings — all from one embedded app.
+          Collect storefront reviews, moderate submissions, and show Google your
+          star ratings — all without reading Shopify orders or customers.
         </p>
         {showForm && (
           <Form className={styles.form} method="post" action="/auth/login">

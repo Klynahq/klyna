@@ -16,7 +16,6 @@ embedded = true
 
 [build]
 automatically_update_urls_on_dev = false
-include_config_on_deploy = true
 dev_store_url = ""
 
 [webhooks]
@@ -25,12 +24,6 @@ api_version = "2026-04"
   [[webhooks.subscriptions]]
   topics = ["app/uninstalled"]
   uri = "/webhooks/app/uninstalled"
-
-  # Drives review-request email automation: when an order is fulfilled we
-  # schedule a request to the customer for the products they bought.
-  [[webhooks.subscriptions]]
-  topics = ["orders/fulfilled"]
-  uri = "/webhooks/orders/fulfilled"
 
   [[webhooks.subscriptions]]
   compliance_topics = ["customers/data_request"]
@@ -45,11 +38,9 @@ api_version = "2026-04"
   uri = "/webhooks/shop/redact"
 
 [access_scopes]
-# read_products      — resolve product titles/handles/images for the widget + emails
-# read_orders        — match fulfillments to line items for review requests
-# read_customers     — name + email for review-request automation
-# write_metafields   — publish aggregate rating metafields the storefront widget reads
-scopes = "read_products,read_orders,read_customers,write_metafields"
+# read_products      — resolve product titles/handles/images for the widget
+# write_products     — publish aggregate rating metafields the storefront widget reads
+scopes = "read_products,write_products"
 
 [auth]
 redirect_urls = [

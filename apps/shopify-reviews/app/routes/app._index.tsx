@@ -81,7 +81,7 @@ export default function Dashboard() {
     },
     {
       title: 'Review requests',
-      body: 'Automated post-fulfillment emails that ask verified buyers to leave a review.',
+      body: 'Buyer email automation is paused in the launch build until protected customer data approval is granted.',
       to: '/app/requests',
       badge: stats.requestsScheduled > 0 ? `${stats.requestsScheduled} scheduled` : undefined,
     },
@@ -120,9 +120,9 @@ export default function Dashboard() {
                 )}
               </InlineStack>
               <Text as="p" variant="bodyMd" tone="subdued">
-                Collect verified star and photo reviews, ask buyers automatically after
-                fulfillment, and publish AggregateRating schema so Google shows your
-                stars in search. No data leaves your store.
+                Collect star and photo reviews, moderate submissions, and publish
+                AggregateRating schema so Google can understand your product ratings.
+                The launch build does not read Shopify orders or customers.
               </Text>
             </BlockStack>
           </Card>

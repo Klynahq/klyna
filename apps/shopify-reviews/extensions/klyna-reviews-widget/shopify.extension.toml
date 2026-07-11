@@ -10,6 +10,7 @@
 
 name = "klyna-reviews-widget"
 type = "theme"
+uid = "d5904cf1-2a33-f3b3-8c99-65125d8926bf5f337955"
 
 [[extensions]]
 name = "Klyna Reviews"

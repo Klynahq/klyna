@@ -24,7 +24,7 @@ import { getShopAiSettings, getTodayUsage, saveShopAiSettings } from '../lib/ai.
 
 const DEFAULTS = {
   autoPublish: false,
-  requestEnabled: true,
+  requestEnabled: false,
   requestDelayDays: 7,
   widgetAccent: '#7c5cff',
   showPhotos: true,
@@ -127,7 +127,7 @@ export default function SettingsPage() {
   const testing = testFetcher.state === 'submitting';
 
   const [autoPublish, setAutoPublish] = useState(settings.autoPublish);
-  const [requestEnabled, setRequestEnabled] = useState(settings.requestEnabled);
+  const [requestEnabled] = useState(false);
   const [showPhotos, setShowPhotos] = useState(settings.showPhotos);
   const [delay, setDelay] = useState(String(settings.requestDelayDays));
   const [accent, setAccent] = useState(settings.widgetAccent);
@@ -194,9 +194,10 @@ export default function SettingsPage() {
                 <BlockStack gap="300">
                   <Text as="h2" variant="headingMd">Review requests</Text>
                   <Checkbox
-                    label="Email customers automatically after fulfillment"
+                    label="Buyer email automation is off in this launch build"
+                    helpText="This feature requires Shopify protected customer data approval. Storefront reviews, moderation, widgets, analytics, and schema are available now."
                     checked={requestEnabled}
-                    onChange={setRequestEnabled}
+                    disabled
                   />
                   <input type="hidden" name="requestEnabled" value={requestEnabled ? 'on' : 'off'} />
                   <FormLayout>
@@ -219,7 +220,7 @@ export default function SettingsPage() {
                       type="email"
                       autoComplete="email"
                       placeholder="reviews@your-store.com"
-                      helpText="Defaults to KLYNA_FROM_EMAIL when blank."
+                      helpText="Reserved for the protected-data email automation release."
                       value={emailFrom}
                       onChange={setEmailFrom}
                     />
