@@ -2,10 +2,9 @@
  * Klyna Bundles — storefront widget.
  *
  * Hydrates every [data-klyna-bundles] block on the page:
- *   1. fetch the product's active bundle, FBT recs, and volume tiers from the
+ *   1. fetch the product's active bundle and volume tiers from the
  *      app proxy (/apps/klyna-bundles?product=<gid>),
- *   2. render the bundle offer, the "frequently bought together" row, and the
- *      volume-break table,
+ *   2. render the bundle offer and volume-break table,
  *   3. wire "Add bundle to cart" to the Shopify AJAX cart API.
  *
  * No framework, no build step — vanilla JS so it drops straight into any theme.

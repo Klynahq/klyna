@@ -3,9 +3,9 @@
 
   Drop this block onto the product template (Theme editor → Add block → Apps →
   Klyna Bundles). It renders a placeholder, then `klyna-bundles.js` fetches the
-  product's active bundle, FBT recommendations, and volume tiers from the app
-  proxy and hydrates the UI. All discount math is computed server-side and
-  mirrors the admin preview exactly.
+  product's active bundle and volume tiers from the app proxy and hydrates the
+  UI. All discount math is computed server-side and mirrors the admin preview
+  exactly.
 {% endcomment %}
 
 <div
@@ -46,8 +46,8 @@
     {
       "type": "checkbox",
       "id": "show_fbt",
-      "label": "Show frequently bought together",
-      "default": true
+      "label": "Show frequently bought together (requires order-data approval)",
+      "default": false
     },
     {
       "type": "checkbox",

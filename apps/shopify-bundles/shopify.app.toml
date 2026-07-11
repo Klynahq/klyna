@@ -15,17 +15,16 @@ application_url = "https://klyna-bundles.vercel.app"
 embedded = true
 
 [access_scopes]
-# read_products / write_products - read the catalog for the builder and create
-#   bundle parent records.
+# read_products - read the catalog for the builder and storefront offer lookup.
 # read_discounts / write_discounts - create and manage the volume-break and
 #   bundle automatic discounts.
-scopes = "read_products,write_products,read_discounts,write_discounts"
+scopes = "read_products,read_discounts,write_discounts"
 
 # App proxy - exposes the public storefront data endpoint at
 # https://<shop>/apps/klyna-bundles, forwarded to /api/storefront. The theme
-# app extension calls this to render bundle + FBT data on the product page.
+# app extension calls this to render bundle and volume-tier data on the product page.
 [app_proxy]
-url = "https://klyna.dev/api/storefront"
+url = "https://klyna-bundles.vercel.app/api/storefront"
 subpath = "klyna-bundles"
 prefix = "apps"
 
@@ -42,6 +41,18 @@ api_version = "2026-04"
 [[webhooks.subscriptions]]
 topics = ["app/uninstalled"]
 uri = "/webhooks"
+
+[[webhooks.subscriptions]]
+compliance_topics = ["customers/data_request"]
+uri = "/webhooks/customers/data_request"
+
+[[webhooks.subscriptions]]
+compliance_topics = ["customers/redact"]
+uri = "/webhooks/customers/redact"
+
+[[webhooks.subscriptions]]
+compliance_topics = ["shop/redact"]
+uri = "/webhooks/shop/redact"
 
 [build]
 automatically_update_urls_on_dev = false

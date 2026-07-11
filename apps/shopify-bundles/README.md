@@ -1,8 +1,8 @@
 # Klyna Bundles
 
-Bundles, frequently-bought-together, and volume discounts that lift average
-order value. Build product bundles and quantity breaks in the admin, then show
-the discounted price right on the product page with a theme app extension.
+Product bundles and volume discounts that lift average order value. Build
+product bundles and quantity breaks in the admin, then show the discounted
+price right on the product page with a theme app extension.
 
 Part of [Klyna](https://klyna.dev) — _tools that help your work get found._
 
@@ -16,14 +16,11 @@ Part of [Klyna](https://klyna.dev) — _tools that help your work get found._
 - **Volume / quantity-break tiers** — add a "buy more, save more" ladder to any
   product ("buy 3+ save 5%, buy 10+ save 15%"). A live table previews the
   effective unit price at each break point.
-- **Frequently bought together** — mine up to 250 recent orders for products
-  bought together (a market-basket / association-rule pass), ranked by support
-  and confidence. No external ML, no data leaves your store.
 - **Storefront widget** — a theme app extension block renders the bundle,
-  the FBT row, and the volume table on the product page, with one-click
-  "add bundle to cart" via the AJAX cart API.
-- **Revenue analytics** — the admin home shows bundle-attributed revenue, AOV,
-  and a revenue-by-source breakdown, fed by the `orders/create` webhook.
+  volume table, and one-click "add bundle to cart" via the AJAX cart API.
+- **Launch-safe privacy posture** — core bundles and volume tiers work without
+  protected customer/order data access. Order-history recommendations are kept
+  disabled until protected data access is approved.
 - **Settings** — default discount type, storefront price display (single total
   vs. per-item strikethrough), widget headings, accent color, and savings badge.
 
@@ -96,11 +93,11 @@ apps/shopify-bundles/
 │       ├── auth.$.tsx              # OAuth callback (catch-all)
 │       ├── auth.login.tsx          # Manual login form
 │       ├── app.tsx                 # Embedded app shell + NavMenu
-│       ├── app._index.tsx          # Dashboard + revenue analytics
+│       ├── app._index.tsx          # Dashboard + launch metrics shell
 │       ├── app.bundles._index.tsx  # Bundle list
 │       ├── app.bundles.$id.tsx     # Bundle builder (new + edit)
 │       ├── app.volume.tsx          # Volume / quantity-break tiers
-│       ├── app.fbt.tsx             # Frequently bought together
+│       ├── app.fbt.tsx             # Protected-data FBT placeholder
 │       ├── app.settings.tsx        # Discount + display settings
 │       ├── api.storefront.tsx      # App-proxy data endpoint for the widget
 │       ├── webhooks.app.uninstalled.tsx
@@ -114,46 +111,37 @@ apps/shopify-bundles/
 
 ## How the pieces fit
 
-- **Admin (Remix + Polaris)** writes bundles, tiers, FBT pairs, and settings to
-  SQLite via Prisma, and reads the catalog/orders through the Admin GraphQL API.
+- **Admin (Remix + Polaris)** writes bundles, tiers, and settings to Postgres
+  via Prisma, and reads the catalog through the Admin GraphQL API.
 - **App proxy** (`/apps/klyna-bundles` → `/api/storefront`) serves the public,
   read-only data the storefront block needs, authenticated by Shopify's proxy
   signature — no admin session is exposed.
 - **Theme app extension** is plain Liquid + vanilla JS/CSS; it fetches the proxy
   and hydrates the product page, then uses the AJAX cart API to add bundles.
-- **`orders/create` webhook** attributes each order to bundles, volume tiers, or
-  FBT recommendations and writes a `BundleSale` ledger row that powers the home
-  analytics.
+- **Protected-data features** such as order-history FBT and revenue attribution
+  are scaffolded, but not enabled in the launch scope.
 - **Pricing is shared.** `app/lib/pricing.ts` is the single source of truth, so
   the admin preview and the live widget can never disagree.
 
 ## STATUS
 
-**Scaffolded and feature-complete in code; needs Partner credentials + a tunnel
-to run live.** Honest notes:
+**Feature-complete for launch-scope testing; needs live Partner configuration
+and App Store screenshots before submission.** Honest notes:
 
 - ✅ OAuth + embedded admin, Prisma session storage, uninstall webhook
 - ✅ Bundle builder (fixed + mix-and-match) with live catalog search and a
       shared price preview; persists to Prisma
 - ✅ Volume-break tier editor with live preview; creates native automatic
       discounts on save
-- ✅ Frequently-bought-together miner over real order history (Admin GraphQL),
-      cached to Prisma
-- ✅ Theme app extension block (bundle + FBT + volume) wired to the app proxy,
+- ✅ Theme app extension block (bundle + volume) wired to the app proxy,
       with AJAX add-to-cart
-- ✅ Revenue analytics on the home, fed by the `orders/create` webhook
 - ✅ Settings for discount type + storefront display
-- ⚠️ **Requires a Shopify Partner `client_id`** — set via `shopify app config
-      link`. Until then OAuth can't complete.
 - ⚠️ **Automatic-discount creation** uses `discountAutomaticBasicCreate`. On a
       live store, verify the discount appears under Discounts → Automatic. The
       builder saves a bundle as **draft** (not active) if the discount call
       fails, so the admin never shows an unenforceable price.
-- ⚠️ **FBT needs volume.** Pairs only surface from orders with ≥2 items; a brand
-      new dev store with no order history will show an empty state until you
-      place a few multi-item test orders, then hit "Recompute from orders".
-- 🔜 Not yet: scheduled FBT refresh (the `autoFbt` setting is a stored flag, not
-      a cron yet), Shopify Functions–based bundle pricing, and managed billing.
+- 🔜 Not yet: protected-data FBT, order-attribution analytics, scheduled FBT
+      refresh, Shopify Functions-based bundle pricing, and managed billing.
 
 ## Deploy
 
@@ -169,6 +157,6 @@ version draft for App Store review.
 - **Session + app storage** use Prisma + SQLite locally. For production, point
   `DATABASE_URL` at Postgres (Supabase, Neon, Railway, Fly) and
   `pnpm prisma:migrate`.
-- **No paid APIs.** Catalog search, order mining, and discount creation all run
-  against the free Shopify Admin API. The FBT engine is local market-basket
-  analysis — no third-party ML service.
+- **No paid APIs.** Catalog search and discount creation run against the free
+  Shopify Admin API. Future FBT analysis is local market-basket analysis — no
+  third-party ML service.

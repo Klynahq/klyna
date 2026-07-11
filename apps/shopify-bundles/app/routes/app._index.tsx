@@ -70,10 +70,10 @@ export default function Dashboard() {
     useLoaderData<typeof loader>();
 
   const stats = [
-    { label: `Bundle revenue · ${WINDOW_DAYS}d`, value: fmt(metrics.revenue, currency) },
-    { label: 'Attributed orders', value: String(metrics.orders) },
-    { label: 'Avg. order value', value: fmt(metrics.aov, currency) },
-    { label: 'Discount given', value: fmt(metrics.discounts, currency) },
+    { label: 'Active bundles', value: String(counts.activeBundles) },
+    { label: 'Draft bundles', value: String(counts.draftBundles) },
+    { label: 'Volume tier products', value: String(counts.volumeCount) },
+    { label: 'Protected order data', value: 'Off' },
   ];
 
   const tiles: {
@@ -111,7 +111,8 @@ export default function Dashboard() {
               <Text as="p" variant="bodyMd" tone="subdued">
                 Klyna Bundles turns single-item carts into bigger orders - curated
                 bundles and quantity discounts, all shown on the product page
-                with the savings spelled out.
+                with the savings spelled out. The launch build works without
+                protected order or customer data.
               </Text>
             </BlockStack>
           </Card>
@@ -133,7 +134,9 @@ export default function Dashboard() {
         <Layout.Section>
           <Card>
             <BlockStack gap="300">
-              <Text as="h2" variant="headingMd">Revenue by source · last {WINDOW_DAYS} days</Text>
+              <Text as="h2" variant="headingMd">
+                {hasData ? `Revenue by source · last ${WINDOW_DAYS} days` : 'Launch checklist'}
+              </Text>
               {hasData ? (
                 <BlockStack gap="200">
                   <RevenueRow label="Bundles" value={bySource.bundle} total={metrics.revenue} currency={currency} />
@@ -146,10 +149,18 @@ export default function Dashboard() {
                   </InlineStack>
                 </BlockStack>
               ) : (
-                <Text as="p" tone="subdued">
-                  No bundle-attributed sales yet. Once a bundle or volume tier
-                  converts, revenue shows up here after sales attribution is enabled.
-                </Text>
+                <BlockStack gap="200">
+                  <Text as="p" tone="subdued">
+                    Sales attribution is disabled in the approval-safe launch
+                    build. Core bundles and volume discounts are ready to test
+                    without protected order data.
+                  </Text>
+                  <Text as="p" variant="bodySm">
+                    1. Create a bundle or volume tier. 2. Add the Klyna Bundles
+                    app block to a product template. 3. Verify the discount
+                    appears under Shopify automatic discounts.
+                  </Text>
+                </BlockStack>
               )}
             </BlockStack>
           </Card>
