@@ -3,7 +3,7 @@
 client_id = "ce967ef55bafcdeb9823498ffedb17c7"
 name = "Klyna Wishlist"
 handle = "klyna-wishlist"
-application_url = "https://klyna-wishlist.vercel.app"
+application_url = "https://klyna-wishlist.vercel.app/app"
 embedded = true
 
 [access_scopes]
