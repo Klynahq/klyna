@@ -3,7 +3,7 @@
 client_id = "02ac921ec3c9f022d897a40a87015d96"
 name = "Klyna Sticky Cart"
 handle = "klyna-sticky-cart"
-application_url = "https://klyna-sticky-cart.vercel.app"
+application_url = "https://klyna-sticky-cart.vercel.app/app"
 embedded = true
 
 [access_scopes]
