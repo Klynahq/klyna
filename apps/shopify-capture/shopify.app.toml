@@ -3,7 +3,7 @@
 client_id = "1eacc2bec267d1e592448ead6e5c2777"
 name = "Klyna Capture"
 handle = "klyna-capture"
-application_url = "https://klyna-capture.vercel.app"
+application_url = "https://klyna-capture.vercel.app/app"
 embedded = true
 
 [access_scopes]
