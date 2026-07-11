@@ -1,7 +1,7 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "5562b3e17b36882181d43367a6f87631"
-application_url = "https://klyna-rewards.vercel.app"
+application_url = "https://klyna-rewards.vercel.app/app"
 embedded = true
 name = "Klyna Rewards"
 handle = "klyna-rewards"
