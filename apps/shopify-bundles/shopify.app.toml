@@ -11,7 +11,7 @@ client_id = "08d624eacf014ae9ee9ffe44f5a6bf62"
 
 name = "Klyna Bundles"
 handle = "klyna-bundles"
-application_url = "https://klyna-bundles.vercel.app"
+application_url = "https://klyna-bundles.vercel.app/app"
 embedded = true
 
 [access_scopes]
