@@ -11,7 +11,7 @@ client_id = "570b92e0a46f613063a6ef2ef1d25680"
 
 name = "Klyna Urgency"
 handle = "klyna-urgency"
-application_url = "https://klyna-urgency.vercel.app"
+application_url = "https://klyna-urgency.vercel.app/app"
 embedded = true
 
 [build]
