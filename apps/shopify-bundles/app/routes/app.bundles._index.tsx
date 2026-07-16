@@ -2,6 +2,7 @@ import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-r
 import { useFetcher, useLoaderData } from '@remix-run/react';
 import {
   Badge,
+  Banner,
   BlockStack,
   Box,
   Button,
@@ -14,12 +15,14 @@ import {
   ResourceList,
   Text,
 } from '@shopify/polaris';
-import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
-import { quoteBundle, type DiscountType } from '../lib/pricing';
+import { getPlanSelectionUrl, getShopPlan } from '../lib/plans.server';
+import { type DiscountType, quoteBundle } from '../lib/pricing';
+import { authenticate } from '../shopify.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
+  const plan = await getShopPlan(session.shop, request);
   const bundles = await prisma.bundle.findMany({
     where: { shop: session.shop },
     orderBy: { updatedAt: 'desc' },
@@ -42,7 +45,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     };
   });
 
-  return { rows };
+  return { rows, plan, upgradeUrl: getPlanSelectionUrl(session.shop) };
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -71,12 +74,16 @@ function statusTone(s: string) {
 }
 
 export default function BundlesIndex() {
-  const { rows } = useLoaderData<typeof loader>();
+  const { rows, plan, upgradeUrl } = useLoaderData<typeof loader>();
   const fetcher = useFetcher();
+  const atBundleLimit = rows.length >= plan.maxBundles;
+  const newBundleAction = atBundleLimit
+    ? undefined
+    : { content: 'New bundle', url: '/app/bundles/new' };
 
   if (rows.length === 0) {
     return (
-      <Page title="Bundles" primaryAction={{ content: 'New bundle', url: '/app/bundles/new' }}>
+      <Page title="Bundles" primaryAction={newBundleAction}>
         <Layout>
           <Layout.Section>
             <Card>
@@ -86,9 +93,8 @@ export default function BundlesIndex() {
                 image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
               >
                 <p>
-                  Group products into a fixed set or a mix-and-match offer, apply a
-                  discount, and show the savings on the product page. Bundles lift
-                  average order value by turning one item into several.
+                  Group products into a fixed set or a mix-and-match offer, apply a discount, and
+                  show the savings on the product page with native automatic discounts.
                 </p>
               </EmptyState>
             </Card>
@@ -99,8 +105,22 @@ export default function BundlesIndex() {
   }
 
   return (
-    <Page title="Bundles" primaryAction={{ content: 'New bundle', url: '/app/bundles/new' }}>
+    <Page title="Bundles" primaryAction={newBundleAction}>
       <Layout>
+        {atBundleLimit && (
+          <Layout.Section>
+            <Banner tone="warning" title={`${plan.label} bundle limit reached`}>
+              <Text as="p" variant="bodyMd">
+                Starter includes one bundle.{' '}
+                <a href={upgradeUrl} target="_top" rel="noreferrer">
+                  View paid plans
+                </a>{' '}
+                to create more bundles and quantity-break tiers.
+              </Text>
+            </Banner>
+          </Layout.Section>
+        )}
+
         <Layout.Section>
           <Card padding="0">
             <ResourceList
@@ -115,7 +135,9 @@ export default function BundlesIndex() {
                   <InlineStack align="space-between" blockAlign="center" wrap={false}>
                     <BlockStack gap="100">
                       <InlineStack gap="200" blockAlign="center">
-                        <Text as="span" variant="bodyMd" fontWeight="semibold">{b.title}</Text>
+                        <Text as="span" variant="bodyMd" fontWeight="semibold">
+                          {b.title}
+                        </Text>
                         <Badge tone={statusTone(b.status)}>{b.status}</Badge>
                         <Badge>{b.kind === 'fixed' ? 'Fixed set' : 'Mix & match'}</Badge>
                       </InlineStack>

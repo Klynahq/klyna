@@ -2,22 +2,22 @@
 
 ## App name
 
-Klyna Bundles — Bundles & Volume Discounts
+Klyna Bundles
 
 ## Tagline (short)
 
-Product bundles and volume discounts that lift AOV.
+Product bundles and quantity breaks for product pages.
 
 ## Subtitle (App Store, ≤ 62 chars)
 
-Product bundles and quantity breaks that raise order value.
+Bundle offers and quantity breaks for product pages.
 
 ## Listing description
 
-**Turn single-item carts into bigger orders.**
+**Create bundle offers from Shopify products.**
 
-Klyna Bundles helps you sell more per checkout with three proven AOV levers,
-all managed from one clean dashboard and shown right on your product page:
+Klyna Bundles helps merchants create bundle offers and quantity breaks from one
+embedded dashboard, then show those offers on product pages:
 
 **📦 Product bundles**
 Build a fixed bundle ("buy these three together") or a mix-and-match offer
@@ -48,8 +48,8 @@ protected customer data.
 - Optional order-history recommendations are disabled until protected customer
   data access is approved.
 
-Klyna Bundles is part of [Klyna](https://klyna.dev) — an indie studio building
-honest, modern commerce tools.
+Klyna Bundles is part of [Klyna](https://klyna.dev), an indie studio building
+modern commerce tools.
 
 ## Key benefits (bullet list for the listing sidebar)
 
@@ -70,11 +70,8 @@ honest, modern commerce tools.
 
 ## Target keywords
 
-bundle, bundles, product bundle, bundle builder, mix and match,
-volume discount, quantity discount,
-quantity break, tiered pricing, buy more save more, upsell, cross-sell,
-average order value, AOV, increase AOV, discount, automatic discount,
-combo deal, kit, product kit, bundle discount, cart upsell
+product bundles, volume discounts, quantity breaks, mix and match,
+bundle offers
 
 ## Categories
 
@@ -83,11 +80,9 @@ combo deal, kit, product kit, bundle discount, cart upsell
 
 ## Pricing copy (suggested)
 
-- **Free launch plan** — create product bundles and volume tiers during review
-  and early merchant testing.
-
-Billing is not enabled in the launch build. Submit as a free app until Shopify
-managed pricing is wired.
+- **Starter** — free limited plan for small stores and launch testing.
+- **Growth** — $9.99/month for unlimited bundle and quantity-break workflows.
+- **Pro** — $19.99/month for advanced settings, reporting, and priority support.
 
 ## Support / privacy
 

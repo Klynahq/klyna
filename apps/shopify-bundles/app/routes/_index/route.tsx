@@ -22,9 +22,8 @@ export default function App() {
       <div className={styles.content}>
         <h1 className={styles.heading}>Klyna Bundles</h1>
         <p className={styles.text}>
-          Bundles, frequently-bought-together, and volume discounts that lift
-          average order value. Build product bundles and quantity breaks, then
-          show the savings right on the product page.
+          Build product bundles and quantity breaks, then show the savings right on the product page
+          with native automatic discounts.
         </p>
         {showForm && (
           <Form className={styles.form} method="post" action="/auth/login">

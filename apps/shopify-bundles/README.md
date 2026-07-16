@@ -1,8 +1,7 @@
 # Klyna Bundles
 
-Product bundles and volume discounts that lift average order value. Build
-product bundles and quantity breaks in the admin, then show the discounted
-price right on the product page with a theme app extension.
+Build product bundles and quantity breaks in the admin, then show the
+discounted price right on the product page with a theme app extension.
 
 Part of [Klyna](https://klyna.dev) — _tools that help your work get found._
 

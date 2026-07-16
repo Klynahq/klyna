@@ -121,6 +121,18 @@ model ShopSettings {
   updatedAt          DateTime @updatedAt
 }
 
+// Current Shopify App Pricing plan selected by a shop. Shopify redirects back
+// with `plan_handle`; we persist the normalized plan so server actions can
+// enforce the free/paid feature split on later requests.
+model ShopPlan {
+  shop       String   @id
+  handle     String   @default("starter")
+  rawHandle  String?
+  source     String   @default("default")
+  selectedAt DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
 // Append-only ledger of bundle-attributed revenue, written by the
 // orders/create webhook (or the manual recompute). Powers the home analytics.
 model BundleSale {
