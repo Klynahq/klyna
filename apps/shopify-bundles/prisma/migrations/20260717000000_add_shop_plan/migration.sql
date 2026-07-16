@@ -1,4 +1,4 @@
-CREATE TABLE "ShopPlan" (
+CREATE TABLE IF NOT EXISTS "ShopPlan" (
   "shop" TEXT NOT NULL,
   "handle" TEXT NOT NULL DEFAULT 'starter',
   "rawHandle" TEXT,

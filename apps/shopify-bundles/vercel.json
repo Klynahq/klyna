@@ -2,6 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "remix",
   "installCommand": "corepack enable && corepack prepare pnpm@9.15.0 --activate && pnpm install --frozen-lockfile",
-  "buildCommand": "pnpm exec prisma migrate deploy && pnpm exec prisma generate && pnpm exec remix vite:build",
+  "buildCommand": "pnpm exec prisma db execute --schema prisma/schema.prisma --file prisma/migrations/20260717000000_add_shop_plan/migration.sql && pnpm exec prisma generate && pnpm exec remix vite:build",
   "outputDirectory": "build"
 }

@@ -2,6 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "remix",
   "installCommand": "corepack enable && corepack prepare pnpm@9.15.0 --activate && pnpm install --frozen-lockfile",
-  "buildCommand": "pnpm --filter shopify-bundles exec prisma migrate deploy && pnpm --filter shopify-bundles exec prisma generate && pnpm --filter shopify-bundles build",
+  "buildCommand": "pnpm --filter shopify-bundles exec prisma db execute --schema prisma/schema.prisma --file prisma/migrations/20260717000000_add_shop_plan/migration.sql && pnpm --filter shopify-bundles exec prisma generate && pnpm --filter shopify-bundles build",
   "outputDirectory": "apps/shopify-bundles/build"
 }
