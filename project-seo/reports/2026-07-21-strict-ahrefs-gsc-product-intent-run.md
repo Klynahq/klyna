@@ -22,9 +22,18 @@ This strict run used same-day GSC and Ahrefs/RankyTools evidence to focus on bra
 
 ## QA plan
 
-- Build the website and confirm Astro output includes the new sections.
-- Live QA the homepage, products page, and selected guide URLs after deployment.
+- `pnpm --filter website build` passed on the clean worktree.
+- Built HTML QA passed for 24 URLs plus sitemap.
+- Live QA passed for 24 URLs plus sitemap on:
+  - `https://klyna-7zdw7wg0t-adnanaimanager-3376s-projects.vercel.app`
+  - `https://klyna.dev`
 - Monitor GSC for brand/product impressions and request indexing for materially updated pages when URL Inspection is stable.
+
+## Deployment
+
+- Commit: `a759bbf` (`Add strict product-intent search paths`)
+- Vercel deployment: `dpl_odubeEqyJoUSv4aKh4T2gjADvYtd`
+- Production alias: `https://klyna.dev`
 
 ## Backlink / risk
 
