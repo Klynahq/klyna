@@ -48,3 +48,23 @@ model DiagnosticScan {
 
   @@index([shop, productKey, createdAt])
 }
+
+model RedirectInventory {
+  id        String   @id @default(cuid())
+  shop      String
+  paths     String
+  createdAt DateTime @default(now())
+
+  @@index([shop, createdAt])
+}
+
+model RedirectChange {
+  id        String   @id @default(cuid())
+  shop      String
+  path      String
+  target    String
+  shopifyId String?
+  createdAt DateTime @default(now())
+
+  @@index([shop, createdAt])
+}

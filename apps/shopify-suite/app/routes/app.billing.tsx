@@ -85,7 +85,7 @@ export default function Billing() {
                 </Text>
                 <Text as="p" tone="subdued">
                   Start with a {trialDays}-day trial. The plan unlocks the redirect audit
-                  dashboard, saved scan history, and fix playbook for launch and migration QA.
+                  dashboard, URL-loss monitoring, redirect validation, guarded fixes, and exports.
                 </Text>
                 {billingError ? (
                   <>
@@ -114,10 +114,10 @@ export default function Billing() {
                   Included
                 </Text>
                 <List type="bullet">
-                  <List.Item>Redirect coverage audits for products, collections, and pages.</List.Item>
-                  <List.Item>Failed sampled URL checks before catalog or theme launches.</List.Item>
-                  <List.Item>Saved scan history for store teams and agencies.</List.Item>
-                  <List.Item>Fix playbook for safe URL cleanup and migration QA.</List.Item>
+                  <List.Item>URL-loss baselines for deleted and renamed content.</List.Item>
+                  <List.Item>Redirect chain, loop, and destination validation.</List.Item>
+                  <List.Item>Guarded Shopify redirect creation with a change log.</List.Item>
+                  <List.Item>CSV redirect-map exports for migrations and agency handoff.</List.Item>
                 </List>
                 <Box paddingBlockStart="200">
                   <Text as="p" tone="subdued">

@@ -30,7 +30,7 @@ api_version = "2026-07"
   uri = "/webhooks/shop/redact"
 
 [access_scopes]
-scopes = "read_products,read_content,read_online_store_navigation"
+scopes = "read_products,read_content,read_online_store_navigation,write_online_store_navigation"
 
 [auth]
 redirect_urls = [

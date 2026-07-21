@@ -119,7 +119,9 @@ export default function Dashboard() {
                         {product.primaryAction}
                       </Button>
                     </Form>
-                    <Button url={playbookUrl}>View fix playbook</Button>
+                    <Button url={playbookUrl}>
+                      {product.key === 'redirect-guard' ? 'Open redirect workspace' : 'Open operating guide'}
+                    </Button>
                   </InlineStack>
                 </BlockStack>
                 <div
