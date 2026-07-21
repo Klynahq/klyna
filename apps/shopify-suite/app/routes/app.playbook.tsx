@@ -25,7 +25,6 @@ import {
 } from '@shopify/polaris';
 import { useEffect, useState } from 'react';
 import prisma from '../db.server';
-import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getProductKey, products } from '../lib/products';
 import { type ShopSnapshot, getShopSnapshot } from '../lib/shopify-data.server';
 import { authenticate } from '../shopify.server';
@@ -212,7 +211,6 @@ function RedirectWorkspace({ data }: { data: Extract<ReturnType<typeof useLoader
   const [path, setPath] = useState('');
   const [target, setTarget] = useState('/');
   const [confirmed, setConfirmed] = useState(false);
-  const exportUrl = useEmbeddedRoute('/app/redirects.csv');
   const isSubmitting = navigation.state !== 'idle';
 
   useEffect(() => {
@@ -226,7 +224,7 @@ function RedirectWorkspace({ data }: { data: Extract<ReturnType<typeof useLoader
     <Page
       title="Redirect workspace"
       subtitle="Detect URL losses, validate destinations, and create reviewed Shopify redirects."
-      primaryAction={{ content: 'Export redirect map', url: exportUrl }}
+      primaryAction={{ content: 'Export redirect map', onAction: () => downloadRedirects(data.redirects) }}
     >
       <Layout>
         {actionData && 'error' in actionData && actionData.error ? (
@@ -448,7 +446,7 @@ function RedirectWorkspace({ data }: { data: Extract<ReturnType<typeof useLoader
                     Current Shopify redirects. Export the full map before a migration or catalog cleanup.
                   </Text>
                 </BlockStack>
-                <Button url={exportUrl}>Download CSV</Button>
+                <Button onClick={() => downloadRedirects(data.redirects)}>Download CSV</Button>
               </InlineStack>
               <Divider />
               {data.redirects.length ? (
@@ -645,4 +643,22 @@ function formatDate(date: Date) {
     timeStyle: 'short',
     timeZone: 'UTC',
   }).format(date);
+}
+
+function downloadRedirects(redirects: { path: string; target: string }[]) {
+  const rows = [
+    ['Redirect from', 'Redirect to'],
+    ...redirects.map((redirect) => [redirect.path, redirect.target]),
+  ];
+  const csv = rows
+    .map((row) => row.map((value) => `"${value.replace(/"/g, '""')}"`).join(','))
+    .join('\r\n');
+  const blobUrl = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  const anchor = document.createElement('a');
+  anchor.href = blobUrl;
+  anchor.download = `klyna-redirect-map-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(blobUrl);
 }
