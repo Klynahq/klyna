@@ -1,5 +1,5 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
-import { Form, useFetcher, useLoaderData } from '@remix-run/react';
+import { useFetcher, useLoaderData } from '@remix-run/react';
 import {
   Badge,
   Banner,
@@ -75,6 +75,29 @@ type VitalsResult = {
 };
 
 const PSI_URL = 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed';
+
+function normalizeHttpUrl(rawUrl: string) {
+  try {
+    const url = new URL(rawUrl.startsWith('http') ? rawUrl : `https://${rawUrl}`);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+    return url.href;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchPageSpeed(url: string, strategy: 'mobile' | 'desktop'): Promise<PsiResponse> {
+  const res = await fetch(`${PSI_URL}?url=${encodeURIComponent(url)}&strategy=${strategy}`, {
+    signal: AbortSignal.timeout(45_000),
+  });
+  const data = (await res.json().catch(() => null)) as PsiResponse | null;
+
+  if (!res.ok) {
+    return { error: { message: data?.error?.message ?? `PageSpeed returned HTTP ${res.status}` } };
+  }
+
+  return data ?? { error: { message: 'PageSpeed returned an empty response' } };
+}
 
 function parsePsi(
   data: PsiResponse,
@@ -167,28 +190,36 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 export const action = async ({ request }: ActionFunctionArgs) => {
   await authenticate.admin(request);
   const form = await request.formData();
-  const url = String(form.get('url') ?? '').trim();
-  const strategy = String(form.get('strategy') ?? 'mobile') as 'mobile' | 'desktop';
+  const rawUrl = String(form.get('url') ?? '').trim();
+  const url = normalizeHttpUrl(rawUrl);
 
-  if (!url) return json({ error: 'URL is required' }, { status: 400 });
+  if (!rawUrl) return json({ error: 'URL is required' }, { status: 400 });
+  if (!url) return json({ error: 'Enter a valid http or https URL' }, { status: 400 });
 
   try {
-    const [mobileRes, desktopRes] = await Promise.all([
-      fetch(`${PSI_URL}?url=${encodeURIComponent(url)}&strategy=mobile`),
-      fetch(`${PSI_URL}?url=${encodeURIComponent(url)}&strategy=desktop`),
-    ]);
-
     const [mobileData, desktopData] = await Promise.all([
-      mobileRes.json() as Promise<PsiResponse>,
-      desktopRes.json() as Promise<PsiResponse>,
+      fetchPageSpeed(url, 'mobile'),
+      fetchPageSpeed(url, 'desktop'),
     ]);
 
-    if (mobileData.error) {
-      return json({ error: mobileData.error.message }, { status: 400 });
+    if (mobileData.error || desktopData.error) {
+      return json(
+        {
+          error:
+            mobileData.error?.message ?? desktopData.error?.message ?? 'PageSpeed analysis failed',
+        },
+        { status: 400 },
+      );
     }
 
     const mobile = parsePsi(mobileData, url, 'mobile');
     const desktop = parsePsi(desktopData, url, 'desktop');
+    if (!mobile || !desktop) {
+      return json(
+        { error: 'PageSpeed did not return Lighthouse data for this URL' },
+        { status: 400 },
+      );
+    }
 
     return json({ mobile, desktop });
   } catch (err) {
@@ -429,7 +460,7 @@ export default function VitalsPage() {
                   best-selling product, or slowest collection.
                 </Text>
               </BlockStack>
-              <Form method="post">
+              <fetcher.Form method="post">
                 <InlineStack gap="200" blockAlign="end">
                   <Box minWidth="400px">
                     <TextField
@@ -445,7 +476,7 @@ export default function VitalsPage() {
                     Analyze
                   </Button>
                 </InlineStack>
-              </Form>
+              </fetcher.Form>
             </BlockStack>
           </Card>
         </Layout.Section>

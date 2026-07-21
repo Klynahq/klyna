@@ -3,22 +3,13 @@ import { Form, useActionData, useLoaderData } from '@remix-run/react';
 import { login } from '../shopify.server';
 
 export const links = () => [];
+export const handle = { hydrate: false };
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url);
   const shop = url.searchParams.get('shop');
-  // If shop is already in the URL, kick off OAuth immediately — no form needed
-  if (shop) {
-    await login(
-      new Request(request.url, {
-        method: 'POST',
-        body: new URLSearchParams({ shop }),
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      }),
-    );
-    // login() throws a redirect on success — if we reach here the shop was invalid
-  }
-  return json({ shop: shop ?? '' });
+  const errors = await login(request);
+  return json({ errors, shop: shop ?? '' });
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -27,9 +18,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 };
 
 export default function Auth() {
-  const { shop } = useLoaderData<typeof loader>();
+  const loaderData = useLoaderData<typeof loader>();
+  const { shop } = loaderData;
   const actionData = useActionData<typeof action>();
-  const errors = actionData?.errors as Record<string, string> | undefined;
+  const errors = (actionData?.errors ?? loaderData.errors) as Record<string, string> | undefined;
 
   return (
     <>

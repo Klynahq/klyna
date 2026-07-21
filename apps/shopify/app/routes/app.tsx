@@ -1,4 +1,4 @@
-import type { HeadersFunction, LoaderFunctionArgs } from '@remix-run/node';
+import { type HeadersFunction, type LoaderFunctionArgs } from '@remix-run/node';
 import { Link, Outlet, useLoaderData, useRouteError } from '@remix-run/react';
 import { NavMenu } from '@shopify/app-bridge-react';
 import polarisStyles from '@shopify/polaris/build/esm/styles.css?url';

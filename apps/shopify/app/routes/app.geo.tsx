@@ -38,6 +38,36 @@ type GeoResult = {
   llmsTxtUrl: string | null;
 };
 
+type ShopifyUserError = {
+  field?: string[] | string | null;
+  message: string;
+};
+
+type PageMutationResult = {
+  page: { id: string; handle?: string } | null;
+  userErrors: ShopifyUserError[];
+};
+
+type PageMutationJson = {
+  data?: {
+    pageCreate?: PageMutationResult;
+    pageUpdate?: PageMutationResult;
+  };
+  errors?: { message: string }[];
+};
+
+function formatMutationError(json: PageMutationJson, mutationName: 'pageCreate' | 'pageUpdate') {
+  const apiError = json.errors?.[0]?.message;
+  if (apiError) return apiError;
+
+  const userError = json.data?.[mutationName]?.userErrors?.[0];
+  if (userError) return userError.message;
+
+  if (!json.data?.[mutationName]?.page) return 'Shopify did not return the saved page.';
+
+  return null;
+}
+
 function geoGrade(score: number, max: number): 'A' | 'B' | 'C' | 'D' | 'F' {
   const pct = score / max;
   if (pct >= 0.9) return 'A';
@@ -59,7 +89,6 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         name: string;
         email: string;
         description: string | null;
-        myshopifyDomain: string;
         primaryDomain: { url: string };
       };
     };
@@ -80,7 +109,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   type PageData = {
     data: {
-      pages: { nodes: { id: string; handle: string; title: string; body: string }[] };
+      pages: {
+        nodes: {
+          id: string;
+          handle: string;
+          title: string;
+          body: string;
+        }[];
+      };
     };
   };
 
@@ -92,7 +128,6 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
           title: string;
           handle: string;
           descriptionHtml: string;
-          onlineStoreUrl: string | null;
           priceRangeV2: { minVariantPrice: { amount: string; currencyCode: string } };
         }[];
       };
@@ -109,7 +144,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   const [shopRes, articlesRes, pagesRes, productsRes, collRes] = await Promise.all([
     admin.graphql(`{
-      shop { id name email description myshopifyDomain primaryDomain { url } }
+      shop { id name email description primaryDomain { url } }
     }`),
     admin.graphql(`{
       articles(first: 20) {
@@ -122,7 +157,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     admin.graphql(`{
       products(first: 50) {
         nodes {
-          id title handle descriptionHtml onlineStoreUrl
+          id title handle descriptionHtml
           priceRangeV2 { minVariantPrice { amount currencyCode } }
         }
       }
@@ -139,7 +174,6 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const collections = ((await collRes.json()) as CollData).data.collections.nodes;
 
   const storeUrl = shopData.primaryDomain.url.replace(/\/$/, '');
-  const myDomain = shopData.myshopifyDomain;
 
   // ── Schema config
   const schemaConfig = await prisma.schemaConfig.findUnique({ where: { shop } });
@@ -272,15 +306,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const maxTotal = signals.reduce((s, sig) => s + sig.max, 0);
 
   // ── Build llms.txt content ────────────────────────────────────────────────
-  const llmsTxtContent = buildLlmsTxt(
-    shopData,
-    storeUrl,
-    myDomain,
-    products,
-    collections,
-    pages,
-    articles,
-  );
+  const llmsTxtContent = buildLlmsTxt(shopData, storeUrl, products, collections, pages, articles);
 
   return json<{
     geoResult: GeoResult;
@@ -305,11 +331,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 function buildLlmsTxt(
   shop: { name: string; description: string | null },
   storeUrl: string,
-  myDomain: string,
   products: {
     title: string;
     handle: string;
-    onlineStoreUrl: string | null;
     priceRangeV2: { minVariantPrice: { amount: string; currencyCode: string } };
     descriptionHtml: string;
   }[],
@@ -342,7 +366,7 @@ function buildLlmsTxt(
     lines.push('## Products');
     lines.push('');
     for (const p of products.slice(0, 50)) {
-      const url = p.onlineStoreUrl ?? `https://${myDomain}/products/${p.handle}`;
+      const url = `${storeUrl}/products/${p.handle}`;
       const price = `${p.priceRangeV2.minVariantPrice.currencyCode} ${p.priceRangeV2.minVariantPrice.amount}`;
       const desc = p.descriptionHtml
         .replace(/<[^>]+>/g, ' ')
@@ -359,7 +383,8 @@ function buildLlmsTxt(
     lines.push('## Key Pages');
     lines.push('');
     for (const p of keyPages) {
-      lines.push(`- [${p.title}](${storeUrl}/pages/${p.handle})`);
+      const url = `${storeUrl}/pages/${p.handle}`;
+      lines.push(`- [${p.title}](${url})`);
     }
     lines.push('');
   }
@@ -390,30 +415,51 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   if (intent === 'deploy-llms-txt') {
     const content = String(form.get('content') ?? '');
 
+    if (!content.trim()) {
+      return json(
+        { error: 'The generated llms.txt content is empty. Refresh the page and try again.' },
+        { status: 400 },
+      );
+    }
+
     // Create or update a Shopify page with the llms.txt content
     // First check if it already exists
-    type ExistingPage = { data: { pages: { nodes: { id: string; handle: string }[] } } };
+    type ExistingPage = {
+      data: {
+        shop: { primaryDomain: { url: string } };
+        pages: { nodes: { id: string; handle: string }[] };
+      };
+    };
     const existingRes = await admin.graphql(`{
+      shop { primaryDomain { url } }
       pages(first: 1, query: "handle:llms-txt") {
         nodes { id handle }
       }
     }`);
-    const existing = ((await existingRes.json()) as ExistingPage).data.pages.nodes[0];
+    const existingJson = (await existingRes.json()) as ExistingPage;
+    const storeUrl = existingJson.data.shop.primaryDomain.url.replace(/\/$/, '');
+    const existing = existingJson.data.pages.nodes[0];
 
     const htmlContent = `<pre style="font-family:monospace;white-space:pre-wrap;padding:20px">${content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>`;
 
+    let pageHandle = existing?.handle ?? 'llms-txt';
+
     if (existing) {
-      await admin.graphql(
+      const updateRes = await admin.graphql(
         `mutation klynaPageUpdate($id: ID!, $page: PageUpdateInput!) {
           pageUpdate(id: $id, page: $page) {
-            page { id }
+            page { id handle }
             userErrors { field message }
           }
         }`,
         { variables: { id: existing.id, page: { body: htmlContent } } },
       );
+      const updateJson = (await updateRes.json()) as PageMutationJson;
+      const error = formatMutationError(updateJson, 'pageUpdate');
+      if (error) return json({ error }, { status: 400 });
+      pageHandle = updateJson.data?.pageUpdate?.page?.handle ?? pageHandle;
     } else {
-      await admin.graphql(
+      const createRes = await admin.graphql(
         `mutation klynaPageCreate($page: PageCreateInput!) {
           pageCreate(page: $page) {
             page { id handle }
@@ -422,9 +468,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         }`,
         { variables: { page: { title: 'llms.txt', handle: 'llms-txt', body: htmlContent } } },
       );
+      const createJson = (await createRes.json()) as PageMutationJson;
+      const error = formatMutationError(createJson, 'pageCreate');
+      if (error) return json({ error }, { status: 400 });
+      pageHandle = createJson.data?.pageCreate?.page?.handle ?? pageHandle;
     }
 
-    return json({ deployed: true });
+    return json({ deployed: true, llmsTxtUrl: `${storeUrl}/pages/${pageHandle}` });
   }
 
   return json({ error: 'Unknown intent' });
@@ -438,7 +488,7 @@ function gradeTone(g: string): 'success' | 'warning' | 'critical' {
 
 export default function GeoPage() {
   const { geoResult, shopName, storeUrl, llmsTxtPageExists } = useLoaderData<typeof loader>();
-  const fetcher = useFetcher<{ deployed?: boolean; error?: string }>();
+  const fetcher = useFetcher<{ deployed?: boolean; error?: string; llmsTxtUrl?: string }>();
   const [showContent, setShowContent] = useState(false);
 
   const deploying = fetcher.state === 'submitting';
@@ -609,17 +659,25 @@ export default function GeoPage() {
                 </Button>
               </InlineStack>
 
+              {fetcher.data?.error && (
+                <Banner tone="critical" title="llms.txt could not be deployed">
+                  <Text as="p" variant="bodyMd">
+                    {fetcher.data.error}
+                  </Text>
+                </Banner>
+              )}
+
               {fetcher.data?.deployed && (
                 <Banner tone="success" title="llms.txt deployed">
                   <BlockStack gap="100">
                     <Text as="p" variant="bodyMd">
                       Your llms.txt is now live at{' '}
                       <a
-                        href={`${storeUrl}/pages/llms-txt`}
+                        href={fetcher.data.llmsTxtUrl ?? `${storeUrl}/pages/llms-txt`}
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        {storeUrl}/pages/llms-txt
+                        {fetcher.data.llmsTxtUrl ?? `${storeUrl}/pages/llms-txt`}
                       </a>
                     </Text>
                     <Text as="p" variant="bodyMd">

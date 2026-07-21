@@ -10,6 +10,7 @@ const shopify = shopifyApp({
   scopes: process.env.SCOPES?.split(','),
   appUrl: process.env.SHOPIFY_APP_URL ?? 'https://klyna.dev',
   authPathPrefix: '/auth',
+  isEmbeddedApp: true,
   sessionStorage: new PrismaSessionStorage(prisma as never),
   distribution: AppDistribution.AppStore,
   future: {

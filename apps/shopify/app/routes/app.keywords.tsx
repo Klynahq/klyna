@@ -1,5 +1,5 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
-import { Form, useFetcher, useLoaderData } from '@remix-run/react';
+import { useFetcher, useLoaderData } from '@remix-run/react';
 import {
   Badge,
   Banner,
@@ -131,6 +131,49 @@ export default function KeywordsPage() {
   const loading = fetcher.state === 'submitting';
   const result = fetcher.data?.result;
   const error = fetcher.data?.error;
+  const keywordTips = result
+    ? [
+        ...(result.missingFromStore.length > 0
+          ? [
+              {
+                tip: `Add "${result.missingFromStore.slice(0, 3).join('", "')}" to product descriptions`,
+                detail:
+                  'Weave missing terms naturally into descriptions as sentences, not keyword lists.',
+                impact: 'High',
+              },
+            ]
+          : [
+              {
+                tip: 'Keep refreshing high-value pages with specific buying language',
+                detail:
+                  'Your current content already covers the strongest semantic terms this scan found.',
+                impact: 'Low',
+              },
+            ]),
+        ...(result.triggered.length > 0
+          ? [
+              {
+                tip: 'Use associated terms as FAQ questions',
+                detail: `Turn "${result.triggered
+                  .slice(0, 2)
+                  .map((w) => w.word)
+                  .join('" and "')}" into FAQ questions on relevant pages.`,
+                impact: 'Medium',
+              },
+            ]
+          : []),
+        ...(result.suggestions.length > 0
+          ? [
+              {
+                tip: 'Target search variations as collection names',
+                detail:
+                  'Use autocomplete variations for collection pages, headings, and buyer guides.',
+                impact: 'Medium',
+              },
+            ]
+          : []),
+      ]
+    : [];
 
   const useSuggestion = (title: string) => {
     const words = title.toLowerCase().split(/\s+/).slice(0, 3).join(' ');
@@ -154,7 +197,7 @@ export default function KeywordsPage() {
                 </Text>
               </BlockStack>
 
-              <Form method="post">
+              <fetcher.Form method="post">
                 <InlineStack gap="200" blockAlign="end">
                   <Box minWidth="360px">
                     <TextField
@@ -170,7 +213,7 @@ export default function KeywordsPage() {
                     Analyse
                   </Button>
                 </InlineStack>
-              </Form>
+              </fetcher.Form>
 
               {productTitles.length > 0 && (
                 <BlockStack gap="100">
@@ -383,28 +426,7 @@ export default function KeywordsPage() {
                     How to use these keywords
                   </Text>
                   <BlockStack gap="200">
-                    {[
-                      {
-                        tip: `Add "${result.missingFromStore.slice(0, 3).join('", "')}" to product descriptions`,
-                        detail:
-                          'Weave missing terms naturally into your descriptions — not as a list, as sentences.',
-                        impact: 'High',
-                      },
-                      {
-                        tip: 'Use associated terms as FAQ questions',
-                        detail: `Turn "${result.triggered
-                          .slice(0, 2)
-                          .map((w) => w.word)
-                          .join('" and "')}" into FAQ questions on relevant pages.`,
-                        impact: 'Medium',
-                      },
-                      {
-                        tip: 'Target search variations as collection names',
-                        detail:
-                          'If you sell running shoes, create collections named for the top autocomplete variations.',
-                        impact: 'Medium',
-                      },
-                    ].map((item) => (
+                    {keywordTips.map((item) => (
                       <InlineStack key={item.tip} align="space-between" blockAlign="start">
                         <BlockStack gap="050">
                           <Text as="p" variant="bodyMd" fontWeight="semibold">

@@ -24,10 +24,10 @@ cd apps/shopify
 # 1. Install deps
 pnpm install
 
-# 2. Create the Prisma SQLite DB for session storage
+# 2. Configure Prisma session storage
 cp .env.example .env
 pnpm prisma:generate
-pnpm prisma:migrate   # creates dev.sqlite
+pnpm prisma:migrate
 
 # 3. Link to a Shopify app (creates one in your Partner account or links to existing)
 pnpm shopify app config link
@@ -49,7 +49,7 @@ apps/shopify/
 ├── shopify.app.toml          # Shopify app config — CLI rewrites client_id
 ├── shopify.web.toml          # Tells the Shopify CLI how to run the web role
 ├── vite.config.ts
-├── prisma/schema.prisma      # Session storage (SQLite locally)
+├── prisma/schema.prisma      # Session storage + audit state (Postgres)
 ├── app/
 │   ├── shopify.server.ts     # @shopify/shopify-app-remix init
 │   ├── db.server.ts          # PrismaClient singleton
@@ -62,25 +62,38 @@ apps/shopify/
 │       ├── app.tsx             # Embedded app shell + NavMenu
 │       ├── app._index.tsx      # Dashboard
 │       ├── app.audit.tsx       # Audit feature (uses @klyna/core)
-│       ├── app.schema.tsx      # Schema (planned)
-│       ├── app.links.tsx       # Internal links (planned)
+│       ├── app.schema.tsx      # JSON-LD schema settings + snippets
+│       ├── app.links.tsx       # Internal link suggestions
+│       ├── app.bulk.tsx        # Store-wide audit runner
+│       ├── app.geo.tsx         # GEO score + llms.txt generator
+│       ├── app.meta-editor.tsx # Bulk SEO metadata editor
+│       ├── app.alt-text.tsx    # Product image alt text editor
+│       ├── app.keywords.tsx    # Keyword gap helper
+│       ├── app.vitals.tsx      # PageSpeed Insights checker
+│       ├── app.canonical.tsx   # Canonical URL checks
+│       ├── app.competitor.tsx  # Competitor page comparison
 │       └── webhooks.app.uninstalled.tsx
 ```
 
-## What works v0.1
+## What works
 
 - **OAuth + embedded admin** (out of the box once credentials are in place)
 - **Storefront audit** (`/app/audit`) — fetches a URL, runs the full Klyna
-  audit engine on it, displays score + findings, persists each run to SQLite
-
-## What ships next
-
-- **Schema markup module** (`/app/schema`) — auto-inject product, collection,
-  org, FAQ schema via theme app extension
-- **Internal links module** (`/app/links`) — TF-IDF across products, collections,
-  and pages, with theme-extension-based injection
-- **Webhooks** — listen to product/page updates to invalidate audit cache
-- **Billing** — Shopify managed pricing, free tier with limits
+  audit engine on it, displays score + findings, and persists each run
+- **Bulk Store Audit** (`/app/bulk`) — scans homepage, products, collections,
+  and pages, using Shopify `onlineStoreUrl` as the canonical URL when available
+- **Schema Markup** (`/app/schema`) — saves schema settings and generates
+  Organization, WebSite, Product, BreadcrumbList, and FAQ JSON-LD snippets
+- **Internal Links** (`/app/links`) — TF-IDF suggestions and orphan detection
+  across products, collections, and content pages
+- **GEO Score** (`/app/geo`) — entity/trust/content scoring plus an
+  `llms.txt` generator for AI crawlers
+- **Meta Bulk Editor** (`/app/meta-editor`) — edits product and collection SEO
+  fields through Shopify Admin API, with page metadata handled via metafields
+- **Image Alt Text** (`/app/alt-text`) — product image alt text audit and editor
+- **Keywords, Web Vitals, Canonicals, Competitors** — focused analysis modules
+  for deeper store optimization
+- **GDPR webhooks** — app uninstall and customer/shop privacy endpoints
 
 ## Deploy
 
@@ -95,9 +108,9 @@ for the App Store review process.
 
 ## Architecture notes
 
-- **Session storage** uses Prisma + SQLite locally. For production, swap
-  `DATABASE_URL` to a Postgres URL (Supabase, Neon, Railway, Fly Postgres —
-  any work) and `pnpm prisma:migrate`.
+- **Session storage** uses Prisma + Postgres. Production expects
+  `DATABASE_URL` for pooled runtime access and `DIRECT_URL` for Prisma schema
+  sync during deploy.
 - **No paid APIs** — every audit, every analysis runs locally on whatever
   Node host the app is deployed to. The Shopify Admin API is free.
 - **The shared engine** — `@klyna/core` is imported directly from the
