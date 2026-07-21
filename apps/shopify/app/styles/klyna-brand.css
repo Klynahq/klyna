@@ -99,7 +99,7 @@
   text-decoration: none;
 }
 .klyna-header__wordmark {
-  font-family: -apple-system, 'Inter', system-ui, sans-serif;
+  font-family: -apple-system, "Inter", system-ui, sans-serif;
   font-size: 15px;
   font-weight: 700;
   letter-spacing: -0.3px;
@@ -127,8 +127,28 @@
   letter-spacing: -1px;
   border: 3px solid currentColor;
 }
-.klyna-score-pill--a { color: #22c55e; border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.08); }
-.klyna-score-pill--b { color: #84cc16; border-color: rgba(132,204,22,0.3); background: rgba(132,204,22,0.08); }
-.klyna-score-pill--c { color: #f59e0b; border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.08); }
-.klyna-score-pill--d { color: #f97316; border-color: rgba(249,115,22,0.3); background: rgba(249,115,22,0.08); }
-.klyna-score-pill--f { color: #ef4444; border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.08); }
+.klyna-score-pill--a {
+  color: #22c55e;
+  border-color: rgba(34, 197, 94, 0.3);
+  background: rgba(34, 197, 94, 0.08);
+}
+.klyna-score-pill--b {
+  color: #84cc16;
+  border-color: rgba(132, 204, 22, 0.3);
+  background: rgba(132, 204, 22, 0.08);
+}
+.klyna-score-pill--c {
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.3);
+  background: rgba(245, 158, 11, 0.08);
+}
+.klyna-score-pill--d {
+  color: #f97316;
+  border-color: rgba(249, 115, 22, 0.3);
+  background: rgba(249, 115, 22, 0.08);
+}
+.klyna-score-pill--f {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.08);
+}

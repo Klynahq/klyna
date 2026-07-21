@@ -29,7 +29,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { admin } = await authenticate.admin(request);
 
   type ShopRes = { data: { shop: { myshopifyDomain: string; primaryDomain: { url: string } } } };
-  const shopRes = await admin.graphql(`{ shop { myshopifyDomain primaryDomain { url } } }`);
+  const shopRes = await admin.graphql('{ shop { myshopifyDomain primaryDomain { url } } }');
   const shopData = ((await shopRes.json()) as ShopRes).data.shop;
   const baseUrl = shopData.primaryDomain.url.replace(/\/$/, '');
   const myDomain = shopData.myshopifyDomain;
@@ -63,14 +63,18 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     );
 
     const gqlData = (await res.json()) as {
-      data: { products: { pageInfo: { hasNextPage: boolean; endCursor: string | null }; nodes: P[] } };
+      data: {
+        products: { pageInfo: { hasNextPage: boolean; endCursor: string | null }; nodes: P[] };
+      };
     };
     const { nodes, pageInfo } = gqlData.data.products;
 
     for (const p of nodes) {
       const canonical = p.onlineStoreUrl ?? `${baseUrl}/products/${p.handle}`;
       const colls = p.collections.nodes;
-      const duplicates = colls.map((c) => `${baseUrl}/collections/${c.handle}/products/${p.handle}`);
+      const duplicates = colls.map(
+        (c) => `${baseUrl}/collections/${c.handle}/products/${p.handle}`,
+      );
 
       productsWithCollections.push({
         id: p.id,
@@ -126,12 +130,14 @@ export default function CanonicalPage() {
             <BlockStack gap="300">
               <InlineStack align="space-between" blockAlign="center">
                 <BlockStack gap="100">
-                  <Text as="h2" variant="headingMd">Duplicate URL detector</Text>
+                  <Text as="h2" variant="headingMd">
+                    Duplicate URL detector
+                  </Text>
                   <Text as="p" tone="subdued">
                     Shopify creates a unique URL for every product (/products/handle) but also lets
                     them be accessed via collection paths (/collections/x/products/handle). Each
-                    collection a product belongs to creates a new, indexable URL — even with canonical
-                    tags, Google may ignore them and split link equity across duplicates.
+                    collection a product belongs to creates a new, indexable URL — even with
+                    canonical tags, Google may ignore them and split link equity across duplicates.
                   </Text>
                 </BlockStack>
                 <InlineStack gap="200">
@@ -143,7 +149,9 @@ export default function CanonicalPage() {
               </InlineStack>
 
               <Banner
-                tone={affected.length === 0 ? 'success' : affected.length > 20 ? 'critical' : 'warning'}
+                tone={
+                  affected.length === 0 ? 'success' : affected.length > 20 ? 'critical' : 'warning'
+                }
                 title={
                   affected.length === 0
                     ? 'No canonical URL issues detected'
@@ -166,17 +174,21 @@ export default function CanonicalPage() {
             <Card>
               <BlockStack gap="400">
                 <InlineStack align="space-between" blockAlign="center">
-                  <Text as="h2" variant="headingMd">How to fix it — Liquid code change</Text>
+                  <Text as="h2" variant="headingMd">
+                    How to fix it — Liquid code change
+                  </Text>
                   <Badge tone="info">One-time theme edit</Badge>
                 </InlineStack>
                 <Text as="p" tone="subdued">
-                  The root cause is the Liquid <code>| within: collection</code> filter used in product
-                  card templates. This filter generates a collection-scoped URL instead of the canonical
-                  product URL. One change fixes all affected products permanently.
+                  The root cause is the Liquid <code>| within: collection</code> filter used in
+                  product card templates. This filter generates a collection-scoped URL instead of
+                  the canonical product URL. One change fixes all affected products permanently.
                 </Text>
 
                 <BlockStack gap="200">
-                  <Text as="h3" variant="headingSm">File to edit</Text>
+                  <Text as="h3" variant="headingSm">
+                    File to edit
+                  </Text>
                   <Box
                     background="bg-surface-secondary"
                     padding="300"
@@ -191,7 +203,9 @@ export default function CanonicalPage() {
                 </BlockStack>
 
                 <BlockStack gap="200">
-                  <Text as="h3" variant="headingSm">The change</Text>
+                  <Text as="h3" variant="headingSm">
+                    The change
+                  </Text>
                   <InlineStack gap="300" wrap>
                     <Box
                       background="bg-fill-critical-secondary"
@@ -201,9 +215,11 @@ export default function CanonicalPage() {
                       borderColor="border-critical"
                     >
                       <BlockStack gap="100">
-                        <Text as="p" variant="bodySm" fontWeight="semibold" tone="critical">Before (creates duplicates)</Text>
+                        <Text as="p" variant="bodySm" fontWeight="semibold" tone="critical">
+                          Before (creates duplicates)
+                        </Text>
                         <code style={{ fontSize: '12px', fontFamily: 'monospace' }}>
-                          {`{{ product.url | within: collection }}`}
+                          {'{{ product.url | within: collection }}'}
                         </code>
                       </BlockStack>
                     </Box>
@@ -215,9 +231,11 @@ export default function CanonicalPage() {
                       borderColor="border-success"
                     >
                       <BlockStack gap="100">
-                        <Text as="p" variant="bodySm" fontWeight="semibold" tone="success">After (canonical URL)</Text>
+                        <Text as="p" variant="bodySm" fontWeight="semibold" tone="success">
+                          After (canonical URL)
+                        </Text>
                         <code style={{ fontSize: '12px', fontFamily: 'monospace' }}>
-                          {`{{ product.url }}`}
+                          {'{{ product.url }}'}
                         </code>
                       </BlockStack>
                     </Box>
@@ -226,10 +244,10 @@ export default function CanonicalPage() {
 
                 <Banner tone="info" title="What this does">
                   <Text as="p" variant="bodyMd">
-                    Changing <code>| within: collection</code> to nothing makes your theme always link
-                    to <code>/products/handle</code> — the canonical URL. This concentrates link equity
-                    on one URL per product and eliminates duplicate content. Google will then consistently
-                    index the canonical version.
+                    Changing <code>| within: collection</code> to nothing makes your theme always
+                    link to <code>/products/handle</code> — the canonical URL. This concentrates
+                    link equity on one URL per product and eliminates duplicate content. Google will
+                    then consistently index the canonical version.
                   </Text>
                 </Banner>
               </BlockStack>
@@ -246,8 +264,8 @@ export default function CanonicalPage() {
                   Affected products ({affected.length})
                 </Text>
                 <Text as="p" tone="subdued">
-                  These products are discoverable at multiple URLs. The canonical URL is shown
-                  first — it&apos;s where link equity should concentrate.
+                  These products are discoverable at multiple URLs. The canonical URL is shown first
+                  — it&apos;s where link equity should concentrate.
                 </Text>
                 <Divider />
 
@@ -261,7 +279,9 @@ export default function CanonicalPage() {
                       <BlockStack gap="200">
                         <InlineStack align="space-between" blockAlign="center">
                           <BlockStack gap="050">
-                            <Text as="p" variant="bodyMd" fontWeight="semibold">{p.title}</Text>
+                            <Text as="p" variant="bodyMd" fontWeight="semibold">
+                              {p.title}
+                            </Text>
                             <Text as="p" variant="bodySm" tone="success">
                               Canonical: {p.canonicalUrl.replace(baseUrl, '')}
                             </Text>
@@ -269,7 +289,9 @@ export default function CanonicalPage() {
                           <Badge tone="critical">{`${p.collections.length} collections`}</Badge>
                         </InlineStack>
                         <BlockStack gap="050">
-                          <Text as="p" variant="bodySm" tone="subdued">Also accessible at:</Text>
+                          <Text as="p" variant="bodySm" tone="subdued">
+                            Also accessible at:
+                          </Text>
                           {p.duplicateUrls.slice(0, 4).map((url) => (
                             <Text key={url} as="p" variant="bodySm" tone="critical">
                               ✗ {url.replace(baseUrl, '')}
@@ -278,7 +300,9 @@ export default function CanonicalPage() {
                         </BlockStack>
                         <InlineStack gap="100" wrap>
                           {p.collections.map((c) => (
-                            <Badge key={c.handle} tone="info" size="small">{c.title}</Badge>
+                            <Badge key={c.handle} tone="info" size="small">
+                              {c.title}
+                            </Badge>
                           ))}
                         </InlineStack>
                       </BlockStack>
@@ -312,7 +336,9 @@ export default function CanonicalPage() {
         <Layout.Section>
           <Card>
             <BlockStack gap="300">
-              <Text as="h2" variant="headingMd">Why this matters</Text>
+              <Text as="h2" variant="headingMd">
+                Why this matters
+              </Text>
               <BlockStack gap="200">
                 {[
                   {
@@ -333,10 +359,19 @@ export default function CanonicalPage() {
                   },
                 ].map((item) => (
                   <InlineStack key={item.title} align="start" blockAlign="start" gap="200">
-                    <Box minWidth="4px" minHeight="40px" background="bg-fill-brand" borderRadius="full" />
+                    <Box
+                      minWidth="4px"
+                      minHeight="40px"
+                      background="bg-fill-brand"
+                      borderRadius="full"
+                    />
                     <BlockStack gap="050">
-                      <Text as="p" variant="bodyMd" fontWeight="semibold">{item.title}</Text>
-                      <Text as="p" variant="bodySm" tone="subdued">{item.body}</Text>
+                      <Text as="p" variant="bodyMd" fontWeight="semibold">
+                        {item.title}
+                      </Text>
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        {item.body}
+                      </Text>
                     </BlockStack>
                   </InlineStack>
                 ))}

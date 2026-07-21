@@ -1,0 +1,46 @@
+:root {
+  --klyna-accent: #7c5cff;
+  --klyna-accent-hover: #9277ff;
+  --klyna-bg: #0b0b0f;
+  --klyna-surface: #13131a;
+  --klyna-border: #2a2a35;
+}
+
+.KlynaScore {
+  width: 104px;
+  height: 104px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at center, #ffffff 0 54%, transparent 55%),
+    conic-gradient(var(--klyna-accent) calc(var(--score) * 1%), #e4e4e7 0);
+  border: 1px solid #e4e4e7;
+}
+
+.KlynaScore strong {
+  color: #111827;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.KlynaFinding {
+  border: 1px solid #dfe3e8;
+  border-radius: 8px;
+  padding: 14px;
+  background: #fff;
+}
+
+.KlynaFinding[data-severity="critical"] {
+  border-color: #fed7aa;
+  background: #fff7ed;
+}
+
+.KlynaFinding[data-severity="warning"] {
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+.KlynaFinding[data-severity="success"] {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}

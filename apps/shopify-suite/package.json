@@ -1,0 +1,48 @@
+{
+  "name": "shopify-suite",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "description": "Shared Shopify app source for the next Klyna App Store batch: Cleanroom, Promo QA, Redirect Guard, Pixel Doctor, and Feed Doctor.",
+  "type": "module",
+  "scripts": {
+    "build": "remix vite:build",
+    "dev": "shopify app dev",
+    "start": "remix-serve ./build/server/index.js",
+    "config:link": "shopify app config link",
+    "config:use": "shopify app config use",
+    "deploy": "shopify app deploy",
+    "generate": "shopify app generate",
+    "prisma:migrate": "prisma migrate deploy",
+    "prisma:generate": "prisma generate",
+    "typecheck": "tsc --noEmit",
+    "setup": "pnpm prisma:generate && pnpm prisma:migrate"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.0.0",
+    "@remix-run/node": "^2.15.0",
+    "@remix-run/react": "^2.15.0",
+    "@remix-run/serve": "^2.15.0",
+    "@shopify/app-bridge-react": "^4.2.12",
+    "@shopify/polaris": "^13.9.0",
+    "@shopify/shopify-app-remix": "^4.2.1",
+    "@shopify/shopify-app-session-storage-prisma": "^9.0.1",
+    "isbot": "^5.1.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@remix-run/dev": "^2.15.0",
+    "@shopify/cli": "^4.5.2",
+    "@types/node": "^22.10.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "prisma": "^6.0.0",
+    "typescript": "^5.7.2",
+    "vite": "^5.4.0",
+    "vite-tsconfig-paths": "^5.1.0"
+  },
+  "engines": {
+    "node": "22.x"
+  }
+}

@@ -2,7 +2,11 @@
 // Backs Shopify session storage and any local state we cache.
 
 generator client {
-  provider = "prisma-client-js"
+  provider               = "prisma-client"
+  output                 = "../app/generated/prisma-client"
+  moduleFormat           = "esm"
+  generatedFileExtension = "ts"
+  importFileExtension    = "ts"
 }
 
 datasource db {
@@ -12,21 +16,23 @@ datasource db {
 }
 
 model Session {
-  id            String    @id
-  shop          String
-  state         String
-  isOnline      Boolean   @default(false)
-  scope         String?
-  expires       DateTime?
-  accessToken   String
-  userId        BigInt?
-  firstName     String?
-  lastName      String?
-  email         String?
-  accountOwner  Boolean   @default(false)
-  locale        String?
-  collaborator  Boolean?  @default(false)
-  emailVerified Boolean?  @default(false)
+  id                  String    @id
+  shop                String
+  state               String
+  isOnline            Boolean   @default(false)
+  scope               String?
+  expires             DateTime?
+  accessToken         String
+  userId              BigInt?
+  firstName           String?
+  lastName            String?
+  email               String?
+  accountOwner        Boolean   @default(false)
+  locale              String?
+  collaborator        Boolean?  @default(false)
+  emailVerified       Boolean?  @default(false)
+  refreshToken        String?
+  refreshTokenExpires DateTime?
 }
 
 model AuditResult {
@@ -35,7 +41,7 @@ model AuditResult {
   url       String
   score     Int
   grade     String
-  findings  String   // serialized JSON
+  findings  String // serialized JSON
   createdAt DateTime @default(now())
 
   @@index([shop, createdAt])
@@ -45,7 +51,7 @@ model AuditResult {
 model AiSettings {
   shop      String   @id
   provider  String   @default("off") // off | openrouter | groq | gemini
-  apiKey    String?  // user-supplied; stored only on this shop's DB row
+  apiKey    String? // user-supplied; stored only on this shop's DB row
   model     String?
   dailyCap  Int      @default(100)
   updatedAt DateTime @default(now()) @updatedAt
@@ -53,9 +59,9 @@ model AiSettings {
 
 // Daily AI usage counter (resets per UTC day) for the per-shop cap.
 model AiUsage {
-  shop      String
-  day       String   // YYYY-MM-DD (UTC)
-  count     Int      @default(0)
+  shop  String
+  day   String // YYYY-MM-DD (UTC)
+  count Int    @default(0)
 
   @@id([shop, day])
 }
@@ -83,24 +89,24 @@ model BulkScan {
 
 // Audit fix log — every field change Klyna writes to the store.
 model FixLog {
-  id        String   @id @default(cuid())
-  shop      String
+  id         String   @id @default(cuid())
+  shop       String
   resourceId String
-  url       String
-  field     String   // e.g. "seo.title" | "seo.description" | "altText"
-  oldValue  String?
-  newValue  String
-  createdAt DateTime @default(now())
+  url        String
+  field      String // e.g. "seo.title" | "seo.description" | "altText"
+  oldValue   String?
+  newValue   String
+  createdAt  DateTime @default(now())
 
   @@index([shop, createdAt])
 }
 
 // Schema injection config per shop.
 model SchemaConfig {
-  shop           String  @id
-  orgEnabled     Boolean @default(false)
-  productEnabled Boolean @default(false)
-  breadcrumbEnabled Boolean @default(false)
-  faqEnabled     Boolean @default(false)
-  updatedAt      DateTime @default(now()) @updatedAt
+  shop              String   @id
+  orgEnabled        Boolean  @default(false)
+  productEnabled    Boolean  @default(false)
+  breadcrumbEnabled Boolean  @default(false)
+  faqEnabled        Boolean  @default(false)
+  updatedAt         DateTime @default(now()) @updatedAt
 }

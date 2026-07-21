@@ -10,14 +10,19 @@ if (
   (!process.env.SHOPIFY_APP_URL || process.env.SHOPIFY_APP_URL === process.env.HOST)
 ) {
   process.env.SHOPIFY_APP_URL = process.env.HOST;
-  delete process.env.HOST;
+  process.env.HOST = undefined;
 }
 
 const host = new URL(process.env.SHOPIFY_APP_URL ?? 'http://localhost').hostname;
 const hmrConfig =
   host === 'localhost'
     ? { protocol: 'ws' as const, host: 'localhost', port: 64999, clientPort: 64999 }
-    : { protocol: 'wss' as const, host, port: parseInt(process.env.FRONTEND_PORT ?? '8002'), clientPort: 443 };
+    : {
+        protocol: 'wss' as const,
+        host,
+        port: Number.parseInt(process.env.FRONTEND_PORT ?? '8002'),
+        clientPort: 443,
+      };
 
 export default defineConfig({
   server: {

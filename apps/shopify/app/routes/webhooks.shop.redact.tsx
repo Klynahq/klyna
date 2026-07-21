@@ -1,6 +1,6 @@
-import { type ActionFunctionArgs } from '@remix-run/node';
-import { authenticate } from '../shopify.server';
+import type { ActionFunctionArgs } from '@remix-run/node';
 import prisma from '../db.server';
+import { authenticate } from '../shopify.server';
 
 // GDPR mandatory webhook: shop/redact.
 // Fires 48h after uninstall. Delete every row for this shop across all

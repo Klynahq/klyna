@@ -151,7 +151,12 @@ export function createAiClient(opts: AiClientOpts): AiClient {
   const conf = PROVIDER_DEFAULTS[provider];
   const model = opts.model ?? conf.model;
 
-  async function callOpenAICompat(prompt: string, system: string, temperature: number, maxTokens: number): Promise<string> {
+  async function callOpenAICompat(
+    prompt: string,
+    system: string,
+    temperature: number,
+    maxTokens: number,
+  ): Promise<string> {
     const res = await fetch(conf.url, {
       method: 'POST',
       headers: {
@@ -186,7 +191,12 @@ export function createAiClient(opts: AiClientOpts): AiClient {
     return text.trim();
   }
 
-  async function callGemini(prompt: string, system: string, temperature: number, maxTokens: number): Promise<string> {
+  async function callGemini(
+    prompt: string,
+    system: string,
+    temperature: number,
+    maxTokens: number,
+  ): Promise<string> {
     const url = `${conf.url}/${model}:generateContent?key=${opts.apiKey}`;
     const res = await fetch(url, {
       method: 'POST',
@@ -208,7 +218,12 @@ export function createAiClient(opts: AiClientOpts): AiClient {
     return text.trim();
   }
 
-  async function dispatch(prompt: string, system: string, temperature: number, maxTokens: number): Promise<string> {
+  async function dispatch(
+    prompt: string,
+    system: string,
+    temperature: number,
+    maxTokens: number,
+  ): Promise<string> {
     if (provider === 'gemini') return callGemini(prompt, system, temperature, maxTokens);
     return callOpenAICompat(prompt, system, temperature, maxTokens);
   }
@@ -269,33 +284,20 @@ export function createAiClient(opts: AiClientOpts): AiClient {
 
 export const PROMPTS = {
   seoTitle: (resource: string, brand: string, context: string) =>
-    `Write 3 SEO title options (50-60 chars each) for this ${resource} on the store "${brand}". ` +
-    `Be specific and search-friendly. One per line, no numbering, no quotes.\n\n` +
-    `Context:\n${context.slice(0, 600)}`,
+    `Write 3 SEO title options (50-60 chars each) for this ${resource} on the store "${brand}". Be specific and search-friendly. One per line, no numbering, no quotes.\n\nContext:\n${context.slice(0, 600)}`,
 
   metaDescription: (resource: string, brand: string, context: string) =>
-    `Write a meta description (130-155 chars) for this ${resource} on the store "${brand}". ` +
-    `Include one concrete benefit. No emoji, no superlatives.\n\n` +
-    `Context:\n${context.slice(0, 800)}`,
+    `Write a meta description (130-155 chars) for this ${resource} on the store "${brand}". Include one concrete benefit. No emoji, no superlatives.\n\nContext:\n${context.slice(0, 800)}`,
 
   h1Suggestion: (pageTitle: string, body: string) =>
-    `Write a single <h1> heading (40-70 chars) for a page titled "${pageTitle}". ` +
-    `It should describe the page topic plainly. Output the heading text only, no tags, no quotes.\n\n` +
-    `Page content excerpt:\n${body.slice(0, 600)}`,
+    `Write a single <h1> heading (40-70 chars) for a page titled "${pageTitle}". It should describe the page topic plainly. Output the heading text only, no tags, no quotes.\n\nPage content excerpt:\n${body.slice(0, 600)}`,
 
   expandThinContent: (title: string, body: string) =>
-    `The page "${title}" is too thin (under 300 words). Write 2-3 short paragraphs (about 200 words total) ` +
-    `that genuinely add useful detail. No filler, no marketing language. Output paragraphs only.\n\n` +
-    `Existing content:\n${body.slice(0, 800)}`,
+    `The page "${title}" is too thin (under 300 words). Write 2-3 short paragraphs (about 200 words total) that genuinely add useful detail. No filler, no marketing language. Output paragraphs only.\n\nExisting content:\n${body.slice(0, 800)}`,
 
   faqSet: (topic: string, context: string) =>
-    `Generate 4 frequently-asked questions (with 1-2 sentence answers) about: ${topic}. ` +
-    `Output as: Q: <question>\\nA: <answer>\\n\\n  — repeated. No numbering.\n\n` +
-    `Context:\n${context.slice(0, 600)}`,
+    `Generate 4 frequently-asked questions (with 1-2 sentence answers) about: ${topic}. Output as: Q: <question>\\nA: <answer>\\n\\n  — repeated. No numbering.\n\nContext:\n${context.slice(0, 600)}`,
 
   productBundle: (anchorProduct: string, coPurchasedTitles: string[]) =>
-    `A shopper looking at "${anchorProduct}" also bought these: ` +
-    `${coPurchasedTitles.slice(0, 8).join(', ')}. ` +
-    `Suggest the best 2-item bundle (just product names) and a 1-line reason a shopper would buy both. ` +
-    `Format: BUNDLE: a + b\\nREASON: <one sentence>`,
+    `A shopper looking at "${anchorProduct}" also bought these: ${coPurchasedTitles.slice(0, 8).join(', ')}. Suggest the best 2-item bundle (just product names) and a 1-line reason a shopper would buy both. Format: BUNDLE: a + b\\nREASON: <one sentence>`,
 };
