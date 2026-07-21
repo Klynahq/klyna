@@ -24,29 +24,13 @@
     "preserveWatchOutput": true,
     "inlineSources": false,
     "jsx": "react-jsx",
-    "lib": [
-      "DOM",
-      "DOM.Iterable",
-      "ES2022"
-    ],
-    "types": [
-      "@remix-run/node",
-      "vite/client",
-      "node"
-    ],
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "types": ["@remix-run/node", "vite/client", "node"],
     "baseUrl": ".",
     "paths": {
-      "~/*": [
-        "./app/*"
-      ]
+      "~/*": ["./app/*"]
     }
   },
-  "include": [
-    "app/**/*",
-    "vite.config.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "build"
-  ]
+  "include": ["app/**/*", "vite.config.ts"],
+  "exclude": ["node_modules", "build"]
 }

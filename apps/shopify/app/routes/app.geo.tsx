@@ -1,6 +1,5 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
 import { useFetcher, useLoaderData } from '@remix-run/react';
-import { useState } from 'react';
 import {
   Badge,
   Banner,
@@ -16,8 +15,9 @@ import {
   ProgressBar,
   Text,
 } from '@shopify/polaris';
-import { authenticate } from '../shopify.server';
+import { useState } from 'react';
 import prisma from '../db.server';
+import { authenticate } from '../shopify.server';
 
 // ── GEO Score computation ─────────────────────────────────────────────────────
 
@@ -102,7 +102,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   type CollData = {
     data: {
       collections: {
-        nodes: { title: string; handle: string; onlineStoreUrl: string | null }[];
+        nodes: { title: string; handle: string }[];
       };
     };
   };
@@ -128,7 +128,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       }
     }`),
     admin.graphql(`{
-      collections(first: 30) { nodes { title handle onlineStoreUrl } }
+      collections(first: 30) { nodes { title handle } }
     }`),
   ]);
 
@@ -160,9 +160,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   });
 
   // 2. About page exists
-  const aboutPage = pages.find(
-    (p) => /about/i.test(p.handle) || /about/i.test(p.title),
-  );
+  const aboutPage = pages.find((p) => /about/i.test(p.handle) || /about/i.test(p.title));
   signals.push({
     label: 'About page',
     detail: aboutPage
@@ -178,16 +176,20 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const authorScore = Math.min(10, articlesWithAuthor.length * 3);
   signals.push({
     label: 'Blog posts with author attribution',
-    detail: articlesWithAuthor.length > 0
-      ? `${articlesWithAuthor.length} posts have named authors — E-E-A-T signal for AI engines.`
-      : 'Add author attribution to blog posts. AI engines weight content more heavily when authorship is clear.',
+    detail:
+      articlesWithAuthor.length > 0
+        ? `${articlesWithAuthor.length} posts have named authors — E-E-A-T signal for AI engines.`
+        : 'Add author attribution to blog posts. AI engines weight content more heavily when authorship is clear.',
     score: authorScore,
     max: 10,
     met: articlesWithAuthor.length > 0,
   });
 
   // 4. Structured / FAQ content
-  const allPageText = pages.map((p) => p.body).join(' ').toLowerCase();
+  const allPageText = pages
+    .map((p) => p.body)
+    .join(' ')
+    .toLowerCase();
   const hasFaq = /\b(faq|frequently asked|question|q:\s|q\.|answer)\b/i.test(allPageText);
   signals.push({
     label: 'FAQ / Q&A content',
@@ -200,8 +202,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   });
 
   // 5. Product descriptions (thin content check)
-  const strippedDescs = products.map((p) =>
-    p.descriptionHtml.replace(/<[^>]+>/g, ' ').trim().split(/\s+/).length,
+  const strippedDescs = products.map(
+    (p) =>
+      p.descriptionHtml
+        .replace(/<[^>]+>/g, ' ')
+        .trim()
+        .split(/\s+/).length,
   );
   const avgDescWords =
     strippedDescs.length > 0
@@ -233,7 +239,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   // 7. Store has facts / numbers in content (citation-ready)
   const productText = products.map((p) => p.descriptionHtml).join(' ');
-  const hasNumbers = /\d+\s*(mm|cm|kg|lb|oz|ml|g|inch|feet|m\b|year|month|day|hour|%|warranty|guarantee)/i.test(productText);
+  const hasNumbers =
+    /\d+\s*(mm|cm|kg|lb|oz|ml|g|inch|feet|m\b|year|month|day|hour|%|warranty|guarantee)/i.test(
+      productText,
+    );
   signals.push({
     label: 'Citation-ready facts in content',
     detail: hasNumbers
@@ -263,7 +272,15 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const maxTotal = signals.reduce((s, sig) => s + sig.max, 0);
 
   // ── Build llms.txt content ────────────────────────────────────────────────
-  const llmsTxtContent = buildLlmsTxt(shopData, storeUrl, myDomain, products, collections, pages, articles);
+  const llmsTxtContent = buildLlmsTxt(
+    shopData,
+    storeUrl,
+    myDomain,
+    products,
+    collections,
+    pages,
+    articles,
+  );
 
   return json<{
     geoResult: GeoResult;
@@ -289,8 +306,14 @@ function buildLlmsTxt(
   shop: { name: string; description: string | null },
   storeUrl: string,
   myDomain: string,
-  products: { title: string; handle: string; onlineStoreUrl: string | null; priceRangeV2: { minVariantPrice: { amount: string; currencyCode: string } }; descriptionHtml: string }[],
-  collections: { title: string; handle: string; onlineStoreUrl: string | null }[],
+  products: {
+    title: string;
+    handle: string;
+    onlineStoreUrl: string | null;
+    priceRangeV2: { minVariantPrice: { amount: string; currencyCode: string } };
+    descriptionHtml: string;
+  }[],
+  collections: { title: string; handle: string }[],
   pages: { title: string; handle: string }[],
   articles: { title: string; handle: string; blog: { handle: string } }[],
 ): string {
@@ -309,7 +332,7 @@ function buildLlmsTxt(
     lines.push('## Collections');
     lines.push('');
     for (const c of collections.slice(0, 20)) {
-      const url = c.onlineStoreUrl ?? `https://${myDomain}/collections/${c.handle}`;
+      const url = `${storeUrl}/collections/${c.handle}`;
       lines.push(`- [${c.title}](${url})`);
     }
     lines.push('');
@@ -326,14 +349,12 @@ function buildLlmsTxt(
         .replace(/\s+/g, ' ')
         .trim()
         .slice(0, 120);
-      lines.push(`- [${p.title}](${url}): ${price}${desc ? ' — ' + desc : ''}`);
+      lines.push(`- [${p.title}](${url}): ${price}${desc ? ` — ${desc}` : ''}`);
     }
     lines.push('');
   }
 
-  const keyPages = pages.filter(
-    (p) => /about|contact|faq|policy|shipping|returns/i.test(p.handle),
-  );
+  const keyPages = pages.filter((p) => /about|contact|faq|policy|shipping|returns/i.test(p.handle));
   if (keyPages.length > 0) {
     lines.push('## Key Pages');
     lines.push('');
@@ -355,7 +376,7 @@ function buildLlmsTxt(
   lines.push('## Notes for AI systems');
   lines.push('');
   lines.push(`- Store URL: ${storeUrl}`);
-  lines.push(`- This file is maintained by Klyna (https://klyna.dev)`);
+  lines.push('- This file is maintained by Klyna (https://klyna.dev)');
   lines.push(`- Last updated: ${new Date().toISOString().slice(0, 10)}`);
 
   return lines.join('\n');
@@ -441,31 +462,49 @@ export default function GeoPage() {
             <BlockStack gap="400">
               <InlineStack align="space-between" blockAlign="center">
                 <BlockStack gap="100">
-                  <Text as="h2" variant="headingLg">GEO Score for {shopName}</Text>
+                  <Text as="h2" variant="headingLg">
+                    GEO Score for {shopName}
+                  </Text>
                   <Text as="p" tone="subdued">
                     How likely is your store to be cited, featured, or recommended by AI engines
-                    like ChatGPT, Gemini, and Perplexity? This score measures the signals AI uses
-                    to evaluate, trust, and reference your brand.
+                    like ChatGPT, Gemini, and Perplexity? This score measures the signals AI uses to
+                    evaluate, trust, and reference your brand.
                   </Text>
                 </BlockStack>
                 <InlineStack gap="300" blockAlign="center">
-                  <Text as="p" variant="heading2xl" fontWeight="bold">{geoResult.total}</Text>
-                  <Text as="p" variant="headingLg" tone="subdued">/ {geoResult.maxTotal}</Text>
+                  <Text as="p" variant="heading2xl" fontWeight="bold">
+                    {geoResult.total}
+                  </Text>
+                  <Text as="p" variant="headingLg" tone="subdued">
+                    / {geoResult.maxTotal}
+                  </Text>
                   <Badge tone={gradeTone(geoResult.grade)} size="large">
                     {`Grade ${geoResult.grade}`}
                   </Badge>
                 </InlineStack>
               </InlineStack>
 
-              <ProgressBar progress={pct} tone={pct >= 75 ? 'primary' : pct >= 50 ? 'highlight' : 'critical'} />
+              <ProgressBar
+                progress={pct}
+                tone={pct >= 75 ? 'primary' : pct >= 50 ? 'highlight' : 'critical'}
+              />
 
               <Banner
-                tone={geoResult.grade === 'A' || geoResult.grade === 'B' ? 'success' : geoResult.grade === 'C' ? 'warning' : 'critical'}
+                tone={
+                  geoResult.grade === 'A' || geoResult.grade === 'B'
+                    ? 'success'
+                    : geoResult.grade === 'C'
+                      ? 'warning'
+                      : 'critical'
+                }
                 title={
-                  geoResult.grade === 'A' ? 'Excellent GEO — your store is AI-citation ready' :
-                  geoResult.grade === 'B' ? 'Good GEO — a few improvements will push you to the top' :
-                  geoResult.grade === 'C' ? 'Average GEO — AI engines can find you but rarely cite you' :
-                  'Poor GEO — AI engines don\'t have enough signals to trust or cite your store'
+                  geoResult.grade === 'A'
+                    ? 'Excellent GEO — your store is AI-citation ready'
+                    : geoResult.grade === 'B'
+                      ? 'Good GEO — a few improvements will push you to the top'
+                      : geoResult.grade === 'C'
+                        ? 'Average GEO — AI engines can find you but rarely cite you'
+                        : "Poor GEO — AI engines don't have enough signals to trust or cite your store"
                 }
               >
                 <Text as="p" variant="bodyMd">
@@ -482,7 +521,9 @@ export default function GeoPage() {
         <Layout.Section>
           <Card>
             <BlockStack gap="300">
-              <Text as="h2" variant="headingMd">GEO signal breakdown</Text>
+              <Text as="h2" variant="headingMd">
+                GEO signal breakdown
+              </Text>
               <BlockStack gap="0">
                 {geoResult.signals.map((sig, i) => (
                   <Box
@@ -493,12 +534,16 @@ export default function GeoPage() {
                     <InlineStack align="space-between" blockAlign="start">
                       <BlockStack gap="100">
                         <InlineStack gap="200" blockAlign="center">
-                          <Text as="p" variant="bodyMd" fontWeight="semibold">{sig.label}</Text>
+                          <Text as="p" variant="bodyMd" fontWeight="semibold">
+                            {sig.label}
+                          </Text>
                           <Badge tone={sig.met ? 'success' : 'critical'} size="small">
                             {sig.met ? `✓ ${sig.score}/${sig.max}` : `✗ 0/${sig.max}`}
                           </Badge>
                         </InlineStack>
-                        <Text as="p" variant="bodySm" tone="subdued">{sig.detail}</Text>
+                        <Text as="p" variant="bodySm" tone="subdued">
+                          {sig.detail}
+                        </Text>
                       </BlockStack>
                       <Box minWidth="80px">
                         <ProgressBar
@@ -522,15 +567,17 @@ export default function GeoPage() {
               <InlineStack align="space-between" blockAlign="center">
                 <BlockStack gap="100">
                   <InlineStack gap="200" blockAlign="center">
-                    <Text as="h2" variant="headingMd">llms.txt — AI catalog file</Text>
+                    <Text as="h2" variant="headingMd">
+                      llms.txt — AI catalog file
+                    </Text>
                     {deployed && <Badge tone="success">Deployed</Badge>}
                     {!deployed && <Badge tone="warning">Not deployed</Badge>}
                   </InlineStack>
                   <Text as="p" tone="subdued">
                     llms.txt is an emerging standard (like robots.txt but for AI systems) that tells
-                    ChatGPT, Perplexity, Gemini, and other AI crawlers what your store sells,
-                    who you are, and what content to cite. Klyna generates it automatically from
-                    your live product catalog.
+                    ChatGPT, Perplexity, Gemini, and other AI crawlers what your store sells, who
+                    you are, and what content to cite. Klyna generates it automatically from your
+                    live product catalog.
                   </Text>
                 </BlockStack>
               </InlineStack>
@@ -538,7 +585,10 @@ export default function GeoPage() {
               {deployed && geoResult.llmsTxtUrl && (
                 <Banner tone="success" title="llms.txt is live">
                   <Text as="p" variant="bodyMd">
-                    Accessible at: <a href={geoResult.llmsTxtUrl} target="_blank" rel="noopener noreferrer">{geoResult.llmsTxtUrl}</a>
+                    Accessible at:{' '}
+                    <a href={geoResult.llmsTxtUrl} target="_blank" rel="noopener noreferrer">
+                      {geoResult.llmsTxtUrl}
+                    </a>
                   </Text>
                 </Banner>
               )}
@@ -564,12 +614,17 @@ export default function GeoPage() {
                   <BlockStack gap="100">
                     <Text as="p" variant="bodyMd">
                       Your llms.txt is now live at{' '}
-                      <a href={`${storeUrl}/pages/llms-txt`} target="_blank" rel="noopener noreferrer">
+                      <a
+                        href={`${storeUrl}/pages/llms-txt`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         {storeUrl}/pages/llms-txt
                       </a>
                     </Text>
                     <Text as="p" variant="bodyMd">
-                      Add a URL redirect in Shopify: <strong>/llms.txt</strong> → <strong>/pages/llms-txt</strong> so AI crawlers find it at the standard path.
+                      Add a URL redirect in Shopify: <strong>/llms.txt</strong> →{' '}
+                      <strong>/pages/llms-txt</strong> so AI crawlers find it at the standard path.
                     </Text>
                   </BlockStack>
                 </Banner>
@@ -583,7 +638,17 @@ export default function GeoPage() {
                   borderWidth="025"
                   borderColor="border"
                 >
-                  <pre style={{ margin: 0, fontSize: '12px', whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'monospace', maxHeight: '400px', overflowY: 'auto' }}>
+                  <pre
+                    style={{
+                      margin: 0,
+                      fontSize: '12px',
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-word',
+                      fontFamily: 'monospace',
+                      maxHeight: '400px',
+                      overflowY: 'auto',
+                    }}
+                  >
                     {geoResult.llmsTxtContent}
                   </pre>
                 </Box>
@@ -596,17 +661,29 @@ export default function GeoPage() {
         <Layout.Section>
           <Card>
             <BlockStack gap="300">
-              <Text as="h2" variant="headingMd">What is GEO and why does it matter?</Text>
+              <Text as="h2" variant="headingMd">
+                What is GEO and why does it matter?
+              </Text>
               <InlineGrid columns={2} gap="400">
                 {[
                   {
                     title: 'Traditional SEO',
-                    points: ['Optimise for Google\'s ranking algorithm', 'Keywords, backlinks, page speed', 'Rank on the 10 blue links', 'Measured in SERP position'],
+                    points: [
+                      "Optimise for Google's ranking algorithm",
+                      'Keywords, backlinks, page speed',
+                      'Rank on the 10 blue links',
+                      'Measured in SERP position',
+                    ],
                     tone: 'info' as const,
                   },
                   {
                     title: 'GEO — Generative Engine Optimization',
-                    points: ['Optimise for AI engines (ChatGPT, Perplexity, Gemini)', 'Entity clarity, citation readiness, structured facts', 'Get mentioned in AI-generated answers', 'Measured in brand mentions + citation frequency'],
+                    points: [
+                      'Optimise for AI engines (ChatGPT, Perplexity, Gemini)',
+                      'Entity clarity, citation readiness, structured facts',
+                      'Get mentioned in AI-generated answers',
+                      'Measured in brand mentions + citation frequency',
+                    ],
                     tone: 'success' as const,
                   },
                 ].map((section) => (
@@ -615,7 +692,9 @@ export default function GeoPage() {
                       <Badge tone={section.tone}>{section.title}</Badge>
                       <BlockStack gap="100">
                         {section.points.map((p) => (
-                          <Text key={p} as="p" variant="bodyMd">· {p}</Text>
+                          <Text key={p} as="p" variant="bodyMd">
+                            · {p}
+                          </Text>
                         ))}
                       </BlockStack>
                     </BlockStack>

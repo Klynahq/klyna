@@ -167,7 +167,9 @@ export default function Auth() {
         </div>
 
         <h1>Install Klyna SEO</h1>
-        <p className="subtitle">Enter your Shopify store domain to connect your store and start your free audit.</p>
+        <p className="subtitle">
+          Enter your Shopify store domain to connect your store and start your free audit.
+        </p>
 
         <Form method="post">
           <label htmlFor="shop">Store domain</label>
@@ -178,16 +180,15 @@ export default function Auth() {
             defaultValue={shop}
             placeholder="my-store.myshopify.com"
             autoComplete="off"
-            autoFocus
           />
           {errors?.shop && <p className="field-error">{errors.shop}</p>}
 
-          <button type="submit" className="submit-btn">Connect store →</button>
+          <button type="submit" className="submit-btn">
+            Connect store →
+          </button>
         </Form>
 
-        <p className="footer-note">
-          Klyna is free to install. No credit card required.
-        </p>
+        <p className="footer-note">Klyna is free to install. No credit card required.</p>
       </div>
     </>
   );

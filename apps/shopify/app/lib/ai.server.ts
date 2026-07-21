@@ -3,7 +3,7 @@
 // Each Shopify session gets its own AI client backed by the AiSettings row
 // for the shop. Cache and quota are also DB-backed so they survive restarts.
 
-import { createAiClient, type AiProvider, type AiClient } from '~/lib/klyna-ai-client';
+import { type AiClient, type AiProvider, createAiClient } from '~/lib/klyna-ai-client';
 import prisma from '../db.server';
 
 export type ShopAiSettings = {
@@ -26,7 +26,10 @@ export async function getShopAiSettings(shop: string): Promise<ShopAiSettings> {
   };
 }
 
-export async function saveShopAiSettings(shop: string, input: Partial<ShopAiSettings>): Promise<void> {
+export async function saveShopAiSettings(
+  shop: string,
+  input: Partial<ShopAiSettings>,
+): Promise<void> {
   const existing = await prisma.aiSettings.findUnique({ where: { shop } });
   await prisma.aiSettings.upsert({
     where: { shop },

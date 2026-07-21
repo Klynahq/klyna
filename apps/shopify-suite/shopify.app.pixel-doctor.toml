@@ -1,0 +1,41 @@
+# Klyna Pixel Doctor public app config.
+# Link this file to the matching Shopify Partners app with:
+#   pnpm config:link -- --config shopify.app.pixel-doctor.toml
+
+client_id = "cb5991abe400808ec11e41fbcc316d2a"
+name = "Klyna Pixel Doctor"
+application_url = "https://klyna-pixel-doctor.vercel.app"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+
+[webhooks]
+api_version = "2026-07"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "/webhooks/app/uninstalled"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = [ "customers/data_request" ]
+  uri = "/webhooks/customers/data_request"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = [ "customers/redact" ]
+  uri = "/webhooks/customers/redact"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = [ "shop/redact" ]
+  uri = "/webhooks/shop/redact"
+
+[access_scopes]
+scopes = "read_products,read_content"
+
+[auth]
+redirect_urls = [
+  "https://klyna-pixel-doctor.vercel.app/auth/callback",
+  "https://klyna-pixel-doctor.vercel.app/auth/shopify/callback",
+  "https://klyna-pixel-doctor.vercel.app/api/auth/callback",
+  "https://klyna-pixel-doctor.vercel.app/auth/login",
+]

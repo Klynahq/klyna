@@ -1,6 +1,5 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
 import { useFetcher, useLoaderData } from '@remix-run/react';
-import { useCallback, useState } from 'react';
 import {
   Badge,
   Banner,
@@ -17,8 +16,9 @@ import {
   Text,
   TextField,
 } from '@shopify/polaris';
-import { authenticate } from '../shopify.server';
+import { useCallback, useState } from 'react';
 import prisma from '../db.server';
+import { authenticate } from '../shopify.server';
 
 type MetaRow = {
   id: string;
@@ -30,7 +30,11 @@ type MetaRow = {
   type: 'product' | 'collection' | 'page';
 };
 
-function scoreField(value: string | null, min: number, max: number): 'good' | 'short' | 'missing' | 'long' {
+function scoreField(
+  value: string | null,
+  min: number,
+  max: number,
+): 'good' | 'short' | 'missing' | 'long' {
   if (!value || value.trim() === '') return 'missing';
   const len = value.trim().length;
   if (len < min) return 'short';
@@ -51,7 +55,10 @@ function fieldBadge(score: 'good' | 'short' | 'missing' | 'long') {
 async function paginateGql<T>(
   admin: { graphql: (q: string, o?: { variables?: Record<string, unknown> }) => Promise<Response> },
   query: string,
-  extract: (d: unknown) => { nodes: T[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } },
+  extract: (d: unknown) => {
+    nodes: T[];
+    pageInfo: { hasNextPage: boolean; endCursor: string | null };
+  },
   max = 250,
 ): Promise<T[]> {
   const all: T[] = [];
@@ -71,9 +78,26 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session, admin } = await authenticate.admin(request);
   const shop = session.shop;
 
-  type P = { id: string; handle: string; title: string; onlineStoreUrl: string | null; seo: { title: string | null; description: string | null } };
-  type C = { id: string; handle: string; title: string; onlineStoreUrl: string | null; seo: { title: string | null; description: string | null } };
-  type Pg = { id: string; handle: string; title: string; onlineStoreUrl: string | null };
+  const shopResponse = await admin.graphql('{ shop { primaryDomain { url } } }');
+  const shopData = (await shopResponse.json()) as {
+    data: { shop: { primaryDomain: { url: string } } };
+  };
+  const baseUrl = shopData.data.shop.primaryDomain.url.replace(/\/$/, '');
+
+  type P = {
+    id: string;
+    handle: string;
+    title: string;
+    onlineStoreUrl: string | null;
+    seo: { title: string | null; description: string | null };
+  };
+  type C = {
+    id: string;
+    handle: string;
+    title: string;
+    seo: { title: string | null; description: string | null };
+  };
+  type Pg = { id: string; handle: string; title: string };
 
   const [products, collections, pages] = await Promise.all([
     paginateGql<P>(
@@ -84,34 +108,76 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
           nodes { id handle title onlineStoreUrl seo { title description } }
         }
       }`,
-      (d) => (d as { products: { nodes: P[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } } }).products,
+      (d) =>
+        (
+          d as {
+            products: { nodes: P[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } };
+          }
+        ).products,
     ),
     paginateGql<C>(
       admin,
       `query ($cursor: String) {
         collections(first: 50, after: $cursor) {
           pageInfo { hasNextPage endCursor }
-          nodes { id handle title onlineStoreUrl seo { title description } }
+          nodes { id handle title seo { title description } }
         }
       }`,
-      (d) => (d as { collections: { nodes: C[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } } }).collections,
+      (d) =>
+        (
+          d as {
+            collections: {
+              nodes: C[];
+              pageInfo: { hasNextPage: boolean; endCursor: string | null };
+            };
+          }
+        ).collections,
     ),
     paginateGql<Pg>(
       admin,
       `query ($cursor: String) {
         pages(first: 50, after: $cursor) {
           pageInfo { hasNextPage endCursor }
-          nodes { id handle title onlineStoreUrl }
+          nodes { id handle title }
         }
       }`,
-      (d) => (d as { pages: { nodes: Pg[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } } }).pages,
+      (d) =>
+        (
+          d as {
+            pages: { nodes: Pg[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } };
+          }
+        ).pages,
     ),
   ]);
 
   const rows: MetaRow[] = [
-    ...products.map((p) => ({ id: p.id, handle: p.handle, title: p.title, seoTitle: p.seo.title, seoDescription: p.seo.description, url: p.onlineStoreUrl, type: 'product' as const })),
-    ...collections.map((c) => ({ id: c.id, handle: c.handle, title: c.title, seoTitle: c.seo.title, seoDescription: c.seo.description, url: c.onlineStoreUrl, type: 'collection' as const })),
-    ...pages.map((pg) => ({ id: pg.id, handle: pg.handle, title: pg.title, seoTitle: null, seoDescription: null, url: pg.onlineStoreUrl, type: 'page' as const })),
+    ...products.map((p) => ({
+      id: p.id,
+      handle: p.handle,
+      title: p.title,
+      seoTitle: p.seo.title,
+      seoDescription: p.seo.description,
+      url: p.onlineStoreUrl,
+      type: 'product' as const,
+    })),
+    ...collections.map((c) => ({
+      id: c.id,
+      handle: c.handle,
+      title: c.title,
+      seoTitle: c.seo.title,
+      seoDescription: c.seo.description,
+      url: `${baseUrl}/collections/${c.handle}`,
+      type: 'collection' as const,
+    })),
+    ...pages.map((pg) => ({
+      id: pg.id,
+      handle: pg.handle,
+      title: pg.title,
+      seoTitle: null,
+      seoDescription: null,
+      url: `${baseUrl}/pages/${pg.handle}`,
+      type: 'page' as const,
+    })),
   ];
 
   return json({ shop, rows });
@@ -135,7 +201,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
             userErrors { field message }
           }
         }`,
-        { variables: { input: { id, seo: { title: seoTitle ?? '', description: seoDescription ?? '' } } } },
+        {
+          variables: {
+            input: { id, seo: { title: seoTitle ?? '', description: seoDescription ?? '' } },
+          },
+        },
       );
     } else if (type === 'collection') {
       await admin.graphql(
@@ -145,7 +215,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
             userErrors { field message }
           }
         }`,
-        { variables: { input: { id, seo: { title: seoTitle ?? '', description: seoDescription ?? '' } } } },
+        {
+          variables: {
+            input: { id, seo: { title: seoTitle ?? '', description: seoDescription ?? '' } },
+          },
+        },
       );
     } else if (type === 'page') {
       await admin.graphql(
@@ -161,8 +235,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     await prisma.fixLog.createMany({
       data: [
-        ...(seoTitle ? [{ shop, resourceId: id, url: id, field: 'seo.title', newValue: seoTitle }] : []),
-        ...(seoDescription ? [{ shop, resourceId: id, url: id, field: 'seo.description', newValue: seoDescription }] : []),
+        ...(seoTitle
+          ? [{ shop, resourceId: id, url: id, field: 'seo.title', newValue: seoTitle }]
+          : []),
+        ...(seoDescription
+          ? [{ shop, resourceId: id, url: id, field: 'seo.description', newValue: seoDescription }]
+          : []),
       ],
     });
 
@@ -207,21 +285,31 @@ function RowEditor({ row, onSaved }: RowEditorProps) {
     <BlockStack gap="200">
       <InlineStack align="space-between" blockAlign="center">
         <BlockStack gap="050">
-          <Text as="p" variant="bodyMd" fontWeight="semibold">{row.title}</Text>
-          <Text as="p" variant="bodySm" tone="subdued">/{row.handle}</Text>
+          <Text as="p" variant="bodyMd" fontWeight="semibold">
+            {row.title}
+          </Text>
+          <Text as="p" variant="bodySm" tone="subdued">
+            /{row.handle}
+          </Text>
         </BlockStack>
         {justSaved ? (
           <Badge tone="success">Saved</Badge>
         ) : (
-          <Button size="slim" onClick={save} loading={isSaving}>Save</Button>
+          <Button size="slim" onClick={save} loading={isSaving}>
+            Save
+          </Button>
         )}
       </InlineStack>
 
       <InlineGrid columns={2} gap="200">
         <BlockStack gap="100">
           <InlineStack gap="100" blockAlign="center">
-            <Text as="p" variant="bodySm" tone="subdued">SEO title ({title.length}/60)</Text>
-            <Badge tone={titleBadge.tone} size="small">{titleBadge.label}</Badge>
+            <Text as="p" variant="bodySm" tone="subdued">
+              SEO title ({title.length}/60)
+            </Text>
+            <Badge tone={titleBadge.tone} size="small">
+              {titleBadge.label}
+            </Badge>
           </InlineStack>
           <TextField
             label=""
@@ -236,8 +324,12 @@ function RowEditor({ row, onSaved }: RowEditorProps) {
         </BlockStack>
         <BlockStack gap="100">
           <InlineStack gap="100" blockAlign="center">
-            <Text as="p" variant="bodySm" tone="subdued">Meta description ({desc.length}/160)</Text>
-            <Badge tone={descBadge.tone} size="small">{descBadge.label}</Badge>
+            <Text as="p" variant="bodySm" tone="subdued">
+              Meta description ({desc.length}/160)
+            </Text>
+            <Badge tone={descBadge.tone} size="small">
+              {descBadge.label}
+            </Badge>
           </InlineStack>
           <TextField
             label=""
@@ -262,7 +354,9 @@ function RowEditor({ row, onSaved }: RowEditorProps) {
           borderColor="border"
         >
           <BlockStack gap="050">
-            <Text as="p" variant="bodySm" tone="subdued">SERP preview</Text>
+            <Text as="p" variant="bodySm" tone="subdued">
+              SERP preview
+            </Text>
             <Text as="p" variant="bodyMd" tone="magic">
               {(title || row.title).slice(0, 60)}
             </Text>
@@ -270,14 +364,18 @@ function RowEditor({ row, onSaved }: RowEditorProps) {
               {row.url ?? `/${row.type}s/${row.handle}`}
             </Text>
             <Text as="p" variant="bodyMd">
-              {(desc || 'No meta description set — Google will pull a snippet from page content.').slice(0, 160)}
+              {(
+                desc || 'No meta description set — Google will pull a snippet from page content.'
+              ).slice(0, 160)}
             </Text>
           </BlockStack>
         </Box>
       )}
 
       {fetcher.data?.error && (
-        <Text as="p" tone="critical" variant="bodySm">{fetcher.data.error}</Text>
+        <Text as="p" tone="critical" variant="bodySm">
+          {fetcher.data.error}
+        </Text>
       )}
     </BlockStack>
   );
@@ -289,9 +387,21 @@ export default function MetaEditorPage() {
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
 
   const tabs = [
-    { id: 'products', content: `Products (${rows.filter((r) => r.type === 'product').length})`, panelID: 'products-panel' },
-    { id: 'collections', content: `Collections (${rows.filter((r) => r.type === 'collection').length})`, panelID: 'collections-panel' },
-    { id: 'pages', content: `Pages (${rows.filter((r) => r.type === 'page').length})`, panelID: 'pages-panel' },
+    {
+      id: 'products',
+      content: `Products (${rows.filter((r) => r.type === 'product').length})`,
+      panelID: 'products-panel',
+    },
+    {
+      id: 'collections',
+      content: `Collections (${rows.filter((r) => r.type === 'collection').length})`,
+      panelID: 'collections-panel',
+    },
+    {
+      id: 'pages',
+      content: `Pages (${rows.filter((r) => r.type === 'page').length})`,
+      panelID: 'pages-panel',
+    },
   ];
 
   const typeMap = ['product', 'collection', 'page'] as const;
@@ -312,10 +422,12 @@ export default function MetaEditorPage() {
             <BlockStack gap="300">
               <InlineStack align="space-between" blockAlign="center">
                 <BlockStack gap="100">
-                  <Text as="h2" variant="headingMd">SEO titles + meta descriptions</Text>
+                  <Text as="h2" variant="headingMd">
+                    SEO titles + meta descriptions
+                  </Text>
                   <Text as="p" tone="subdued">
-                    Edit and preview how your pages appear in Google. Changes save directly to Shopify.
-                    Green = optimal length · Amber = too short or long · Red = missing.
+                    Edit and preview how your pages appear in Google. Changes save directly to
+                    Shopify. Green = optimal length · Amber = too short or long · Red = missing.
                   </Text>
                 </BlockStack>
                 {missing.length > 0 && (

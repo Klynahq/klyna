@@ -1,6 +1,5 @@
 import { type LoaderFunctionArgs, json } from '@remix-run/node';
 import { useFetcher, useLoaderData } from '@remix-run/react';
-import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Badge,
   BlockStack,
@@ -15,8 +14,9 @@ import {
   Spinner,
   Text,
 } from '@shopify/polaris';
-import { authenticate } from '../shopify.server';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import prisma from '../db.server';
+import { authenticate } from '../shopify.server';
 
 type ScanRow = {
   url: string;
@@ -39,7 +39,10 @@ function gradeTone(g: string): 'success' | 'warning' | 'critical' {
 async function paginateGql<T>(
   admin: { graphql: (q: string, o?: { variables?: Record<string, unknown> }) => Promise<Response> },
   query: string,
-  extract: (data: unknown) => { nodes: T[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } },
+  extract: (data: unknown) => {
+    nodes: T[];
+    pageInfo: { hasNextPage: boolean; endCursor: string | null };
+  },
   max = 250,
 ): Promise<T[]> {
   const all: T[] = [];
@@ -61,14 +64,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   // Get store domain for URL construction
   type ShopData = { data: { shop: { myshopifyDomain: string; primaryDomain: { url: string } } } };
-  const shopRes = await admin.graphql(`{ shop { myshopifyDomain primaryDomain { url } } }`);
+  const shopRes = await admin.graphql('{ shop { myshopifyDomain primaryDomain { url } } }');
   const shopJson = (await shopRes.json()) as ShopData;
   const baseUrl = shopJson.data.shop.primaryDomain.url.replace(/\/$/, '');
   const myDomain = shopJson.data.shop.myshopifyDomain;
 
   type ProductNode = { handle: string; onlineStoreUrl: string | null };
-  type CollectionNode = { handle: string; onlineStoreUrl: string | null };
-  type PageNode = { handle: string; onlineStoreUrl: string | null };
+  type CollectionNode = { handle: string };
+  type PageNode = { handle: string };
 
   const [products, collections, pages] = await Promise.all([
     paginateGql<ProductNode>(
@@ -79,35 +82,59 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
           nodes { handle onlineStoreUrl }
         }
       }`,
-      (d) => (d as { products: { nodes: ProductNode[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } } }).products,
+      (d) =>
+        (
+          d as {
+            products: {
+              nodes: ProductNode[];
+              pageInfo: { hasNextPage: boolean; endCursor: string | null };
+            };
+          }
+        ).products,
     ),
     paginateGql<CollectionNode>(
       admin,
       `query ($cursor: String) {
         collections(first: 50, after: $cursor) {
           pageInfo { hasNextPage endCursor }
-          nodes { handle onlineStoreUrl }
+          nodes { handle }
         }
       }`,
-      (d) => (d as { collections: { nodes: CollectionNode[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } } }).collections,
+      (d) =>
+        (
+          d as {
+            collections: {
+              nodes: CollectionNode[];
+              pageInfo: { hasNextPage: boolean; endCursor: string | null };
+            };
+          }
+        ).collections,
     ),
     paginateGql<PageNode>(
       admin,
       `query ($cursor: String) {
         pages(first: 50, after: $cursor) {
           pageInfo { hasNextPage endCursor }
-          nodes { handle onlineStoreUrl }
+          nodes { handle }
         }
       }`,
-      (d) => (d as { pages: { nodes: PageNode[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } } }).pages,
+      (d) =>
+        (
+          d as {
+            pages: {
+              nodes: PageNode[];
+              pageInfo: { hasNextPage: boolean; endCursor: string | null };
+            };
+          }
+        ).pages,
     ),
   ]);
 
   const allUrls: string[] = [
     baseUrl, // homepage
     ...products.map((p) => p.onlineStoreUrl ?? `https://${myDomain}/products/${p.handle}`),
-    ...collections.map((c) => c.onlineStoreUrl ?? `https://${myDomain}/collections/${c.handle}`),
-    ...pages.map((pg) => pg.onlineStoreUrl ?? `https://${myDomain}/pages/${pg.handle}`),
+    ...collections.map((c) => `${baseUrl}/collections/${c.handle}`),
+    ...pages.map((pg) => `${baseUrl}/pages/${pg.handle}`),
   ].filter(Boolean);
 
   // Deduplicate
@@ -119,7 +146,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     orderBy: { createdAt: 'desc' },
     take: 500,
   });
-  const latestByUrl = new Map<string, typeof recent[0]>();
+  const latestByUrl = new Map<string, (typeof recent)[0]>();
   for (const r of recent) {
     if (!latestByUrl.has(r.url)) latestByUrl.set(r.url, r);
   }
@@ -139,7 +166,11 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       scannedAt: r.createdAt.toISOString(),
     })),
     lastScan: lastScan
-      ? { scannedUrls: lastScan.scannedUrls, totalUrls: lastScan.totalUrls, finishedAt: lastScan.finishedAt?.toISOString() ?? null }
+      ? {
+          scannedUrls: lastScan.scannedUrls,
+          totalUrls: lastScan.totalUrls,
+          finishedAt: lastScan.finishedAt?.toISOString() ?? null,
+        }
       : null,
   });
 };
@@ -152,7 +183,14 @@ export default function BulkAudit() {
 
   const [scanning, setScanning] = useState(false);
   const [results, setResults] = useState<ScanRow[]>(
-    previousResults.map((r) => ({ url: r.url, score: r.score, grade: r.grade, errors: 0, warnings: 0, ok: true })),
+    previousResults.map((r) => ({
+      url: r.url,
+      score: r.score,
+      grade: r.grade,
+      errors: 0,
+      warnings: 0,
+      ok: true,
+    })),
   );
   const [submitted, setSubmitted] = useState(0);
   const [filter, setFilter] = useState<'all' | 'error' | 'warn'>('all');
@@ -167,7 +205,9 @@ export default function BulkAudit() {
       }
       indexRef.current = fromIndex + batch.length;
       const fd = new FormData();
-      batch.forEach((url) => fd.append('url', url));
+      for (const url of batch) {
+        fd.append('url', url);
+      }
       fetcher.submit(fd, { method: 'post', action: '/app/bulk-worker' });
     },
     [allUrls, fetcher],
@@ -201,7 +241,9 @@ export default function BulkAudit() {
 
   const progress = allUrls.length > 0 ? Math.round((submitted / allUrls.length) * 100) : 0;
   const avgScore =
-    results.length > 0 ? Math.round(results.reduce((s, r) => s + r.score, 0) / results.length) : null;
+    results.length > 0
+      ? Math.round(results.reduce((s, r) => s + r.score, 0) / results.length)
+      : null;
 
   const filtered = results.filter((r) => {
     if (filter === 'error') return r.errors > 0;
@@ -220,7 +262,9 @@ export default function BulkAudit() {
             <BlockStack gap="300">
               <InlineStack align="space-between" blockAlign="center">
                 <BlockStack gap="100">
-                  <Text as="h2" variant="headingMd">Scan every page in your store</Text>
+                  <Text as="h2" variant="headingMd">
+                    Scan every page in your store
+                  </Text>
                   <Text as="p" tone="subdued">
                     {allUrls.length} URLs found — {allUrls.length} products, collections, and pages.
                     Klyna fetches and audits each one locally.
@@ -251,26 +295,36 @@ export default function BulkAudit() {
               {!scanning && results.length > 0 && avgScore !== null && (
                 <InlineStack gap="400" blockAlign="center">
                   <BlockStack gap="050">
-                    <Text as="p" variant="headingLg" fontWeight="bold">{avgScore}</Text>
-                    <Text as="p" variant="bodySm" tone="subdued">Average score</Text>
+                    <Text as="p" variant="headingLg" fontWeight="bold">
+                      {avgScore}
+                    </Text>
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      Average score
+                    </Text>
                   </BlockStack>
                   <BlockStack gap="050">
                     <Text as="p" variant="headingLg" fontWeight="bold" tone="critical">
                       {results.filter((r) => r.errors > 0).length}
                     </Text>
-                    <Text as="p" variant="bodySm" tone="subdued">Pages with errors</Text>
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      Pages with errors
+                    </Text>
                   </BlockStack>
                   <BlockStack gap="050">
                     <Text as="p" variant="headingLg" fontWeight="bold" tone="caution">
                       {results.filter((r) => r.warnings > 0).length}
                     </Text>
-                    <Text as="p" variant="bodySm" tone="subdued">Pages with warnings</Text>
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      Pages with warnings
+                    </Text>
                   </BlockStack>
                   <BlockStack gap="050">
                     <Text as="p" variant="headingLg" fontWeight="bold" tone="success">
                       {results.filter((r) => r.score >= 80).length}
                     </Text>
-                    <Text as="p" variant="bodySm" tone="subdued">Pages scoring 80+</Text>
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      Pages scoring 80+
+                    </Text>
                   </BlockStack>
                 </InlineStack>
               )}
@@ -307,12 +361,22 @@ export default function BulkAudit() {
                   {/* Header row */}
                   <Box padding="200" background="bg-surface-secondary">
                     <InlineStack align="space-between">
-                      <Text as="p" variant="bodySm" fontWeight="semibold" tone="subdued">URL</Text>
+                      <Text as="p" variant="bodySm" fontWeight="semibold" tone="subdued">
+                        URL
+                      </Text>
                       <InlineStack gap="400">
-                        <Text as="p" variant="bodySm" fontWeight="semibold" tone="subdued">Score</Text>
-                        <Text as="p" variant="bodySm" fontWeight="semibold" tone="subdued">Grade</Text>
-                        <Text as="p" variant="bodySm" fontWeight="semibold" tone="subdued">Issues</Text>
-                        <Text as="p" variant="bodySm" fontWeight="semibold" tone="subdued">Action</Text>
+                        <Text as="p" variant="bodySm" fontWeight="semibold" tone="subdued">
+                          Score
+                        </Text>
+                        <Text as="p" variant="bodySm" fontWeight="semibold" tone="subdued">
+                          Grade
+                        </Text>
+                        <Text as="p" variant="bodySm" fontWeight="semibold" tone="subdued">
+                          Issues
+                        </Text>
+                        <Text as="p" variant="bodySm" fontWeight="semibold" tone="subdued">
+                          Action
+                        </Text>
                       </InlineStack>
                     </InlineStack>
                   </Box>
@@ -329,27 +393,34 @@ export default function BulkAudit() {
                             {r.url.replace(/^https?:\/\/[^/]+/, '') || '/'}
                           </Text>
                           {r.error && (
-                            <Text as="p" variant="bodySm" tone="critical">{r.error}</Text>
+                            <Text as="p" variant="bodySm" tone="critical">
+                              {r.error}
+                            </Text>
                           )}
                         </Box>
                         <InlineStack gap="400" blockAlign="center">
-                          <Text as="p" variant="bodyMd" fontWeight="bold">{r.score}</Text>
+                          <Text as="p" variant="bodyMd" fontWeight="bold">
+                            {r.score}
+                          </Text>
                           <Badge tone={gradeTone(r.grade)}>{r.grade}</Badge>
                           <Text as="p" variant="bodySm">
                             {r.errors > 0 && (
-                              <Text as="span" tone="critical">{r.errors}E </Text>
+                              <Text as="span" tone="critical">
+                                {r.errors}E{' '}
+                              </Text>
                             )}
                             {r.warnings > 0 && (
-                              <Text as="span" tone="caution">{r.warnings}W</Text>
+                              <Text as="span" tone="caution">
+                                {r.warnings}W
+                              </Text>
                             )}
                             {r.errors === 0 && r.warnings === 0 && (
-                              <Text as="span" tone="success">✓</Text>
+                              <Text as="span" tone="success">
+                                ✓
+                              </Text>
                             )}
                           </Text>
-                          <Button
-                            size="slim"
-                            url={`/app/audit?url=${encodeURIComponent(r.url)}`}
-                          >
+                          <Button size="slim" url={`/app/audit?url=${encodeURIComponent(r.url)}`}>
                             Fix
                           </Button>
                         </InlineStack>
@@ -367,10 +438,14 @@ export default function BulkAudit() {
           <Layout.Section>
             <Card>
               <BlockStack gap="200">
-                <Text as="h2" variant="headingMd">Previous scan</Text>
+                <Text as="h2" variant="headingMd">
+                  Previous scan
+                </Text>
                 <Text as="p" tone="subdued">
                   {lastScan.scannedUrls} of {lastScan.totalUrls} URLs scanned
-                  {lastScan.finishedAt ? ` · ${new Date(lastScan.finishedAt).toLocaleString()}` : ''}
+                  {lastScan.finishedAt
+                    ? ` · ${new Date(lastScan.finishedAt).toLocaleString()}`
+                    : ''}
                 </Text>
               </BlockStack>
             </Card>

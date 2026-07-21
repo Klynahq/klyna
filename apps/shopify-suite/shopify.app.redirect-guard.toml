@@ -1,0 +1,41 @@
+# Klyna Redirect Guard public app config.
+# Link this file to the matching Shopify Partners app with:
+#   pnpm config:link -- --config shopify.app.redirect-guard.toml
+
+client_id = "4a68940ecb6a526696ff4cef934f444d"
+name = "Klyna Redirect Guard"
+application_url = "https://klyna-redirect-guard.vercel.app"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+
+[webhooks]
+api_version = "2026-07"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "/webhooks/app/uninstalled"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = [ "customers/data_request" ]
+  uri = "/webhooks/customers/data_request"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = [ "customers/redact" ]
+  uri = "/webhooks/customers/redact"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = [ "shop/redact" ]
+  uri = "/webhooks/shop/redact"
+
+[access_scopes]
+scopes = "read_products,read_content,read_online_store_navigation"
+
+[auth]
+redirect_urls = [
+  "https://klyna-redirect-guard.vercel.app/auth/callback",
+  "https://klyna-redirect-guard.vercel.app/auth/shopify/callback",
+  "https://klyna-redirect-guard.vercel.app/api/auth/callback",
+  "https://klyna-redirect-guard.vercel.app/auth/login",
+]

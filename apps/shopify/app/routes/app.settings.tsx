@@ -1,6 +1,5 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
 import { Form, useActionData, useFetcher, useLoaderData, useNavigation } from '@remix-run/react';
-import { useState } from 'react';
 import {
   Banner,
   BlockStack,
@@ -15,9 +14,10 @@ import {
   Text,
   TextField,
 } from '@shopify/polaris';
-import { authenticate } from '../shopify.server';
-import { createAiClient, type AiProvider } from '~/lib/klyna-ai-client';
+import { useState } from 'react';
+import { type AiProvider, createAiClient } from '~/lib/klyna-ai-client';
 import { getShopAiSettings, getTodayUsage, saveShopAiSettings } from '../lib/ai.server';
+import { authenticate } from '../shopify.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
@@ -106,11 +106,13 @@ export default function Settings() {
           <Card>
             <BlockStack gap="400">
               <BlockStack gap="100">
-                <Text as="h2" variant="headingMd">AI assistant</Text>
+                <Text as="h2" variant="headingMd">
+                  AI assistant
+                </Text>
                 <Text as="p" tone="subdued">
-                  Klyna ships with auto-fixes for the SEO basics — title, description, OG tags.
-                  For content generation (h1, expanded copy, FAQ blocks), add a free-tier API
-                  key from any provider below. Your key stays on this app's database.
+                  Klyna ships with auto-fixes for the SEO basics — title, description, OG tags. For
+                  content generation (h1, expanded copy, FAQ blocks), add a free-tier API key from
+                  any provider below. Your key stays on this app's database.
                 </Text>
               </BlockStack>
 
@@ -136,8 +138,10 @@ export default function Settings() {
                         helpText={
                           help ? (
                             <>
-                              <Link url={help.url} target="_blank">Get a free key →</Link>
-                              {' '}{help.hint}
+                              <Link url={help.url} target="_blank">
+                                Get a free key →
+                              </Link>{' '}
+                              {help.hint}
                             </>
                           ) : null
                         }
@@ -184,7 +188,9 @@ export default function Settings() {
                   tone={testResult.ok ? 'success' : 'critical'}
                   title={testResult.ok ? 'Connection OK' : 'Connection failed'}
                 >
-                  <Text as="p" variant="bodyMd">{testResult.message}</Text>
+                  <Text as="p" variant="bodyMd">
+                    {testResult.message}
+                  </Text>
                 </Banner>
               )}
             </BlockStack>
@@ -194,16 +200,22 @@ export default function Settings() {
         <Layout.Section>
           <Card>
             <BlockStack gap="200">
-              <Text as="h2" variant="headingMd">About this app</Text>
+              <Text as="h2" variant="headingMd">
+                About this app
+              </Text>
               <Text as="p" tone="subdued" variant="bodyMd">
-                Klyna for Shopify is part of the Klyna indie suite — open, fast, free where it can be.
-                Auto-fixes use Shopify's own Admin API — no AI required. AI is only for content
+                Klyna for Shopify is part of the Klyna indie suite — open, fast, free where it can
+                be. Auto-fixes use Shopify's own Admin API — no AI required. AI is only for content
                 generation, and only when you've added a key.
               </Text>
               <Box>
-                <Link url="https://klyna.dev" target="_blank">klyna.dev</Link>
+                <Link url="https://klyna.dev" target="_blank">
+                  klyna.dev
+                </Link>
                 {' · '}
-                <Link url="https://github.com/klynahq/klyna" target="_blank">GitHub</Link>
+                <Link url="https://github.com/klynahq/klyna" target="_blank">
+                  GitHub
+                </Link>
               </Box>
             </BlockStack>
           </Card>

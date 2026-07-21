@@ -1,3 +1,4 @@
+import { type AuditResult, auditPage } from '@klyna/core';
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
 import { Form, useActionData, useFetcher, useLoaderData, useNavigation } from '@remix-run/react';
 import {
@@ -13,10 +14,9 @@ import {
   Page,
   Text,
 } from '@shopify/polaris';
-import { auditPage, type AuditResult } from '@klyna/core';
 import { PROMPTS } from '~/lib/klyna-ai-client';
-import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
+import { getAiClientForShop, getShopAiSettings } from '../lib/ai.server';
 import {
   applyCollectionFix,
   applyHomeFix,
@@ -25,7 +25,7 @@ import {
   classifyFindings,
   detectResource,
 } from '../lib/seo-fix';
-import { getAiClientForShop, getShopAiSettings } from '../lib/ai.server';
+import { authenticate } from '../shopify.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
@@ -52,7 +52,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const ai = await getAiClientForShop(session.shop);
     if (ai.provider === 'off') {
       return json({
-        aiSuggestion: { findingId, text: '', error: 'AI is off. Enable a provider in Settings → AI assistant.' },
+        aiSuggestion: {
+          findingId,
+          text: '',
+          error: 'AI is off. Enable a provider in Settings → AI assistant.',
+        },
       });
     }
 
@@ -88,7 +92,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       prompt = PROMPTS.metaDescription('page', session.shop, bodyText);
     }
 
-    const out = await ai.complete({ prompt, maxTokens: 500, cacheKey: `${session.shop}|${url}|${findingId}` });
+    const out = await ai.complete({
+      prompt,
+      maxTokens: 500,
+      cacheKey: `${session.shop}|${url}|${findingId}`,
+    });
     return json({
       aiSuggestion: { findingId, text: out.text, error: out.error, source: out.source },
     });
@@ -106,7 +114,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
       if (kind === 'home') {
         // Look up shop GID + name
-        const shopRes = await admin.graphql(/* GraphQL */ `{ shop { id name } }`);
+        const shopRes = await admin.graphql(/* GraphQL */ '{ shop { id name } }');
         const shopJson = (await shopRes.json()) as { data: { shop: { id: string; name: string } } };
         const { id: shopGid, name: shopName } = shopJson.data.shop;
         resourceTitle = shopName;
@@ -157,10 +165,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
     html = await res.text();
   } catch (err) {
-    return json(
-      { error: err instanceof Error ? err.message : 'Fetch failed' },
-      { status: 500 },
-    );
+    return json({ error: err instanceof Error ? err.message : 'Fetch failed' }, { status: 500 });
   }
 
   const result = auditPage({
@@ -182,8 +187,15 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   return json({ result });
 };
 
-function AiSuggestRow({ id, message, reason, url }: { id: string; message: string; reason: string; url: string }) {
-  const fetcher = useFetcher<{ aiSuggestion?: { findingId: string; text: string; error?: string; source?: string } }>();
+function AiSuggestRow({
+  id,
+  message,
+  reason,
+  url,
+}: { id: string; message: string; reason: string; url: string }) {
+  const fetcher = useFetcher<{
+    aiSuggestion?: { findingId: string; text: string; error?: string; source?: string };
+  }>();
   const busy = fetcher.state === 'submitting' && fetcher.formData?.get('findingId') === id;
   const result = fetcher.data?.aiSuggestion?.findingId === id ? fetcher.data.aiSuggestion : null;
 
@@ -197,9 +209,13 @@ function AiSuggestRow({ id, message, reason, url }: { id: string; message: strin
 
   return (
     <List.Item>
-      <Text as="span" variant="bodyMd">{message}</Text>
+      <Text as="span" variant="bodyMd">
+        {message}
+      </Text>
       <br />
-      <Text as="span" variant="bodySm" tone="subdued">→ {reason}</Text>
+      <Text as="span" variant="bodySm" tone="subdued">
+        → {reason}
+      </Text>
       <Box paddingBlockStart="100">
         <Button size="slim" onClick={run} loading={busy}>
           Suggest with AI
@@ -207,16 +223,25 @@ function AiSuggestRow({ id, message, reason, url }: { id: string; message: strin
       </Box>
       {result?.error && (
         <Box paddingBlockStart="100">
-          <Text as="p" tone="critical" variant="bodySm">{result.error}</Text>
+          <Text as="p" tone="critical" variant="bodySm">
+            {result.error}
+          </Text>
         </Box>
       )}
       {result?.text && !result.error && (
-        <Box paddingBlockStart="200" paddingInlineStart="200" borderInlineStartWidth="050" borderColor="border">
+        <Box
+          paddingBlockStart="200"
+          paddingInlineStart="200"
+          borderInlineStartWidth="050"
+          borderColor="border"
+        >
           <BlockStack gap="100">
             <Text as="p" variant="bodySm" tone="subdued">
               AI suggestion{result.source === 'cache' ? ' (cached)' : ''}:
             </Text>
-            <Text as="p" variant="bodyMd">{result.text}</Text>
+            <Text as="p" variant="bodyMd">
+              {result.text}
+            </Text>
           </BlockStack>
         </Box>
       )}
@@ -246,10 +271,12 @@ export default function Audit() {
         <Layout.Section>
           <Card>
             <BlockStack gap="300">
-              <Text as="h2" variant="headingMd">Run an audit</Text>
+              <Text as="h2" variant="headingMd">
+                Run an audit
+              </Text>
               <Text as="p" tone="subdued">
-                Klyna fetches the page and runs a full SEO + GEO audit locally —
-                schema, meta, headings, internal links, FAQ structure, citation readiness.
+                Klyna fetches the page and runs a full SEO + GEO audit locally — schema, meta,
+                headings, internal links, FAQ structure, citation readiness.
               </Text>
               <Form method="post">
                 <BlockStack gap="200">
@@ -270,7 +297,9 @@ export default function Audit() {
                 </BlockStack>
               </Form>
               {error && (
-                <Text as="p" tone="critical">{String(error)}</Text>
+                <Text as="p" tone="critical">
+                  {String(error)}
+                </Text>
               )}
             </BlockStack>
           </Card>
@@ -281,7 +310,9 @@ export default function Audit() {
             <Card>
               <BlockStack gap="300">
                 <InlineStack align="space-between" blockAlign="center">
-                  <Text as="h2" variant="headingMd">Result</Text>
+                  <Text as="h2" variant="headingMd">
+                    Result
+                  </Text>
                   <InlineStack gap="200" blockAlign="center">
                     <Badge tone={gradeTone(result.grade)}>{`Grade ${result.grade}`}</Badge>
                     <Text as="p" variant="headingLg" fontWeight="bold">
@@ -291,29 +322,41 @@ export default function Audit() {
                 </InlineStack>
                 <Box paddingBlockStart="200">
                   <BlockStack gap="100">
-                    <Text as="p" variant="bodySm" tone="subdued">URL</Text>
-                    <Text as="p" variant="bodyMd">{result.url}</Text>
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      URL
+                    </Text>
+                    <Text as="p" variant="bodyMd">
+                      {result.url}
+                    </Text>
                   </BlockStack>
                 </Box>
 
                 <BlockStack gap="200">
-                  <Text as="h3" variant="headingSm">Findings · {result.findings.length}</Text>
+                  <Text as="h3" variant="headingSm">
+                    Findings · {result.findings.length}
+                  </Text>
                   <List type="bullet">
                     {result.findings.map((f) => (
                       <List.Item key={f.id}>
-                        <Text as="span" tone={
-                          f.severity === 'error'
-                            ? 'critical'
-                            : f.severity === 'warn'
-                              ? 'caution'
-                              : 'subdued'
-                        }>
+                        <Text
+                          as="span"
+                          tone={
+                            f.severity === 'error'
+                              ? 'critical'
+                              : f.severity === 'warn'
+                                ? 'caution'
+                                : 'subdued'
+                          }
+                        >
                           [{f.severity.toUpperCase()}]
-                        </Text>{' '}{f.message}
+                        </Text>{' '}
+                        {f.message}
                         {f.fix && (
                           <>
                             <br />
-                            <Text as="span" variant="bodySm" tone="subdued">→ {f.fix}</Text>
+                            <Text as="span" variant="bodySm" tone="subdued">
+                              → {f.fix}
+                            </Text>
                           </>
                         )}
                       </List.Item>
@@ -325,11 +368,14 @@ export default function Audit() {
                 {fixClassification && fixClassification.fixable.length > 0 && !applied && (
                   <Box paddingBlockStart="200">
                     <BlockStack gap="200">
-                      <Banner tone="info" title={`${fixClassification.fixable.length} of ${result.findings.length} findings are auto-fixable`}>
+                      <Banner
+                        tone="info"
+                        title={`${fixClassification.fixable.length} of ${result.findings.length} findings are auto-fixable`}
+                      >
                         <Text as="p" variant="bodyMd">
                           Klyna will write the missing SEO title, description, and Open Graph
-                          metadata directly to your Shopify store. Theme- or content-level
-                          issues (h1, word count, internal links) are flagged separately below.
+                          metadata directly to your Shopify store. Theme- or content-level issues
+                          (h1, word count, internal links) are flagged separately below.
                         </Text>
                       </Banner>
                       <Form method="post">
@@ -362,9 +408,13 @@ export default function Audit() {
                                 />
                               ) : (
                                 <List.Item key={u.id}>
-                                  <Text as="span" variant="bodyMd">{u.message}</Text>
+                                  <Text as="span" variant="bodyMd">
+                                    {u.message}
+                                  </Text>
                                   <br />
-                                  <Text as="span" variant="bodySm" tone="subdued">→ {u.reason}</Text>
+                                  <Text as="span" variant="bodySm" tone="subdued">
+                                    → {u.reason}
+                                  </Text>
                                 </List.Item>
                               ),
                             )}
@@ -386,8 +436,8 @@ export default function Audit() {
                       </List>
                       <Box paddingBlockStart="200">
                         <Text as="p" variant="bodySm" tone="subdued">
-                          Re-audited above — your new score reflects the changes.
-                          Allow a minute for Shopify’s CDN to propagate before checking the storefront.
+                          Re-audited above — your new score reflects the changes. Allow a minute for
+                          Shopify’s CDN to propagate before checking the storefront.
                         </Text>
                       </Box>
                     </Banner>
@@ -396,7 +446,9 @@ export default function Audit() {
 
                 {fixError && (
                   <Banner tone="critical" title="Auto-fix failed">
-                    <Text as="p" variant="bodyMd">{String(fixError)}</Text>
+                    <Text as="p" variant="bodyMd">
+                      {String(fixError)}
+                    </Text>
                   </Banner>
                 )}
               </BlockStack>
@@ -408,14 +460,16 @@ export default function Audit() {
           <Layout.Section>
             <Card>
               <BlockStack gap="200">
-                <Text as="h2" variant="headingMd">Recent audits</Text>
+                <Text as="h2" variant="headingMd">
+                  Recent audits
+                </Text>
                 <List type="bullet">
                   {recent.map((r) => (
                     <List.Item key={r.id}>
-                      <Badge tone={gradeTone(r.grade)}>{`${r.grade} · ${r.score}`}</Badge>{' '}
-                      {r.url}
+                      <Badge tone={gradeTone(r.grade)}>{`${r.grade} · ${r.score}`}</Badge> {r.url}
                       <Text as="span" tone="subdued">
-                        {' '} · {new Date(r.createdAt).toLocaleString()}
+                        {' '}
+                        · {new Date(r.createdAt).toLocaleString()}
                       </Text>
                     </List.Item>
                   ))}

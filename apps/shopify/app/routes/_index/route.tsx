@@ -19,8 +19,8 @@ export default function App() {
       <div className={styles.content}>
         <h1 className={styles.heading}>Klyna for Shopify</h1>
         <p className={styles.text}>
-          Organic growth tools for Shopify merchants. Schema markup, internal
-          linking, and SEO + GEO audits — free, open, no paid APIs.
+          Organic growth tools for Shopify merchants. Schema markup, internal linking, and SEO + GEO
+          audits — free, open, no paid APIs.
         </p>
         {showForm && (
           <Form className={styles.form} method="post" action="/auth/login">

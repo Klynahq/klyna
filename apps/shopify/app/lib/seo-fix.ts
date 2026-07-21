@@ -22,18 +22,18 @@ export type FixOutcome = {
   resourceTitle?: string;
 };
 
-export type ResourceKind =
-  | 'home'
-  | 'product'
-  | 'collection'
-  | 'page'
-  | 'article'
-  | 'unknown';
+export type ResourceKind = 'home' | 'product' | 'collection' | 'page' | 'article' | 'unknown';
 
-type GqlClient = (query: string, opts?: { variables?: Record<string, unknown> }) => Promise<Response>;
+type GqlClient = (
+  query: string,
+  opts?: { variables?: Record<string, unknown> },
+) => Promise<Response>;
 
 /** Detect what Shopify resource a storefront URL points to. */
-export function detectResource(url: string, shopDomain: string): {
+export function detectResource(
+  url: string,
+  shopDomain: string,
+): {
   kind: ResourceKind;
   handle?: string;
 } {
@@ -69,9 +69,7 @@ export function detectResource(url: string, shopDomain: string): {
 export function craftTitle(resourceTitle: string, brand: string): string {
   const base = resourceTitle.trim() || brand;
   if (base.length >= 50) return base.slice(0, 60);
-  const withBrand = base.toLowerCase().includes(brand.toLowerCase())
-    ? base
-    : `${base} | ${brand}`;
+  const withBrand = base.toLowerCase().includes(brand.toLowerCase()) ? base : `${base} | ${brand}`;
   return withBrand.length <= 60 ? withBrand : withBrand.slice(0, 60);
 }
 
@@ -86,7 +84,7 @@ export function craftDescription(body: string, fallback: string): string {
   // Cut on a word boundary near 155 chars
   const cut = seed.slice(0, 157);
   const lastSpace = cut.lastIndexOf(' ');
-  return (lastSpace > 100 ? cut.slice(0, lastSpace) : cut) + '…';
+  return `${lastSpace > 100 ? cut.slice(0, lastSpace) : cut}…`;
 }
 
 /** Decide which findings are auto-fixable. */
@@ -128,7 +126,11 @@ export function classifyFindings(result: AuditResult): {
 
 // ── GraphQL helpers ────────────────────────────────────────────────────────
 
-async function gql<T>(client: GqlClient, query: string, variables?: Record<string, unknown>): Promise<T> {
+async function gql<T>(
+  client: GqlClient,
+  query: string,
+  variables?: Record<string, unknown>,
+): Promise<T> {
   const res = await client(query, variables ? { variables } : undefined);
   const json = (await res.json()) as { data?: T; errors?: { message: string }[] };
   if (json.errors?.length) {
@@ -153,7 +155,9 @@ export async function applyHomeFix(
     `${shopName} — modern products, fast shipping, and a clean shopping experience.`,
   );
 
-  await gql(client, /* GraphQL */ `
+  await gql(
+    client,
+    /* GraphQL */ `
     mutation klynaSetShopSeoTitle($ownerId: ID!, $value: String!) {
       metafieldsSet(metafields: [{
         ownerId: $ownerId
@@ -163,10 +167,14 @@ export async function applyHomeFix(
         value: $value
       }]) { userErrors { field message } }
     }
-  `, { ownerId: shopGid, value: title });
+  `,
+    { ownerId: shopGid, value: title },
+  );
   applied.push(`Set homepage SEO title: “${title}”`);
 
-  await gql(client, /* GraphQL */ `
+  await gql(
+    client,
+    /* GraphQL */ `
     mutation klynaSetShopSeoDescription($ownerId: ID!, $value: String!) {
       metafieldsSet(metafields: [{
         ownerId: $ownerId
@@ -176,16 +184,15 @@ export async function applyHomeFix(
         value: $value
       }]) { userErrors { field message } }
     }
-  `, { ownerId: shopGid, value: description });
+  `,
+    { ownerId: shopGid, value: description },
+  );
   applied.push(`Set homepage meta description: “${description.slice(0, 80)}…”`);
 
   return applied;
 }
 
-export async function applyProductFix(
-  client: GqlClient,
-  handle: string,
-): Promise<string[]> {
+export async function applyProductFix(client: GqlClient, handle: string): Promise<string[]> {
   const applied: string[] = [];
   type ProductLookup = {
     productByHandle?: {
@@ -196,55 +203,66 @@ export async function applyProductFix(
     };
   };
 
-  const data = await gql<ProductLookup>(client, /* GraphQL */ `
+  const data = await gql<ProductLookup>(
+    client,
+    /* GraphQL */ `
     query klynaProductByHandle($handle: String!) {
       productByHandle(handle: $handle) {
         id title descriptionHtml seo { title description }
       }
     }
-  `, { handle });
+  `,
+    { handle },
+  );
 
   const p = data.productByHandle;
   if (!p) throw new Error(`No product with handle “${handle}”.`);
 
   const brand = 'Your Store';
-  const newTitle = p.seo.title && p.seo.title.length >= 30 ? p.seo.title : craftTitle(p.title, brand);
-  const newDesc = p.seo.description && p.seo.description.length >= 80
-    ? p.seo.description
-    : craftDescription(p.descriptionHtml ?? '', `Shop ${p.title} — quality and fast delivery.`);
+  const newTitle =
+    p.seo.title && p.seo.title.length >= 30 ? p.seo.title : craftTitle(p.title, brand);
+  const newDesc =
+    p.seo.description && p.seo.description.length >= 80
+      ? p.seo.description
+      : craftDescription(p.descriptionHtml ?? '', `Shop ${p.title} — quality and fast delivery.`);
 
-  await gql(client, /* GraphQL */ `
+  await gql(
+    client,
+    /* GraphQL */ `
     mutation klynaProductSeo($input: ProductInput!) {
       productUpdate(input: $input) {
         product { id }
         userErrors { field message }
       }
     }
-  `, {
-    input: { id: p.id, seo: { title: newTitle, description: newDesc } },
-  });
+  `,
+    {
+      input: { id: p.id, seo: { title: newTitle, description: newDesc } },
+    },
+  );
 
   applied.push(`Set product seo.title: “${newTitle}”`);
   applied.push(`Set product seo.description: “${newDesc.slice(0, 80)}…”`);
   return applied;
 }
 
-export async function applyPageFix(
-  client: GqlClient,
-  handle: string,
-): Promise<string[]> {
+export async function applyPageFix(client: GqlClient, handle: string): Promise<string[]> {
   const applied: string[] = [];
   type PageLookup = {
     pages: { edges: { node: { id: string; title: string; body: string; handle: string } }[] };
   };
 
-  const data = await gql<PageLookup>(client, /* GraphQL */ `
+  const data = await gql<PageLookup>(
+    client,
+    /* GraphQL */ `
     query klynaPageByHandle($q: String!) {
       pages(first: 1, query: $q) {
         edges { node { id title body handle } }
       }
     }
-  `, { q: `handle:${handle}` });
+  `,
+    { q: `handle:${handle}` },
+  );
 
   const p = data.pages.edges[0]?.node;
   if (!p) throw new Error(`No page with handle “${handle}”.`);
@@ -253,37 +271,42 @@ export async function applyPageFix(
   const newTitle = craftTitle(p.title, brand);
   const newDesc = craftDescription(p.body ?? '', `Read more about ${p.title}.`);
 
-  await gql(client, /* GraphQL */ `
+  await gql(
+    client,
+    /* GraphQL */ `
     mutation klynaPageSeo($id: ID!, $page: PageUpdateInput!) {
       pageUpdate(id: $id, page: $page) {
         page { id }
         userErrors { field message }
       }
     }
-  `, {
-    id: p.id,
-    page: { templateSuffix: null, body: p.body, title: p.title, handle: p.handle },
-  });
+  `,
+    {
+      id: p.id,
+      page: { templateSuffix: null, body: p.body, title: p.title, handle: p.handle },
+    },
+  );
 
   // Page SEO via metafields (pages don't expose seo on the standard input).
-  await gql(client, /* GraphQL */ `
+  await gql(
+    client,
+    /* GraphQL */ `
     mutation klynaPageSeoMeta($ownerId: ID!, $title: String!, $desc: String!) {
       metafieldsSet(metafields: [
         { ownerId: $ownerId, namespace: "global", key: "title_tag",       type: "single_line_text_field", value: $title }
         { ownerId: $ownerId, namespace: "global", key: "description_tag", type: "single_line_text_field", value: $desc  }
       ]) { userErrors { field message } }
     }
-  `, { ownerId: p.id, title: newTitle, desc: newDesc });
+  `,
+    { ownerId: p.id, title: newTitle, desc: newDesc },
+  );
 
   applied.push(`Set page seo.title: “${newTitle}”`);
   applied.push(`Set page seo.description: “${newDesc.slice(0, 80)}…”`);
   return applied;
 }
 
-export async function applyCollectionFix(
-  client: GqlClient,
-  handle: string,
-): Promise<string[]> {
+export async function applyCollectionFix(client: GqlClient, handle: string): Promise<string[]> {
   const applied: string[] = [];
   type CollectionLookup = {
     collectionByHandle?: {
@@ -294,33 +317,43 @@ export async function applyCollectionFix(
     };
   };
 
-  const data = await gql<CollectionLookup>(client, /* GraphQL */ `
+  const data = await gql<CollectionLookup>(
+    client,
+    /* GraphQL */ `
     query klynaCollectionByHandle($handle: String!) {
       collectionByHandle(handle: $handle) {
         id title descriptionHtml seo { title description }
       }
     }
-  `, { handle });
+  `,
+    { handle },
+  );
 
   const c = data.collectionByHandle;
   if (!c) throw new Error(`No collection with handle “${handle}”.`);
 
   const brand = 'Your Store';
-  const newTitle = c.seo.title && c.seo.title.length >= 30 ? c.seo.title : craftTitle(c.title, brand);
-  const newDesc = c.seo.description && c.seo.description.length >= 80
-    ? c.seo.description
-    : craftDescription(c.descriptionHtml ?? '', `Shop our ${c.title} collection.`);
+  const newTitle =
+    c.seo.title && c.seo.title.length >= 30 ? c.seo.title : craftTitle(c.title, brand);
+  const newDesc =
+    c.seo.description && c.seo.description.length >= 80
+      ? c.seo.description
+      : craftDescription(c.descriptionHtml ?? '', `Shop our ${c.title} collection.`);
 
-  await gql(client, /* GraphQL */ `
+  await gql(
+    client,
+    /* GraphQL */ `
     mutation klynaCollectionSeo($input: CollectionInput!) {
       collectionUpdate(input: $input) {
         collection { id }
         userErrors { field message }
       }
     }
-  `, {
-    input: { id: c.id, seo: { title: newTitle, description: newDesc } },
-  });
+  `,
+    {
+      input: { id: c.id, seo: { title: newTitle, description: newDesc } },
+    },
+  );
 
   applied.push(`Set collection seo.title: “${newTitle}”`);
   applied.push(`Set collection seo.description: “${newDesc.slice(0, 80)}…”`);

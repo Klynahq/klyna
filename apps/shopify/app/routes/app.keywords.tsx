@@ -1,6 +1,5 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
 import { Form, useFetcher, useLoaderData } from '@remix-run/react';
-import { useState } from 'react';
 import {
   Badge,
   Banner,
@@ -17,6 +16,7 @@ import {
   Text,
   TextField,
 } from '@shopify/polaris';
+import { useState } from 'react';
 import { authenticate } from '../shopify.server';
 
 type DatamuseWord = { word: string; score: number; f?: number };
@@ -49,7 +49,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   // Pull product titles as seed suggestions
   type P = { title: string };
-  const res = await admin.graphql(`{ products(first: 20) { nodes { title } } }`);
+  const res = await admin.graphql('{ products(first: 20) { nodes { title } } }');
   const data = (await res.json()) as { data: { products: { nodes: P[] } } };
   const productTitles = data.data.products.nodes.map((p) => p.title);
 
@@ -59,7 +59,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { admin } = await authenticate.admin(request);
   const form = await request.formData();
-  const seed = String(form.get('seed') ?? '').trim().toLowerCase();
+  const seed = String(form.get('seed') ?? '')
+    .trim()
+    .toLowerCase();
 
   if (!seed) return json({ error: 'Enter a keyword to analyse' }, { status: 400 });
 
@@ -77,15 +79,15 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   type Pg2 = { title: string; body: string };
 
   const [prodRes, collRes, pageRes] = await Promise.all([
-    admin.graphql(`{ products(first: 50) { nodes { title descriptionHtml } } }`),
-    admin.graphql(`{ collections(first: 30) { nodes { title descriptionHtml } } }`),
-    admin.graphql(`{ pages(first: 30) { nodes { title body } } }`),
+    admin.graphql('{ products(first: 50) { nodes { title descriptionHtml } } }'),
+    admin.graphql('{ collections(first: 30) { nodes { title descriptionHtml } } }'),
+    admin.graphql('{ pages(first: 30) { nodes { title body } } }'),
   ]);
 
   const [prodData, collData, pageData] = await Promise.all([
-    (prodRes.json()) as Promise<{ data: { products: { nodes: P2[] } } }>,
-    (collRes.json()) as Promise<{ data: { collections: { nodes: C2[] } } }>,
-    (pageRes.json()) as Promise<{ data: { pages: { nodes: Pg2[] } } }>,
+    prodRes.json() as Promise<{ data: { products: { nodes: P2[] } } }>,
+    collRes.json() as Promise<{ data: { collections: { nodes: C2[] } } }>,
+    pageRes.json() as Promise<{ data: { pages: { nodes: Pg2[] } } }>,
   ]);
 
   const storeText = [
@@ -142,11 +144,13 @@ export default function KeywordsPage() {
           <Card>
             <BlockStack gap="300">
               <BlockStack gap="100">
-                <Text as="h2" variant="headingMd">Discover missing keywords</Text>
+                <Text as="h2" variant="headingMd">
+                  Discover missing keywords
+                </Text>
                 <Text as="p" tone="subdued">
-                  Powered by the Datamuse semantic API — completely free, no key required.
-                  Enter any keyword and Klyna surfaces related terms, semantic associations,
-                  and which ones are missing from your store&apos;s content.
+                  Powered by the Datamuse semantic API — completely free, no key required. Enter any
+                  keyword and Klyna surfaces related terms, semantic associations, and which ones
+                  are missing from your store&apos;s content.
                 </Text>
               </BlockStack>
 
@@ -170,10 +174,17 @@ export default function KeywordsPage() {
 
               {productTitles.length > 0 && (
                 <BlockStack gap="100">
-                  <Text as="p" variant="bodySm" tone="subdued">Analyse a product:</Text>
+                  <Text as="p" variant="bodySm" tone="subdued">
+                    Analyse a product:
+                  </Text>
                   <InlineStack gap="100" wrap>
                     {productTitles.slice(0, 8).map((t) => (
-                      <Button key={t} size="slim" variant="secondary" onClick={() => useSuggestion(t)}>
+                      <Button
+                        key={t}
+                        size="slim"
+                        variant="secondary"
+                        onClick={() => useSuggestion(t)}
+                      >
                         {t.slice(0, 30)}
                       </Button>
                     ))}
@@ -189,7 +200,9 @@ export default function KeywordsPage() {
             <Card>
               <InlineStack gap="300" blockAlign="center">
                 <Spinner size="small" />
-                <Text as="p" tone="subdued">Fetching semantic data from Datamuse + scanning store content…</Text>
+                <Text as="p" tone="subdued">
+                  Fetching semantic data from Datamuse + scanning store content…
+                </Text>
               </InlineStack>
             </Card>
           </Layout.Section>
@@ -229,17 +242,27 @@ export default function KeywordsPage() {
 
                   <InlineGrid columns={2} gap="400">
                     <BlockStack gap="200">
-                      <Text as="h3" variant="headingSm" tone="success">Present in your store</Text>
+                      <Text as="h3" variant="headingSm" tone="success">
+                        Present in your store
+                      </Text>
                       <InlineStack gap="100" wrap>
-                        {result.presentInStore.length > 0
-                          ? result.presentInStore.map((w) => <WordBadge key={w} word={w} present />)
-                          : <Text as="p" variant="bodySm" tone="subdued">None detected</Text>}
+                        {result.presentInStore.length > 0 ? (
+                          result.presentInStore.map((w) => <WordBadge key={w} word={w} present />)
+                        ) : (
+                          <Text as="p" variant="bodySm" tone="subdued">
+                            None detected
+                          </Text>
+                        )}
                       </InlineStack>
                     </BlockStack>
                     <BlockStack gap="200">
-                      <Text as="h3" variant="headingSm" tone="caution">Missing from your store</Text>
+                      <Text as="h3" variant="headingSm" tone="caution">
+                        Missing from your store
+                      </Text>
                       <InlineStack gap="100" wrap>
-                        {result.missingFromStore.map((w) => <WordBadge key={w} word={w} present={false} />)}
+                        {result.missingFromStore.map((w) => (
+                          <WordBadge key={w} word={w} present={false} />
+                        ))}
                       </InlineStack>
                     </BlockStack>
                   </InlineGrid>
@@ -253,19 +276,26 @@ export default function KeywordsPage() {
                 <Card>
                   <BlockStack gap="300">
                     <BlockStack gap="100">
-                      <Text as="h3" variant="headingMd">Semantically related</Text>
+                      <Text as="h3" variant="headingMd">
+                        Semantically related
+                      </Text>
                       <Text as="p" variant="bodySm" tone="subdued">
-                        Words with similar meaning — add these to descriptions for broader topic coverage.
+                        Words with similar meaning — add these to descriptions for broader topic
+                        coverage.
                       </Text>
                     </BlockStack>
                     <Divider />
                     <BlockStack gap="100">
                       {result.related.map((w) => (
                         <InlineStack key={w.word} align="space-between" blockAlign="center">
-                          <Text as="p" variant="bodyMd">{w.word}</Text>
+                          <Text as="p" variant="bodyMd">
+                            {w.word}
+                          </Text>
                           <InlineStack gap="100">
                             {result.presentInStore.includes(w.word) && (
-                              <Badge tone="success" size="small">In store</Badge>
+                              <Badge tone="success" size="small">
+                                In store
+                              </Badge>
                             )}
                             {w.f && (
                               <Text as="p" variant="bodySm" tone="subdued">
@@ -282,18 +312,25 @@ export default function KeywordsPage() {
                 <Card>
                   <BlockStack gap="300">
                     <BlockStack gap="100">
-                      <Text as="h3" variant="headingMd">Strongly associated terms</Text>
+                      <Text as="h3" variant="headingMd">
+                        Strongly associated terms
+                      </Text>
                       <Text as="p" variant="bodySm" tone="subdued">
-                        Words people associate with this topic — great for FAQ answers and buying guides.
+                        Words people associate with this topic — great for FAQ answers and buying
+                        guides.
                       </Text>
                     </BlockStack>
                     <Divider />
                     <BlockStack gap="100">
                       {result.triggered.map((w) => (
                         <InlineStack key={w.word} align="space-between" blockAlign="center">
-                          <Text as="p" variant="bodyMd">{w.word}</Text>
+                          <Text as="p" variant="bodyMd">
+                            {w.word}
+                          </Text>
                           {result.presentInStore.includes(w.word) && (
-                            <Badge tone="success" size="small">In store</Badge>
+                            <Badge tone="success" size="small">
+                              In store
+                            </Badge>
                           )}
                         </InlineStack>
                       ))}
@@ -309,9 +346,12 @@ export default function KeywordsPage() {
                 <Card>
                   <BlockStack gap="300">
                     <BlockStack gap="100">
-                      <Text as="h3" variant="headingMd">Search autocomplete variations</Text>
+                      <Text as="h3" variant="headingMd">
+                        Search autocomplete variations
+                      </Text>
                       <Text as="p" variant="bodySm" tone="subdued">
-                        Common search query completions — use as product titles, headings, or FAQ questions.
+                        Common search query completions — use as product titles, headings, or FAQ
+                        questions.
                       </Text>
                     </BlockStack>
                     <InlineStack gap="200" wrap>
@@ -324,7 +364,9 @@ export default function KeywordsPage() {
                           borderWidth="025"
                           borderColor="border"
                         >
-                          <Text as="p" variant="bodyMd">{w.word}</Text>
+                          <Text as="p" variant="bodyMd">
+                            {w.word}
+                          </Text>
                         </Box>
                       ))}
                     </InlineStack>
@@ -337,31 +379,44 @@ export default function KeywordsPage() {
             <Layout.Section>
               <Card>
                 <BlockStack gap="300">
-                  <Text as="h2" variant="headingMd">How to use these keywords</Text>
+                  <Text as="h2" variant="headingMd">
+                    How to use these keywords
+                  </Text>
                   <BlockStack gap="200">
                     {[
                       {
                         tip: `Add "${result.missingFromStore.slice(0, 3).join('", "')}" to product descriptions`,
-                        detail: 'Weave missing terms naturally into your descriptions — not as a list, as sentences.',
+                        detail:
+                          'Weave missing terms naturally into your descriptions — not as a list, as sentences.',
                         impact: 'High',
                       },
                       {
                         tip: 'Use associated terms as FAQ questions',
-                        detail: `Turn "${result.triggered.slice(0, 2).map(w => w.word).join('" and "')}" into FAQ questions on relevant pages.`,
+                        detail: `Turn "${result.triggered
+                          .slice(0, 2)
+                          .map((w) => w.word)
+                          .join('" and "')}" into FAQ questions on relevant pages.`,
                         impact: 'Medium',
                       },
                       {
                         tip: 'Target search variations as collection names',
-                        detail: 'If you sell running shoes, create collections named for the top autocomplete variations.',
+                        detail:
+                          'If you sell running shoes, create collections named for the top autocomplete variations.',
                         impact: 'Medium',
                       },
                     ].map((item) => (
                       <InlineStack key={item.tip} align="space-between" blockAlign="start">
                         <BlockStack gap="050">
-                          <Text as="p" variant="bodyMd" fontWeight="semibold">{item.tip}</Text>
-                          <Text as="p" variant="bodySm" tone="subdued">{item.detail}</Text>
+                          <Text as="p" variant="bodyMd" fontWeight="semibold">
+                            {item.tip}
+                          </Text>
+                          <Text as="p" variant="bodySm" tone="subdued">
+                            {item.detail}
+                          </Text>
                         </BlockStack>
-                        <Badge tone={item.impact === 'High' ? 'success' : 'info'}>{item.impact}</Badge>
+                        <Badge tone={item.impact === 'High' ? 'success' : 'info'}>
+                          {item.impact}
+                        </Badge>
                       </InlineStack>
                     ))}
                   </BlockStack>

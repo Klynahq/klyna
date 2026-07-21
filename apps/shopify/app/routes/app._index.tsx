@@ -1,3 +1,4 @@
+import type { Finding } from '@klyna/core';
 import { type LoaderFunctionArgs, json } from '@remix-run/node';
 import { Link, useLoaderData } from '@remix-run/react';
 import {
@@ -15,10 +16,9 @@ import {
   ProgressBar,
   Text,
 } from '@shopify/polaris';
-import type { Finding } from '@klyna/core';
-import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
 import { getShopAiSettings } from '../lib/ai.server';
+import { authenticate } from '../shopify.server';
 
 function gradeFor(score: number): 'A' | 'B' | 'C' | 'D' | 'F' {
   if (score >= 90) return 'A';
@@ -41,7 +41,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   type ShopRes = {
     data: { shop: { name: string; myshopifyDomain: string; primaryDomain: { url: string } } };
   };
-  const shopRes = await admin.graphql(`{ shop { name myshopifyDomain primaryDomain { url } } }`);
+  const shopRes = await admin.graphql('{ shop { name myshopifyDomain primaryDomain { url } } }');
   const shopInfo = ((await shopRes.json()) as ShopRes).data.shop;
 
   // Fetch recent audit results for this shop
@@ -52,7 +52,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   });
 
   // Latest result per URL
-  const latestByUrl = new Map<string, typeof allResults[0]>();
+  const latestByUrl = new Map<string, (typeof allResults)[0]>();
   for (const r of allResults) {
     if (!latestByUrl.has(r.url)) latestByUrl.set(r.url, r);
   }
@@ -91,9 +91,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   // Score history: last 7 days
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  const recentHistory = allResults
-    .filter((r) => r.createdAt > sevenDaysAgo)
-    .reverse(); // oldest first
+  const recentHistory = allResults.filter((r) => r.createdAt > sevenDaysAgo).reverse(); // oldest first
 
   // Group by day
   const byDay = new Map<string, number[]>();
@@ -273,14 +271,15 @@ export default function Dashboard() {
           </Layout.Section>
         )}
 
-
         {/* Store Score */}
         <Layout.Section>
           <Card>
             <BlockStack gap="400">
               <InlineStack align="space-between" blockAlign="center">
                 <BlockStack gap="100">
-                  <Text as="h2" variant="headingLg">Store SEO score</Text>
+                  <Text as="h2" variant="headingLg">
+                    Store SEO score
+                  </Text>
                   <Text as="p" variant="bodyMd" tone="subdued">
                     {pagesScanned > 0
                       ? `Averaged across ${pagesScanned} scanned page${pagesScanned !== 1 ? 's' : ''}`
@@ -294,8 +293,8 @@ export default function Dashboard() {
                         overallGrade === 'A' || overallGrade === 'B'
                           ? 'bg-fill-success'
                           : overallGrade === 'C' || overallGrade === 'D'
-                          ? 'bg-fill-caution'
-                          : 'bg-fill-critical'
+                            ? 'bg-fill-caution'
+                            : 'bg-fill-critical'
                       }
                       borderRadius="full"
                       padding="500"
@@ -310,8 +309,8 @@ export default function Dashboard() {
                             overallGrade === 'A' || overallGrade === 'B'
                               ? 'success'
                               : overallGrade === 'C' || overallGrade === 'D'
-                              ? 'caution'
-                              : 'critical'
+                                ? 'caution'
+                                : 'critical'
                           }
                         >
                           {avgScore}
@@ -324,8 +323,8 @@ export default function Dashboard() {
                             overallGrade === 'A' || overallGrade === 'B'
                               ? 'success'
                               : overallGrade === 'C' || overallGrade === 'D'
-                              ? 'caution'
-                              : 'critical'
+                                ? 'caution'
+                                : 'critical'
                           }
                         >
                           {`Grade ${overallGrade}`}
@@ -335,7 +334,9 @@ export default function Dashboard() {
                   </InlineStack>
                 )}
                 {avgScore === null && (
-                  <Button url="/app/bulk" variant="primary">Scan your store</Button>
+                  <Button url="/app/bulk" variant="primary">
+                    Scan your store
+                  </Button>
                 )}
               </InlineStack>
 
@@ -347,33 +348,47 @@ export default function Dashboard() {
                       <Text as="p" variant="headingXl" tone="critical" fontWeight="bold">
                         {errors}
                       </Text>
-                      <Text as="p" variant="bodySm" tone="subdued">Errors</Text>
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        Errors
+                      </Text>
                     </BlockStack>
                     <BlockStack gap="100">
                       <Text as="p" variant="headingXl" tone="caution" fontWeight="bold">
                         {warnings}
                       </Text>
-                      <Text as="p" variant="bodySm" tone="subdued">Warnings</Text>
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        Warnings
+                      </Text>
                     </BlockStack>
                     <BlockStack gap="100">
                       <Text as="p" variant="headingXl" fontWeight="bold">
                         {infos}
                       </Text>
-                      <Text as="p" variant="bodySm" tone="subdued">Info</Text>
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        Info
+                      </Text>
                     </BlockStack>
                   </InlineGrid>
 
                   {totalIssues > 0 && (
                     <Box paddingBlockStart="100">
                       <BlockStack gap="100">
-                        <Text as="p" variant="bodySm" tone="subdued">Issues breakdown</Text>
+                        <Text as="p" variant="bodySm" tone="subdued">
+                          Issues breakdown
+                        </Text>
                         <ProgressBar
-                          progress={errors > 0 ? Math.max(5, Math.round((errors / totalIssues) * 100)) : 0}
+                          progress={
+                            errors > 0 ? Math.max(5, Math.round((errors / totalIssues) * 100)) : 0
+                          }
                           tone="critical"
                           size="small"
                         />
                         <ProgressBar
-                          progress={warnings > 0 ? Math.max(5, Math.round((warnings / totalIssues) * 100)) : 0}
+                          progress={
+                            warnings > 0
+                              ? Math.max(5, Math.round((warnings / totalIssues) * 100))
+                              : 0
+                          }
                           tone="highlight"
                           size="small"
                         />
@@ -391,7 +406,9 @@ export default function Dashboard() {
           <Layout.Section>
             <Card>
               <BlockStack gap="300">
-                <Text as="h2" variant="headingMd">Pages needing attention</Text>
+                <Text as="h2" variant="headingMd">
+                  Pages needing attention
+                </Text>
                 <BlockStack gap="200">
                   {worst.map((p) => (
                     <BlockStack key={p.url} gap="100">
@@ -400,23 +417,34 @@ export default function Dashboard() {
                           <Text as="p" variant="bodyMd">
                             {p.url.replace(/^https?:\/\/[^/]+/, '') || '/'}
                           </Text>
-                          <Text as="p" variant="bodySm" tone="subdued">{p.url}</Text>
+                          <Text as="p" variant="bodySm" tone="subdued">
+                            {p.url}
+                          </Text>
                         </BlockStack>
                         <InlineStack gap="200" blockAlign="center">
-                          <Text as="p" variant="headingMd" fontWeight="bold">{p.score}</Text>
+                          <Text as="p" variant="headingMd" fontWeight="bold">
+                            {p.score}
+                          </Text>
                           <Badge tone={gradeTone(p.grade)}>{`Grade ${p.grade}`}</Badge>
                         </InlineStack>
                       </InlineStack>
                       <ProgressBar progress={p.score} tone="critical" size="small" />
                     </BlockStack>
                   ))}
+                </BlockStack>
+              </BlockStack>
+            </Card>
+          </Layout.Section>
+        )}
 
         {/* Score history */}
         {scoreHistory.length > 1 && (
           <Layout.Section>
             <Card>
               <BlockStack gap="300">
-                <Text as="h2" variant="headingMd">Score trend · last 7 days</Text>
+                <Text as="h2" variant="headingMd">
+                  Score trend · last 7 days
+                </Text>
                 <InlineStack gap="400" blockAlign="end">
                   {scoreHistory.map((s) => (
                     <BlockStack key={s.day} gap="100" inlineAlign="center">
@@ -443,7 +471,9 @@ export default function Dashboard() {
                     ? ` · ${new Date(lastScan.finishedAt).toLocaleString()}`
                     : ' · In progress'}
                 </Text>
-                <Button url="/app/bulk" variant="plain" size="slim">Re-scan →</Button>
+                <Button url="/app/bulk" variant="plain" size="slim">
+                  Re-scan →
+                </Button>
               </InlineStack>
             </Box>
           </Layout.Section>
@@ -452,19 +482,27 @@ export default function Dashboard() {
         {/* Core fix modules */}
         <Layout.Section>
           <BlockStack gap="300">
-            <Text as="h2" variant="headingMd">Fix SEO issues</Text>
+            <Text as="h2" variant="headingMd">
+              Fix SEO issues
+            </Text>
             <InlineGrid columns={{ xs: 1, sm: 2, md: 3 }} gap="300">
               {coreActions.map((a) => (
                 <Card key={a.to}>
                   <BlockStack gap="300">
                     <InlineStack align="space-between" blockAlign="start">
                       <InlineStack gap="150" blockAlign="center">
-                        <Text as="span" variant="headingMd">{a.icon}</Text>
-                        <Text as="h3" variant="headingSm">{a.title}</Text>
+                        <Text as="span" variant="headingMd">
+                          {a.icon}
+                        </Text>
+                        <Text as="h3" variant="headingSm">
+                          {a.title}
+                        </Text>
                       </InlineStack>
                       {a.badge && <Badge tone="success">{a.badge}</Badge>}
                     </InlineStack>
-                    <Text as="p" variant="bodyMd" tone="subdued">{a.desc}</Text>
+                    <Text as="p" variant="bodyMd" tone="subdued">
+                      {a.desc}
+                    </Text>
                     <Link to={a.to}>{a.cta} →</Link>
                   </BlockStack>
                 </Card>
@@ -476,23 +514,39 @@ export default function Dashboard() {
         {/* Advanced tools */}
         <Layout.Section>
           <BlockStack gap="300">
-            <Text as="h2" variant="headingMd">Advanced tools</Text>
+            <Text as="h2" variant="headingMd">
+              Advanced tools
+            </Text>
             <InlineGrid columns={{ xs: 1, sm: 2, md: 3 }} gap="300">
               {advancedActions.map((a) => (
                 <Card key={a.to}>
                   <BlockStack gap="300">
                     <InlineStack align="space-between" blockAlign="start">
                       <InlineStack gap="150" blockAlign="center">
-                        <Text as="span" variant="headingMd">{a.icon}</Text>
-                        <Text as="h3" variant="headingSm">{a.title}</Text>
+                        <Text as="span" variant="headingMd">
+                          {a.icon}
+                        </Text>
+                        <Text as="h3" variant="headingSm">
+                          {a.title}
+                        </Text>
                       </InlineStack>
                       {a.badge && (
-                        <Badge tone={a.badge === 'New' ? 'info' : a.badge === 'AI active' ? 'success' : 'magic'}>
+                        <Badge
+                          tone={
+                            a.badge === 'New'
+                              ? 'info'
+                              : a.badge === 'AI active'
+                                ? 'success'
+                                : 'magic'
+                          }
+                        >
                           {a.badge}
                         </Badge>
                       )}
                     </InlineStack>
-                    <Text as="p" variant="bodyMd" tone="subdued">{a.desc}</Text>
+                    <Text as="p" variant="bodyMd" tone="subdued">
+                      {a.desc}
+                    </Text>
                     <Link to={a.to}>{a.cta} →</Link>
                   </BlockStack>
                 </Card>

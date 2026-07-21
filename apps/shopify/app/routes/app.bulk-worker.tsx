@@ -1,7 +1,7 @@
-import { type ActionFunctionArgs, json } from '@remix-run/node';
 import { auditPage } from '@klyna/core';
-import { authenticate } from '../shopify.server';
+import { type ActionFunctionArgs, json } from '@remix-run/node';
 import prisma from '../db.server';
+import { authenticate } from '../shopify.server';
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { session } = await authenticate.admin(request);
@@ -62,6 +62,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   );
 
   return json({
-    results: results.map((r) => (r.status === 'fulfilled' ? r.value : { url: '', ok: false, error: 'Internal error' })),
+    results: results.map((r) =>
+      r.status === 'fulfilled' ? r.value : { url: '', ok: false, error: 'Internal error' },
+    ),
   });
 };

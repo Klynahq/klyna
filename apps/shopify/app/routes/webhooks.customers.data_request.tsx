@@ -1,4 +1,4 @@
-import { type ActionFunctionArgs } from '@remix-run/node';
+import type { ActionFunctionArgs } from '@remix-run/node';
 import { authenticate } from '../shopify.server';
 
 // GDPR mandatory webhook: customers/data_request.

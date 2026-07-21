@@ -1,6 +1,6 @@
+import { schema } from '@klyna/core';
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
 import { useActionData, useFetcher, useLoaderData } from '@remix-run/react';
-import { useState } from 'react';
 import {
   Badge,
   Banner,
@@ -16,9 +16,9 @@ import {
   Text,
   TextField,
 } from '@shopify/polaris';
-import { schema } from '@klyna/core';
-import { authenticate } from '../shopify.server';
+import { useState } from 'react';
 import prisma from '../db.server';
+import { authenticate } from '../shopify.server';
 
 type ShopGqlData = {
   data: {
@@ -49,7 +49,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       description
     }
   }`);
-  const { data: { shop: shopData } } = (await res.json()) as ShopGqlData;
+  const {
+    data: { shop: shopData },
+  } = (await res.json()) as ShopGqlData;
 
   const config = await prisma.schemaConfig.findUnique({ where: { shop } });
   const storeUrl = shopData.primaryDomain.url.replace(/\/$/, '');
@@ -103,33 +105,60 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     if (orgEnabled) {
       // Get shop info to build schema
-      type ShopRes = { data: { shop: { id: string; name: string; url: string; primaryDomain: { url: string }; description: string | null } } };
-      const shopRes = await admin.graphql(`{ shop { id name url primaryDomain { url } description } }`);
-      const { data: { shop: sd } } = (await shopRes.json()) as ShopRes;
+      type ShopRes = {
+        data: {
+          shop: {
+            id: string;
+            name: string;
+            url: string;
+            primaryDomain: { url: string };
+            description: string | null;
+          };
+        };
+      };
+      const shopRes = await admin.graphql(
+        '{ shop { id name url primaryDomain { url } description } }',
+      );
+      const {
+        data: { shop: sd },
+      } = (await shopRes.json()) as ShopRes;
       const storeUrl = sd.primaryDomain.url.replace(/\/$/, '');
 
-      const orgJson = JSON.stringify(schema.buildOrganization({
-        name: sd.name,
-        url: storeUrl,
-        description: sd.description ?? undefined,
-      }));
+      const orgJson = JSON.stringify(
+        schema.buildOrganization({
+          name: sd.name,
+          url: storeUrl,
+          description: sd.description ?? undefined,
+        }),
+      );
 
-      const websiteJson = JSON.stringify(schema.buildWebSite({
-        name: sd.name,
-        url: storeUrl,
-        publisherId: `${storeUrl}#organization`,
-      }));
+      const websiteJson = JSON.stringify(
+        schema.buildWebSite({
+          name: sd.name,
+          url: storeUrl,
+          publisherId: `${storeUrl}#organization`,
+        }),
+      );
 
       // Write combined schema to shop metafield
       const combined = JSON.stringify({
         '@context': 'https://schema.org',
         '@graph': [
-          schema.buildOrganization({ name: sd.name, url: storeUrl, description: sd.description ?? undefined }),
-          schema.buildWebSite({ name: sd.name, url: storeUrl, publisherId: `${storeUrl}#organization` }),
+          schema.buildOrganization({
+            name: sd.name,
+            url: storeUrl,
+            description: sd.description ?? undefined,
+          }),
+          schema.buildWebSite({
+            name: sd.name,
+            url: storeUrl,
+            publisherId: `${storeUrl}#organization`,
+          }),
         ],
       });
 
-      await admin.graphql(`
+      await admin.graphql(
+        `
         mutation klynaSetGlobalSchema($ownerId: ID!, $value: String!) {
           metafieldsSet(metafields: [{
             ownerId: $ownerId
@@ -139,9 +168,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
             value: $value
           }]) { userErrors { field message } }
         }
-      `, { variables: { ownerId: sd.id, value: combined } });
+      `,
+        { variables: { ownerId: sd.id, value: combined } },
+      );
 
-      void orgJson; void websiteJson; // generated, used in combined
+      void orgJson;
+      void websiteJson; // generated, used in combined
     }
 
     return json({ saved: true, orgEnabled, productEnabled, breadcrumbEnabled, faqEnabled });
@@ -203,7 +235,9 @@ export default function SchemaPage() {
           <Card>
             <BlockStack gap="400">
               <BlockStack gap="100">
-                <Text as="h2" variant="headingMd">Structured data for {shopName}</Text>
+                <Text as="h2" variant="headingMd">
+                  Structured data for {shopName}
+                </Text>
                 <Text as="p" tone="subdued">
                   Schema markup tells Google exactly what your store, products, and content are.
                   Enable the types below — Klyna writes the JSON-LD to your store&apos;s metafields.
@@ -217,7 +251,9 @@ export default function SchemaPage() {
                 <Checkbox
                   label={
                     <InlineStack gap="200" blockAlign="center">
-                      <Text as="span" variant="bodyMd" fontWeight="semibold">Organization + WebSite</Text>
+                      <Text as="span" variant="bodyMd" fontWeight="semibold">
+                        Organization + WebSite
+                      </Text>
                       <Badge tone="success">Recommended</Badge>
                     </InlineStack>
                   }
@@ -228,7 +264,9 @@ export default function SchemaPage() {
                 <Checkbox
                   label={
                     <InlineStack gap="200" blockAlign="center">
-                      <Text as="span" variant="bodyMd" fontWeight="semibold">Product schema</Text>
+                      <Text as="span" variant="bodyMd" fontWeight="semibold">
+                        Product schema
+                      </Text>
                       <Badge>Price · Availability · Images</Badge>
                     </InlineStack>
                   }
@@ -237,13 +275,21 @@ export default function SchemaPage() {
                   onChange={setProductEnabled}
                 />
                 <Checkbox
-                  label={<Text as="span" variant="bodyMd" fontWeight="semibold">BreadcrumbList</Text>}
+                  label={
+                    <Text as="span" variant="bodyMd" fontWeight="semibold">
+                      BreadcrumbList
+                    </Text>
+                  }
                   helpText="Shows collection › product breadcrumbs in search results."
                   checked={breadcrumbEnabled}
                   onChange={setBreadcrumbEnabled}
                 />
                 <Checkbox
-                  label={<Text as="span" variant="bodyMd" fontWeight="semibold">FAQPage</Text>}
+                  label={
+                    <Text as="span" variant="bodyMd" fontWeight="semibold">
+                      FAQPage
+                    </Text>
+                  }
                   helpText="Detect FAQ sections in your pages and blog posts and emit FAQPage schema."
                   checked={faqEnabled}
                   onChange={setFaqEnabled}
@@ -259,8 +305,8 @@ export default function SchemaPage() {
               {saved && (
                 <Banner tone="success" title="Schema written to metafields">
                   <Text as="p" variant="bodyMd">
-                    Your schema is live in Shopify metafields. Paste the Liquid snippet below
-                    once to make Google see it on every page.
+                    Your schema is live in Shopify metafields. Paste the Liquid snippet below once
+                    to make Google see it on every page.
                   </Text>
                 </Banner>
               )}
@@ -274,19 +320,29 @@ export default function SchemaPage() {
             <BlockStack gap="400">
               <BlockStack gap="100">
                 <InlineStack gap="200" blockAlign="center">
-                  <Text as="h2" variant="headingMd">One-time theme installation</Text>
+                  <Text as="h2" variant="headingMd">
+                    One-time theme installation
+                  </Text>
                   <Badge tone="info">Required once</Badge>
                 </InlineStack>
                 <Text as="p" tone="subdued">
                   Copy the snippet below and paste it inside the{' '}
-                  <Text as="span" variant="bodyMd" fontWeight="semibold">&lt;head&gt;</Text> tag in your
-                  theme&apos;s <Text as="span" variant="bodyMd" fontWeight="semibold">layout/theme.liquid</Text>.
-                  This wires up all schema types you enable above — forever, with no further theme edits needed.
+                  <Text as="span" variant="bodyMd" fontWeight="semibold">
+                    &lt;head&gt;
+                  </Text>{' '}
+                  tag in your theme&apos;s{' '}
+                  <Text as="span" variant="bodyMd" fontWeight="semibold">
+                    layout/theme.liquid
+                  </Text>
+                  . This wires up all schema types you enable above — forever, with no further theme
+                  edits needed.
                 </Text>
               </BlockStack>
 
               <BlockStack gap="200">
-                <Text as="h3" variant="headingSm">Global schema (Organization + WebSite)</Text>
+                <Text as="h3" variant="headingSm">
+                  Global schema (Organization + WebSite)
+                </Text>
                 <Box
                   background="bg-surface-secondary"
                   padding="300"
@@ -295,7 +351,15 @@ export default function SchemaPage() {
                   borderColor="border"
                 >
                   <Text as="p" variant="bodyMd">
-                    <pre style={{ margin: 0, fontSize: '12px', whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontFamily: 'monospace' }}>
+                    <pre
+                      style={{
+                        margin: 0,
+                        fontSize: '12px',
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-all',
+                        fontFamily: 'monospace',
+                      }}
+                    >
                       {LIQUID_SNIPPET}
                     </pre>
                   </Text>
@@ -311,7 +375,9 @@ export default function SchemaPage() {
 
               {productEnabled && (
                 <BlockStack gap="200">
-                  <Text as="h3" variant="headingSm">Product schema</Text>
+                  <Text as="h3" variant="headingSm">
+                    Product schema
+                  </Text>
                   <Box
                     background="bg-surface-secondary"
                     padding="300"
@@ -319,7 +385,15 @@ export default function SchemaPage() {
                     borderWidth="025"
                     borderColor="border"
                   >
-                    <pre style={{ margin: 0, fontSize: '12px', whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontFamily: 'monospace' }}>
+                    <pre
+                      style={{
+                        margin: 0,
+                        fontSize: '12px',
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-all',
+                        fontFamily: 'monospace',
+                      }}
+                    >
                       {PRODUCT_SNIPPET}
                     </pre>
                   </Box>
@@ -340,19 +414,26 @@ export default function SchemaPage() {
         <Layout.Section>
           <Card>
             <BlockStack gap="400">
-              <Text as="h2" variant="headingMd">Generated JSON-LD preview</Text>
+              <Text as="h2" variant="headingMd">
+                Generated JSON-LD preview
+              </Text>
               <Text as="p" tone="subdued">
                 Exactly what gets written to your metafield and emitted by the snippet above.
                 Validate at{' '}
                 <a href="https://validator.schema.org" target="_blank" rel="noopener noreferrer">
                   validator.schema.org
-                </a>.
+                </a>
+                .
               </Text>
 
               <BlockStack gap="200">
                 <InlineStack align="space-between" blockAlign="center">
-                  <Text as="h3" variant="headingSm">Organization</Text>
-                  <Badge tone={orgEnabled ? 'success' : 'critical'}>{orgEnabled ? 'Enabled' : 'Disabled'}</Badge>
+                  <Text as="h3" variant="headingSm">
+                    Organization
+                  </Text>
+                  <Badge tone={orgEnabled ? 'success' : 'critical'}>
+                    {orgEnabled ? 'Enabled' : 'Disabled'}
+                  </Badge>
                 </InlineStack>
                 <Box
                   background="bg-surface-secondary"
@@ -361,7 +442,14 @@ export default function SchemaPage() {
                   borderWidth="025"
                   borderColor="border"
                 >
-                  <pre style={{ margin: 0, fontSize: '12px', overflowX: 'auto', fontFamily: 'monospace' }}>
+                  <pre
+                    style={{
+                      margin: 0,
+                      fontSize: '12px',
+                      overflowX: 'auto',
+                      fontFamily: 'monospace',
+                    }}
+                  >
                     {orgSchemaPreview}
                   </pre>
                 </Box>
@@ -369,8 +457,12 @@ export default function SchemaPage() {
 
               <BlockStack gap="200">
                 <InlineStack align="space-between" blockAlign="center">
-                  <Text as="h3" variant="headingSm">WebSite</Text>
-                  <Badge tone={orgEnabled ? 'success' : 'critical'}>{orgEnabled ? 'Enabled' : 'Disabled'}</Badge>
+                  <Text as="h3" variant="headingSm">
+                    WebSite
+                  </Text>
+                  <Badge tone={orgEnabled ? 'success' : 'critical'}>
+                    {orgEnabled ? 'Enabled' : 'Disabled'}
+                  </Badge>
                 </InlineStack>
                 <Box
                   background="bg-surface-secondary"
@@ -379,7 +471,14 @@ export default function SchemaPage() {
                   borderWidth="025"
                   borderColor="border"
                 >
-                  <pre style={{ margin: 0, fontSize: '12px', overflowX: 'auto', fontFamily: 'monospace' }}>
+                  <pre
+                    style={{
+                      margin: 0,
+                      fontSize: '12px',
+                      overflowX: 'auto',
+                      fontFamily: 'monospace',
+                    }}
+                  >
                     {websiteSchemaPreview}
                   </pre>
                 </Box>
@@ -392,7 +491,9 @@ export default function SchemaPage() {
         <Layout.Section>
           <Card>
             <BlockStack gap="300">
-              <Text as="h2" variant="headingMd">Rich results eligibility</Text>
+              <Text as="h2" variant="headingMd">
+                Rich results eligibility
+              </Text>
               <BlockStack gap="200">
                 {[
                   {
@@ -418,8 +519,12 @@ export default function SchemaPage() {
                 ].map((item) => (
                   <InlineStack key={item.type} align="space-between" blockAlign="center">
                     <BlockStack gap="050">
-                      <Text as="p" variant="bodyMd">{item.type}</Text>
-                      <Text as="p" variant="bodySm" tone="subdued">Requires: {item.requirement}</Text>
+                      <Text as="p" variant="bodyMd">
+                        {item.type}
+                      </Text>
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        Requires: {item.requirement}
+                      </Text>
                     </BlockStack>
                     <Badge tone={item.eligible ? 'success' : 'warning'}>
                       {item.eligible ? '✓ Eligible' : 'Not enabled'}

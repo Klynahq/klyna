@@ -42,3 +42,7 @@ Thumbs.db
 .cache/
 *.tsbuildinfo
 .vercel
+apps/admin/app/generated/
+apps/shopify/app/generated/
+apps/shopify-suite/app/generated/
+apps/shopify-suite/build/

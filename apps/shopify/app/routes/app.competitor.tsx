@@ -1,6 +1,6 @@
+import { type AuditResult, auditPage } from '@klyna/core';
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
 import { useFetcher, useLoaderData } from '@remix-run/react';
-import { useState } from 'react';
 import {
   Badge,
   Banner,
@@ -9,7 +9,6 @@ import {
   Button,
   Card,
   Divider,
-  Form,
   InlineGrid,
   InlineStack,
   Layout,
@@ -18,9 +17,9 @@ import {
   Text,
   TextField,
 } from '@shopify/polaris';
-import { auditPage, type AuditResult } from '@klyna/core';
-import { authenticate } from '../shopify.server';
+import { useState } from 'react';
 import prisma from '../db.server';
+import { authenticate } from '../shopify.server';
 
 type CompResult = {
   url: string;
@@ -47,7 +46,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     orderBy: { createdAt: 'desc' },
     take: 200,
   });
-  const byUrl = new Map<string, typeof recent[0]>();
+  const byUrl = new Map<string, (typeof recent)[0]>();
   for (const r of recent) {
     if (!byUrl.has(r.url)) byUrl.set(r.url, r);
   }
@@ -111,8 +110,21 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           url,
           score: 0,
           grade: 'F',
-          findings: [{ id: 'fetch-error', severity: 'error', message: err instanceof Error ? err.message : 'Failed to fetch' }],
-          stats: { headings: { h1: 0, h2: 0, h3: 0 }, links: { internal: 0, external: 0, total: 0 }, images: { total: 0, missingAlt: 0 }, schema: { count: 0, types: [] }, word_count: 0, reading_time_minutes: 0 },
+          findings: [
+            {
+              id: 'fetch-error',
+              severity: 'error',
+              message: err instanceof Error ? err.message : 'Failed to fetch',
+            },
+          ],
+          stats: {
+            headings: { h1: 0, h2: 0, h3: 0 },
+            links: { internal: 0, external: 0, total: 0 },
+            images: { total: 0, missingAlt: 0 },
+            schema: { count: 0, types: [] },
+            word_count: 0,
+            reading_time_minutes: 0,
+          },
           meta: {},
         });
       }
@@ -132,12 +144,15 @@ export default function CompetitorPage() {
   const error = fetcher.data?.error;
 
   const addUrl = () => setUrls((prev) => [...prev, '']);
-  const updateUrl = (i: number, v: string) => setUrls((prev) => prev.map((u, idx) => idx === i ? v : u));
+  const updateUrl = (i: number, v: string) =>
+    setUrls((prev) => prev.map((u, idx) => (idx === i ? v : u)));
   const removeUrl = (i: number) => setUrls((prev) => prev.filter((_, idx) => idx !== i));
 
   const submit = () => {
     const fd = new FormData();
-    urls.filter(Boolean).forEach((u) => fd.append('url', u));
+    for (const url of urls.filter(Boolean)) {
+      fd.append('url', url);
+    }
     fetcher.submit(fd, { method: 'post' });
   };
 
@@ -148,12 +163,14 @@ export default function CompetitorPage() {
           <Card>
             <BlockStack gap="300">
               <BlockStack gap="100">
-                <Text as="h2" variant="headingMd">Analyse competitor URLs</Text>
+                <Text as="h2" variant="headingMd">
+                  Analyse competitor URLs
+                </Text>
                 <Text as="p" tone="subdued">
-                  Klyna fetches competitor pages and runs the same SEO + GEO audit engine it
-                  uses on your store. See exactly what schema types they have, how their meta
-                  is structured, and where they outperform you — all without leaving the app.
-                  No API key, no third-party data, just the same engine on their HTML.
+                  Klyna fetches competitor pages and runs the same SEO + GEO audit engine it uses on
+                  your store. See exactly what schema types they have, how their meta is structured,
+                  and where they outperform you — all without leaving the app. No API key, no
+                  third-party data, just the same engine on their HTML.
                 </Text>
               </BlockStack>
 
@@ -172,18 +189,27 @@ export default function CompetitorPage() {
                       />
                     </Box>
                     {urls.length > 1 && (
-                      <Button size="slim" tone="critical" onClick={() => removeUrl(i)}>Remove</Button>
+                      <Button size="slim" tone="critical" onClick={() => removeUrl(i)}>
+                        Remove
+                      </Button>
                     )}
                   </InlineStack>
                 ))}
               </BlockStack>
 
               <InlineStack gap="200">
-                <Button variant="primary" onClick={submit} loading={loading} disabled={urls.filter(Boolean).length === 0}>
+                <Button
+                  variant="primary"
+                  onClick={submit}
+                  loading={loading}
+                  disabled={urls.filter(Boolean).length === 0}
+                >
                   Analyse competitors
                 </Button>
                 {urls.length < 5 && (
-                  <Button variant="secondary" onClick={addUrl}>+ Add URL</Button>
+                  <Button variant="secondary" onClick={addUrl}>
+                    + Add URL
+                  </Button>
                 )}
               </InlineStack>
 
@@ -198,12 +224,30 @@ export default function CompetitorPage() {
             <Card>
               <InlineStack align="space-between" blockAlign="center">
                 <BlockStack gap="050">
-                  <Text as="p" variant="headingMd">Your store benchmark</Text>
-                  <Text as="p" variant="bodySm" tone="subdued">{pagesScanned} pages scanned · average score</Text>
+                  <Text as="p" variant="headingMd">
+                    Your store benchmark
+                  </Text>
+                  <Text as="p" variant="bodySm" tone="subdued">
+                    {pagesScanned} pages scanned · average score
+                  </Text>
                 </BlockStack>
                 <InlineStack gap="200" blockAlign="center">
-                  <Text as="p" variant="heading2xl" fontWeight="bold">{myAvgScore}</Text>
-                  <Badge tone={gradeTone(myAvgScore >= 90 ? 'A' : myAvgScore >= 80 ? 'B' : myAvgScore >= 70 ? 'C' : myAvgScore >= 60 ? 'D' : 'F')}>
+                  <Text as="p" variant="heading2xl" fontWeight="bold">
+                    {myAvgScore}
+                  </Text>
+                  <Badge
+                    tone={gradeTone(
+                      myAvgScore >= 90
+                        ? 'A'
+                        : myAvgScore >= 80
+                          ? 'B'
+                          : myAvgScore >= 70
+                            ? 'C'
+                            : myAvgScore >= 60
+                              ? 'D'
+                              : 'F',
+                    )}
+                  >
                     {`Grade ${myAvgScore >= 90 ? 'A' : myAvgScore >= 80 ? 'B' : myAvgScore >= 70 ? 'C' : myAvgScore >= 60 ? 'D' : 'F'}`}
                   </Badge>
                 </InlineStack>
@@ -219,16 +263,22 @@ export default function CompetitorPage() {
             <Layout.Section>
               <Card>
                 <BlockStack gap="300">
-                  <Text as="h2" variant="headingMd">Score comparison</Text>
+                  <Text as="h2" variant="headingMd">
+                    Score comparison
+                  </Text>
                   <BlockStack gap="200">
                     {myAvgScore !== null && (
                       <InlineStack align="space-between" blockAlign="center">
                         <InlineStack gap="200" blockAlign="center">
                           <Badge tone="success">Your store</Badge>
-                          <Text as="p" variant="bodyMd">(average across {pagesScanned} pages)</Text>
+                          <Text as="p" variant="bodyMd">
+                            (average across {pagesScanned} pages)
+                          </Text>
                         </InlineStack>
                         <InlineStack gap="200" blockAlign="center">
-                          <Text as="p" variant="headingMd" fontWeight="bold">{myAvgScore}</Text>
+                          <Text as="p" variant="headingMd" fontWeight="bold">
+                            {myAvgScore}
+                          </Text>
                           <Box minWidth="120px">
                             <ProgressBar progress={myAvgScore} tone="primary" size="small" />
                           </Box>
@@ -243,7 +293,9 @@ export default function CompetitorPage() {
                           </Text>
                         </InlineStack>
                         <InlineStack gap="200" blockAlign="center">
-                          <Text as="p" variant="headingMd" fontWeight="bold">{r.score}</Text>
+                          <Text as="p" variant="headingMd" fontWeight="bold">
+                            {r.score}
+                          </Text>
                           <Badge tone={gradeTone(r.grade)}>{r.grade}</Badge>
                           {myAvgScore !== null && r.score > myAvgScore && (
                             <Badge tone="critical">{`+${r.score - myAvgScore} ahead`}</Badge>
@@ -252,7 +304,17 @@ export default function CompetitorPage() {
                             <Badge tone="success">{`${myAvgScore - r.score} behind you`}</Badge>
                           )}
                           <Box minWidth="120px">
-                            <ProgressBar progress={r.score} tone={gradeTone(r.grade) === 'success' ? 'primary' : gradeTone(r.grade) === 'warning' ? 'highlight' : 'critical'} size="small" />
+                            <ProgressBar
+                              progress={r.score}
+                              tone={
+                                gradeTone(r.grade) === 'success'
+                                  ? 'primary'
+                                  : gradeTone(r.grade) === 'warning'
+                                    ? 'highlight'
+                                    : 'critical'
+                              }
+                              size="small"
+                            />
                           </Box>
                         </InlineStack>
                       </InlineStack>
@@ -269,10 +331,17 @@ export default function CompetitorPage() {
                   <BlockStack gap="400">
                     <InlineStack align="space-between" blockAlign="center">
                       <BlockStack gap="050">
-                        <Text as="h3" variant="headingMd">{new URL(r.url).hostname}</Text>
-                        <Text as="p" variant="bodySm" tone="subdued">{r.url}</Text>
+                        <Text as="h3" variant="headingMd">
+                          {new URL(r.url).hostname}
+                        </Text>
+                        <Text as="p" variant="bodySm" tone="subdued">
+                          {r.url}
+                        </Text>
                       </BlockStack>
-                      <Badge tone={gradeTone(r.grade)} size="large">{`${r.score} · Grade ${r.grade}`}</Badge>
+                      <Badge
+                        tone={gradeTone(r.grade)}
+                        size="large"
+                      >{`${r.score} · Grade ${r.grade}`}</Badge>
                     </InlineStack>
 
                     <Divider />
@@ -280,7 +349,9 @@ export default function CompetitorPage() {
                     {/* Meta */}
                     <InlineGrid columns={2} gap="300">
                       <BlockStack gap="200">
-                        <Text as="h4" variant="headingSm">Meta</Text>
+                        <Text as="h4" variant="headingSm">
+                          Meta
+                        </Text>
                         {[
                           { label: 'Title', value: r.meta.title },
                           { label: 'Description', value: r.meta.description },
@@ -289,40 +360,61 @@ export default function CompetitorPage() {
                           { label: 'Twitter Card', value: r.meta.twitterCard },
                         ].map(({ label, value }) => (
                           <BlockStack key={label} gap="050">
-                            <Text as="p" variant="bodySm" tone="subdued">{label}</Text>
+                            <Text as="p" variant="bodySm" tone="subdued">
+                              {label}
+                            </Text>
                             <Text as="p" variant="bodyMd">
-                              {value ? String(value).slice(0, 80) : <Text as="span" tone="critical">Missing</Text>}
+                              {value ? (
+                                String(value).slice(0, 80)
+                              ) : (
+                                <Text as="span" tone="critical">
+                                  Missing
+                                </Text>
+                              )}
                             </Text>
                           </BlockStack>
                         ))}
                       </BlockStack>
 
                       <BlockStack gap="200">
-                        <Text as="h4" variant="headingSm">Content stats</Text>
+                        <Text as="h4" variant="headingSm">
+                          Content stats
+                        </Text>
                         {[
                           { label: 'Word count', value: String(r.stats.word_count) },
                           { label: 'H1 count', value: String(r.stats.headings.h1) },
                           { label: 'Internal links', value: String(r.stats.links.internal) },
                           { label: 'Images total', value: String(r.stats.images.total) },
                           { label: 'Images missing alt', value: String(r.stats.images.missingAlt) },
-                          { label: 'Schema types', value: r.stats.schema.types.join(', ') || 'None' },
+                          {
+                            label: 'Schema types',
+                            value: r.stats.schema.types.join(', ') || 'None',
+                          },
                         ].map(({ label, value }) => (
                           <InlineStack key={label} align="space-between">
-                            <Text as="p" variant="bodySm" tone="subdued">{label}</Text>
-                            <Text as="p" variant="bodyMd" fontWeight="semibold">{value}</Text>
+                            <Text as="p" variant="bodySm" tone="subdued">
+                              {label}
+                            </Text>
+                            <Text as="p" variant="bodyMd" fontWeight="semibold">
+                              {value}
+                            </Text>
                           </InlineStack>
                         ))}
                       </BlockStack>
                     </InlineGrid>
 
                     {/* Issues they have */}
-                    {r.findings.filter(f => f.severity === 'error').length > 0 && (
+                    {r.findings.filter((f) => f.severity === 'error').length > 0 && (
                       <>
                         <Divider />
                         <BlockStack gap="200">
                           <InlineStack gap="100" blockAlign="center">
-                            <Text as="h4" variant="headingSm">Their SEO errors</Text>
-                            <Badge tone="success" size="small">Opportunities for you</Badge>
+                            <Text as="h4" variant="headingSm">
+                              Their SEO errors
+                            </Text>
+                            <Badge tone="success" size="small">
+                              Opportunities for you
+                            </Badge>
                           </InlineStack>
                           <BlockStack gap="100">
                             {r.findings
