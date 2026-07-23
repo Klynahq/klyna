@@ -3,11 +3,24 @@ import { ApiVersion, AppDistribution, shopifyApp } from '@shopify/shopify-app-re
 import { PrismaSessionStorage } from '@shopify/shopify-app-session-storage-prisma';
 import prisma from './db.server';
 
+const defaultScopes = [
+  'read_content',
+  'read_metaobjects',
+  'read_products',
+  'read_themes',
+  'write_content',
+  'write_metaobjects',
+  'write_products',
+];
+const environmentScopes = process.env.SCOPES?.split(',')
+  .map((scope) => scope.trim())
+  .filter(Boolean);
+
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY ?? '',
   apiSecretKey: process.env.SHOPIFY_API_SECRET ?? '',
   apiVersion: ApiVersion.July26,
-  scopes: process.env.SCOPES?.split(','),
+  scopes: environmentScopes?.length ? environmentScopes : defaultScopes,
   appUrl: process.env.SHOPIFY_APP_URL ?? 'https://klyna.dev',
   authPathPrefix: '/auth',
   isEmbeddedApp: true,
