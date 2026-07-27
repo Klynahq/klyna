@@ -11,7 +11,7 @@ client_id = "de9d1c425289b2900e2b8ef5392b3f79"
 
 name = "Klyna Reviews"
 handle = "klyna-reviews"
-application_url = "https://klyna-shopify-reviews.vercel.app/app"
+application_url = "https://klyna-reviews-app.vercel.app/app"
 embedded = true
 
 [build]
@@ -44,10 +44,15 @@ scopes = "read_products,write_products"
 
 [auth]
 redirect_urls = [
-  "https://klyna-shopify-reviews.vercel.app/auth/callback",
-  "https://klyna-shopify-reviews.vercel.app/auth/shopify/callback",
-  "https://klyna-shopify-reviews.vercel.app/api/auth/callback"
+  "https://klyna-reviews-app.vercel.app/auth/callback",
+  "https://klyna-reviews-app.vercel.app/auth/shopify/callback",
+  "https://klyna-reviews-app.vercel.app/api/auth/callback"
 ]
+
+[app_proxy]
+url = "https://klyna-reviews-app.vercel.app/apps/reviews"
+subpath = "reviews"
+prefix = "apps"
 
 [pos]
 embedded = false

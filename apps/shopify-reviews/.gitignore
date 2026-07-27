@@ -8,3 +8,4 @@ build/
 .shopify/
 public/build/
 .vercel
+.env*
