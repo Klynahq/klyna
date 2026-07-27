@@ -23,33 +23,33 @@ api_version = "2026-04"
 
   [[webhooks.subscriptions]]
   topics = ["app/uninstalled"]
-  uri = "/webhooks/app/uninstalled"
+  uri = "https://klyna-restock.vercel.app/webhooks/app/uninstalled"
 
   # Fired whenever a variant's available count changes at a location. This is the
   # signal that drives back-in-stock alerts: when a sold-out variant goes > 0 we
   # flush its waitlist.
   [[webhooks.subscriptions]]
   topics = ["inventory_levels/update"]
-  uri = "/webhooks/inventory/update"
+  uri = "https://klyna-restock.vercel.app/webhooks/inventory/update"
 
   # Keeps the cached variant title / product handle fresh for the storefront
   # widget and the demand report.
   [[webhooks.subscriptions]]
   topics = ["products/update"]
-  uri = "/webhooks/products/update"
+  uri = "https://klyna-restock.vercel.app/webhooks/products/update"
 
   # Mandatory GDPR / App Store compliance webhooks.
   [[webhooks.subscriptions]]
   compliance_topics = ["customers/data_request"]
-  uri = "/webhooks/customers/data_request"
+  uri = "https://klyna-restock.vercel.app/webhooks/customers/data_request"
 
   [[webhooks.subscriptions]]
   compliance_topics = ["customers/redact"]
-  uri = "/webhooks/customers/redact"
+  uri = "https://klyna-restock.vercel.app/webhooks/customers/redact"
 
   [[webhooks.subscriptions]]
   compliance_topics = ["shop/redact"]
-  uri = "/webhooks/shop/redact"
+  uri = "https://klyna-restock.vercel.app/webhooks/shop/redact"
 
 [access_scopes]
 # read_products + read_inventory power the demand report and the inventory webhook.
