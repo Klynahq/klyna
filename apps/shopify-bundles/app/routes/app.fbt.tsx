@@ -12,8 +12,9 @@ import {
   Text,
   Thumbnail,
 } from '@shopify/polaris';
-import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
+import { useEmbeddedRoute } from '../lib/embedded-routes';
+import { authenticate } from '../shopify.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
@@ -43,11 +44,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 export default function Fbt() {
   const { groups, lastComputed, pairCount } = useLoaderData<typeof loader>();
+  const embeddedRoute = useEmbeddedRoute();
 
   return (
     <Page
       title="Frequently bought together"
-      backAction={{ url: '/app' }}
+      backAction={{ url: embeddedRoute('/app') }}
       subtitle="Optional order-history recommendations."
     >
       <Layout>

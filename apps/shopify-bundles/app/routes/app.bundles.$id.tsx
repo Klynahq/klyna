@@ -20,6 +20,7 @@ import {
 import { useEffect, useState } from 'react';
 import prisma from '../db.server';
 import { type CatalogProduct, createAutomaticDiscount, searchProducts } from '../lib/admin.server';
+import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getPlanSelectionUrl, getShopPlan, planLimitMessage } from '../lib/plans.server';
 import { type DiscountType, quoteBundle } from '../lib/pricing';
 import { authenticate } from '../shopify.server';
@@ -202,11 +203,13 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
     }
   }
 
-  return redirect('/app/bundles');
+  const url = new URL(request.url);
+  return redirect(`/app/bundles${url.search}`);
 };
 
 export default function BundleBuilder() {
   const { isNew, bundle, plan, upgradeUrl, limitReached } = useLoaderData<typeof loader>();
+  const embeddedRoute = useEmbeddedRoute();
   const submit = useSubmit();
   const nav = useNavigation();
   const searchFetcher = useFetcher<{ products: CatalogProduct[] }>();
@@ -276,13 +279,16 @@ export default function BundleBuilder() {
     const fd = new FormData();
     fd.set('intent', 'save');
     fd.set('payload', JSON.stringify(payload));
-    submit(fd, { method: 'post' });
+    submit(fd, {
+      method: 'post',
+      action: embeddedRoute(isNew ? '/app/bundles/new' : `/app/bundles/${bundle.id}`),
+    });
   };
 
   return (
     <Page
       title={isNew ? 'New bundle' : 'Edit bundle'}
-      backAction={{ url: '/app/bundles' }}
+      backAction={{ url: embeddedRoute('/app/bundles') }}
       primaryAction={{
         content: 'Save & activate',
         loading: saving,

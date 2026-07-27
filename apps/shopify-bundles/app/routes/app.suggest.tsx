@@ -15,9 +15,10 @@ import {
   Page,
   Text,
 } from '@shopify/polaris';
-import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
 import { getShopAiSettings } from '../lib/ai.server';
+import { useEmbeddedRoute } from '../lib/embedded-routes';
+import { authenticate } from '../shopify.server';
 
 type Companion = { gid: string; title: string };
 
@@ -165,6 +166,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 export default function Suggest() {
   const { aiOff, suggestions, orderHistoryEnabled } = useLoaderData<typeof loader>();
+  const embeddedRoute = useEmbeddedRoute();
   const submit = useSubmit();
   const nav = useNavigation();
   const busy = nav.state === 'submitting';
@@ -172,27 +174,27 @@ export default function Suggest() {
   const generate = () => {
     const fd = new FormData();
     fd.set('intent', 'generate');
-    submit(fd, { method: 'post' });
+    submit(fd, { method: 'post', action: embeddedRoute('/app/suggest') });
   };
 
   const approve = (id: string) => {
     const fd = new FormData();
     fd.set('intent', 'approve');
     fd.set('id', id);
-    submit(fd, { method: 'post' });
+    submit(fd, { method: 'post', action: embeddedRoute('/app/suggest') });
   };
 
   const dismiss = (id: string) => {
     const fd = new FormData();
     fd.set('intent', 'dismiss');
     fd.set('id', id);
-    submit(fd, { method: 'post' });
+    submit(fd, { method: 'post', action: embeddedRoute('/app/suggest') });
   };
 
   return (
     <Page
       title="AI-suggested bundles"
-      backAction={{ url: '/app' }}
+      backAction={{ url: embeddedRoute('/app') }}
       subtitle="Bundles mined from your real co-purchase patterns, then titled and described by your AI provider."
       primaryAction={
         aiOff || !orderHistoryEnabled
@@ -222,7 +224,7 @@ export default function Suggest() {
             <Banner
               tone="warning"
               title="Enable AI in Settings"
-              action={{ content: 'Open Settings', url: '/app/settings' }}
+              action={{ content: 'Open Settings', url: embeddedRoute('/app/settings') }}
             >
               <Text as="p" variant="bodyMd">
                 Suggested bundles need a free-tier AI provider key. Pick OpenRouter,

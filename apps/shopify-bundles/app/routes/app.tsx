@@ -4,6 +4,7 @@ import { NavMenu } from '@shopify/app-bridge-react';
 import polarisStyles from '@shopify/polaris/build/esm/styles.css?url';
 import { AppProvider } from '@shopify/shopify-app-remix/react';
 import { boundary } from '@shopify/shopify-app-remix/server';
+import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getShopPlan } from '../lib/plans.server';
 import { authenticate } from '../shopify.server';
 
@@ -17,16 +18,17 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 export default function App() {
   const { apiKey } = useLoaderData<typeof loader>();
+  const embeddedRoute = useEmbeddedRoute();
 
   return (
     <AppProvider isEmbeddedApp apiKey={apiKey}>
       <NavMenu>
-        <Link to="/app" rel="home">
+        <Link to={embeddedRoute('/app')} rel="home">
           Dashboard
         </Link>
-        <Link to="/app/bundles">Bundles</Link>
-        <Link to="/app/volume">Volume discounts</Link>
-        <Link to="/app/settings">Settings</Link>
+        <Link to={embeddedRoute('/app/bundles')}>Bundles</Link>
+        <Link to={embeddedRoute('/app/volume')}>Volume discounts</Link>
+        <Link to={embeddedRoute('/app/settings')}>Settings</Link>
       </NavMenu>
       <Outlet />
     </AppProvider>

@@ -21,6 +21,7 @@ import { authenticate } from '../shopify.server';
 import { getSettings, updateSettings } from '../lib/settings.server';
 import { createAiClient, type AiProvider } from '~/lib/klyna-ai-client';
 import { getShopAiSettings, getTodayUsage, saveShopAiSettings } from '../lib/ai.server';
+import { useEmbeddedRoute } from '../lib/embedded-routes';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
@@ -90,6 +91,7 @@ const PROVIDER_HELP: Record<string, { url: string; hint: string }> = {
 
 export default function Settings() {
   const { settings, aiSettings, usedToday } = useLoaderData<typeof loader>();
+  const embeddedRoute = useEmbeddedRoute();
   const data = useActionData<typeof action>();
   const submit = useSubmit();
   const nav = useNavigation();
@@ -126,7 +128,7 @@ export default function Settings() {
     fd.set('bundleHeading', bundleHeading);
     fd.set('accentColor', accentColor);
     if (showSavingsBadge) fd.set('showSavingsBadge', 'on');
-    submit(fd, { method: 'post' });
+    submit(fd, { method: 'post', action: embeddedRoute('/app/settings') });
   };
 
   const runTest = () => {
@@ -136,13 +138,13 @@ export default function Settings() {
     fd.set('apiKey', apiKey);
     fd.set('model', model);
     fd.set('dailyCap', dailyCap);
-    testFetcher.submit(fd, { method: 'post' });
+    testFetcher.submit(fd, { method: 'post', action: embeddedRoute('/app/settings') });
   };
 
   return (
     <Page
       title="Settings"
-      backAction={{ url: '/app' }}
+      backAction={{ url: embeddedRoute('/app') }}
       primaryAction={{ content: 'Save storefront settings', loading: saving, onAction: save }}
     >
       <Layout>
@@ -233,7 +235,7 @@ export default function Settings() {
                 </Text>
               </BlockStack>
 
-              <Form method="post">
+              <Form method="post" action={embeddedRoute('/app/settings')}>
                 <BlockStack gap="300">
                   <Select
                     label="Provider"

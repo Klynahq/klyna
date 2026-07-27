@@ -14,6 +14,7 @@ import {
 } from '@shopify/polaris';
 import prisma from '../db.server';
 import { getShopInfo } from '../lib/admin.server';
+import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getPlanSelectionUrl, getShopPlan } from '../lib/plans.server';
 import { money } from '../lib/pricing';
 import { authenticate } from '../shopify.server';
@@ -71,6 +72,7 @@ function fmt(amount: number, currency: string) {
 export default function Dashboard() {
   const { shop, currency, metrics, bySource, counts, plan, upgradeUrl, hasData } =
     useLoaderData<typeof loader>();
+  const embeddedRoute = useEmbeddedRoute();
 
   const stats = [
     { label: 'Active bundles', value: String(counts.activeBundles) },
@@ -104,7 +106,7 @@ export default function Dashboard() {
     <Page
       title="Klyna Bundles"
       subtitle={`Connected to ${shop}`}
-      primaryAction={{ content: 'New bundle', url: '/app/bundles/new' }}
+      primaryAction={{ content: 'New bundle', url: embeddedRoute('/app/bundles/new') }}
     >
       <Layout>
         <Layout.Section>
@@ -234,7 +236,7 @@ export default function Dashboard() {
                   <Text as="p" variant="bodyMd" tone="subdued">
                     {t.body}
                   </Text>
-                  <Link to={t.to}>Open</Link>
+                  <Link to={embeddedRoute(t.to)}>Open</Link>
                 </BlockStack>
               </Card>
             ))}

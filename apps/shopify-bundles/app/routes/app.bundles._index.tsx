@@ -16,6 +16,7 @@ import {
   Text,
 } from '@shopify/polaris';
 import prisma from '../db.server';
+import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getPlanSelectionUrl, getShopPlan } from '../lib/plans.server';
 import { type DiscountType, quoteBundle } from '../lib/pricing';
 import { authenticate } from '../shopify.server';
@@ -76,10 +77,11 @@ function statusTone(s: string) {
 export default function BundlesIndex() {
   const { rows, plan, upgradeUrl } = useLoaderData<typeof loader>();
   const fetcher = useFetcher();
+  const embeddedRoute = useEmbeddedRoute();
   const atBundleLimit = rows.length >= plan.maxBundles;
   const newBundleAction = atBundleLimit
     ? undefined
-    : { content: 'New bundle', url: '/app/bundles/new' };
+    : { content: 'New bundle', url: embeddedRoute('/app/bundles/new') };
 
   if (rows.length === 0) {
     return (
@@ -89,7 +91,7 @@ export default function BundlesIndex() {
             <Card>
               <EmptyState
                 heading="Build your first bundle"
-                action={{ content: 'New bundle', url: '/app/bundles/new' }}
+                action={{ content: 'New bundle', url: embeddedRoute('/app/bundles/new') }}
                 image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
               >
                 <p>
@@ -129,7 +131,7 @@ export default function BundlesIndex() {
               renderItem={(b) => (
                 <ResourceItem
                   id={b.id}
-                  url={`/app/bundles/${b.id}`}
+                  url={embeddedRoute(`/app/bundles/${b.id}`)}
                   accessibilityLabel={`Edit ${b.title}`}
                 >
                   <InlineStack align="space-between" blockAlign="center" wrap={false}>
@@ -154,7 +156,7 @@ export default function BundlesIndex() {
                         <Text as="span" variant="bodyMd" fontWeight="semibold">
                           {b.total.toFixed(2)}
                         </Text>
-                        <fetcher.Form method="post">
+                        <fetcher.Form method="post" action={embeddedRoute('/app/bundles')}>
                           <input type="hidden" name="id" value={b.id} />
                           <input type="hidden" name="intent" value="toggle" />
                           <Button size="slim" submit variant="tertiary">

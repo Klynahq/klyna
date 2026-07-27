@@ -21,6 +21,7 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import prisma from '../db.server';
 import { type CatalogProduct, createAutomaticDiscount, searchProducts } from '../lib/admin.server';
+import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getPlanSelectionUrl, getShopPlan, planLimitMessage } from '../lib/plans.server';
 import {
   type DiscountType,
@@ -169,6 +170,7 @@ const SAMPLE_PRICE = 20;
 
 export default function VolumeDiscounts() {
   const { groups, plan, upgradeUrl } = useLoaderData<typeof loader>();
+  const embeddedRoute = useEmbeddedRoute();
   const searchFetcher = useFetcher<{ products: CatalogProduct[] }>();
   const saveFetcher = useFetcher<{ ok: boolean; error?: string }>();
 
@@ -183,14 +185,16 @@ export default function VolumeDiscounts() {
   const submitSearch = searchFetcher.submit;
 
   useEffect(() => {
+    if (!plan.canUseVolume) return;
+
     const h = setTimeout(() => {
       const fd = new FormData();
       fd.set('intent', 'search');
       fd.set('query', query);
-      submitSearch(fd, { method: 'post' });
+      submitSearch(fd, { method: 'post', action: embeddedRoute('/app/volume') });
     }, 250);
     return () => clearTimeout(h);
-  }, [query, submitSearch]);
+  }, [embeddedRoute, plan.canUseVolume, query, submitSearch]);
 
   const setTier = (i: number, patch: Partial<DraftTier>) =>
     setTiers((prev) => prev.map((t, idx) => (idx === i ? { ...t, ...patch } : t)));
@@ -239,7 +243,7 @@ export default function VolumeDiscounts() {
     fd.set('intent', 'save');
     fd.set('product', JSON.stringify(product));
     fd.set('tiers', JSON.stringify(tiers));
-    saveFetcher.submit(fd, { method: 'post' });
+    saveFetcher.submit(fd, { method: 'post', action: embeddedRoute('/app/volume') });
   };
 
   const saving = saveFetcher.state !== 'idle';
@@ -250,14 +254,14 @@ export default function VolumeDiscounts() {
     const fd = new FormData();
     fd.set('intent', 'deleteProduct');
     fd.set('productGid', productGid);
-    saveFetcher.submit(fd, { method: 'post' });
+    saveFetcher.submit(fd, { method: 'post', action: embeddedRoute('/app/volume') });
   };
 
   if (!plan.canUseVolume) {
     return (
       <Page
         title="Volume discounts"
-        backAction={{ url: '/app' }}
+        backAction={{ url: embeddedRoute('/app') }}
         subtitle="Buy more, save more — quantity break tiers."
       >
         <Layout>
@@ -280,7 +284,7 @@ export default function VolumeDiscounts() {
   return (
     <Page
       title="Volume discounts"
-      backAction={{ url: '/app' }}
+      backAction={{ url: embeddedRoute('/app') }}
       subtitle="Buy more, save more — quantity break tiers."
     >
       <Layout>
