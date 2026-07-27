@@ -6,6 +6,10 @@ import prisma from '../db.server';
 // compliance topics here (customers/data_request, customers/redact, shop/redact)
 // when the app is configured with `compliance_topics` in shopify.app.toml.
 export const action = async ({ request }: ActionFunctionArgs) => {
+  if (!request.headers.get('x-shopify-hmac-sha256')) {
+    return new Response(undefined, { status: 401, statusText: 'Unauthorized' });
+  }
+
   const { shop, topic, payload } = await authenticate.webhook(request);
   console.log(`[GDPR] ${topic} received for ${shop}`);
 
