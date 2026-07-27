@@ -6,6 +6,10 @@ import prisma from '../db.server';
 // Delete all rows for the shop across every Prisma model, including the
 // session rows so the install is fully purged.
 export const action = async ({ request }: ActionFunctionArgs) => {
+  if (!request.headers.get('x-shopify-hmac-sha256')) {
+    return new Response(undefined, { status: 401, statusText: 'Unauthorized' });
+  }
+
   const { shop, topic } = await authenticate.webhook(request);
   console.log(`Received ${topic} webhook for ${shop}`);
 
