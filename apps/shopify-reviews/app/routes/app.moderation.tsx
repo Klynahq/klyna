@@ -19,6 +19,7 @@ import {
 import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
 import { refreshProductRating } from '../lib/reviews.server';
+import { useEmbeddedRoute } from '../lib/embedded-routes';
 
 const TABS = [
   { id: 'pending', content: 'Pending' },
@@ -122,6 +123,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 };
 
 export default function Moderation() {
+  const embeddedRoute = useEmbeddedRoute();
   const { status, reviews, counts } = useLoaderData<typeof loader>();
   const data = useActionData<typeof action>();
   const nav = useNavigation();
@@ -137,7 +139,7 @@ export default function Moderation() {
   }));
 
   return (
-    <Page title="Moderation" subtitle="Approve, reply to, or reject incoming reviews" backAction={{ url: '/app' }}>
+    <Page title="Moderation" subtitle="Approve, reply to, or reject incoming reviews" backAction={{ url: embeddedRoute('/app') }}>
       <Layout>
         <Layout.Section>
           <Card padding="0">

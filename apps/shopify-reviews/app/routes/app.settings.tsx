@@ -21,6 +21,7 @@ import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
 import { createAiClient, type AiProvider } from '~/lib/klyna-ai-client';
 import { getShopAiSettings, getTodayUsage, saveShopAiSettings } from '../lib/ai.server';
+import { useEmbeddedRoute } from '../lib/embedded-routes';
 
 const DEFAULTS = {
   autoPublish: false,
@@ -117,6 +118,7 @@ const PROVIDER_HELP: Record<string, { url: string; hint: string }> = {
 };
 
 export default function SettingsPage() {
+  const embeddedRoute = useEmbeddedRoute();
   const { settings, ai, usedToday } = useLoaderData<typeof loader>();
   const data = useActionData<typeof action>();
   const nav = useNavigation();
@@ -166,7 +168,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <Page title="Settings" backAction={{ url: '/app' }}>
+    <Page title="Settings" backAction={{ url: embeddedRoute('/app') }}>
       <Layout>
         {savedReviews && (
           <Layout.Section>

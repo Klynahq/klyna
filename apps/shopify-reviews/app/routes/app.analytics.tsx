@@ -16,6 +16,7 @@ import {
 import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
 import { roundRating } from '../lib/reviews.server';
+import { useEmbeddedRoute } from '../lib/embedded-routes';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
@@ -90,6 +91,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export default function Analytics() {
+  const embeddedRoute = useEmbeddedRoute();
   const a = useLoaderData<typeof loader>();
   const maxTrend = Math.max(1, ...a.trend.map(([, v]) => v));
   const totalDist = Math.max(1, a.distribution.reduce((x, y) => x + y, 0));
@@ -102,7 +104,7 @@ export default function Analytics() {
   ];
 
   return (
-    <Page title="Analytics" subtitle="Rating trends, response rate, and photo coverage" backAction={{ url: '/app' }}>
+    <Page title="Analytics" subtitle="Rating trends, response rate, and photo coverage" backAction={{ url: embeddedRoute('/app') }}>
       <Layout>
         <Layout.Section>
           <InlineGrid columns={{ xs: 2, md: 4 }} gap="300">

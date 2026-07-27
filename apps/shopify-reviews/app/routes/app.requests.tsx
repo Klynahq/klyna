@@ -3,6 +3,7 @@ import { useLoaderData } from '@remix-run/react';
 import { Badge, BlockStack, Card, Layout, Page, Text } from '@shopify/polaris';
 import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
+import { useEmbeddedRoute } from '../lib/embedded-routes';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
@@ -11,13 +12,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export default function Requests() {
+  const embeddedRoute = useEmbeddedRoute();
   const { savedRequestCount } = useLoaderData<typeof loader>();
 
   return (
     <Page
       title="Review requests"
       subtitle="Approval-gated buyer email automation"
-      backAction={{ url: '/app' }}
+      backAction={{ url: embeddedRoute('/app') }}
     >
       <Layout>
         <Layout.Section>

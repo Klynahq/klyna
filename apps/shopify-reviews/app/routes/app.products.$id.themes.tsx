@@ -21,6 +21,7 @@ import {
 import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
 import { getAiClientForShop, getShopAiSettings } from '../lib/ai.server';
+import { useEmbeddedRoute } from '../lib/embedded-routes';
 
 const TEXT_CAP = 8000;
 const CACHE_TTL_SECONDS = 60 * 60 * 24;
@@ -187,6 +188,7 @@ export const action = async (args: ActionFunctionArgs) => {
 
 export default function ProductThemes() {
   const { productTitle, reviewCount, aiEnabled, aiProvider } = useLoaderData<typeof loader>();
+  const embeddedRoute = useEmbeddedRoute();
   const data = useActionData<typeof action>();
   const nav = useNavigation();
   const running = nav.state === 'submitting';
@@ -195,7 +197,7 @@ export default function ProductThemes() {
     <Page
       title="Review themes"
       subtitle={productTitle}
-      backAction={{ url: '/app' }}
+      backAction={{ url: embeddedRoute('/app') }}
     >
       <Layout>
         <Layout.Section>
@@ -222,7 +224,7 @@ export default function ProductThemes() {
                     then come back here.
                   </Text>
                   <Box paddingBlockStart="200">
-                    <RemixLink to="/app/settings">Open Settings</RemixLink>
+                    <RemixLink to={embeddedRoute('/app/settings')}>Open Settings</RemixLink>
                   </Box>
                 </Banner>
               )}

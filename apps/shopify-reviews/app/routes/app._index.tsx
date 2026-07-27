@@ -15,6 +15,7 @@ import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
 import { roundRating } from '../lib/reviews.server';
 import { getShopAiSettings } from '../lib/ai.server';
+import { useEmbeddedRoute } from '../lib/embedded-routes';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
@@ -67,6 +68,7 @@ function statusTone(status: string): 'attention' | 'success' | 'critical' | 'inf
 
 export default function Dashboard() {
   const { shop, stats, recent, aiEnabled, aiProvider, topProductId } = useLoaderData<typeof loader>();
+  const embeddedRoute = useEmbeddedRoute();
 
   const themesTo = topProductId
     ? `/app/products/${encodeURIComponent(topProductId)}/themes`
@@ -154,7 +156,7 @@ export default function Dashboard() {
                     {t.badge && <Badge tone="attention">{t.badge}</Badge>}
                   </InlineStack>
                   <Text as="p" variant="bodyMd" tone="subdued">{t.body}</Text>
-                  <Link to={t.to}>Open</Link>
+                  <Link to={embeddedRoute(t.to)}>Open</Link>
                 </BlockStack>
               </Card>
             ))}
