@@ -3,6 +3,7 @@ import { Form, useActionData, useLoaderData, useNavigation, useSearchParams } fr
 import { useCallback } from 'react';
 import {
   Badge,
+  Banner,
   BlockStack,
   Button,
   Card,
@@ -18,6 +19,7 @@ import {
 import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
+import { getShopPlan, planSelectionUrl } from '../lib/plans.server';
 
 type StatusFilter = 'ALL' | 'PENDING' | 'NOTIFIED' | 'CANCELLED';
 
@@ -38,15 +40,20 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url);
   const filter = (url.searchParams.get('status') as StatusFilter) ?? 'ALL';
 
-  const subscribers = await prisma.subscription.findMany({
-    where: statusWhere(shop, TABS.some((t) => t.id === filter) ? filter : 'ALL'),
-    orderBy: { createdAt: 'desc' },
-    take: 250,
-  });
+  const [subscribers, planHandle] = await Promise.all([
+    prisma.subscription.findMany({
+      where: statusWhere(shop, TABS.some((t) => t.id === filter) ? filter : 'ALL'),
+      orderBy: { createdAt: 'desc' },
+      take: 250,
+    }),
+    getShopPlan(shop),
+  ]);
 
   return {
     shop,
     filter,
+    planHandle,
+    pricingUrl: planSelectionUrl(shop),
     subscribers: subscribers.map((s) => ({
       id: s.id,
       contact: s.channel === 'EMAIL' ? s.email : s.phone,
@@ -84,6 +91,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 
   if (intent === 'export') {
+    if ((await getShopPlan(shop)) !== 'growth') {
+      return json(
+        { ok: false, message: 'CSV export is available on the Growth plan.' },
+        { status: 403 },
+      );
+    }
     const filter = (String(form.get('status') ?? 'ALL') as StatusFilter);
     const rows = await prisma.subscription.findMany({
       where: statusWhere(shop, TABS.some((t) => t.id === filter) ? filter : 'ALL'),
@@ -127,7 +140,7 @@ function csvCell(value: string | null): string {
 
 export default function Subscribers() {
   const embeddedRoute = useEmbeddedRoute();
-  const { subscribers, filter } = useLoaderData<typeof loader>();
+  const { subscribers, filter, planHandle, pricingUrl } = useLoaderData<typeof loader>();
   const data = useActionData<typeof action>();
   const nav = useNavigation();
   const { smUp } = useBreakpoints();
@@ -160,6 +173,20 @@ export default function Subscribers() {
       backAction={{ url: embeddedRoute('/app') }}
     >
       <Layout>
+        {planHandle === 'free' && (
+          <Layout.Section>
+            <Banner
+              tone="info"
+              title="Free plan: up to 50 active waitlist subscribers"
+              action={{ content: 'View Growth plan', url: pricingUrl }}
+            >
+              <Text as="p">
+                Upgrade for unlimited active subscribers, CSV export, SMS capture,
+                and smart timing.
+              </Text>
+            </Banner>
+          </Layout.Section>
+        )}
         <Layout.Section>
           <Card>
             <InlineStack align="space-between" blockAlign="center" gap="300">
@@ -169,7 +196,7 @@ export default function Subscribers() {
               <Form method="post" reloadDocument>
                 <input type="hidden" name="intent" value="export" />
                 <input type="hidden" name="status" value={filter} />
-                <Button submit>Export CSV</Button>
+                <Button submit disabled={planHandle !== 'growth'}>Export CSV</Button>
               </Form>
             </InlineStack>
           </Card>

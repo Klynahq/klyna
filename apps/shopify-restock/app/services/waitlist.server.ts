@@ -7,6 +7,10 @@
 // the per-shop resend window so a flapping inventory feed can't spam shoppers.
 
 import prisma from '../db.server';
+import {
+  FREE_ACTIVE_SUBSCRIBER_LIMIT,
+  getShopPlan,
+} from '../lib/plans.server';
 import { deliver } from './notifier.server';
 import { decideSendTime } from '../lib/smart-timing.server';
 
@@ -213,6 +217,19 @@ export async function recordSignup(input: SignupInput): Promise<SignupResult> {
       });
     }
     return { ok: true, alreadySubscribed: true };
+  }
+
+  const planHandle = await getShopPlan(input.shop);
+  if (planHandle === 'free') {
+    const activeCount = await prisma.subscription.count({
+      where: { shop: input.shop, status: 'PENDING' },
+    });
+    if (activeCount >= FREE_ACTIVE_SUBSCRIBER_LIMIT) {
+      return {
+        ok: false,
+        error: 'This waitlist is currently full. Please contact the store for help.',
+      };
+    }
   }
 
   await prisma.subscription.create({

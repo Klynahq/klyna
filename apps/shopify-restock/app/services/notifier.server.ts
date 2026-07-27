@@ -1,11 +1,9 @@
 // Klyna Back-in-Stock — alert delivery.
 //
 // One job: take a queued Alert row and actually send it. Email goes through
-// Resend, SMS through Twilio. Both providers are optional — if the relevant
-// env vars are missing we run in "log only" mode (the Alert still gets a SENT
-// timestamp so the rest of the pipeline behaves identically in dev). Swap the
-// fetch calls here if you prefer Postmark / SendGrid / MessageBird; the shape
-// the rest of the app depends on is just `deliver()` returning DeliveryResult.
+// Resend, SMS through Twilio. Missing credentials are allowed only in local
+// development. Production must return a visible delivery failure so the app
+// never marks an alert as sent when no provider actually received it.
 
 export type DeliveryResult =
   | { ok: true; provider: string }
@@ -72,8 +70,11 @@ async function deliverEmail(payload: AlertPayload): Promise<DeliveryResult> {
   const { subject, html, text } = buildEmail(payload);
 
   if (!apiKey) {
-    console.log(`[notifier] (log only) email → ${payload.recipient}: ${subject}`);
-    return { ok: true, provider: 'log' };
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[notifier] (log only) email → ${payload.recipient}: ${subject}`);
+      return { ok: true, provider: 'log' };
+    }
+    return { ok: false, error: 'Email delivery is not configured.' };
   }
 
   try {
@@ -107,8 +108,11 @@ async function deliverSms(payload: AlertPayload): Promise<DeliveryResult> {
   const body = buildSms(payload);
 
   if (!sid || !token || !from) {
-    console.log(`[notifier] (log only) sms → ${payload.recipient}: ${body}`);
-    return { ok: true, provider: 'log' };
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[notifier] (log only) sms → ${payload.recipient}: ${body}`);
+      return { ok: true, provider: 'log' };
+    }
+    return { ok: false, error: 'SMS delivery is not configured.' };
   }
 
   try {

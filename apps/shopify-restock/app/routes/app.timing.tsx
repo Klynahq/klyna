@@ -33,12 +33,16 @@ import {
   decideSendTime,
   timezoneForCountry,
 } from '../lib/smart-timing.server';
+import { getShopPlan, planSelectionUrl } from '../lib/plans.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
   const shop = session.shop;
-  const settings = await getShopSettings(shop);
-  const ai = await getShopAiSettings(shop);
+  const [settings, ai, planHandle] = await Promise.all([
+    getShopSettings(shop),
+    getShopAiSettings(shop),
+    getShopPlan(shop),
+  ]);
 
   const [queueCount, queuedSample, recentSent] = await Promise.all([
     prisma.queuedNotification.count({ where: { shop, status: 'QUEUED' } }),
@@ -52,6 +56,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   return {
     shop,
+    planHandle,
+    pricingUrl: planSelectionUrl(shop),
     enabled: settings.smartTimingEnabled,
     aiOff: ai.provider === 'off',
     queueCount,
@@ -80,6 +86,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   if (intent === 'toggle') {
     const enabled = form.get('enabled') === 'true';
+    if (enabled && (await getShopPlan(shop)) !== 'growth') {
+      return json(
+        { ok: false, planError: 'Smart timing is available on the Growth plan.' },
+        { status: 403 },
+      );
+    }
     await prisma.shopSettings.upsert({
       where: { shop },
       update: { smartTimingEnabled: enabled },
@@ -130,8 +142,16 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 export default function Timing() {
   const embeddedRoute = useEmbeddedRoute();
-  const { enabled, aiOff, queueCount, recentSent, queuedSample, window: w } =
-    useLoaderData<typeof loader>();
+  const {
+    enabled,
+    aiOff,
+    queueCount,
+    recentSent,
+    queuedSample,
+    window: w,
+    planHandle,
+    pricingUrl,
+  } = useLoaderData<typeof loader>();
   const data = useActionData<typeof action>();
   const nav = useNavigation();
   const submit = useSubmit();
@@ -173,6 +193,20 @@ export default function Timing() {
       backAction={{ url: embeddedRoute('/app') }}
     >
       <Layout>
+        {planHandle === 'free' && (
+          <Layout.Section>
+            <Banner
+              tone="info"
+              title="Smart timing is included with Growth"
+              action={{ content: 'View Growth plan', url: pricingUrl }}
+            >
+              <Text as="p">
+                Preview the routing rule below, then upgrade to queue alerts for
+                each shopper's local daytime.
+              </Text>
+            </Banner>
+          </Layout.Section>
+        )}
         {aiOff && (
           <Layout.Section>
             <Banner tone="info" title="Enable AI in Settings">
@@ -202,7 +236,7 @@ export default function Timing() {
                 label="Enable smart timing"
                 checked={on}
                 onChange={toggle}
-                disabled={busy}
+                disabled={busy || planHandle !== 'growth'}
                 helpText="Off: alerts fire the instant inventory returns, regardless of recipient's local time."
               />
             </BlockStack>

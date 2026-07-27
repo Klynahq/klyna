@@ -7,7 +7,6 @@ import {
   Box,
   Button,
   Card,
-  Checkbox,
   FormLayout,
   InlineStack,
   Layout,
@@ -23,13 +22,29 @@ import prisma from '../db.server';
 import { createAiClient, type AiProvider } from '~/lib/klyna-ai-client';
 import { getShopAiSettings, getTodayUsage, saveShopAiSettings } from '../lib/ai.server';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
+import { getShopPlan, planSelectionUrl } from '../lib/plans.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
   const settings = await getShopSettings(session.shop);
   const ai = await getShopAiSettings(session.shop);
   const usedToday = await getTodayUsage(session.shop);
-  return { settings, ai, usedToday };
+  const planHandle = await getShopPlan(session.shop);
+  const storeHandle = session.shop.replace(/\.myshopify\.com$/i, '');
+  return {
+    settings,
+    ai,
+    usedToday,
+    planHandle,
+    pricingUrl: planSelectionUrl(session.shop),
+    themeEditorUrl: `https://admin.shopify.com/store/${storeHandle}/themes/current/editor`,
+    emailDeliveryConfigured: Boolean(process.env.RESEND_API_KEY),
+    smsDeliveryConfigured: Boolean(
+      process.env.TWILIO_ACCOUNT_SID &&
+        process.env.TWILIO_AUTH_TOKEN &&
+        process.env.TWILIO_FROM_NUMBER,
+    ),
+  };
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -39,6 +54,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const intent = String(form.get('intent') ?? 'save');
 
   if (intent === 'ai-test') {
+    if ((await getShopPlan(shop)) !== 'growth') {
+      return json(
+        { planError: 'AI assistance is available on the Growth plan.' },
+        { status: 403 },
+      );
+    }
     const provider = String(form.get('provider') ?? 'off') as AiProvider;
     const apiKey = String(form.get('apiKey') ?? '').trim() || undefined;
     const model = String(form.get('model') ?? '').trim() || undefined;
@@ -48,6 +69,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 
   if (intent === 'ai-save') {
+    if ((await getShopPlan(shop)) !== 'growth') {
+      return json(
+        { planError: 'AI assistance is available on the Growth plan.' },
+        { status: 403 },
+      );
+    }
     const provider = String(form.get('provider') ?? 'off') as AiProvider;
     const apiKey = String(form.get('apiKey') ?? '').trim() || undefined;
     const model = String(form.get('model') ?? '').trim() || undefined;
@@ -56,19 +83,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     return json({ aiSaved: true });
   }
 
-  const buttonLabel = String(form.get('buttonLabel') ?? '').trim() || 'Notify me when available';
-  const successMessage =
-    String(form.get('successMessage') ?? '').trim() ||
-    "You're on the list - we'll email you the moment it's back.";
-  const collectPhone = form.get('collectPhone') === 'true';
-  const requireConsent = form.get('requireConsent') === 'true';
   const alertsEnabled = form.get('alertsEnabled') === 'true';
   const resendGuardHours = clampInt(Number(form.get('resendGuardHours')), 0, 720, 24);
 
   await prisma.shopSettings.upsert({
     where: { shop },
-    update: { buttonLabel, successMessage, collectPhone, requireConsent, alertsEnabled, resendGuardHours },
-    create: { shop, buttonLabel, successMessage, collectPhone, requireConsent, alertsEnabled, resendGuardHours },
+    update: { alertsEnabled, resendGuardHours },
+    create: { shop, alertsEnabled, resendGuardHours },
   });
 
   return json({ ok: true });
@@ -102,7 +123,16 @@ const PROVIDER_HELP: Record<string, { url: string; hint: string }> = {
 };
 
 export default function Settings() {
-  const { settings, ai, usedToday } = useLoaderData<typeof loader>();
+  const {
+    settings,
+    ai,
+    usedToday,
+    planHandle,
+    pricingUrl,
+    themeEditorUrl,
+    emailDeliveryConfigured,
+    smsDeliveryConfigured,
+  } = useLoaderData<typeof loader>();
   const embeddedRoute = useEmbeddedRoute();
   const data = useActionData<typeof action>();
   const nav = useNavigation();
@@ -111,10 +141,6 @@ export default function Settings() {
   const saving = nav.state === 'submitting';
   const testing = testFetcher.state === 'submitting';
 
-  const [buttonLabel, setButtonLabel] = useState(settings.buttonLabel);
-  const [successMessage, setSuccessMessage] = useState(settings.successMessage);
-  const [collectPhone, setCollectPhone] = useState(settings.collectPhone);
-  const [requireConsent, setRequireConsent] = useState(settings.requireConsent);
   const [alertsEnabled, setAlertsEnabled] = useState(settings.alertsEnabled);
   const [resendGuardHours, setResendGuardHours] = useState(String(settings.resendGuardHours));
 
@@ -126,10 +152,6 @@ export default function Settings() {
   const handleSave = () => {
     const fd = new FormData();
     fd.set('intent', 'save');
-    fd.set('buttonLabel', buttonLabel);
-    fd.set('successMessage', successMessage);
-    fd.set('collectPhone', String(collectPhone));
-    fd.set('requireConsent', String(requireConsent));
     fd.set('alertsEnabled', String(alertsEnabled));
     fd.set('resendGuardHours', resendGuardHours);
     submit(fd, { method: 'post' });
@@ -141,6 +163,7 @@ export default function Settings() {
       : null;
   const aiSaved = data && 'aiSaved' in data ? data.aiSaved : false;
   const settingsSaved = data && 'ok' in data ? data.ok : false;
+  const planError = data && 'planError' in data ? data.planError : null;
   const help = PROVIDER_HELP[provider];
 
   const runTest = () => {
@@ -166,39 +189,45 @@ export default function Settings() {
           </Layout.Section>
         )}
 
+        {!emailDeliveryConfigured && (
+          <Layout.Section>
+            <Banner tone="critical" title="Email delivery is not configured">
+              <Text as="p">
+                Waitlist capture works, but email alerts will be recorded as failed
+                until Klyna connects its production email provider.
+              </Text>
+            </Banner>
+          </Layout.Section>
+        )}
+
+        {planHandle === 'free' && (
+          <Layout.Section>
+            <Banner
+              tone="info"
+              title="Free plan"
+              action={{ content: 'View Growth plan', url: pricingUrl }}
+            >
+              <Text as="p">
+                Growth unlocks unlimited active subscribers, CSV export, SMS
+                capture, smart timing, and AI assistance.
+              </Text>
+            </Banner>
+          </Layout.Section>
+        )}
+
         <Layout.Section>
           <Card>
             <BlockStack gap="400">
               <Text as="h2" variant="headingMd">Storefront widget</Text>
-              <FormLayout>
-                <TextField
-                  label="Button label"
-                  value={buttonLabel}
-                  onChange={setButtonLabel}
-                  autoComplete="off"
-                  helpText="Shown on sold-out variants in your theme."
-                />
-                <TextField
-                  label="Success message"
-                  value={successMessage}
-                  onChange={setSuccessMessage}
-                  autoComplete="off"
-                  multiline={2}
-                  helpText="Confirmation shown after a shopper signs up."
-                />
-                <Checkbox
-                  label="Collect phone number for SMS alerts"
-                  checked={collectPhone}
-                  onChange={setCollectPhone}
-                  helpText="Adds a phone field alongside email. Requires Twilio credentials to deliver."
-                />
-                <Checkbox
-                  label="Require explicit marketing consent"
-                  checked={requireConsent}
-                  onChange={setRequireConsent}
-                  helpText="Adds a consent checkbox the shopper must tick before subscribing."
-                />
-              </FormLayout>
+              <Text as="p" tone="subdued">
+                Shopify stores button copy, consent, phone capture, and accent
+                color inside the Klyna Notify me theme block. Edit those settings
+                directly in your product template so the preview always matches
+                the live storefront.
+              </Text>
+              <InlineStack>
+                <Button url={themeEditorUrl} target="_top">Open theme editor</Button>
+              </InlineStack>
             </BlockStack>
           </Card>
         </Layout.Section>
@@ -229,10 +258,10 @@ export default function Settings() {
                 />
               </FormLayout>
               <Text as="p" variant="bodySm" tone="subdued">
-                Email is delivered via Resend and SMS via Twilio when their API keys
-                are set in the environment. Without keys, Klyna runs in log-only
-                mode - every alert is still recorded so the pipeline behaves
-                identically in development.
+                Email provider: {emailDeliveryConfigured ? 'configured' : 'not configured'}.
+                {' '}SMS provider: {smsDeliveryConfigured ? 'configured' : 'not configured'}.
+                Failed deliveries remain visible in the dashboard and can be retried
+                after the provider issue is fixed.
               </Text>
             </BlockStack>
           </Card>
@@ -259,6 +288,7 @@ export default function Settings() {
                     value={provider}
                     onChange={setProvider}
                     name="provider"
+                    disabled={planHandle !== 'growth'}
                   />
 
                   {provider !== 'off' && (
@@ -270,6 +300,7 @@ export default function Settings() {
                         onChange={setApiKey}
                         name="apiKey"
                         autoComplete="off"
+                        disabled={planHandle !== 'growth'}
                         helpText={
                           help ? (
                             <>
@@ -285,6 +316,7 @@ export default function Settings() {
                         onChange={setModel}
                         name="model"
                         autoComplete="off"
+                        disabled={planHandle !== 'growth'}
                         helpText="Leave blank to use the recommended default for this provider."
                       />
                       <TextField
@@ -296,17 +328,28 @@ export default function Settings() {
                         autoComplete="off"
                         min={1}
                         max={10000}
+                        disabled={planHandle !== 'growth'}
                         helpText={`Used today: ${usedToday} requests. Resets at 00:00 UTC.`}
                       />
                     </>
                   )}
 
                   <InlineStack gap="200">
-                    <Button submit variant="primary" loading={saving}>
+                    <Button
+                      submit
+                      variant="primary"
+                      loading={saving}
+                      disabled={planHandle !== 'growth'}
+                    >
                       Save AI settings
                     </Button>
                     {provider !== 'off' && (
-                      <Button onClick={runTest} loading={testing} variant="secondary">
+                      <Button
+                        onClick={runTest}
+                        loading={testing}
+                        variant="secondary"
+                        disabled={planHandle !== 'growth'}
+                      >
                         Test connection
                       </Button>
                     )}
@@ -316,6 +359,9 @@ export default function Settings() {
               </Form>
 
               {aiSaved && <Banner tone="success" title="AI settings saved" />}
+              {typeof planError === 'string' && planError && (
+                <Banner tone="critical" title={planError} />
+              )}
               {testResult && (
                 <Banner
                   tone={testResult.ok ? 'success' : 'critical'}

@@ -118,6 +118,7 @@ model VariantSnapshot {
 // Per-shop configuration for the widget + delivery behavior.
 model ShopSettings {
   shop            String   @id
+  planHandle      String   @default("free") // free | growth
   // Storefront widget copy / behavior.
   buttonLabel     String   @default("Notify me when available")
   successMessage  String   @default("You're on the list — we'll email you the moment it's back.")

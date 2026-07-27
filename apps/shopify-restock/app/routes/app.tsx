@@ -6,12 +6,18 @@ import { NavMenu } from '@shopify/app-bridge-react';
 import polarisStyles from '@shopify/polaris/build/esm/styles.css?url';
 import { authenticate } from '../shopify.server';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
+import { planSelectionUrl, syncPlanFromRequest } from '../lib/plans.server';
 
 export const links = () => [{ rel: 'stylesheet', href: polarisStyles }];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  await authenticate.admin(request);
-  return { apiKey: process.env.SHOPIFY_API_KEY ?? '' };
+  const { session } = await authenticate.admin(request);
+  const planHandle = await syncPlanFromRequest(session.shop, request);
+  return {
+    apiKey: process.env.SHOPIFY_API_KEY ?? '',
+    planHandle,
+    pricingUrl: planSelectionUrl(session.shop),
+  };
 };
 
 export default function App() {
