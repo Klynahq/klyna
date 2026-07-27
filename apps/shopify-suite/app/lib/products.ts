@@ -79,7 +79,7 @@ export const products: Record<ProductKey, ProductDefinition> = {
     listingPositioning:
       'SEO-safe URL monitoring for product deletions, migrations, and content changes.',
     paidValue:
-      'Starter includes redirect audits, saved scan history, current findings, and a practical fix playbook for launch and migration QA.',
+      'Starter includes URL-loss baselines, redirect-map risk detection, destination validation, guarded redirect creation, CSV export, and a timestamped change log.',
   },
   'pixel-doctor': {
     key: 'pixel-doctor',

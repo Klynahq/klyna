@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Klyna Redirect Guard review walkthrough</title>
+  <style>
+    body {
+      margin: 0;
+      background: #0b0b0f;
+      color: #f4f4f5;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 48px 24px 64px;
+    }
+    h1 {
+      margin: 0 0 12px;
+      font-size: 44px;
+      line-height: 1.05;
+    }
+    h2 {
+      margin: 36px 0 12px;
+      font-size: 28px;
+    }
+    p,
+    li {
+      color: #d4d4d8;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+    .media {
+      margin: 28px 0;
+      overflow: hidden;
+      border: 1px solid rgba(244, 244, 245, .14);
+      border-radius: 12px;
+      background: #14141d;
+    }
+    img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    .steps {
+      display: grid;
+      gap: 12px;
+      padding: 0;
+      list-style-position: inside;
+    }
+    a {
+      color: #a78bfa;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Klyna Redirect Guard review walkthrough</h1>
+    <p>This public walkthrough shows the reviewer the core merchant workflow for Klyna Redirect Guard.</p>
+    <div class="media">
+      <img
+        src="./redirect-guard-screencast.gif"
+        alt="Animated walkthrough of the Klyna Redirect Guard dashboard, scan history, and fix playbook"
+      />
+    </div>
+    <h2>Redirect creation verified</h2>
+    <p>
+      This production test created <strong>/klyna-review-proof-20260728</strong>
+      and pointed it to the live storefront home page. The new redirect appears
+      in both Shopify's redirect map and Klyna's timestamped change log.
+    </p>
+    <div class="media">
+      <img
+        src="./redirect-created-proof.png"
+        alt="Klyna Redirect Guard showing a newly created Shopify redirect and timestamped change log entry"
+      />
+    </div>
+    <ol class="steps">
+      <li>Install Klyna Redirect Guard on a development store.</li>
+      <li>Open the embedded app from the store admin.</li>
+      <li>Approve the Starter test billing plan when prompted.</li>
+      <li>Click Audit redirects on the dashboard.</li>
+      <li>Open Fix playbook and enter an unused retired source path.</li>
+      <li>Enter <strong>/</strong> as the safe live destination.</li>
+      <li>Check the explicit review confirmation, then click Validate and create redirect.</li>
+      <li>Confirm the redirect appears in Existing redirect map and Klyna change log.</li>
+      <li>No separate Klyna account is required.</li>
+    </ol>
+    <p>Support: <a href="mailto:hi@klyna.dev">hi@klyna.dev</a></p>
+  </main>
+</body>
+</html>
