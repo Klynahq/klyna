@@ -3,7 +3,7 @@
 client_id = "7cede999b6d21fcbcabf544952de3c48"
 name = "Klyna Upsell"
 handle = "klyna-upsell"
-application_url = "https://klyna-upsell.vercel.app/app"
+application_url = "https://klyna-shopify-upsell.vercel.app/app"
 embedded = true
 
 [access_scopes]
@@ -12,9 +12,9 @@ scopes = "read_discounts,read_inventory,read_products,write_discounts"
 
 [auth]
 redirect_urls = [
-  "https://klyna-upsell.vercel.app/auth/callback",
-  "https://klyna-upsell.vercel.app/auth/shopify/callback",
-  "https://klyna-upsell.vercel.app/api/auth/callback"
+  "https://klyna-shopify-upsell.vercel.app/auth/callback",
+  "https://klyna-shopify-upsell.vercel.app/auth/shopify/callback",
+  "https://klyna-shopify-upsell.vercel.app/api/auth/callback"
 ]
 
 [webhooks]

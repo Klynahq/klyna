@@ -6,6 +6,10 @@ import prisma from '../db.server';
 // Fires 48 hours after app uninstall. Delete every row associated with
 // the shop across all Prisma models, including sessions.
 export const action = async ({ request }: ActionFunctionArgs) => {
+  if (!request.headers.get('x-shopify-hmac-sha256')) {
+    return new Response(undefined, { status: 401, statusText: 'Unauthorized' });
+  }
+
   const { shop, topic } = await authenticate.webhook(request);
   console.log(`Received ${topic} webhook for ${shop} — purging shop data`);
 

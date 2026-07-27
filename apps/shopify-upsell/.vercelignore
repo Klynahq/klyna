@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.example
+!.env.sample
+node_modules
+build
+.cache
+.shopify
+.vercel
+.DS_Store
+*.sqlite
+*.sqlite-journal
