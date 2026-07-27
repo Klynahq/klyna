@@ -23,19 +23,19 @@ api_version = "2026-04"
 
   [[webhooks.subscriptions]]
   topics = ["app/uninstalled"]
-  uri = "/webhooks/app/uninstalled"
+  uri = "https://klyna-reviews-app.vercel.app/webhooks/app/uninstalled"
 
   [[webhooks.subscriptions]]
   compliance_topics = ["customers/data_request"]
-  uri = "/webhooks/customers/data_request"
+  uri = "https://klyna-reviews-app.vercel.app/webhooks/customers/data_request"
 
   [[webhooks.subscriptions]]
   compliance_topics = ["customers/redact"]
-  uri = "/webhooks/customers/redact"
+  uri = "https://klyna-reviews-app.vercel.app/webhooks/customers/redact"
 
   [[webhooks.subscriptions]]
   compliance_topics = ["shop/redact"]
-  uri = "/webhooks/shop/redact"
+  uri = "https://klyna-reviews-app.vercel.app/webhooks/shop/redact"
 
 [access_scopes]
 # read_products      — resolve product titles/handles/images for the widget
