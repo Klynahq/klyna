@@ -15,7 +15,7 @@ Restock alerts & waitlists that recover sold-out demand.
 
 ## Short description (≤ 120 chars)
 
-Add a “Notify me” button to sold-out variants, capture email & SMS, and auto-alert shoppers the moment stock returns.
+Add a “Notify me” button to sold-out variants, capture email waitlists, and alert shoppers when stock returns.
 
 ---
 
@@ -31,9 +31,9 @@ Drop the Klyna app block into your product template from the theme editor — no
 code, no liquid edits. It appears automatically *only* when the selected variant
 is sold out, and follows the customer’s variant selection in real time.
 
-**Capture email and SMS interest.**
-Collect email by default and phone numbers for SMS when you want them. Add an
-optional consent checkbox to stay compliant.
+**Capture email waitlists.**
+Collect shopper emails the moment a variant sells out. Add an optional consent
+checkbox when your store requires it.
 
 **Automatic restock alerts.**
 The moment you restock, Klyna detects it via Shopify’s inventory webhook and
@@ -42,7 +42,7 @@ makes sure nobody gets spammed if inventory flickers.
 
 **Know exactly what to restock first.**
 The Demand Report ranks your sold-out variants by how many shoppers are
-waiting, with the email/SMS split and live stock status. It’s the clearest
+waiting, with live stock status. It’s the clearest
 signal you’ll ever get about what your customers actually want back.
 
 **Own your subscriber list.**
@@ -51,12 +51,11 @@ any time. Your waitlist is your data.
 
 **Honest by design.**
 Klyna only requests read access to products and inventory — it never modifies
-your catalog. No paid APIs are required to run; connect Resend (email) and
-Twilio (SMS) when you’re ready to deliver at scale.
+your catalog. Email delivery is handled through Klyna's transactional provider.
 
 ### What you get
 - “Notify me” button on sold-out variants (Theme App Extension)
-- Email + optional SMS capture, with consent support
+- Email waitlist capture, with consent support
 - Automatic back-in-stock alerts on restock
 - Waitlist demand report — most-wanted sold-out products, ranked
 - Subscriber management with CSV export
@@ -72,19 +71,18 @@ Twilio (SMS) when you’re ready to deliver at scale.
 ## Feature bullets (for the “key features” section)
 
 1. **Auto-showing “Notify me” button** — renders only on sold-out variants, zero theme code.
-2. **Email & SMS waitlists** — capture demand the moment a customer hits a stockout.
+2. **Email waitlists** — capture demand the moment a customer hits a stockout.
 3. **Instant restock alerts** — webhook-driven, idempotent, resend-guarded.
 4. **Demand report** — rank what to restock first by real waiting-shopper counts.
 5. **Subscriber CSV export** — your list, your data, no lock-in.
 
 ---
 
-## Pricing copy (suggested)
+## Pricing
 
 - **Free** — up to 50 active waitlist subscribers, email alerts, demand report.
-- **Growth** — unlimited subscribers, SMS alerts, priority delivery.
-
-(Pricing is illustrative; wire up Shopify managed pricing before launch.)
+- **Growth — $9.99/month or $99/year** — unlimited subscribers, CSV export,
+  smart timing, and BYOK AI assistance. Includes a 7-day free trial.
 
 ---
 
@@ -105,7 +103,6 @@ Secondary:
 - inventory alerts
 - low stock / restock reminder
 - pre-order interest / demand capture
-- SMS back in stock
 - stock notification app
 
 Long-tail:

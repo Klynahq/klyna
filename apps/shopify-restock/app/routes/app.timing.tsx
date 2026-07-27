@@ -36,12 +36,12 @@ import {
 import { getShopPlan, planSelectionUrl } from '../lib/plans.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
+  const { admin, session } = await authenticate.admin(request);
   const shop = session.shop;
   const [settings, ai, planHandle] = await Promise.all([
     getShopSettings(shop),
     getShopAiSettings(shop),
-    getShopPlan(shop),
+    getShopPlan(shop, admin),
   ]);
 
   const [queueCount, queuedSample, recentSent] = await Promise.all([
@@ -79,14 +79,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
+  const { admin, session } = await authenticate.admin(request);
   const shop = session.shop;
   const form = await request.formData();
   const intent = String(form.get('intent') ?? '');
 
   if (intent === 'toggle') {
     const enabled = form.get('enabled') === 'true';
-    if (enabled && (await getShopPlan(shop)) !== 'growth') {
+    if (enabled && (await getShopPlan(shop, admin)) !== 'growth') {
       return json(
         { ok: false, planError: 'Smart timing is available on the Growth plan.' },
         { status: 403 },

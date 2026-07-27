@@ -18,7 +18,7 @@ import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getShopPlan, planSelectionUrl } from '../lib/plans.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
+  const { admin, session } = await authenticate.admin(request);
   const shop = session.shop;
 
   // Real KPIs straight from the waitlist store.
@@ -34,7 +34,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       orderBy: { _count: { variantId: 'desc' } },
       take: 5,
     }),
-    getShopPlan(shop),
+    getShopPlan(shop, admin),
   ]);
 
   // Hydrate the top variants with their cached titles for display.
@@ -128,8 +128,8 @@ export default function Dashboard() {
               action={{ content: 'View Growth plan', url: pricingUrl }}
             >
               <Text as="p">
-                Upgrade for unlimited demand capture, CSV export, SMS, and
-                local-time delivery.
+                Upgrade for unlimited demand capture, CSV export, smart timing,
+                and AI assistance.
               </Text>
             </Banner>
           </Layout.Section>
@@ -140,7 +140,7 @@ export default function Dashboard() {
               <Text as="h2" variant="headingMd">Recover the demand you're losing to sold-out.</Text>
               <Text as="p" variant="bodyMd" tone="subdued">
                 Klyna adds a “Notify me” button to every sold-out variant, captures
-                email &amp; SMS interest, and auto-alerts shoppers the moment inventory
+                email interest, and auto-alerts shoppers the moment inventory
                 returns — turning stockouts into a recovery channel instead of lost sales.
               </Text>
             </BlockStack>

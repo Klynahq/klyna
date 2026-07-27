@@ -102,12 +102,12 @@
     if (form) {
       form.addEventListener('submit', function (e) {
         e.preventDefault();
-        if (!form.reportValidity()) return;
 
         var emailEl = form.querySelector('[name="email"]');
-        var phoneEl = form.querySelector('[name="phone"]');
         var consentEl = form.querySelector('[name="consent"]');
         var variant = variantById(currentVariantId);
+        var email = emailEl ? emailEl.value.trim() : '';
+        if (!form.reportValidity()) return;
 
         var payload = {
           shop: shop,
@@ -116,8 +116,7 @@
           productTitle: productTitle,
           productHandle: productHandle,
           variantTitle: variant && variant.title !== 'Default Title' ? variant.title : '',
-          email: emailEl ? emailEl.value.trim() : '',
-          phone: phoneEl ? phoneEl.value.trim() : '',
+          email: email,
           consent: consentEl && consentEl.checked ? 'true' : 'false',
           locale: document.documentElement.lang || '',
           sourceUrl: window.location.href,

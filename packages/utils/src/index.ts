@@ -120,7 +120,7 @@ export const products: Product[] = [
     name: 'Klyna Back-in-Stock',
     tagline: 'Restock alerts & waitlists that recover lost sold-out demand.',
     description:
-      '"Notify me" on sold-out variants, email/SMS interest capture, back-in-stock alerts on inventory webhook, and a demand report of most-wanted products.',
+      '"Notify me" on sold-out variants, email waitlist capture, back-in-stock alerts on inventory webhook, and a demand report of most-wanted products.',
     status: 'beta',
     surface: 'shopify',
     downloadUrl: '/downloads/shopify-restock.zip',

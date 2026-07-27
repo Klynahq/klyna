@@ -9,7 +9,7 @@
 import prisma from '../db.server';
 import {
   FREE_ACTIVE_SUBSCRIBER_LIMIT,
-  getShopPlan,
+  type PlanHandle,
 } from '../lib/plans.server';
 import { deliver } from './notifier.server';
 import { decideSendTime } from '../lib/smart-timing.server';
@@ -174,6 +174,7 @@ export interface SignupInput {
   marketingConsent?: boolean;
   locale?: string | null;
   sourceUrl?: string | null;
+  planHandle: PlanHandle;
 }
 
 export interface SignupResult {
@@ -219,8 +220,7 @@ export async function recordSignup(input: SignupInput): Promise<SignupResult> {
     return { ok: true, alreadySubscribed: true };
   }
 
-  const planHandle = await getShopPlan(input.shop);
-  if (planHandle === 'free') {
+  if (input.planHandle === 'free') {
     const activeCount = await prisma.subscription.count({
       where: { shop: input.shop, status: 'PENDING' },
     });

@@ -11,8 +11,8 @@ import { planSelectionUrl, syncPlanFromRequest } from '../lib/plans.server';
 export const links = () => [{ rel: 'stylesheet', href: polarisStyles }];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
-  const planHandle = await syncPlanFromRequest(session.shop, request);
+  const { admin, session } = await authenticate.admin(request);
+  const planHandle = await syncPlanFromRequest(session.shop, request, admin);
   return {
     apiKey: process.env.SHOPIFY_API_KEY ?? '',
     planHandle,

@@ -25,11 +25,11 @@ import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getShopPlan, planSelectionUrl } from '../lib/plans.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
+  const { admin, session } = await authenticate.admin(request);
   const settings = await getShopSettings(session.shop);
   const ai = await getShopAiSettings(session.shop);
   const usedToday = await getTodayUsage(session.shop);
-  const planHandle = await getShopPlan(session.shop);
+  const planHandle = await getShopPlan(session.shop, admin);
   const storeHandle = session.shop.replace(/\.myshopify\.com$/i, '');
   return {
     settings,
@@ -39,22 +39,17 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     pricingUrl: planSelectionUrl(session.shop),
     themeEditorUrl: `https://admin.shopify.com/store/${storeHandle}/themes/current/editor`,
     emailDeliveryConfigured: Boolean(process.env.RESEND_API_KEY),
-    smsDeliveryConfigured: Boolean(
-      process.env.TWILIO_ACCOUNT_SID &&
-        process.env.TWILIO_AUTH_TOKEN &&
-        process.env.TWILIO_FROM_NUMBER,
-    ),
   };
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
+  const { admin, session } = await authenticate.admin(request);
   const shop = session.shop;
   const form = await request.formData();
   const intent = String(form.get('intent') ?? 'save');
 
   if (intent === 'ai-test') {
-    if ((await getShopPlan(shop)) !== 'growth') {
+    if ((await getShopPlan(shop, admin)) !== 'growth') {
       return json(
         { planError: 'AI assistance is available on the Growth plan.' },
         { status: 403 },
@@ -69,7 +64,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 
   if (intent === 'ai-save') {
-    if ((await getShopPlan(shop)) !== 'growth') {
+    if ((await getShopPlan(shop, admin)) !== 'growth') {
       return json(
         { planError: 'AI assistance is available on the Growth plan.' },
         { status: 403 },
@@ -131,7 +126,6 @@ export default function Settings() {
     pricingUrl,
     themeEditorUrl,
     emailDeliveryConfigured,
-    smsDeliveryConfigured,
   } = useLoaderData<typeof loader>();
   const embeddedRoute = useEmbeddedRoute();
   const data = useActionData<typeof action>();
@@ -211,8 +205,8 @@ export default function Settings() {
               action={{ content: 'View Growth plan', url: pricingUrl }}
             >
               <Text as="p">
-                Growth unlocks unlimited active subscribers, CSV export, SMS
-                capture, smart timing, and AI assistance.
+                Growth unlocks unlimited active subscribers, CSV export, smart
+                timing, and AI assistance.
               </Text>
             </Banner>
           </Layout.Section>
@@ -262,7 +256,6 @@ export default function Settings() {
               </FormLayout>
               <Text as="p" variant="bodySm" tone="subdued">
                 Email provider: {emailDeliveryConfigured ? 'configured' : 'not configured'}.
-                {' '}SMS provider: {smsDeliveryConfigured ? 'configured' : 'not configured'}.
                 Failed deliveries remain visible in the dashboard and can be retried
                 after the provider issue is fixed.
               </Text>

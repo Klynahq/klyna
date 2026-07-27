@@ -2,7 +2,7 @@
   Klyna Back-in-Stock — "Notify me" app block.
 
   Renders on the product page. Hidden while the selected variant is in stock;
-  when sold out it shows an email (and optionally phone) capture form that POSTs
+  when sold out it shows an email capture form that POSTs
   through Shopify's signed app proxy. Variant switching is handled client-side
   by reading the product JSON below, so the form follows the customer's variant
   selection without a page reload.
@@ -22,7 +22,6 @@
   data-product-title="{{ product.title | escape }}"
   data-product-handle="{{ product.handle }}"
   data-variant-id="{{ current_variant.id }}"
-  data-collect-phone="{{ block.settings.collect_phone }}"
   data-require-consent="{{ block.settings.require_consent }}"
   data-success="{{ block.settings.success_message | escape }}"
   {% if current_variant.available %}hidden{% endif %}
@@ -44,20 +43,6 @@
       placeholder="you@example.com"
       required
     >
-
-    {%- if block.settings.collect_phone -%}
-      <label class="klyna-bis__label" for="klyna-bis-phone-{{ block.id }}">
-        {{ block.settings.phone_label | escape }}
-      </label>
-      <input
-        class="klyna-bis__input"
-        id="klyna-bis-phone-{{ block.id }}"
-        type="tel"
-        name="phone"
-        autocomplete="tel"
-        placeholder="+1 555 000 0000"
-      >
-    {%- endif -%}
 
     {%- if block.settings.require_consent -%}
       <label class="klyna-bis__consent">
@@ -109,12 +94,6 @@
     },
     {
       "type": "text",
-      "id": "phone_label",
-      "label": "Phone field label",
-      "default": "Phone (optional)"
-    },
-    {
-      "type": "text",
       "id": "success_message",
       "label": "Success message",
       "default": "You're on the list — we'll let you know the moment it's back."
@@ -122,12 +101,6 @@
     {
       "type": "header",
       "content": "Behavior"
-    },
-    {
-      "type": "checkbox",
-      "id": "collect_phone",
-      "label": "Collect phone number (SMS)",
-      "default": false
     },
     {
       "type": "checkbox",

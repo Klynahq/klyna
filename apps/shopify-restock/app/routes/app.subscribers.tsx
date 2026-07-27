@@ -35,7 +35,7 @@ function statusWhere(shop: string, filter: StatusFilter) {
 }
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
+  const { admin, session } = await authenticate.admin(request);
   const shop = session.shop;
   const url = new URL(request.url);
   const filter = (url.searchParams.get('status') as StatusFilter) ?? 'ALL';
@@ -46,7 +46,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       orderBy: { createdAt: 'desc' },
       take: 250,
     }),
-    getShopPlan(shop),
+    getShopPlan(shop, admin),
   ]);
 
   return {
@@ -56,8 +56,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     pricingUrl: planSelectionUrl(shop),
     subscribers: subscribers.map((s) => ({
       id: s.id,
-      contact: s.channel === 'EMAIL' ? s.email : s.phone,
-      channel: s.channel,
+      contact: s.email ?? s.phone,
       product: [s.productTitle, s.variantTitle].filter(Boolean).join(' — '),
       status: s.status,
       createdAt: s.createdAt.toISOString(),
@@ -66,7 +65,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
+  const { admin, session } = await authenticate.admin(request);
   const shop = session.shop;
   const form = await request.formData();
   const intent = String(form.get('intent') ?? '');
@@ -91,7 +90,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 
   if (intent === 'export') {
-    if ((await getShopPlan(shop)) !== 'growth') {
+    if ((await getShopPlan(shop, admin)) !== 'growth') {
       return json(
         { ok: false, message: 'CSV export is available on the Growth plan.' },
         { status: 403 },
@@ -181,8 +180,8 @@ export default function Subscribers() {
               action={{ content: 'View Growth plan', url: pricingUrl }}
             >
               <Text as="p">
-                Upgrade for unlimited active subscribers, CSV export, SMS capture,
-                and smart timing.
+                Upgrade for unlimited active subscribers, CSV export, smart timing,
+                and AI assistance.
               </Text>
             </Banner>
           </Layout.Section>
@@ -233,7 +232,6 @@ export default function Subscribers() {
                   headings={[
                     { title: 'Contact' },
                     { title: 'Product' },
-                    { title: 'Channel' },
                     { title: 'Status' },
                     { title: 'Signed up' },
                     { title: '' },
@@ -245,9 +243,6 @@ export default function Subscribers() {
                         <Text as="span" variant="bodyMd" fontWeight="semibold">{s.contact ?? '—'}</Text>
                       </IndexTable.Cell>
                       <IndexTable.Cell>{s.product}</IndexTable.Cell>
-                      <IndexTable.Cell>
-                        <Badge>{s.channel === 'EMAIL' ? 'Email' : 'SMS'}</Badge>
-                      </IndexTable.Cell>
                       <IndexTable.Cell>{statusBadge(s.status)}</IndexTable.Cell>
                       <IndexTable.Cell>
                         <Text as="span" variant="bodySm" tone="subdued">

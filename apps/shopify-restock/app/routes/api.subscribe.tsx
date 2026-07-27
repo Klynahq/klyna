@@ -1,6 +1,7 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
 import { authenticate } from '../shopify.server';
 import { recordSignup } from '../services/waitlist.server';
+import { getShopPlan } from '../lib/plans.server';
 
 // Public storefront endpoint — the "Notify me" widget POSTs here through the
 // Shopify App Proxy. The Theme App Extension fetches `/apps/klyna-restock`
@@ -53,11 +54,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     return json({ ok: false, error: 'Method not allowed' }, { status: 405 });
   }
 
-  const { session } = await authenticate.public.appProxy(request);
-  if (!session) {
+  const { admin, session } = await authenticate.public.appProxy(request);
+  if (!session || !admin) {
     return json({ ok: false, error: 'No session' }, { status: 401 });
   }
   const shop = session.shop;
+  const planHandle = await getShopPlan(shop, admin);
 
   // Accept both form posts (no-JS fallback) and fetch JSON.
   let body: Record<string, string>;
@@ -74,7 +76,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const variantIdRaw = (body.variantId ?? '').trim();
   const productIdRaw = (body.productId ?? '').trim();
   const email = (body.email ?? '').trim();
-  const phone = (body.phone ?? '').trim();
 
   if (!variantIdRaw || !productIdRaw) {
     return json(
@@ -94,26 +95,17 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     return json({ ok: false, error: 'Invalid product or variant id.' }, { status: 400 });
   }
 
-  if (!email && !phone) {
-    return json(
-      { ok: false, error: 'Email or phone required.' },
-      { status: 400 },
-    );
-  }
-  if (email && !EMAIL_RE.test(email)) {
+  if (!email || !EMAIL_RE.test(email)) {
     return json({ ok: false, error: 'Invalid email.' }, { status: 400 });
   }
 
-  // Rate limit by (shop, email-or-phone) to deter abuse.
-  const rateKey = email || phone;
-  if (!checkRateLimit(shop, rateKey)) {
+  // Rate limit by (shop, email) to deter abuse.
+  if (!checkRateLimit(shop, email)) {
     return json(
       { ok: false, error: 'Too many requests. Please try again later.' },
       { status: 429 },
     );
   }
-
-  const channel = phone && !email ? 'SMS' : 'EMAIL';
 
   const result = await recordSignup({
     shop,
@@ -122,12 +114,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     productTitle: body.productTitle?.trim() || 'Product',
     variantTitle: body.variantTitle?.trim() || null,
     productHandle: body.productHandle?.trim() || null,
-    channel,
-    email: email || null,
-    phone: phone || null,
+    channel: 'EMAIL',
+    email,
+    phone: null,
     marketingConsent: body.consent === 'true' || body.consent === 'on',
     locale: body.locale ?? null,
     sourceUrl: body.sourceUrl ?? null,
+    planHandle,
   });
 
   if (!result.ok) {

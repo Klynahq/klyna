@@ -23,7 +23,7 @@ export default function App() {
         <h1 className={styles.heading}>Klyna Back-in-Stock</h1>
         <p className={styles.text}>
           Restock alerts &amp; waitlists that recover lost sold-out demand. Add a
-          “Notify me” button to sold-out variants, capture email &amp; SMS interest,
+          “Notify me” button to sold-out variants, capture email waitlists,
           and auto-alert shoppers the moment inventory returns.
         </p>
         {showForm && (

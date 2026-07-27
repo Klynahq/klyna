@@ -26,8 +26,6 @@ interface DemandRow {
   imageUrl: string | null;
   price: string | null;
   waiting: number;
-  emailWaiting: number;
-  smsWaiting: number;
   available: number | null;
   inStock: boolean;
   productUrl: string;
@@ -37,21 +35,16 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
   const shop = session.shop;
 
-  // Rank sold-out variants by how many shoppers are waiting. We aggregate per
-  // variant + channel so the merchant sees the email/SMS split.
+  // Rank sold-out variants by how many shoppers are waiting.
   const grouped = await prisma.subscription.groupBy({
-    by: ['variantId', 'channel'],
+    by: ['variantId'],
     where: { shop, status: 'PENDING' },
     _count: { _all: true },
   });
 
-  const byVariant = new Map<string, { email: number; sms: number }>();
-  for (const g of grouped) {
-    const entry = byVariant.get(g.variantId) ?? { email: 0, sms: 0 };
-    if (g.channel === 'EMAIL') entry.email += g._count._all;
-    else entry.sms += g._count._all;
-    byVariant.set(g.variantId, entry);
-  }
+  const byVariant = new Map(
+    grouped.map((group) => [group.variantId, group._count._all]),
+  );
 
   const variantIds = [...byVariant.keys()];
   const [snapshots, subscriptions] = await Promise.all([
@@ -70,7 +63,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   const rows: DemandRow[] = variantIds
     .map((variantId) => {
-      const counts = byVariant.get(variantId)!;
+      const waiting = byVariant.get(variantId) ?? 0;
       const snap = snapFor(variantId);
       const subscription = subscriptionFor(variantId);
       const title = [
@@ -85,9 +78,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         handle: snap?.productHandle ?? null,
         imageUrl: snap?.imageUrl ?? null,
         price: snap?.price ?? null,
-        waiting: counts.email + counts.sms,
-        emailWaiting: counts.email,
-        smsWaiting: counts.sms,
+        waiting,
         available: snap?.available ?? null,
         inStock: snap?.inStock ?? false,
         productUrl: storefrontProductUrl(shop, snap?.productHandle),
@@ -195,7 +186,6 @@ export default function DemandReport() {
                 headings={[
                   { title: 'Product' },
                   { title: 'Waiting' },
-                  { title: 'Channels' },
                   { title: 'Stock' },
                   { title: '' },
                 ]}
@@ -212,12 +202,6 @@ export default function DemandReport() {
                     </IndexTable.Cell>
                     <IndexTable.Cell>
                       <Text as="span" variant="bodyMd" fontWeight="bold">{String(row.waiting)}</Text>
-                    </IndexTable.Cell>
-                    <IndexTable.Cell>
-                      <InlineStack gap="150">
-                        <Text as="span" variant="bodySm" tone="subdued">{row.emailWaiting} email</Text>
-                        <Text as="span" variant="bodySm" tone="subdued">{row.smsWaiting} SMS</Text>
-                      </InlineStack>
                     </IndexTable.Cell>
                     <IndexTable.Cell>
                       {row.inStock ? (
