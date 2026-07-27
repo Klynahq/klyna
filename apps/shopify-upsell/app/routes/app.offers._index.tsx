@@ -14,6 +14,7 @@ import {
 } from '@shopify/polaris';
 import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
+import { useEmbeddedRoute } from '../lib/embedded-routes';
 
 const TRIGGER_LABEL: Record<string, string> = {
   product: 'Product in cart',
@@ -59,6 +60,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 };
 
 export default function OffersIndex() {
+  const embeddedRoute = useEmbeddedRoute();
   const { offers } = useLoaderData<typeof loader>();
   const fetcher = useFetcher();
 
@@ -68,15 +70,15 @@ export default function OffersIndex() {
     return (
       <Page
         title="Offers"
-        backAction={{ url: '/app' }}
-        primaryAction={{ content: 'Create offer', url: '/app/offers/new' }}
+        backAction={{ url: embeddedRoute('/app') }}
+        primaryAction={{ content: 'Create offer', url: embeddedRoute('/app/offers/new') }}
       >
         <Layout>
           <Layout.Section>
             <Card>
               <EmptyState
                 heading="Create your first upsell offer"
-                action={{ content: 'Create offer', url: '/app/offers/new' }}
+                action={{ content: 'Create offer', url: embeddedRoute('/app/offers/new') }}
                 image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
               >
                 <p>
@@ -100,7 +102,7 @@ export default function OffersIndex() {
     return (
       <IndexTable.Row id={offer.id} key={offer.id} position={index}>
         <IndexTable.Cell>
-          <Link to={`/app/offers/${offer.id}`}>
+          <Link to={embeddedRoute(`/app/offers/${offer.id}`)}>
             <Text as="span" fontWeight="semibold">{offer.name}</Text>
           </Link>
         </IndexTable.Cell>
@@ -139,8 +141,8 @@ export default function OffersIndex() {
   return (
     <Page
       title="Offers"
-      backAction={{ url: '/app' }}
-      primaryAction={{ content: 'Create offer', url: '/app/offers/new' }}
+      backAction={{ url: embeddedRoute('/app') }}
+      primaryAction={{ content: 'Create offer', url: embeddedRoute('/app/offers/new') }}
     >
       <Layout>
         <Layout.Section>

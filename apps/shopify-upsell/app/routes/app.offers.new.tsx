@@ -2,6 +2,7 @@ import { type ActionFunctionArgs, type LoaderFunctionArgs, json, redirect } from
 import { useActionData, useNavigation } from '@remix-run/react';
 import { Page } from '@shopify/polaris';
 import { authenticate } from '../shopify.server';
+import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getProduct } from '../models/admin.server';
 import { parseOfferForm, saveOffer } from '../models/offers.server';
 import { EMPTY_OFFER, OfferEditor } from '../components/OfferEditor';
@@ -35,11 +36,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 };
 
 export default function NewOffer() {
+  const embeddedRoute = useEmbeddedRoute();
   const data = useActionData<typeof action>();
   const nav = useNavigation();
 
   return (
-    <Page title="Create offer" backAction={{ url: '/app/offers' }}>
+    <Page title="Create offer" backAction={{ url: embeddedRoute('/app/offers') }}>
       <OfferEditor
         initial={EMPTY_OFFER}
         errors={data?.errors ?? []}

@@ -5,6 +5,7 @@ import { authenticate } from '../shopify.server';
 import { getProduct } from '../models/admin.server';
 import { parseOfferForm, saveOffer } from '../models/offers.server';
 import prisma from '../db.server';
+import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { EMPTY_VARIANT, type OfferEditorValues, OfferEditor, type PickedProduct } from '../components/OfferEditor';
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
@@ -72,6 +73,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 };
 
 export default function EditOffer() {
+  const embeddedRoute = useEmbeddedRoute();
   const { values } = useLoaderData<typeof loader>();
   const data = useActionData<typeof action>();
   const nav = useNavigation();
@@ -81,7 +83,7 @@ export default function EditOffer() {
   return (
     <Page
       title={`Edit · ${values.name}`}
-      backAction={{ url: '/app/offers' }}
+      backAction={{ url: embeddedRoute('/app/offers') }}
       secondaryActions={[{ content: 'AI headlines', url: `/app/offers/${params.id}/copy` }]}
     >
       <OfferEditor

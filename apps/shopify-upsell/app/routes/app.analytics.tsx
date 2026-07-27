@@ -13,6 +13,7 @@ import {
   Text,
 } from '@shopify/polaris';
 import { authenticate } from '../shopify.server';
+import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getShopStats, type OfferStats } from '../models/offers.server';
 import { formatMoney } from '../lib/format';
 
@@ -37,6 +38,7 @@ function abWinner(offer: OfferStats): { label: string; lift: number } | null {
 }
 
 export default function Analytics() {
+  const embeddedRoute = useEmbeddedRoute();
   const { totals, offers } = useLoaderData<typeof loader>();
 
   const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
@@ -51,13 +53,13 @@ export default function Analytics() {
 
   if (offers.length === 0) {
     return (
-      <Page title="Analytics" backAction={{ url: '/app' }}>
+      <Page title="Analytics" backAction={{ url: embeddedRoute('/app') }}>
         <Layout>
           <Layout.Section>
             <Card>
               <EmptyState
                 heading="No data yet"
-                action={{ content: 'Create an offer', url: '/app/offers/new' }}
+                action={{ content: 'Create an offer', url: embeddedRoute('/app/offers/new') }}
                 image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
               >
                 <p>
@@ -74,7 +76,7 @@ export default function Analytics() {
   }
 
   return (
-    <Page title="Analytics" backAction={{ url: '/app' }} subtitle="Conversion and revenue per offer">
+    <Page title="Analytics" backAction={{ url: embeddedRoute('/app') }} subtitle="Conversion and revenue per offer">
       <Layout>
         <Layout.Section>
           <InlineGrid columns={{ xs: 1, sm: 2, md: 5 }} gap="300">

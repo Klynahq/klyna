@@ -13,6 +13,7 @@ import {
 } from '@shopify/polaris';
 import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
+import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getShopStats } from '../models/offers.server';
 import { formatMoney } from '../lib/format';
 
@@ -27,6 +28,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export default function Dashboard() {
+  const embeddedRoute = useEmbeddedRoute();
   const { shop, totals, offerCount, activeCount } = useLoaderData<typeof loader>();
 
   const metrics = [
@@ -119,7 +121,7 @@ export default function Dashboard() {
                   </InlineStack>
                   <Text as="p" variant="bodyMd" tone="subdued">{t.body}</Text>
                   <Box paddingBlockStart="100">
-                    <Link to={t.to}>Open</Link>
+                    <Link to={embeddedRoute(t.to)}>Open</Link>
                   </Box>
                 </BlockStack>
               </Card>

@@ -16,6 +16,7 @@ import {
   TextField,
 } from '@shopify/polaris';
 import { authenticate } from '../shopify.server';
+import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { createAiClient, type AiProvider } from '~/lib/klyna-ai-client';
 import { getShopAiSettings, getTodayUsage, saveShopAiSettings } from '../lib/ai.server';
 
@@ -69,6 +70,7 @@ const PROVIDER_HELP: Record<string, { url: string; hint: string }> = {
 };
 
 export default function Settings() {
+  const embeddedRoute = useEmbeddedRoute();
   const { settings, usedToday } = useLoaderData<typeof loader>();
   const data = useActionData<typeof action>();
   const nav = useNavigation();
@@ -100,7 +102,7 @@ export default function Settings() {
   };
 
   return (
-    <Page title="Settings" backAction={{ url: '/app' }}>
+    <Page title="Settings" backAction={{ url: embeddedRoute('/app') }}>
       <Layout>
         <Layout.Section>
           <Card>
