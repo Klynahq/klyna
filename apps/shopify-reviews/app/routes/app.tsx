@@ -1,17 +1,23 @@
 import type { HeadersFunction, LoaderFunctionArgs } from '@remix-run/node';
 import { Link, Outlet, useLoaderData, useRouteError } from '@remix-run/react';
-import { boundary } from '@shopify/shopify-app-remix/server';
-import { AppProvider } from '@shopify/shopify-app-remix/react';
 import { NavMenu } from '@shopify/app-bridge-react';
 import polarisStyles from '@shopify/polaris/build/esm/styles.css?url';
-import { authenticate } from '../shopify.server';
+import { AppProvider } from '@shopify/shopify-app-remix/react';
+import { boundary } from '@shopify/shopify-app-remix/server';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
+import { planSelectionUrl, syncPlanFromRequest } from '../lib/plans.server';
+import { authenticate } from '../shopify.server';
 
 export const links = () => [{ rel: 'stylesheet', href: polarisStyles }];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  await authenticate.admin(request);
-  return { apiKey: process.env.SHOPIFY_API_KEY ?? '' };
+  const { session } = await authenticate.admin(request);
+  const planHandle = await syncPlanFromRequest(session.shop, request);
+  return {
+    apiKey: process.env.SHOPIFY_API_KEY ?? '',
+    planHandle,
+    pricingUrl: planSelectionUrl(session.shop),
+  };
 };
 
 export default function App() {
@@ -21,7 +27,9 @@ export default function App() {
   return (
     <AppProvider isEmbeddedApp apiKey={apiKey}>
       <NavMenu>
-        <Link to={embeddedRoute('/app')} rel="home">Dashboard</Link>
+        <Link to={embeddedRoute('/app')} rel="home">
+          Dashboard
+        </Link>
         <Link to={embeddedRoute('/app/moderation')}>Moderation</Link>
         <Link to={embeddedRoute('/app/requests')}>Review requests</Link>
         <Link to={embeddedRoute('/app/analytics')}>Analytics</Link>

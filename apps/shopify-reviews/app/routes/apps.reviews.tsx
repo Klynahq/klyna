@@ -1,11 +1,8 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
-import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
-import {
-  buildProductJsonLd,
-  recomputeProductRating,
-  type Aggregate,
-} from '../lib/reviews.server';
+import { FREE_REVIEW_LIMIT, getShopPlan } from '../lib/plans.server';
+import { type Aggregate, buildProductJsonLd, recomputeProductRating } from '../lib/reviews.server';
+import { authenticate } from '../shopify.server';
 
 // Storefront App Proxy endpoint.
 //
@@ -30,7 +27,9 @@ function parsePhotos(raw: string): string[] {
   }
 }
 
-function aggregateFromRow(row: { reviewCount: number; ratingValue: number; distribution: string } | null): Aggregate {
+function aggregateFromRow(
+  row: { reviewCount: number; ratingValue: number; distribution: string } | null,
+): Aggregate {
   if (!row) return { reviewCount: 0, ratingValue: 0, distribution: [0, 0, 0, 0, 0] };
   let distribution = [0, 0, 0, 0, 0];
   try {
@@ -50,7 +49,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const productId = url.searchParams.get('productId');
   const title = url.searchParams.get('title') ?? 'Product';
   const handle = url.searchParams.get('handle') ?? undefined;
-  const page = Math.max(0, parseInt(url.searchParams.get('page') ?? '0', 10) || 0);
+  const page = Math.max(0, Number.parseInt(url.searchParams.get('page') ?? '0', 10) || 0);
 
   if (!productId) {
     return json({ error: 'Missing productId' }, { status: 400 });
@@ -107,16 +106,35 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const productId = String(form.get('productId') ?? '').trim();
   const productTitle = String(form.get('productTitle') ?? 'Product').trim();
   const productHandle = String(form.get('productHandle') ?? '').trim() || null;
-  const rating = Math.min(5, Math.max(1, parseInt(String(form.get('rating') ?? '0'), 10) || 0));
+  const rating = Math.min(
+    5,
+    Math.max(1, Number.parseInt(String(form.get('rating') ?? '0'), 10) || 0),
+  );
   const body = String(form.get('body') ?? '').trim();
   const title = String(form.get('title') ?? '').trim() || null;
   const authorName = String(form.get('authorName') ?? '').trim();
   const authorEmail = String(form.get('authorEmail') ?? '').trim() || null;
   const token = String(form.get('token') ?? '').trim() || null;
-  const photosRaw = form.getAll('photos').map(String).filter(Boolean).slice(0, 6);
+  const planHandle = await getShopPlan(session.shop);
+  const photosRaw =
+    planHandle === 'growth' ? form.getAll('photos').map(String).filter(Boolean).slice(0, 6) : [];
 
   if (!productId || !rating || !body || !authorName) {
     return json({ error: 'Please add a rating, your name, and a review.' }, { status: 400 });
+  }
+
+  if (planHandle === 'free') {
+    const reviewCount = await prisma.review.count({
+      where: { shop: session.shop, status: { in: ['pending', 'published'] } },
+    });
+    if (reviewCount >= FREE_REVIEW_LIMIT) {
+      return json(
+        {
+          error: `The Free plan supports up to ${FREE_REVIEW_LIMIT} reviews. Upgrade to collect more.`,
+        },
+        { status: 402 },
+      );
+    }
   }
 
   // A valid request token marks the review as a verified purchase.

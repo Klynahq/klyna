@@ -97,6 +97,7 @@ model ReviewRequest {
 // Per-shop widget + automation configuration. One row per shop.
 model Settings {
   shop             String   @id
+  planHandle       String   @default("free") // free | growth
   autoPublish      Boolean  @default(false) // publish 4–5★ reviews without moderation
   requestEnabled   Boolean  @default(true)  // send review-request emails on fulfillment
   requestDelayDays Int      @default(7)     // wait N days after fulfillment to ask

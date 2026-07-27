@@ -1,6 +1,11 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
-import { Form, useActionData, useLoaderData, useNavigation, useSearchParams } from '@remix-run/react';
-import { useState } from 'react';
+import {
+  Form,
+  useActionData,
+  useLoaderData,
+  useNavigation,
+  useSearchParams,
+} from '@remix-run/react';
 import {
   Badge,
   BlockStack,
@@ -16,10 +21,12 @@ import {
   TextField,
   Thumbnail,
 } from '@shopify/polaris';
-import { authenticate } from '../shopify.server';
+import { useState } from 'react';
 import prisma from '../db.server';
-import { refreshProductRating } from '../lib/reviews.server';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
+import { FREE_REVIEW_LIMIT, getShopPlan, planSelectionUrl } from '../lib/plans.server';
+import { refreshProductRating } from '../lib/reviews.server';
+import { authenticate } from '../shopify.server';
 
 const TABS = [
   { id: 'pending', content: 'Pending' },
@@ -43,7 +50,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url);
   const status = (url.searchParams.get('status') ?? 'pending') as TabId;
 
-  const [reviews, counts] = await Promise.all([
+  const [reviews, counts, planHandle] = await Promise.all([
     prisma.review.findMany({
       where: { shop: session.shop, status },
       orderBy: { createdAt: 'desc' },
@@ -54,12 +61,19 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       where: { shop: session.shop },
       _count: true,
     }),
+    getShopPlan(session.shop),
   ]);
 
   const byStatus: Record<string, number> = {};
   for (const c of counts) byStatus[c.status] = c._count;
 
-  return { status, reviews, counts: byStatus };
+  return {
+    status,
+    reviews,
+    counts: byStatus,
+    planHandle,
+    pricingUrl: planSelectionUrl(session.shop),
+  };
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -77,6 +91,18 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   switch (intent) {
     case 'publish': {
+      const planHandle = await getShopPlan(session.shop);
+      if (planHandle === 'free' && review.status !== 'published') {
+        const publishedCount = await prisma.review.count({
+          where: { shop: session.shop, status: 'published' },
+        });
+        if (publishedCount >= FREE_REVIEW_LIMIT) {
+          return json(
+            { error: `The Free plan supports up to ${FREE_REVIEW_LIMIT} published reviews.` },
+            { status: 402 },
+          );
+        }
+      }
       await prisma.review.update({
         where: { id: review.id },
         data: { status: 'published', publishedAt: new Date() },
@@ -105,6 +131,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       break;
     }
     case 'reply': {
+      const planHandle = await getShopPlan(session.shop);
+      if (planHandle !== 'growth') {
+        return json(
+          { error: 'Public merchant replies are available on the Growth plan.' },
+          { status: 403 },
+        );
+      }
       const reply = String(form.get('reply') ?? '').trim();
       await prisma.review.update({
         where: { id: review.id },
@@ -124,13 +157,16 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 export default function Moderation() {
   const embeddedRoute = useEmbeddedRoute();
-  const { status, reviews, counts } = useLoaderData<typeof loader>();
+  const { status, reviews, counts, planHandle, pricingUrl } = useLoaderData<typeof loader>();
   const data = useActionData<typeof action>();
   const nav = useNavigation();
   const [, setSearchParams] = useSearchParams();
   const busy = nav.state !== 'idle';
 
-  const selectedTab = Math.max(0, TABS.findIndex((t) => t.id === status));
+  const selectedTab = Math.max(
+    0,
+    TABS.findIndex((t) => t.id === status),
+  );
   const error = data && 'error' in data ? data.error : null;
 
   const tabsWithCounts = TABS.map((t) => ({
@@ -139,7 +175,11 @@ export default function Moderation() {
   }));
 
   return (
-    <Page title="Moderation" subtitle="Approve, reply to, or reject incoming reviews" backAction={{ url: embeddedRoute('/app') }}>
+    <Page
+      title="Moderation"
+      subtitle="Approve, reply to, or reject incoming reviews"
+      backAction={{ url: embeddedRoute('/app') }}
+    >
       <Layout>
         <Layout.Section>
           <Card padding="0">
@@ -151,7 +191,9 @@ export default function Moderation() {
               <Box padding="400">
                 {error && (
                   <Box paddingBlockEnd="300">
-                    <Text as="p" tone="critical">{String(error)}</Text>
+                    <Text as="p" tone="critical">
+                      {String(error)}
+                    </Text>
                   </Box>
                 )}
                 {reviews.length === 0 ? (
@@ -182,9 +224,14 @@ export default function Moderation() {
                               <BlockStack gap="100">
                                 <InlineStack gap="200" blockAlign="center">
                                   <Text as="span" variant="headingMd" fontWeight="bold">
-                                    {'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}
+                                    {'★'.repeat(r.rating)}
+                                    {'☆'.repeat(5 - r.rating)}
                                   </Text>
-                                  {r.verified && <Badge tone="success" size="small">Verified buyer</Badge>}
+                                  {r.verified && (
+                                    <Badge tone="success" size="small">
+                                      Verified buyer
+                                    </Badge>
+                                  )}
                                   <Badge size="small">{r.source}</Badge>
                                 </InlineStack>
                                 <Text as="span" variant="bodySm" tone="subdued">
@@ -198,22 +245,41 @@ export default function Moderation() {
                             </InlineStack>
 
                             <BlockStack gap="100">
-                              {r.title && <Text as="p" fontWeight="semibold">{r.title}</Text>}
-                              <Text as="p" variant="bodyMd">{r.body}</Text>
+                              {r.title && (
+                                <Text as="p" fontWeight="semibold">
+                                  {r.title}
+                                </Text>
+                              )}
+                              <Text as="p" variant="bodyMd">
+                                {r.body}
+                              </Text>
                             </BlockStack>
 
                             {photos.length > 0 && (
                               <InlineStack gap="200">
                                 {photos.map((src, i) => (
-                                  <Thumbnail key={i} source={src} alt={`Review photo ${i + 1}`} size="large" />
+                                  <Thumbnail
+                                    key={src}
+                                    source={src}
+                                    alt={`Review photo ${i + 1}`}
+                                    size="large"
+                                  />
                                 ))}
                               </InlineStack>
                             )}
 
                             {r.reply && (
-                              <Box padding="300" background="bg-surface-secondary" borderRadius="200">
-                                <Text as="p" variant="bodySm" tone="subdued">Your reply</Text>
-                                <Text as="p" variant="bodyMd">{r.reply}</Text>
+                              <Box
+                                padding="300"
+                                background="bg-surface-secondary"
+                                borderRadius="200"
+                              >
+                                <Text as="p" variant="bodySm" tone="subdued">
+                                  Your reply
+                                </Text>
+                                <Text as="p" variant="bodyMd">
+                                  {r.reply}
+                                </Text>
                               </Box>
                             )}
 
@@ -222,14 +288,18 @@ export default function Moderation() {
                                 <Form method="post">
                                   <input type="hidden" name="id" value={r.id} />
                                   <input type="hidden" name="intent" value="publish" />
-                                  <Button submit variant="primary" loading={busy}>Publish</Button>
+                                  <Button submit variant="primary" loading={busy}>
+                                    Publish
+                                  </Button>
                                 </Form>
                               )}
                               {status !== 'rejected' && (
                                 <Form method="post">
                                   <input type="hidden" name="id" value={r.id} />
                                   <input type="hidden" name="intent" value="reject" />
-                                  <Button submit loading={busy}>Reject</Button>
+                                  <Button submit loading={busy}>
+                                    Reject
+                                  </Button>
                                 </Form>
                               )}
                               <Form method="post">
@@ -241,7 +311,13 @@ export default function Moderation() {
                               </Form>
                             </InlineStack>
 
-                            <ReplyForm reviewId={r.id} initial={r.reply ?? ''} busy={busy} />
+                            <ReplyForm
+                              reviewId={r.id}
+                              initial={r.reply ?? ''}
+                              busy={busy}
+                              canReply={planHandle === 'growth'}
+                              pricingUrl={pricingUrl}
+                            />
                           </BlockStack>
                         </Box>
                       );
@@ -257,8 +333,33 @@ export default function Moderation() {
   );
 }
 
-function ReplyForm({ reviewId, initial, busy }: { reviewId: string; initial: string; busy: boolean }) {
+function ReplyForm({
+  reviewId,
+  initial,
+  busy,
+  canReply,
+  pricingUrl,
+}: {
+  reviewId: string;
+  initial: string;
+  busy: boolean;
+  canReply: boolean;
+  pricingUrl: string;
+}) {
   const [value, setValue] = useState(initial);
+  if (!canReply) {
+    return (
+      <InlineStack gap="200" blockAlign="center">
+        <Text as="span" variant="bodySm" tone="subdued">
+          Merchant replies are included with Growth.
+        </Text>
+        <Button url={pricingUrl} target="_top">
+          View plans
+        </Button>
+      </InlineStack>
+    );
+  }
+
   return (
     <Form method="post">
       <input type="hidden" name="id" value={reviewId} />
@@ -276,7 +377,9 @@ function ReplyForm({ reviewId, initial, busy }: { reviewId: string; initial: str
             placeholder="Reply publicly to this review"
           />
         </Box>
-        <Button submit loading={busy}>Save reply</Button>
+        <Button submit loading={busy}>
+          Save reply
+        </Button>
       </InlineStack>
     </Form>
   );

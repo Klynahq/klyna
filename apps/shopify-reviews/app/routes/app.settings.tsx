@@ -17,11 +17,12 @@ import {
   TextField,
 } from '@shopify/polaris';
 import { useState } from 'react';
-import { authenticate } from '../shopify.server';
+import { type AiProvider, createAiClient } from '~/lib/klyna-ai-client';
 import prisma from '../db.server';
-import { createAiClient, type AiProvider } from '~/lib/klyna-ai-client';
 import { getShopAiSettings, getTodayUsage, saveShopAiSettings } from '../lib/ai.server';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
+import { getShopPlan, planSelectionUrl } from '../lib/plans.server';
+import { authenticate } from '../shopify.server';
 
 const DEFAULTS = {
   autoPublish: false,
@@ -37,6 +38,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const settings = await prisma.settings.findUnique({ where: { shop: session.shop } });
   const ai = await getShopAiSettings(session.shop);
   const usedToday = await getTodayUsage(session.shop);
+  const planHandle = await getShopPlan(session.shop);
   return {
     settings: {
       autoPublish: settings?.autoPublish ?? DEFAULTS.autoPublish,
@@ -48,6 +50,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     },
     ai,
     usedToday,
+    planHandle,
+    pricingUrl: planSelectionUrl(session.shop),
   };
 };
 
@@ -55,8 +59,15 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const { session } = await authenticate.admin(request);
   const form = await request.formData();
   const intent = String(form.get('intent') ?? 'save');
+  const planHandle = await getShopPlan(session.shop);
 
   if (intent === 'test-ai') {
+    if (planHandle !== 'growth') {
+      return json(
+        { planError: 'AI review themes are available on the Growth plan.' },
+        { status: 403 },
+      );
+    }
     const provider = String(form.get('provider') ?? 'off') as AiProvider;
     const apiKey = String(form.get('apiKey') ?? '').trim() || undefined;
     const model = String(form.get('model') ?? '').trim() || undefined;
@@ -66,6 +77,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 
   if (intent === 'save-ai') {
+    if (planHandle !== 'growth') {
+      return json(
+        { planError: 'AI review themes are available on the Growth plan.' },
+        { status: 403 },
+      );
+    }
     const provider = String(form.get('provider') ?? 'off') as AiProvider;
     const apiKey = String(form.get('apiKey') ?? '').trim() || undefined;
     const model = String(form.get('model') ?? '').trim() || undefined;
@@ -76,15 +93,22 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   const autoPublish = form.get('autoPublish') === 'on';
   const requestEnabled = form.get('requestEnabled') === 'on';
-  const showPhotos = form.get('showPhotos') === 'on';
+  const showPhotos = planHandle === 'growth' && form.get('showPhotos') === 'on';
   const requestDelayDays = Math.min(
     90,
-    Math.max(0, parseInt(String(form.get('requestDelayDays') ?? '7'), 10) || 0),
+    Math.max(0, Number.parseInt(String(form.get('requestDelayDays') ?? '7'), 10) || 0),
   );
   const widgetAccent = String(form.get('widgetAccent') ?? DEFAULTS.widgetAccent).trim();
   const emailFrom = String(form.get('emailFrom') ?? '').trim();
 
-  const data = { autoPublish, requestEnabled, showPhotos, requestDelayDays, widgetAccent, emailFrom: emailFrom || null };
+  const data = {
+    autoPublish,
+    requestEnabled,
+    showPhotos,
+    requestDelayDays,
+    widgetAccent,
+    emailFrom: emailFrom || null,
+  };
 
   await prisma.settings.upsert({
     where: { shop: session.shop },
@@ -119,7 +143,7 @@ const PROVIDER_HELP: Record<string, { url: string; hint: string }> = {
 
 export default function SettingsPage() {
   const embeddedRoute = useEmbeddedRoute();
-  const { settings, ai, usedToday } = useLoaderData<typeof loader>();
+  const { settings, ai, usedToday, planHandle, pricingUrl } = useLoaderData<typeof loader>();
   const data = useActionData<typeof action>();
   const nav = useNavigation();
   const aiFetcher = useFetcher<typeof action>();
@@ -181,7 +205,9 @@ export default function SettingsPage() {
             <BlockStack gap="400">
               <Card>
                 <BlockStack gap="300">
-                  <Text as="h2" variant="headingMd">Moderation</Text>
+                  <Text as="h2" variant="headingMd">
+                    Moderation
+                  </Text>
                   <Checkbox
                     label="Auto-publish 4 and 5 star reviews from verified buyers"
                     helpText="Lower-rated reviews and unverified submissions still wait in the moderation queue."
@@ -194,14 +220,20 @@ export default function SettingsPage() {
 
               <Card>
                 <BlockStack gap="300">
-                  <Text as="h2" variant="headingMd">Review requests</Text>
+                  <Text as="h2" variant="headingMd">
+                    Review requests
+                  </Text>
                   <Checkbox
                     label="Buyer email automation is off in this launch build"
                     helpText="This feature requires Shopify protected customer data approval. Storefront reviews, moderation, widgets, analytics, and schema are available now."
                     checked={requestEnabled}
                     disabled
                   />
-                  <input type="hidden" name="requestEnabled" value={requestEnabled ? 'on' : 'off'} />
+                  <input
+                    type="hidden"
+                    name="requestEnabled"
+                    value={requestEnabled ? 'on' : 'off'}
+                  />
                   <FormLayout>
                     <Select
                       label="Wait before asking"
@@ -232,10 +264,18 @@ export default function SettingsPage() {
 
               <Card>
                 <BlockStack gap="300">
-                  <Text as="h2" variant="headingMd">Storefront widget</Text>
+                  <Text as="h2" variant="headingMd">
+                    Storefront widget
+                  </Text>
                   <Checkbox
                     label="Show customer photos in the widget"
                     checked={showPhotos}
+                    disabled={planHandle !== 'growth'}
+                    helpText={
+                      planHandle === 'growth'
+                        ? undefined
+                        : 'Photo reviews are included with the Growth plan.'
+                    }
                     onChange={setShowPhotos}
                   />
                   <input type="hidden" name="showPhotos" value={showPhotos ? 'on' : 'off'} />
@@ -262,70 +302,87 @@ export default function SettingsPage() {
           <Card>
             <BlockStack gap="400">
               <BlockStack gap="100">
-                <Text as="h2" variant="headingMd">AI assistant</Text>
+                <Text as="h2" variant="headingMd">
+                  AI assistant
+                </Text>
                 <Text as="p" tone="subdued">
-                  Klyna Reviews can summarize what customers are saying about a product into
-                  short themes with representative quotes. Add a free-tier API key from any
-                  provider below to turn it on. Your key stays on this app's database.
+                  Klyna Reviews can summarize what customers are saying about a product into short
+                  themes with representative quotes. Add a free-tier API key from any provider below
+                  to turn it on. Your key stays on this app's database.
                 </Text>
               </BlockStack>
 
-              <BlockStack gap="300">
-                <Select
-                  label="Provider"
-                  options={PROVIDER_OPTIONS}
-                  value={provider}
-                  onChange={setProvider}
-                />
-
-                {provider !== 'off' && (
-                  <>
-                    <TextField
-                      label="API key"
-                      type="password"
-                      value={apiKey}
-                      onChange={setApiKey}
-                      autoComplete="off"
-                      helpText={
-                        help ? (
-                          <>
-                            <Link url={help.url} target="_blank">Get a free key</Link>
-                            {' '}{help.hint}
-                          </>
-                        ) : null
-                      }
-                    />
-                    <TextField
-                      label="Model (optional)"
-                      value={model}
-                      onChange={setModel}
-                      autoComplete="off"
-                      helpText="Leave blank to use the recommended default for this provider."
-                    />
-                    <TextField
-                      label="Daily cap"
-                      type="number"
-                      value={dailyCap}
-                      onChange={setDailyCap}
-                      autoComplete="off"
-                      min={1}
-                      max={10000}
-                      helpText={`Used today: ${usedToday} requests. Resets at 00:00 UTC.`}
-                    />
-                  </>
-                )}
-
-                <InlineStack gap="200">
-                  <Button onClick={saveAi} variant="primary" loading={savingAi}>
-                    Save AI settings
-                  </Button>
-                  {provider !== 'off' && (
-                    <Button onClick={runTest} loading={testing} variant="secondary">
-                      Test connection
+              {planHandle !== 'growth' ? (
+                <Banner tone="info" title="AI review themes are included with Growth">
+                  <Text as="p" variant="bodyMd">
+                    Upgrade to connect an AI provider and summarize recurring review themes.
+                  </Text>
+                  <Box paddingBlockStart="200">
+                    <Button url={pricingUrl} target="_top">
+                      View plans
                     </Button>
+                  </Box>
+                </Banner>
+              ) : (
+                <BlockStack gap="300">
+                  <Select
+                    label="Provider"
+                    options={PROVIDER_OPTIONS}
+                    value={provider}
+                    onChange={setProvider}
+                  />
+
+                  {provider !== 'off' && (
+                    <>
+                      <TextField
+                        label="API key"
+                        type="password"
+                        value={apiKey}
+                        onChange={setApiKey}
+                        autoComplete="off"
+                        helpText={
+                          help ? (
+                            <>
+                              <Link url={help.url} target="_blank">
+                                Get a free key
+                              </Link>{' '}
+                              {help.hint}
+                            </>
+                          ) : null
+                        }
+                      />
+                      <TextField
+                        label="Model (optional)"
+                        value={model}
+                        onChange={setModel}
+                        autoComplete="off"
+                        helpText="Leave blank to use the recommended default for this provider."
+                      />
+                      <TextField
+                        label="Daily cap"
+                        type="number"
+                        value={dailyCap}
+                        onChange={setDailyCap}
+                        autoComplete="off"
+                        min={1}
+                        max={10000}
+                        helpText={`Used today: ${usedToday} requests. Resets at 00:00 UTC.`}
+                      />
+                    </>
                   )}
-                </InlineStack>
-              </BlockStack>
+
+                  <InlineStack gap="200">
+                    <Button onClick={saveAi} variant="primary" loading={savingAi}>
+                      Save AI settings
+                    </Button>
+                    {provider !== 'off' && (
+                      <Button onClick={runTest} loading={testing} variant="secondary">
+                        Test connection
+                      </Button>
+                    )}
+                  </InlineStack>
+                </BlockStack>
+              )}
 
               {savedAi && <Banner tone="success" title="AI settings saved" />}
               {testResult && (
@@ -333,7 +390,9 @@ export default function SettingsPage() {
                   tone={testResult.ok ? 'success' : 'critical'}
                   title={testResult.ok ? 'Connection OK' : 'Connection failed'}
                 >
-                  <Text as="p" variant="bodyMd">{testResult.message}</Text>
+                  <Text as="p" variant="bodyMd">
+                    {testResult.message}
+                  </Text>
                 </Banner>
               )}
             </BlockStack>
@@ -343,16 +402,22 @@ export default function SettingsPage() {
         <Layout.Section>
           <Card>
             <BlockStack gap="200">
-              <Text as="h2" variant="headingMd">About this app</Text>
+              <Text as="h2" variant="headingMd">
+                About this app
+              </Text>
               <Text as="p" tone="subdued" variant="bodyMd">
                 Klyna Reviews is part of the Klyna indie suite. Photo reviews, UGC, rich-snippet
-                stars, and review-request emails. AI is optional and only used when you've added
-                a key.
+                stars, and review-request emails. AI is optional and only used when you've added a
+                key.
               </Text>
               <Box>
-                <Link url="https://klyna.dev" target="_blank">klyna.dev</Link>
+                <Link url="https://klyna.dev" target="_blank">
+                  klyna.dev
+                </Link>
                 {' · '}
-                <Link url="https://github.com/klynahq/klyna" target="_blank">GitHub</Link>
+                <Link url="https://github.com/klynahq/klyna" target="_blank">
+                  GitHub
+                </Link>
               </Box>
             </BlockStack>
           </Card>

@@ -1,9 +1,10 @@
-import { type LoaderFunctionArgs } from '@remix-run/node';
+import type { LoaderFunctionArgs } from '@remix-run/node';
 import { Link, useLoaderData } from '@remix-run/react';
 import {
   Badge,
   BlockStack,
   Box,
+  Button,
   Card,
   InlineGrid,
   InlineStack,
@@ -11,37 +12,40 @@ import {
   Page,
   Text,
 } from '@shopify/polaris';
-import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
-import { roundRating } from '../lib/reviews.server';
 import { getShopAiSettings } from '../lib/ai.server';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
+import { getShopPlan, planSelectionUrl } from '../lib/plans.server';
+import { roundRating } from '../lib/reviews.server';
+import { authenticate } from '../shopify.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
   const shop = session.shop;
 
-  const [pending, published, requestsScheduled, ratingAgg, recent, ai, topProduct] = await Promise.all([
-    prisma.review.count({ where: { shop, status: 'pending' } }),
-    prisma.review.count({ where: { shop, status: 'published' } }),
-    prisma.reviewRequest.count({ where: { shop, status: 'scheduled' } }),
-    prisma.review.aggregate({
-      where: { shop, status: 'published' },
-      _avg: { rating: true },
-      _count: true,
-    }),
-    prisma.review.findMany({
-      where: { shop },
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-    }),
-    getShopAiSettings(shop),
-    prisma.productRating.findFirst({
-      where: { shop },
-      orderBy: { reviewCount: 'desc' },
-      select: { productId: true },
-    }),
-  ]);
+  const [pending, published, requestsScheduled, ratingAgg, recent, ai, topProduct, planHandle] =
+    await Promise.all([
+      prisma.review.count({ where: { shop, status: 'pending' } }),
+      prisma.review.count({ where: { shop, status: 'published' } }),
+      prisma.reviewRequest.count({ where: { shop, status: 'scheduled' } }),
+      prisma.review.aggregate({
+        where: { shop, status: 'published' },
+        _avg: { rating: true },
+        _count: true,
+      }),
+      prisma.review.findMany({
+        where: { shop },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+      }),
+      getShopAiSettings(shop),
+      prisma.productRating.findFirst({
+        where: { shop },
+        orderBy: { reviewCount: 'desc' },
+        select: { productId: true },
+      }),
+      getShopPlan(shop),
+    ]);
 
   return {
     shop,
@@ -53,9 +57,11 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       totalRated: ratingAgg._count,
     },
     recent,
-    aiEnabled: ai.provider !== 'off' && !!ai.apiKey,
+    aiEnabled: planHandle === 'growth' && ai.provider !== 'off' && !!ai.apiKey,
     aiProvider: ai.provider,
     topProductId: topProduct?.productId ?? null,
+    planHandle,
+    pricingUrl: planSelectionUrl(shop),
   };
 };
 
@@ -67,7 +73,8 @@ function statusTone(status: string): 'attention' | 'success' | 'critical' | 'inf
 }
 
 export default function Dashboard() {
-  const { shop, stats, recent, aiEnabled, aiProvider, topProductId } = useLoaderData<typeof loader>();
+  const { shop, stats, recent, aiEnabled, aiProvider, topProductId, planHandle, pricingUrl } =
+    useLoaderData<typeof loader>();
   const embeddedRoute = useEmbeddedRoute();
 
   const themesTo = topProductId
@@ -113,18 +120,26 @@ export default function Dashboard() {
         <Layout.Section>
           <Card>
             <BlockStack gap="200">
-              <InlineStack gap="200" blockAlign="center">
-                <Text as="h2" variant="headingMd">Reviews that build trust and rank.</Text>
-                {aiEnabled ? (
-                  <Badge tone="success">{`AI · ${aiProvider}`}</Badge>
-                ) : (
-                  <Badge tone="info">No AI key set</Badge>
+              <InlineStack align="space-between" blockAlign="center" gap="300">
+                <InlineStack gap="200" blockAlign="center">
+                  <Text as="h2" variant="headingMd">
+                    Reviews that build trust and rank.
+                  </Text>
+                  <Badge tone={planHandle === 'growth' ? 'success' : 'info'}>
+                    {planHandle === 'growth' ? 'Growth' : 'Free'}
+                  </Badge>
+                  {aiEnabled && <Badge tone="success">{`AI · ${aiProvider}`}</Badge>}
+                </InlineStack>
+                {planHandle === 'free' && (
+                  <Button url={pricingUrl} target="_top">
+                    View plans
+                  </Button>
                 )}
               </InlineStack>
               <Text as="p" variant="bodyMd" tone="subdued">
-                Collect star and photo reviews, moderate submissions, and publish
-                AggregateRating schema so Google can understand your product ratings.
-                The launch build does not read Shopify orders or customers.
+                Collect star and photo reviews, moderate submissions, and publish AggregateRating
+                schema so Google can understand your product ratings. The launch build does not read
+                Shopify orders or customers.
               </Text>
             </BlockStack>
           </Card>
@@ -135,8 +150,12 @@ export default function Dashboard() {
             {metrics.map((m) => (
               <Card key={m.label}>
                 <BlockStack gap="100">
-                  <Text as="p" variant="bodySm" tone="subdued">{m.label}</Text>
-                  <Text as="p" variant="heading2xl" fontWeight="bold">{m.value}</Text>
+                  <Text as="p" variant="bodySm" tone="subdued">
+                    {m.label}
+                  </Text>
+                  <Text as="p" variant="heading2xl" fontWeight="bold">
+                    {m.value}
+                  </Text>
                 </BlockStack>
               </Card>
             ))}
@@ -150,12 +169,16 @@ export default function Dashboard() {
                 <BlockStack gap="200">
                   <InlineStack align="space-between" blockAlign="center">
                     <InlineStack gap="200" blockAlign="center">
-                      <Text as="h3" variant="headingSm">{t.title}</Text>
+                      <Text as="h3" variant="headingSm">
+                        {t.title}
+                      </Text>
                       {t.ai && <Badge tone={aiEnabled ? 'success' : 'info'}>AI</Badge>}
                     </InlineStack>
                     {t.badge && <Badge tone="attention">{t.badge}</Badge>}
                   </InlineStack>
-                  <Text as="p" variant="bodyMd" tone="subdued">{t.body}</Text>
+                  <Text as="p" variant="bodyMd" tone="subdued">
+                    {t.body}
+                  </Text>
                   <Link to={embeddedRoute(t.to)}>Open</Link>
                 </BlockStack>
               </Card>
@@ -167,7 +190,9 @@ export default function Dashboard() {
           <Layout.Section>
             <Card>
               <BlockStack gap="300">
-                <Text as="h2" variant="headingMd">Latest reviews</Text>
+                <Text as="h2" variant="headingMd">
+                  Latest reviews
+                </Text>
                 <BlockStack gap="200">
                   {recent.map((r) => (
                     <Box
@@ -181,15 +206,25 @@ export default function Dashboard() {
                         <InlineStack align="space-between" blockAlign="center">
                           <InlineStack gap="200" blockAlign="center">
                             <Text as="span" fontWeight="bold">
-                              {'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}
+                              {'★'.repeat(r.rating)}
+                              {'☆'.repeat(5 - r.rating)}
                             </Text>
-                            <Text as="span" variant="bodySm" tone="subdued">{r.authorName}</Text>
-                            {r.verified && <Badge tone="success" size="small">Verified</Badge>}
+                            <Text as="span" variant="bodySm" tone="subdued">
+                              {r.authorName}
+                            </Text>
+                            {r.verified && (
+                              <Badge tone="success" size="small">
+                                Verified
+                              </Badge>
+                            )}
                           </InlineStack>
-                          <Badge tone={statusTone(r.status)} size="small">{r.status}</Badge>
+                          <Badge tone={statusTone(r.status)} size="small">
+                            {r.status}
+                          </Badge>
                         </InlineStack>
                         <Text as="p" variant="bodyMd">
-                          {r.title ? <strong>{r.title} — </strong> : null}{r.body}
+                          {r.title ? <strong>{r.title} — </strong> : null}
+                          {r.body}
                         </Text>
                         <Text as="p" variant="bodySm" tone="subdued">
                           {r.productTitle} · {new Date(r.createdAt).toLocaleDateString()}

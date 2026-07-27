@@ -5,7 +5,13 @@
 // name + one representative quote each, and caches the result for 24 hours.
 
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
-import { Form, Link as RemixLink, useActionData, useLoaderData, useNavigation } from '@remix-run/react';
+import {
+  Form,
+  Link as RemixLink,
+  useActionData,
+  useLoaderData,
+  useNavigation,
+} from '@remix-run/react';
 import {
   Badge,
   Banner,
@@ -18,10 +24,11 @@ import {
   Page,
   Text,
 } from '@shopify/polaris';
-import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
 import { getAiClientForShop, getShopAiSettings } from '../lib/ai.server';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
+import { getShopPlan, planSelectionUrl } from '../lib/plans.server';
+import { authenticate } from '../shopify.server';
 
 const TEXT_CAP = 8000;
 const CACHE_TTL_SECONDS = 60 * 60 * 24;
@@ -88,8 +95,8 @@ function parseThemes(raw: string): Theme[] | null {
         typeof (t as { name?: unknown }).name === 'string' &&
         typeof (t as { quote?: unknown }).quote === 'string'
       ) {
-        const name = ((t as { name: string }).name).trim();
-        const quote = ((t as { quote: string }).quote).trim();
+        const name = (t as { name: string }).name.trim();
+        const quote = (t as { quote: string }).quote.trim();
         if (name && quote) out.push({ name, quote });
       }
     }
@@ -104,13 +111,14 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const shop = session.shop;
   const productId = decodeProductGid(params.id ?? '');
 
-  const [reviews, ai] = await Promise.all([
+  const [reviews, ai, planHandle] = await Promise.all([
     prisma.review.findMany({
       where: { shop, productId, status: 'published' },
       orderBy: { createdAt: 'desc' },
       select: { title: true, body: true, productTitle: true },
     }),
     getShopAiSettings(shop),
+    getShopPlan(shop),
   ]);
 
   const productTitle = reviews[0]?.productTitle ?? productId;
@@ -121,8 +129,10 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     productId,
     productTitle,
     reviewCount,
-    aiEnabled: ai.provider !== 'off' && !!ai.apiKey,
+    aiEnabled: planHandle === 'growth' && ai.provider !== 'off' && !!ai.apiKey,
     aiProvider: ai.provider,
+    planHandle,
+    pricingUrl: planSelectionUrl(shop),
   };
 };
 
@@ -134,6 +144,10 @@ async function runAction({ request, params }: ActionFunctionArgs): Promise<Actio
   const { session } = await authenticate.admin(request);
   const shop = session.shop;
   const productId = decodeProductGid(params.id ?? '');
+  const planHandle = await getShopPlan(shop);
+  if (planHandle !== 'growth') {
+    return { ok: false, error: 'Review theme summaries are available on the Growth plan.' };
+  }
 
   const ai = await getShopAiSettings(shop);
   if (ai.provider === 'off' || !ai.apiKey) {
@@ -187,24 +201,23 @@ export const action = async (args: ActionFunctionArgs) => {
 };
 
 export default function ProductThemes() {
-  const { productTitle, reviewCount, aiEnabled, aiProvider } = useLoaderData<typeof loader>();
+  const { productTitle, reviewCount, aiEnabled, aiProvider, planHandle, pricingUrl } =
+    useLoaderData<typeof loader>();
   const embeddedRoute = useEmbeddedRoute();
   const data = useActionData<typeof action>();
   const nav = useNavigation();
   const running = nav.state === 'submitting';
 
   return (
-    <Page
-      title="Review themes"
-      subtitle={productTitle}
-      backAction={{ url: embeddedRoute('/app') }}
-    >
+    <Page title="Review themes" subtitle={productTitle} backAction={{ url: embeddedRoute('/app') }}>
       <Layout>
         <Layout.Section>
           <Card>
             <BlockStack gap="300">
               <InlineStack gap="200" blockAlign="center">
-                <Text as="h2" variant="headingMd">What customers keep mentioning</Text>
+                <Text as="h2" variant="headingMd">
+                  What customers keep mentioning
+                </Text>
                 {aiEnabled ? (
                   <Badge tone="success">{`AI · ${aiProvider}`}</Badge>
                 ) : (
@@ -217,19 +230,32 @@ export default function ProductThemes() {
                   : `Reads the ${reviewCount} published review${reviewCount === 1 ? '' : 's'} for this product and extracts the top three themes with a representative quote each. Cached for 24 hours per product.`}
               </Text>
 
-              {!aiEnabled && (
-                <Banner tone="warning" title="Enable AI in Settings">
+              {planHandle !== 'growth' ? (
+                <Banner tone="info" title="Review themes are included with Growth">
                   <Text as="p" variant="bodyMd">
-                    Add a free-tier API key (OpenRouter, Groq, or Gemini) on the Settings page,
-                    then come back here.
+                    Upgrade to summarize published reviews into recurring customer themes.
                   </Text>
                   <Box paddingBlockStart="200">
-                    <RemixLink to={embeddedRoute('/app/settings')}>Open Settings</RemixLink>
+                    <Button url={pricingUrl} target="_top">
+                      View plans
+                    </Button>
                   </Box>
                 </Banner>
+              ) : (
+                !aiEnabled && (
+                  <Banner tone="warning" title="Enable AI in Settings">
+                    <Text as="p" variant="bodyMd">
+                      Add a free-tier API key (OpenRouter, Groq, or Gemini) on the Settings page,
+                      then come back here.
+                    </Text>
+                    <Box paddingBlockStart="200">
+                      <RemixLink to={embeddedRoute('/app/settings')}>Open Settings</RemixLink>
+                    </Box>
+                  </Banner>
+                )
               )}
 
-              {aiEnabled && reviewCount > 0 && (
+              {planHandle === 'growth' && aiEnabled && reviewCount > 0 && (
                 <Form method="post">
                   <Button submit variant="primary" loading={running}>
                     {running ? 'Summarizing' : 'Summarize themes'}
@@ -243,16 +269,20 @@ export default function ProductThemes() {
         {data && !data.ok && (
           <Layout.Section>
             <Banner tone="critical" title="Could not summarize themes">
-              <Text as="p" variant="bodyMd">{data.error}</Text>
+              <Text as="p" variant="bodyMd">
+                {data.error}
+              </Text>
             </Banner>
           </Layout.Section>
         )}
 
-        {data && data.ok && (
+        {data?.ok && (
           <Layout.Section>
             <BlockStack gap="300">
               <InlineStack gap="200" blockAlign="center">
-                <Text as="h2" variant="headingMd">Top themes</Text>
+                <Text as="h2" variant="headingMd">
+                  Top themes
+                </Text>
                 <Badge tone={data.source === 'cache' ? 'info' : 'success'}>
                   {data.source === 'cache' ? 'From cache' : 'Fresh'}
                 </Badge>
@@ -260,7 +290,9 @@ export default function ProductThemes() {
               {data.themes.map((t, i) => (
                 <Card key={`${i}-${t.name}`}>
                   <BlockStack gap="200">
-                    <Text as="h3" variant="headingSm">{t.name}</Text>
+                    <Text as="h3" variant="headingSm">
+                      {t.name}
+                    </Text>
                     <Box
                       padding="300"
                       borderColor="border"
@@ -268,7 +300,9 @@ export default function ProductThemes() {
                       borderRadius="200"
                       background="bg-surface-secondary"
                     >
-                      <Text as="p" variant="bodyMd">"{t.quote}"</Text>
+                      <Text as="p" variant="bodyMd">
+                        "{t.quote}"
+                      </Text>
                     </Box>
                   </BlockStack>
                 </Card>
