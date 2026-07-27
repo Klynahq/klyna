@@ -15,7 +15,7 @@ import {
 import prisma from '../db.server';
 import { getShopAiSettings } from '../lib/ai.server';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
-import { getShopPlan, planSelectionUrl } from '../lib/plans.server';
+import { planSelectionUrl, syncPlanFromRequest } from '../lib/plans.server';
 import { roundRating } from '../lib/reviews.server';
 import { authenticate } from '../shopify.server';
 
@@ -44,7 +44,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         orderBy: { reviewCount: 'desc' },
         select: { productId: true },
       }),
-      getShopPlan(shop),
+      syncPlanFromRequest(shop, request),
     ]);
 
   return {
