@@ -8,6 +8,10 @@ import prisma from '../db.server';
 //   - shop/redact
 // authenticate.webhook(request) verifies the HMAC and returns the topic.
 export const action = async ({ request }: ActionFunctionArgs) => {
+  if (!request.headers.get('x-shopify-hmac-sha256')) {
+    return new Response(undefined, { status: 401, statusText: 'Unauthorized' });
+  }
+
   const { shop, topic } = await authenticate.webhook(request);
   console.log(`Received compliance webhook ${topic} for ${shop}.`);
 
