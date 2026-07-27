@@ -3,7 +3,7 @@
 
   Renders on the product page. Hidden while the selected variant is in stock;
   when sold out it shows an email (and optionally phone) capture form that POSTs
-  to the app's /api/subscribe endpoint. Variant switching is handled client-side
+  through Shopify's signed app proxy. Variant switching is handled client-side
   by reading the product JSON below, so the form follows the customer's variant
   selection without a page reload.
 {% endcomment %}
@@ -16,7 +16,7 @@
   class="klyna-bis"
   id="klyna-bis-{{ block.id }}"
   data-klyna-bis
-  data-endpoint="{{ block.settings.app_url | default: 'https://klyna-shopify-restock.vercel.app' }}/api/subscribe"
+  data-endpoint="/apps/klyna-restock"
   data-shop="{{ shop.permanent_domain }}"
   data-product-id="{{ product.id }}"
   data-product-title="{{ product.title | escape }}"
@@ -85,17 +85,6 @@
   "name": "Klyna Notify me",
   "target": "section",
   "settings": [
-    {
-      "type": "header",
-      "content": "Connection"
-    },
-    {
-      "type": "text",
-      "id": "app_url",
-      "label": "App URL",
-      "info": "Your installed app's public URL (the application_url from shopify.app.toml). The widget posts signups here.",
-      "default": "https://klyna-shopify-restock.vercel.app"
-    },
     {
       "type": "header",
       "content": "Copy"

@@ -52,8 +52,14 @@ api_version = "2026-04"
   uri = "https://klyna-restock.vercel.app/webhooks/shop/redact"
 
 [access_scopes]
-# read_products + read_inventory power the demand report and the inventory webhook.
-scopes = "read_products,read_inventory"
+# read_products + read_inventory power the demand report and inventory webhook.
+# write_app_proxy signs storefront waitlist requests before they reach the app.
+scopes = "read_products,read_inventory,write_app_proxy"
+
+[app_proxy]
+url = "https://klyna-restock.vercel.app/api/subscribe"
+prefix = "apps"
+subpath = "klyna-restock"
 
 [auth]
 redirect_urls = [

@@ -3,7 +3,7 @@ import { authenticate } from '../shopify.server';
 import { recordSignup } from '../services/waitlist.server';
 
 // Public storefront endpoint — the "Notify me" widget POSTs here through the
-// Shopify App Proxy. The Theme App Extension fetches `/apps/<proxy>/api/subscribe`
+// Shopify App Proxy. The Theme App Extension fetches `/apps/klyna-restock`
 // and Shopify forwards it server-to-server with a signed `shop` query param.
 // We authenticate via `authenticate.public.appProxy` so the shop identity is
 // asserted by Shopify, never trusted from the client body.

@@ -7,7 +7,7 @@
  *      when that variant is sold out.
  *   3. Tracks variant selection by watching the URL ?variant= param and common
  *      theme events / form inputs, so it follows the customer without a reload.
- *   4. On submit, POSTs the signup to the app's /api/subscribe endpoint and
+ *   4. On submit, POSTs the signup through Shopify's signed app proxy and
  *      swaps the form for the success message.
  */
 (function () {
