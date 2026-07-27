@@ -22,6 +22,7 @@ import {
 } from '@shopify/polaris';
 import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
+import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getShopSettings } from '../services/waitlist.server';
 import { getAiClientForShop } from '../lib/ai.server';
 import { getShopAiSettings } from '../lib/ai.server';
@@ -128,6 +129,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 };
 
 export default function Timing() {
+  const embeddedRoute = useEmbeddedRoute();
   const { enabled, aiOff, queueCount, recentSent, queuedSample, window: w } =
     useLoaderData<typeof loader>();
   const data = useActionData<typeof action>();
@@ -168,7 +170,7 @@ export default function Timing() {
     <Page
       title="Smart timing"
       subtitle="Respect each shopper's local hours when alerts fire."
-      backAction={{ url: '/app' }}
+      backAction={{ url: embeddedRoute('/app') }}
     >
       <Layout>
         {aiOff && (

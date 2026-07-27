@@ -13,6 +13,7 @@ import {
 } from '@shopify/polaris';
 import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
+import { useEmbeddedRoute } from '../lib/embedded-routes';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
@@ -57,6 +58,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 export default function Dashboard() {
   const { shop, pending, notified, alertsSent, alertsFailed, top } =
     useLoaderData<typeof loader>();
+  const embeddedRoute = useEmbeddedRoute();
 
   const stats = [
     { label: 'On waitlists', value: pending, hint: 'Shoppers waiting on a restock' },
@@ -128,7 +130,7 @@ export default function Dashboard() {
               <BlockStack gap="300">
                 <InlineStack align="space-between" blockAlign="center">
                   <Text as="h2" variant="headingMd">Most-wanted right now</Text>
-                  <Link to="/app/demand">Full report →</Link>
+                  <Link to={embeddedRoute('/app/demand')}>Full report →</Link>
                 </InlineStack>
                 <BlockStack gap="200">
                   {top.map((t) => (
@@ -155,7 +157,7 @@ export default function Dashboard() {
                     {t.ai && <Badge tone="info">AI</Badge>}
                   </InlineStack>
                   <Text as="p" variant="bodyMd" tone="subdued">{t.body}</Text>
-                  <Link to={t.to}>Open →</Link>
+                  <Link to={embeddedRoute(t.to)}>Open →</Link>
                 </BlockStack>
               </Card>
             ))}

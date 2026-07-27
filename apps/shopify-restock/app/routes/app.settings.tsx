@@ -22,6 +22,7 @@ import { getShopSettings } from '../services/waitlist.server';
 import prisma from '../db.server';
 import { createAiClient, type AiProvider } from '~/lib/klyna-ai-client';
 import { getShopAiSettings, getTodayUsage, saveShopAiSettings } from '../lib/ai.server';
+import { useEmbeddedRoute } from '../lib/embedded-routes';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
@@ -102,6 +103,7 @@ const PROVIDER_HELP: Record<string, { url: string; hint: string }> = {
 
 export default function Settings() {
   const { settings, ai, usedToday } = useLoaderData<typeof loader>();
+  const embeddedRoute = useEmbeddedRoute();
   const data = useActionData<typeof action>();
   const nav = useNavigation();
   const submit = useSubmit();
@@ -154,7 +156,7 @@ export default function Settings() {
     <Page
       title="Settings"
       subtitle="Tune the storefront widget, delivery, and AI assistance."
-      backAction={{ url: '/app' }}
+      backAction={{ url: embeddedRoute('/app') }}
       primaryAction={{ content: 'Save', onAction: handleSave, loading: saving }}
     >
       <Layout>

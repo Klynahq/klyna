@@ -17,6 +17,7 @@ import {
 } from '@shopify/polaris';
 import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
+import { useEmbeddedRoute } from '../lib/embedded-routes';
 
 type StatusFilter = 'ALL' | 'PENDING' | 'NOTIFIED' | 'CANCELLED';
 
@@ -125,6 +126,7 @@ function csvCell(value: string | null): string {
 }
 
 export default function Subscribers() {
+  const embeddedRoute = useEmbeddedRoute();
   const { subscribers, filter } = useLoaderData<typeof loader>();
   const data = useActionData<typeof action>();
   const nav = useNavigation();
@@ -155,7 +157,7 @@ export default function Subscribers() {
     <Page
       title="Subscribers"
       subtitle="Everyone on a waitlist, across every variant."
-      backAction={{ url: '/app' }}
+      backAction={{ url: embeddedRoute('/app') }}
     >
       <Layout>
         <Layout.Section>

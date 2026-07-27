@@ -15,6 +15,7 @@ import {
 } from '@shopify/polaris';
 import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
+import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { syncWaitlistedVariants } from '../services/inventory.server';
 import { flushVariant, storefrontProductUrl } from '../services/waitlist.server';
 
@@ -121,6 +122,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 export default function DemandReport() {
   const { rows, totalWaiting } = useLoaderData<typeof loader>();
+  const embeddedRoute = useEmbeddedRoute();
   const data = useActionData<typeof action>();
   const nav = useNavigation();
   const { smUp } = useBreakpoints();
@@ -131,7 +133,7 @@ export default function DemandReport() {
     <Page
       title="Demand report"
       subtitle="Sold-out variants ranked by how many shoppers are waiting."
-      backAction={{ url: '/app' }}
+      backAction={{ url: embeddedRoute('/app') }}
     >
       <Layout>
         <Layout.Section>
