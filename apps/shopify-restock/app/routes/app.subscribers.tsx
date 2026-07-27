@@ -193,7 +193,11 @@ export default function Subscribers() {
               <Text as="p" variant="bodyMd" tone="subdued">
                 Export the current tab — or every signup — as CSV. Your list, your data.
               </Text>
-              <Form method="post" reloadDocument>
+              <Form
+                method="post"
+                action={embeddedRoute('/app/subscribers')}
+                reloadDocument
+              >
                 <input type="hidden" name="intent" value="export" />
                 <input type="hidden" name="status" value={filter} />
                 <Button submit disabled={planHandle !== 'growth'}>Export CSV</Button>
@@ -253,7 +257,10 @@ export default function Subscribers() {
                       <IndexTable.Cell>
                         <InlineStack gap="200">
                           {s.status === 'NOTIFIED' && (
-                            <Form method="post">
+                            <Form
+                              method="post"
+                              action={embeddedRoute('/app/subscribers')}
+                            >
                               <input type="hidden" name="intent" value="rearm" />
                               <input type="hidden" name="id" value={s.id} />
                               <Button submit size="slim" variant="plain" disabled={busy}>
@@ -262,7 +269,10 @@ export default function Subscribers() {
                             </Form>
                           )}
                           {s.status !== 'CANCELLED' && (
-                            <Form method="post">
+                            <Form
+                              method="post"
+                              action={embeddedRoute('/app/subscribers')}
+                            >
                               <input type="hidden" name="intent" value="cancel" />
                               <input type="hidden" name="id" value={s.id} />
                               <Button submit size="slim" variant="plain" tone="critical" disabled={busy}>

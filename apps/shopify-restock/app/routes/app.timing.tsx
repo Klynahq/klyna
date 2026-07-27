@@ -165,14 +165,14 @@ export default function Timing() {
     const fd = new FormData();
     fd.set('intent', 'toggle');
     fd.set('enabled', String(next));
-    submit(fd, { method: 'post' });
+    submit(fd, { method: 'post', action: embeddedRoute('/app/timing') });
   };
 
   const runPreview = () => {
     const fd = new FormData();
     fd.set('intent', 'preview');
     fd.set('countryCode', country);
-    submit(fd, { method: 'post' });
+    submit(fd, { method: 'post', action: embeddedRoute('/app/timing') });
   };
 
   const preview = data && 'preview' in data ? data.preview : null;
@@ -229,8 +229,8 @@ export default function Timing() {
                 from their captured locale and maps it to a timezone. If the
                 local hour is between {w.start}:00 and {w.end}:00 the alert fires
                 immediately. Outside that window it's parked in the queue and
-                released at {w.morning}:00 local. The queue is flushed by
-                /api/cron/restock-tick (protected by SCHEDULER_SECRET).
+                released at {w.morning}:00 local. Klyna checks the queue
+                automatically throughout the day.
               </Text>
               <Checkbox
                 label="Enable smart timing"
@@ -259,7 +259,7 @@ export default function Timing() {
                 <Text as="p" variant="bodySm" tone="subdued">Released so far</Text>
                 <Text as="p" variant="heading2xl" fontWeight="bold">{String(recentSent)}</Text>
                 <Text as="p" variant="bodySm" tone="subdued">
-                  Smart-timed alerts the cron tick has delivered.
+                  Smart-timed alerts delivered during shoppers' local daytime.
                 </Text>
               </BlockStack>
             </Card>

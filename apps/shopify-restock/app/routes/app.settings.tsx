@@ -154,7 +154,7 @@ export default function Settings() {
     fd.set('intent', 'save');
     fd.set('alertsEnabled', String(alertsEnabled));
     fd.set('resendGuardHours', resendGuardHours);
-    submit(fd, { method: 'post' });
+    submit(fd, { method: 'post', action: embeddedRoute('/app/settings') });
   };
 
   const testResult =
@@ -172,7 +172,10 @@ export default function Settings() {
     fd.set('provider', provider);
     fd.set('apiKey', apiKey);
     fd.set('model', model);
-    testFetcher.submit(fd, { method: 'post' });
+    testFetcher.submit(fd, {
+      method: 'post',
+      action: embeddedRoute('/app/settings'),
+    });
   };
 
   return (
@@ -280,7 +283,7 @@ export default function Settings() {
                 </Text>
               </BlockStack>
 
-              <Form method="post">
+              <Form method="post" action={embeddedRoute('/app/settings')}>
                 <BlockStack gap="300">
                   <Select
                     label="Provider"

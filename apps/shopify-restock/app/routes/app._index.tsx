@@ -39,14 +39,25 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   // Hydrate the top variants with their cached titles for display.
   const variantIds = topVariants.map((t) => t.variantId);
-  const snapshots = await prisma.variantSnapshot.findMany({
-    where: { shop, variantId: { in: variantIds } },
-  });
+  const [snapshots, subscriptions] = await Promise.all([
+    prisma.variantSnapshot.findMany({
+      where: { shop, variantId: { in: variantIds } },
+    }),
+    prisma.subscription.findMany({
+      where: { shop, status: 'PENDING', variantId: { in: variantIds } },
+      distinct: ['variantId'],
+      select: { variantId: true, productTitle: true, variantTitle: true },
+    }),
+  ]);
   const titleFor = (id: string) => {
     const snap = snapshots.find((s) => s.variantId === id);
-    return snap
-      ? [snap.productTitle, snap.variantTitle].filter(Boolean).join(' — ')
-      : id;
+    const subscription = subscriptions.find((candidate) => candidate.variantId === id);
+    return [
+      snap?.productTitle ?? subscription?.productTitle,
+      snap?.variantTitle ?? subscription?.variantTitle,
+    ]
+      .filter(Boolean)
+      .join(' — ') || 'Product details unavailable';
   };
 
   const top = topVariants.map((t) => ({

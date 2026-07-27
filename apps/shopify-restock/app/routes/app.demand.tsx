@@ -54,21 +54,34 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   }
 
   const variantIds = [...byVariant.keys()];
-  const snapshots = await prisma.variantSnapshot.findMany({
-    where: { shop, variantId: { in: variantIds } },
-  });
+  const [snapshots, subscriptions] = await Promise.all([
+    prisma.variantSnapshot.findMany({
+      where: { shop, variantId: { in: variantIds } },
+    }),
+    prisma.subscription.findMany({
+      where: { shop, status: 'PENDING', variantId: { in: variantIds } },
+      distinct: ['variantId'],
+      select: { variantId: true, productTitle: true, variantTitle: true },
+    }),
+  ]);
   const snapFor = (id: string) => snapshots.find((s) => s.variantId === id);
+  const subscriptionFor = (id: string) =>
+    subscriptions.find((subscription) => subscription.variantId === id);
 
   const rows: DemandRow[] = variantIds
     .map((variantId) => {
       const counts = byVariant.get(variantId)!;
       const snap = snapFor(variantId);
-      const title = snap
-        ? [snap.productTitle, snap.variantTitle].filter(Boolean).join(' — ')
-        : variantId;
+      const subscription = subscriptionFor(variantId);
+      const title = [
+        snap?.productTitle ?? subscription?.productTitle,
+        snap?.variantTitle ?? subscription?.variantTitle,
+      ]
+        .filter(Boolean)
+        .join(' — ');
       return {
         variantId,
-        title,
+        title: title || 'Product details unavailable',
         handle: snap?.productHandle ?? null,
         imageUrl: snap?.imageUrl ?? null,
         price: snap?.price ?? null,
@@ -143,7 +156,7 @@ export default function DemandReport() {
                 Restocks fire alerts automatically via webhook. Use “Check stock now”
                 to reconcile against the Admin API on demand.
               </Text>
-              <Form method="post">
+              <Form method="post" action={embeddedRoute('/app/demand')}>
                 <input type="hidden" name="intent" value="sync" />
                 <Button submit variant="primary" loading={syncing}>
                   Check stock now
@@ -214,7 +227,7 @@ export default function DemandReport() {
                       )}
                     </IndexTable.Cell>
                     <IndexTable.Cell>
-                      <Form method="post">
+                      <Form method="post" action={embeddedRoute('/app/demand')}>
                         <input type="hidden" name="intent" value="flush" />
                         <input type="hidden" name="variantId" value={row.variantId} />
                         <Button submit size="slim" disabled={!row.inStock} variant="plain">
