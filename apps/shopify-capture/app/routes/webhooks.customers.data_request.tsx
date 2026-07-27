@@ -5,6 +5,10 @@ import { authenticate } from '../shopify.server';
 // Klyna Capture stores no customer PII beyond email/phone opt-ins (Subscriber rows).
 // We log the request for the merchant's compliance trail and respond 200.
 export const action = async ({ request }: ActionFunctionArgs) => {
+  if (!request.headers.get('x-shopify-hmac-sha256')) {
+    return new Response(undefined, { status: 401, statusText: 'Unauthorized' });
+  }
+
   const { shop, topic, payload } = await authenticate.webhook(request);
   console.log(`Received ${topic} webhook for ${shop}`, JSON.stringify(payload));
   // No additional data export needed: Klyna Capture only stores marketing

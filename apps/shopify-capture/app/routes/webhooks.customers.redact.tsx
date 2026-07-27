@@ -5,6 +5,10 @@ import prisma from '../db.server';
 // GDPR mandatory webhook: customers/redact.
 // Delete all Subscriber rows for this shop+customer.
 export const action = async ({ request }: ActionFunctionArgs) => {
+  if (!request.headers.get('x-shopify-hmac-sha256')) {
+    return new Response(undefined, { status: 401, statusText: 'Unauthorized' });
+  }
+
   const { shop, topic, payload } = await authenticate.webhook(request);
   console.log(`Received ${topic} webhook for ${shop}`);
 
