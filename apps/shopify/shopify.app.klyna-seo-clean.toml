@@ -6,12 +6,8 @@ application_url = "https://klyna-seo.vercel.app"
 embedded = true
 handle = "klyna-seo-clean"
 
-[build]
-automatically_update_urls_on_dev = false
-include_config_on_deploy = true
-
 [webhooks]
-api_version = "2026-07"
+api_version = "2025-01"
 
   [[webhooks.subscriptions]]
   topics = [ "app/uninstalled" ]
@@ -40,3 +36,6 @@ redirect_urls = [
   "https://klyna-seo.vercel.app/api/auth/callback",
   "https://klyna-seo.vercel.app/auth/login"
 ]
+
+[build]
+automatically_update_urls_on_dev = false

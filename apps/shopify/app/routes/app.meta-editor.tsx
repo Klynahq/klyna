@@ -16,7 +16,7 @@ import {
   Text,
   TextField,
 } from '@shopify/polaris';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import prisma from '../db.server';
 import { authenticate } from '../shopify.server';
 
@@ -78,17 +78,15 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session, admin } = await authenticate.admin(request);
   const shop = session.shop;
 
-  const shopResponse = await admin.graphql('{ shop { primaryDomain { url } } }');
-  const shopData = (await shopResponse.json()) as {
-    data: { shop: { primaryDomain: { url: string } } };
-  };
-  const baseUrl = shopData.data.shop.primaryDomain.url.replace(/\/$/, '');
+  type ShopData = { data: { shop: { primaryDomain: { url: string } } } };
+  const shopRes = await admin.graphql('{ shop { primaryDomain { url } } }');
+  const shopJson = (await shopRes.json()) as ShopData;
+  const baseUrl = shopJson.data.shop.primaryDomain.url.replace(/\/$/, '');
 
   type P = {
     id: string;
     handle: string;
     title: string;
-    onlineStoreUrl: string | null;
     seo: { title: string | null; description: string | null };
   };
   type C = {
@@ -105,7 +103,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       `query ($cursor: String) {
         products(first: 50, after: $cursor) {
           pageInfo { hasNextPage endCursor }
-          nodes { id handle title onlineStoreUrl seo { title description } }
+          nodes { id handle title seo { title description } }
         }
       }`,
       (d) =>
@@ -157,7 +155,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       title: p.title,
       seoTitle: p.seo.title,
       seoDescription: p.seo.description,
-      url: p.onlineStoreUrl,
+      url: `${baseUrl}/products/${p.handle}`,
       type: 'product' as const,
     })),
     ...collections.map((c) => ({
@@ -194,7 +192,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   try {
     if (type === 'product') {
-      await admin.graphql(
+      const res = await admin.graphql(
         `mutation klynaProductSeo($input: ProductInput!) {
           productUpdate(input: $input) {
             product { id }
@@ -207,8 +205,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           },
         },
       );
+      const gql = (await res.json()) as {
+        data: { productUpdate: { userErrors: { message: string }[] } };
+      };
+      const error = gql.data.productUpdate.userErrors[0];
+      if (error) return json({ error: error.message, id }, { status: 400 });
     } else if (type === 'collection') {
-      await admin.graphql(
+      const res = await admin.graphql(
         `mutation klynaCollSeo($input: CollectionInput!) {
           collectionUpdate(input: $input) {
             collection { id }
@@ -221,8 +224,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           },
         },
       );
+      const gql = (await res.json()) as {
+        data: { collectionUpdate: { userErrors: { message: string }[] } };
+      };
+      const error = gql.data.collectionUpdate.userErrors[0];
+      if (error) return json({ error: error.message, id }, { status: 400 });
     } else if (type === 'page') {
-      await admin.graphql(
+      const res = await admin.graphql(
         `mutation klynaPageSeoMeta($ownerId: ID!, $title: String!, $desc: String!) {
           metafieldsSet(metafields: [
             { ownerId: $ownerId, namespace: "global", key: "title_tag",       type: "single_line_text_field", value: $title }
@@ -231,18 +239,24 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         }`,
         { variables: { ownerId: id, title: seoTitle ?? '', desc: seoDescription ?? '' } },
       );
+      const gql = (await res.json()) as {
+        data: { metafieldsSet: { userErrors: { message: string }[] } };
+      };
+      const error = gql.data.metafieldsSet.userErrors[0];
+      if (error) return json({ error: error.message, id }, { status: 400 });
     }
 
-    await prisma.fixLog.createMany({
-      data: [
-        ...(seoTitle
-          ? [{ shop, resourceId: id, url: id, field: 'seo.title', newValue: seoTitle }]
-          : []),
-        ...(seoDescription
-          ? [{ shop, resourceId: id, url: id, field: 'seo.description', newValue: seoDescription }]
-          : []),
-      ],
-    });
+    const logRows = [
+      ...(seoTitle
+        ? [{ shop, resourceId: id, url: id, field: 'seo.title', newValue: seoTitle }]
+        : []),
+      ...(seoDescription
+        ? [{ shop, resourceId: id, url: id, field: 'seo.description', newValue: seoDescription }]
+        : []),
+    ];
+    if (logRows.length > 0) {
+      await prisma.fixLog.createMany({ data: logRows });
+    }
 
     return json({ saved: true, id });
   } catch (err) {
@@ -253,9 +267,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 type RowEditorProps = {
   row: MetaRow;
   onSaved: (id: string) => void;
+  saved: boolean;
 };
 
-function RowEditor({ row, onSaved }: RowEditorProps) {
+function RowEditor({ row, onSaved, saved }: RowEditorProps) {
   const fetcher = useFetcher<{ saved?: boolean; error?: string; id?: string }>();
   const [title, setTitle] = useState(row.seoTitle ?? '');
   const [desc, setDesc] = useState(row.seoDescription ?? '');
@@ -263,11 +278,13 @@ function RowEditor({ row, onSaved }: RowEditorProps) {
   const titleScore = scoreField(title, 30, 60);
   const descScore = scoreField(desc, 80, 160);
   const isSaving = fetcher.state === 'submitting';
-  const justSaved = fetcher.data?.saved && fetcher.data.id === row.id;
+  const justSaved = saved || (fetcher.data?.saved && fetcher.data.id === row.id);
 
-  if (justSaved && !fetcher.data?.error) {
-    onSaved(row.id);
-  }
+  useEffect(() => {
+    if (fetcher.data?.saved && fetcher.data.id === row.id && !fetcher.data.error) {
+      onSaved(row.id);
+    }
+  }, [fetcher.data, onSaved, row.id]);
 
   const save = () => {
     const fd = new FormData();
@@ -452,7 +469,7 @@ export default function MetaEditorPage() {
               currentRows.map((row, i) => (
                 <Card key={row.id}>
                   <BlockStack gap="300">
-                    <RowEditor row={row} onSaved={onSaved} />
+                    <RowEditor row={row} onSaved={onSaved} saved={savedIds.has(row.id)} />
                     {i < currentRows.length - 1 && <Divider />}
                   </BlockStack>
                 </Card>

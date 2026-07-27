@@ -17,7 +17,7 @@ import {
   TextField,
   Thumbnail,
 } from '@shopify/polaris';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import prisma from '../db.server';
 import { authenticate } from '../shopify.server';
 
@@ -220,14 +220,19 @@ export default function AltTextPage() {
     fetcher.submit(fd, { method: 'post' });
   }, [fetcher, images, applied, getAlt]);
 
-  // Track applied images
-  if (fetcher.data?.updated && fetcher.data.imageId && !applied.has(fetcher.data.imageId)) {
-    setApplied((prev) => new Set([...prev, fetcher.data!.imageId!]));
-  }
-  if (fetcher.data?.updatedAll) {
-    setBulkRunning(false);
-    void revalidator.revalidate();
-  }
+  useEffect(() => {
+    if (fetcher.data?.updated && fetcher.data.imageId) {
+      setApplied((prev) => {
+        if (prev.has(fetcher.data!.imageId!)) return prev;
+        return new Set([...prev, fetcher.data!.imageId!]);
+      });
+    }
+
+    if (fetcher.data?.updatedAll) {
+      setBulkRunning(false);
+      void revalidator.revalidate();
+    }
+  }, [fetcher.data, revalidator]);
 
   const pending = images.filter((img) => !applied.has(img.imageId));
   const busy = fetcher.state === 'submitting';

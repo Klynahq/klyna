@@ -56,17 +56,32 @@ function extractLinks(html: string, baseUrl: string): string[] {
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session, admin } = await authenticate.admin(request);
 
-  type ShopRes = { data: { shop: { primaryDomain: { url: string }; myshopifyDomain: string } } };
-  const shopRes = await admin.graphql('{ shop { primaryDomain { url } myshopifyDomain } }');
+  type ShopRes = { data: { shop: { primaryDomain: { url: string } } } };
+  const shopRes = await admin.graphql('{ shop { primaryDomain { url } } }');
   const {
     data: { shop: shopData },
   } = (await shopRes.json()) as ShopRes;
   const baseUrl = shopData.primaryDomain.url.replace(/\/$/, '');
 
   // Fetch content from Admin API (no storefront fetch needed)
-  type P = { id: string; handle: string; title: string; descriptionHtml: string };
-  type C = { id: string; handle: string; title: string; descriptionHtml: string };
-  type Pg = { id: string; handle: string; title: string; body: string };
+  type P = {
+    id: string;
+    handle: string;
+    title: string;
+    descriptionHtml: string;
+  };
+  type C = {
+    id: string;
+    handle: string;
+    title: string;
+    descriptionHtml: string;
+  };
+  type Pg = {
+    id: string;
+    handle: string;
+    title: string;
+    body: string;
+  };
 
   const [productsRes, collectionsRes, pagesRes] = await Promise.all([
     admin.graphql(`{

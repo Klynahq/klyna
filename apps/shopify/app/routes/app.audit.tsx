@@ -29,6 +29,8 @@ import { authenticate } from '../shopify.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
+  const pageUrl = new URL(request.url);
+  const requestedUrl = pageUrl.searchParams.get('url')?.trim();
   const [recent, ai] = await Promise.all([
     prisma.auditResult.findMany({
       where: { shop: session.shop },
@@ -37,7 +39,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     }),
     getShopAiSettings(session.shop),
   ]);
-  return { shop: session.shop, recent, aiEnabled: ai.provider !== 'off' && !!ai.apiKey };
+  return {
+    shop: session.shop,
+    recent,
+    aiEnabled: ai.provider !== 'off' && !!ai.apiKey,
+    auditUrl:
+      requestedUrl && /^https?:\/\//i.test(requestedUrl) ? requestedUrl : `https://${session.shop}`,
+  };
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -250,7 +258,7 @@ function AiSuggestRow({
 }
 
 export default function Audit() {
-  const { shop, recent, aiEnabled } = useLoaderData<typeof loader>();
+  const { recent, aiEnabled, auditUrl } = useLoaderData<typeof loader>();
   const data = useActionData<typeof action>();
   const nav = useNavigation();
   const submitting = nav.state === 'submitting';
@@ -260,7 +268,7 @@ export default function Audit() {
   const fixError = data && 'fixError' in data ? data.fixError : null;
   const fixSubmitting = submitting && nav.formData?.get('intent') === 'fix';
   const fixClassification = result ? classifyFindings(result) : null;
-  const defaultUrl = `https://${shop}`;
+  const defaultUrl = auditUrl;
 
   const gradeTone = (g: string) =>
     g === 'A' || g === 'B' ? 'success' : g === 'C' || g === 'D' ? 'warning' : 'critical';
