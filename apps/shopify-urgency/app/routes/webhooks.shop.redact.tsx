@@ -5,6 +5,10 @@ import prisma from '../db.server';
 // GDPR: shop/redact. Fires 48h after uninstall. Wipe every row keyed on this
 // shop across all models, plus any lingering Sessions.
 export const action = async ({ request }: ActionFunctionArgs) => {
+  if (!request.headers.get('x-shopify-hmac-sha256')) {
+    return new Response(undefined, { status: 401, statusText: 'Unauthorized' });
+  }
+
   const { shop, topic } = await authenticate.webhook(request);
   console.log(`[GDPR] ${topic} for ${shop} — purging all rows`);
 

@@ -5,6 +5,10 @@ import { authenticate } from '../shopify.server';
 // Shopify customer id, so there is nothing to delete per-customer. We still
 // verify HMAC, log the request, and respond 200 to satisfy the contract.
 export const action = async ({ request }: ActionFunctionArgs) => {
+  if (!request.headers.get('x-shopify-hmac-sha256')) {
+    return new Response(undefined, { status: 401, statusText: 'Unauthorized' });
+  }
+
   const { shop, topic, payload } = await authenticate.webhook(request);
   const customerId =
     (payload as { customer?: { id?: number | string } } | undefined)?.customer?.id ?? 'unknown';
