@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">WordPress schema decision tree</title>
+  <desc id="desc">A decision tree for choosing Article, FAQPage, Breadcrumb, Product, or no extra schema on WordPress pages.</desc>
+  <rect width="1200" height="675" fill="#111827"/>
+  <text x="90" y="112" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="700">Schema decision tree</text>
+  <text x="90" y="158" fill="#bbf7d0" font-family="Inter, Arial, sans-serif" font-size="22">Use schema only when the content is visible and accurate</text>
+  <rect x="430" y="225" width="340" height="80" rx="16" fill="#14532d" stroke="#86efac"/>
+  <text x="475" y="275" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="700">What is visible?</text>
+  <rect x="90" y="405" width="220" height="90" rx="16" fill="#172554" stroke="#60a5fa"/>
+  <text x="135" y="458" fill="#dbeafe" font-family="Inter, Arial, sans-serif" font-size="22">Article</text>
+  <rect x="365" y="405" width="220" height="90" rx="16" fill="#581c87" stroke="#c084fc"/>
+  <text x="418" y="458" fill="#f3e8ff" font-family="Inter, Arial, sans-serif" font-size="22">FAQPage</text>
+  <rect x="640" y="405" width="220" height="90" rx="16" fill="#7c2d12" stroke="#fdba74"/>
+  <text x="681" y="458" fill="#ffedd5" font-family="Inter, Arial, sans-serif" font-size="22">Product</text>
+  <rect x="915" y="405" width="220" height="90" rx="16" fill="#4b5563" stroke="#cbd5e1"/>
+  <text x="956" y="458" fill="#f8fafc" font-family="Inter, Arial, sans-serif" font-size="22">No extra</text>
+  <path d="M520 305 200 405M560 305 475 405M640 305 750 405M690 305 1025 405" stroke="#94a3b8" stroke-width="5" fill="none"/>
+</svg>

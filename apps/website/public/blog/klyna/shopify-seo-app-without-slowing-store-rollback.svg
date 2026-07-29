@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Shopify SEO rollback plan</title>
+  <desc id="desc">A rollback plan for testing Shopify SEO changes without leaving app code, duplicate schema, or broken redirects behind.</desc>
+  <rect width="1200" height="675" fill="#0f172a"/>
+  <rect x="80" y="85" width="1040" height="505" rx="30" fill="#101827" stroke="#334155"/>
+  <text x="125" y="155" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="700">Rollback before rollout</text>
+  <text x="125" y="200" fill="#fcd34d" font-family="Inter, Arial, sans-serif" font-size="22">A safe Shopify SEO app has a way back</text>
+  <g font-family="Inter, Arial, sans-serif" font-size="24" fill="#e2e8f0">
+    <circle cx="165" cy="290" r="24" fill="#f59e0b"/>
+    <text x="210" y="299">Snapshot titles, schema, redirects, and app embeds</text>
+    <circle cx="165" cy="370" r="24" fill="#22c55e"/>
+    <text x="210" y="379">Change one SEO surface at a time</text>
+    <circle cx="165" cy="450" r="24" fill="#38bdf8"/>
+    <text x="210" y="459">Compare GSC, speed, and conversion path after crawl</text>
+    <circle cx="165" cy="530" r="24" fill="#ef4444"/>
+    <text x="210" y="539">Remove or reverse any app output that creates risk</text>
+  </g>
+  <path d="M890 285c75 45 91 151 33 218-43 49-113 65-173 39" fill="none" stroke="#94a3b8" stroke-width="8" stroke-linecap="round"/>
+  <path d="M747 540l-5-65 57 28" fill="#94a3b8"/>
+</svg>

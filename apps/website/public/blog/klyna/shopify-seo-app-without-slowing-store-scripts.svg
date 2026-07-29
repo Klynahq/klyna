@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Shopify app script weight map</title>
+  <desc id="desc">A visual map showing how SEO, review, popup, cart, feed, and pixel apps can add scripts to a Shopify storefront.</desc>
+  <rect width="1200" height="675" fill="#0f172a"/>
+  <text x="90" y="105" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="700">Where app weight usually comes from</text>
+  <text x="90" y="150" fill="#bfdbfe" font-family="Inter, Arial, sans-serif" font-size="22">Map scripts before you add another Shopify SEO app</text>
+  <rect x="95" y="240" width="1010" height="250" rx="24" fill="#111827" stroke="#475569"/>
+  <rect x="135" y="300" width="170" height="90" rx="14" fill="#1d4ed8"/>
+  <text x="166" y="354" fill="#fff" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="700">SEO app</text>
+  <rect x="335" y="300" width="170" height="90" rx="14" fill="#047857"/>
+  <text x="370" y="354" fill="#fff" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="700">Reviews</text>
+  <rect x="535" y="300" width="170" height="90" rx="14" fill="#9333ea"/>
+  <text x="570" y="354" fill="#fff" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="700">Popups</text>
+  <rect x="735" y="300" width="170" height="90" rx="14" fill="#c2410c"/>
+  <text x="780" y="354" fill="#fff" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="700">Cart</text>
+  <rect x="935" y="300" width="130" height="90" rx="14" fill="#be123c"/>
+  <text x="968" y="354" fill="#fff" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="700">Pixel</text>
+  <line x1="220" y1="390" x2="220" y2="510" stroke="#38bdf8" stroke-width="5"/>
+  <line x1="420" y1="390" x2="420" y2="510" stroke="#86efac" stroke-width="5"/>
+  <line x1="620" y1="390" x2="620" y2="510" stroke="#d8b4fe" stroke-width="5"/>
+  <line x1="820" y1="390" x2="820" y2="510" stroke="#fdba74" stroke-width="5"/>
+  <line x1="1000" y1="390" x2="1000" y2="510" stroke="#fb7185" stroke-width="5"/>
+  <text x="145" y="555" fill="#e2e8f0" font-family="Inter, Arial, sans-serif" font-size="24">Theme, product pages, analytics, and Core Web Vitals</text>
+</svg>

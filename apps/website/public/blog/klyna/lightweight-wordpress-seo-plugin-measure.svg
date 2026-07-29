@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">WordPress SEO measurement loop</title>
+  <desc id="desc">A measurement loop for WordPress SEO work using Google Search Console, crawl checks, analytics, and content updates.</desc>
+  <rect width="1200" height="675" fill="#111827"/>
+  <text x="95" y="112" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="700">Measure the plugin by outcomes</text>
+  <text x="95" y="158" fill="#fde68a" font-family="Inter, Arial, sans-serif" font-size="22">Not dashboard scores alone</text>
+  <g font-family="Inter, Arial, sans-serif">
+    <rect x="130" y="250" width="220" height="110" rx="18" fill="#172554" stroke="#60a5fa"/>
+    <text x="175" y="315" fill="#fff" font-size="24" font-weight="700">GSC</text>
+    <rect x="390" y="250" width="220" height="110" rx="18" fill="#14532d" stroke="#86efac"/>
+    <text x="431" y="315" fill="#fff" font-size="24" font-weight="700">Crawl</text>
+    <rect x="650" y="250" width="220" height="110" rx="18" fill="#581c87" stroke="#c084fc"/>
+    <text x="691" y="315" fill="#fff" font-size="24" font-weight="700">GA4</text>
+    <rect x="910" y="250" width="220" height="110" rx="18" fill="#7c2d12" stroke="#fdba74"/>
+    <text x="942" y="315" fill="#fff" font-size="24" font-weight="700">Update</text>
+    <text x="150" y="455" fill="#cbd5e1" font-size="23">Impressions</text>
+    <text x="390" y="455" fill="#cbd5e1" font-size="23">Indexability</text>
+    <text x="650" y="455" fill="#cbd5e1" font-size="23">Conversions</text>
+    <text x="910" y="455" fill="#cbd5e1" font-size="23">Refreshes</text>
+  </g>
+  <path d="M355 305h30M615 305h30M875 305h30" stroke="#94a3b8" stroke-width="5" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Shopify schema conflict check</title>
+  <desc id="desc">A schema conflict checklist comparing visible page facts with app-generated Product, Breadcrumb, and FAQ schema.</desc>
+  <rect width="1200" height="675" fill="#111827"/>
+  <text x="85" y="110" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="700">Schema should match the page</text>
+  <text x="85" y="155" fill="#c4b5fd" font-family="Inter, Arial, sans-serif" font-size="22">Klyna checks whether app-generated JSON-LD is visible and true</text>
+  <rect x="90" y="230" width="460" height="310" rx="22" fill="#1f2937" stroke="#64748b"/>
+  <text x="125" y="285" fill="#f8fafc" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700">Visible page</text>
+  <text x="125" y="340" fill="#cbd5e1" font-family="Inter, Arial, sans-serif" font-size="22">Product name</text>
+  <text x="125" y="390" fill="#cbd5e1" font-family="Inter, Arial, sans-serif" font-size="22">Price and availability</text>
+  <text x="125" y="440" fill="#cbd5e1" font-family="Inter, Arial, sans-serif" font-size="22">Reviews or no reviews</text>
+  <text x="125" y="490" fill="#cbd5e1" font-family="Inter, Arial, sans-serif" font-size="22">FAQ answers</text>
+  <rect x="650" y="230" width="460" height="310" rx="22" fill="#1f2937" stroke="#8b5cf6"/>
+  <text x="685" y="285" fill="#f8fafc" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700">Structured data</text>
+  <text x="685" y="340" fill="#ddd6fe" font-family="Inter, Arial, sans-serif" font-size="22">Product</text>
+  <text x="685" y="390" fill="#ddd6fe" font-family="Inter, Arial, sans-serif" font-size="22">Offer</text>
+  <text x="685" y="440" fill="#ddd6fe" font-family="Inter, Arial, sans-serif" font-size="22">AggregateRating only if true</text>
+  <text x="685" y="490" fill="#ddd6fe" font-family="Inter, Arial, sans-serif" font-size="22">FAQPage only if visible</text>
+  <path d="M560 380h75" stroke="#22c55e" stroke-width="7" stroke-linecap="round"/>
+</svg>

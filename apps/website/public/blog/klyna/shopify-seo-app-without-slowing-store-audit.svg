@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Shopify SEO app speed audit flow</title>
+  <desc id="desc">A four-step audit flow for checking whether a Shopify SEO app helps search visibility without slowing the storefront.</desc>
+  <rect width="1200" height="675" fill="#0d1117"/>
+  <rect x="70" y="70" width="1060" height="535" rx="28" fill="#111827" stroke="#334155" stroke-width="2"/>
+  <text x="110" y="140" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="700">Shopify SEO app speed audit</text>
+  <text x="110" y="186" fill="#a7f3d0" font-family="Inter, Arial, sans-serif" font-size="22">Klyna workflow: diagnose before installing another script</text>
+  <g font-family="Inter, Arial, sans-serif">
+    <rect x="110" y="250" width="210" height="190" rx="18" fill="#172554" stroke="#38bdf8"/>
+    <text x="140" y="305" fill="#ffffff" font-size="24" font-weight="700">1. Crawl</text>
+    <text x="140" y="348" fill="#cbd5e1" font-size="18">Find indexed pages,</text>
+    <text x="140" y="376" fill="#cbd5e1" font-size="18">canonicals, and 404s</text>
+    <rect x="360" y="250" width="210" height="190" rx="18" fill="#14532d" stroke="#86efac"/>
+    <text x="390" y="305" fill="#ffffff" font-size="24" font-weight="700">2. Scripts</text>
+    <text x="390" y="348" fill="#d1fae5" font-size="18">Check app embeds,</text>
+    <text x="390" y="376" fill="#d1fae5" font-size="18">pixels, and leftovers</text>
+    <rect x="610" y="250" width="210" height="190" rx="18" fill="#581c87" stroke="#c084fc"/>
+    <text x="640" y="305" fill="#ffffff" font-size="24" font-weight="700">3. Schema</text>
+    <text x="640" y="348" fill="#ede9fe" font-size="18">Match JSON-LD to</text>
+    <text x="640" y="376" fill="#ede9fe" font-size="18">visible product facts</text>
+    <rect x="860" y="250" width="210" height="190" rx="18" fill="#7c2d12" stroke="#fdba74"/>
+    <text x="890" y="305" fill="#ffffff" font-size="24" font-weight="700">4. Measure</text>
+    <text x="890" y="348" fill="#ffedd5" font-size="18">Watch GSC clicks,</text>
+    <text x="890" y="376" fill="#ffedd5" font-size="18">CTR, and speed</text>
+  </g>
+  <path d="M325 345h30M575 345h30M825 345h30" stroke="#94a3b8" stroke-width="5" stroke-linecap="round"/>
+</svg>
