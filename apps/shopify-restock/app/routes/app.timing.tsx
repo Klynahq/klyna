@@ -51,7 +51,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       orderBy: { dueAt: 'asc' },
       take: 25,
     }),
-    prisma.queuedNotification.count({ where: { shop, status: 'SENT' } }),
+    prisma.alert.count({ where: { shop, status: 'SENT' } }),
   ]);
 
   return {

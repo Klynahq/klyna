@@ -89,20 +89,44 @@ export async function flushVariant(shop: string, variantId: string): Promise<Flu
       const countryCode = countryFromLocale(sub.locale);
       const decision = decideSendTime(countryCode);
       if (!decision.sendNow && decision.dueAt) {
-        await prisma.queuedNotification.create({
-          data: {
-            shop,
-            subscriptionId: sub.id,
-            variantId,
-            channel: sub.channel,
-            recipient,
-            countryCode,
-            timezone: decision.timezone,
-            dueAt: decision.dueAt,
-            status: 'QUEUED',
-          },
+        const dueAt = decision.dueAt;
+        const created = await prisma.$transaction(async (tx) => {
+          const lockKey = `${shop}:${sub.id}`;
+          await tx.$queryRaw`
+            SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))
+          `;
+
+          const activeQueue = await tx.queuedNotification.findFirst({
+            where: {
+              shop,
+              subscriptionId: sub.id,
+              status: { in: ['QUEUED', 'PROCESSING'] },
+            },
+            select: { id: true },
+          });
+          if (activeQueue) return false;
+
+          await tx.queuedNotification.create({
+            data: {
+              shop,
+              subscriptionId: sub.id,
+              variantId,
+              channel: sub.channel,
+              recipient,
+              countryCode,
+              timezone: decision.timezone,
+              dueAt,
+              status: 'QUEUED',
+            },
+          });
+          return true;
         });
-        result.queued += 1;
+
+        if (created) {
+          result.queued += 1;
+        } else {
+          result.skipped += 1;
+        }
         continue;
       }
     }

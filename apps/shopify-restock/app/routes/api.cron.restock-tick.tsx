@@ -25,6 +25,20 @@ function authorized(request: Request): boolean {
 
 async function tick() {
   const now = new Date();
+  const staleClaim = new Date(now.getTime() - 15 * 60 * 1000);
+
+  await prisma.queuedNotification.updateMany({
+    where: {
+      status: 'PROCESSING',
+      claimedAt: { lte: staleClaim },
+    },
+    data: {
+      status: 'QUEUED',
+      claimedAt: null,
+      error: null,
+    },
+  });
+
   const due = await prisma.queuedNotification.findMany({
     where: { status: 'QUEUED', dueAt: { lte: now } },
     take: 200,
@@ -35,11 +49,21 @@ async function tick() {
   let failed = 0;
 
   for (const q of due) {
+    const claim = await prisma.queuedNotification.updateMany({
+      where: { id: q.id, status: 'QUEUED' },
+      data: { status: 'PROCESSING', claimedAt: new Date(), error: null },
+    });
+    if (claim.count === 0) continue;
+
     const sub = await prisma.subscription.findUnique({ where: { id: q.subscriptionId } });
     if (!sub) {
       await prisma.queuedNotification.update({
         where: { id: q.id },
-        data: { status: 'FAILED', error: 'subscription_missing' },
+        data: {
+          status: 'FAILED',
+          claimedAt: null,
+          error: 'subscription_missing',
+        },
       });
       failed += 1;
       continue;
@@ -80,7 +104,7 @@ async function tick() {
         }),
         prisma.queuedNotification.update({
           where: { id: q.id },
-          data: { status: 'SENT', sentAt: ts },
+          data: { status: 'SENT', sentAt: ts, claimedAt: null },
         }),
       ]);
       sent += 1;
@@ -92,7 +116,7 @@ async function tick() {
         }),
         prisma.queuedNotification.update({
           where: { id: q.id },
-          data: { status: 'FAILED', error: delivery.error },
+          data: { status: 'FAILED', claimedAt: null, error: delivery.error },
         }),
       ]);
       failed += 1;

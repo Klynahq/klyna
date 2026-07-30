@@ -195,8 +195,9 @@ model QueuedNotification {
   // When this alert becomes eligible to send (UTC).
   dueAt          DateTime
   createdAt      DateTime @default(now())
+  claimedAt      DateTime?
   sentAt         DateTime?
-  status         String   @default("QUEUED") // QUEUED | SENT | FAILED
+  status         String   @default("QUEUED") // QUEUED | PROCESSING | SENT | FAILED
   error          String?
 
   @@index([shop, status, dueAt])

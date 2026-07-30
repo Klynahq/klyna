@@ -5,6 +5,7 @@
 
 import { createAiClient, type AiProvider, type AiClient } from '~/lib/klyna-ai-client';
 import prisma from '../db.server';
+import { decryptSecret, encryptSecret, isEncryptedSecret } from './secret.server';
 
 export type ShopAiSettings = {
   provider: AiProvider;
@@ -18,9 +19,21 @@ export async function getShopAiSettings(shop: string): Promise<ShopAiSettings> {
   if (!row) {
     return { provider: 'off', dailyCap: 100 };
   }
+
+  let apiKey: string | undefined;
+  if (row.apiKey) {
+    apiKey = decryptSecret(row.apiKey);
+    if (!isEncryptedSecret(row.apiKey)) {
+      await prisma.aiSettings.update({
+        where: { shop },
+        data: { apiKey: encryptSecret(row.apiKey) },
+      });
+    }
+  }
+
   return {
     provider: row.provider as AiProvider,
-    apiKey: row.apiKey ?? undefined,
+    apiKey,
     model: row.model ?? undefined,
     dailyCap: row.dailyCap,
   };
@@ -28,18 +41,21 @@ export async function getShopAiSettings(shop: string): Promise<ShopAiSettings> {
 
 export async function saveShopAiSettings(shop: string, input: Partial<ShopAiSettings>): Promise<void> {
   const existing = await prisma.aiSettings.findUnique({ where: { shop } });
+  const encryptedApiKey =
+    input.apiKey !== undefined ? encryptSecret(input.apiKey) : existing?.apiKey;
+
   await prisma.aiSettings.upsert({
     where: { shop },
     update: {
       provider: input.provider ?? existing?.provider ?? 'off',
-      apiKey: input.apiKey ?? existing?.apiKey,
+      apiKey: encryptedApiKey,
       model: input.model ?? existing?.model,
       dailyCap: input.dailyCap ?? existing?.dailyCap ?? 100,
     },
     create: {
       shop,
       provider: input.provider ?? 'off',
-      apiKey: input.apiKey,
+      apiKey: encryptedApiKey,
       model: input.model,
       dailyCap: input.dailyCap ?? 100,
     },

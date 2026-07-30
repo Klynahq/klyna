@@ -33,7 +33,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const storeHandle = session.shop.replace(/\.myshopify\.com$/i, '');
   return {
     settings,
-    ai,
+    ai: {
+      provider: ai.provider,
+      model: ai.model,
+      dailyCap: ai.dailyCap,
+      hasApiKey: Boolean(ai.apiKey),
+    },
     usedToday,
     planHandle,
     pricingUrl: planSelectionUrl(session.shop),
@@ -58,7 +63,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const provider = String(form.get('provider') ?? 'off') as AiProvider;
     const apiKey = String(form.get('apiKey') ?? '').trim() || undefined;
     const model = String(form.get('model') ?? '').trim() || undefined;
-    const client = createAiClient({ provider, apiKey, model });
+    const saved = await getShopAiSettings(shop);
+    const client = createAiClient({
+      provider,
+      apiKey: apiKey ?? saved.apiKey,
+      model: model ?? saved.model,
+    });
     const result = await client.test();
     return json({ test: result });
   }
@@ -139,7 +149,7 @@ export default function Settings() {
   const [resendGuardHours, setResendGuardHours] = useState(String(settings.resendGuardHours));
 
   const [provider, setProvider] = useState<string>(ai.provider);
-  const [apiKey, setApiKey] = useState(ai.apiKey ?? '');
+  const [apiKey, setApiKey] = useState('');
   const [model, setModel] = useState(ai.model ?? '');
   const [dailyCap, setDailyCap] = useState(String(ai.dailyCap));
 
@@ -270,8 +280,8 @@ export default function Settings() {
                 <Text as="p" tone="subdued">
                   Optional. Used to draft restock alert subject lines and to score
                   how confident smart-timing should be about a given send. Bring
-                  your own free-tier key from any provider below - your key stays
-                  on this app's database.
+                  your own free-tier key from any provider below. Your key is
+                  encrypted at rest and is never returned to the browser.
                 </Text>
               </BlockStack>
 
@@ -297,12 +307,19 @@ export default function Settings() {
                         autoComplete="off"
                         disabled={planHandle !== 'growth'}
                         helpText={
-                          help ? (
+                          ai.hasApiKey ? (
+                            <>
+                              A key is saved securely. Leave this blank to keep it,
+                              or enter a new key to replace it.
+                            </>
+                          ) : help ? (
                             <>
                               <Link url={help.url} target="_blank">Get a free key</Link>
                               {' '}{help.hint}
                             </>
-                          ) : null
+                          ) : (
+                            'Enter a provider API key to enable AI assistance.'
+                          )
                         }
                       />
                       <TextField
