@@ -1,6 +1,5 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
-import { useState } from 'react';
-import { Form, useActionData, useFetcher, useLoaderData, useNavigation, useSubmit } from '@remix-run/react';
+import { useLoaderData } from '@remix-run/react';
 import {
   Banner,
   BlockStack,
@@ -17,11 +16,13 @@ import {
   Text,
   TextField,
 } from '@shopify/polaris';
-import { authenticate } from '../shopify.server';
-import { getSettings, updateSettings } from '../lib/settings.server';
-import { createAiClient, type AiProvider } from '~/lib/klyna-ai-client';
+import { useState } from 'react';
+import { type AiProvider, createAiClient } from '~/lib/klyna-ai-client';
 import { getShopAiSettings, getTodayUsage, saveShopAiSettings } from '../lib/ai.server';
+import { useAuthenticatedAction } from '../lib/authenticated-action';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
+import { getSettings, updateSettings } from '../lib/settings.server';
+import { authenticate } from '../shopify.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
@@ -92,12 +93,11 @@ const PROVIDER_HELP: Record<string, { url: string; hint: string }> = {
 export default function Settings() {
   const { settings, aiSettings, usedToday } = useLoaderData<typeof loader>();
   const embeddedRoute = useEmbeddedRoute();
-  const data = useActionData<typeof action>();
-  const submit = useSubmit();
-  const nav = useNavigation();
-  const testFetcher = useFetcher<typeof action>();
-  const saving = nav.state === 'submitting';
-  const testing = testFetcher.state === 'submitting';
+  const storefrontAction = useAuthenticatedAction<{ ok: boolean }>();
+  const aiAction = useAuthenticatedAction<{ savedAi: boolean }>();
+  const testAction = useAuthenticatedAction<{ test: { ok: boolean; message: string } }>();
+  const saving = storefrontAction.loading;
+  const testing = testAction.loading;
 
   const [defaultDiscountType, setDefaultDiscountType] = useState(settings.defaultDiscountType);
   const [priceDisplay, setPriceDisplay] = useState(settings.priceDisplay);
@@ -111,12 +111,9 @@ export default function Settings() {
   const [model, setModel] = useState(aiSettings.model ?? '');
   const [dailyCap, setDailyCap] = useState(String(aiSettings.dailyCap));
 
-  const testResult =
-    testFetcher.data && 'test' in testFetcher.data
-      ? (testFetcher.data.test as { ok: boolean; message: string })
-      : null;
-  const savedAi = data && 'savedAi' in data ? data.savedAi : false;
-  const savedStorefront = data && 'ok' in data ? data.ok : false;
+  const testResult = testAction.data?.test ?? null;
+  const savedAi = aiAction.data?.savedAi ?? false;
+  const savedStorefront = storefrontAction.data?.ok ?? false;
   const help = PROVIDER_HELP[provider];
 
   const save = () => {
@@ -128,7 +125,7 @@ export default function Settings() {
     fd.set('bundleHeading', bundleHeading);
     fd.set('accentColor', accentColor);
     if (showSavingsBadge) fd.set('showSavingsBadge', 'on');
-    submit(fd, { method: 'post', action: embeddedRoute('/app/settings') });
+    void storefrontAction.submit(embeddedRoute('/app/settings'), fd);
   };
 
   const runTest = () => {
@@ -138,7 +135,17 @@ export default function Settings() {
     fd.set('apiKey', apiKey);
     fd.set('model', model);
     fd.set('dailyCap', dailyCap);
-    testFetcher.submit(fd, { method: 'post', action: embeddedRoute('/app/settings') });
+    void testAction.submit(embeddedRoute('/app/settings'), fd);
+  };
+
+  const saveAi = () => {
+    const fd = new FormData();
+    fd.set('intent', 'saveAi');
+    fd.set('provider', provider);
+    fd.set('apiKey', apiKey);
+    fd.set('model', model);
+    fd.set('dailyCap', dailyCap);
+    void aiAction.submit(embeddedRoute('/app/settings'), fd);
   };
 
   return (
@@ -151,7 +158,9 @@ export default function Settings() {
         <Layout.Section>
           <Card>
             <BlockStack gap="300">
-              <Text as="h2" variant="headingMd">Discount defaults</Text>
+              <Text as="h2" variant="headingMd">
+                Discount defaults
+              </Text>
               <Select
                 label="Default discount type for new offers"
                 options={[
@@ -168,7 +177,9 @@ export default function Settings() {
         <Layout.Section>
           <Card>
             <BlockStack gap="300">
-              <Text as="h2" variant="headingMd">Storefront display</Text>
+              <Text as="h2" variant="headingMd">
+                Storefront display
+              </Text>
               <Select
                 label="Bundle price display"
                 helpText="How the discounted price is shown in the product-page block."
@@ -218,6 +229,11 @@ export default function Settings() {
                 checked={showSavingsBadge}
                 onChange={setShowSavingsBadge}
               />
+              {storefrontAction.error && (
+                <Banner tone="critical" title="Storefront settings could not be saved">
+                  {storefrontAction.error}
+                </Banner>
+              )}
               {savedStorefront && <Banner tone="success" title="Storefront settings saved" />}
             </BlockStack>
           </Card>
@@ -227,15 +243,17 @@ export default function Settings() {
           <Card>
             <BlockStack gap="400">
               <BlockStack gap="100">
-                <Text as="h2" variant="headingMd">AI assistant</Text>
+                <Text as="h2" variant="headingMd">
+                  AI assistant
+                </Text>
                 <Text as="p" tone="subdued">
-                  Add a free-tier API key below for future AI-assisted copy and bundle
-                  naming. Order-history suggestions stay disabled until protected
-                  customer data access is approved in Shopify.
+                  Add a free-tier API key below for future AI-assisted copy and bundle naming.
+                  Order-history suggestions stay disabled until protected customer data access is
+                  approved in Shopify.
                 </Text>
               </BlockStack>
 
-              <Form method="post" action={embeddedRoute('/app/settings')}>
+              <div>
                 <BlockStack gap="300">
                   <Select
                     label="Provider"
@@ -257,8 +275,10 @@ export default function Settings() {
                         helpText={
                           help ? (
                             <>
-                              <Link url={help.url} target="_blank">Get a free key</Link>
-                              {' '}{help.hint}
+                              <Link url={help.url} target="_blank">
+                                Get a free key
+                              </Link>{' '}
+                              {help.hint}
                             </>
                           ) : null
                         }
@@ -286,7 +306,7 @@ export default function Settings() {
                   )}
 
                   <InlineStack gap="200">
-                    <Button submit variant="primary" loading={saving}>
+                    <Button variant="primary" loading={aiAction.loading} onClick={saveAi}>
                       Save AI settings
                     </Button>
                     {provider !== 'off' && (
@@ -294,18 +314,29 @@ export default function Settings() {
                         Test connection
                       </Button>
                     )}
-                    <input type="hidden" name="intent" value="saveAi" />
                   </InlineStack>
                 </BlockStack>
-              </Form>
+              </div>
 
+              {aiAction.error && (
+                <Banner tone="critical" title="AI settings could not be saved">
+                  {aiAction.error}
+                </Banner>
+              )}
+              {testAction.error && (
+                <Banner tone="critical" title="Connection test failed">
+                  {testAction.error}
+                </Banner>
+              )}
               {savedAi && <Banner tone="success" title="AI settings saved" />}
               {testResult && (
                 <Banner
                   tone={testResult.ok ? 'success' : 'critical'}
                   title={testResult.ok ? 'Connection OK' : 'Connection failed'}
                 >
-                  <Text as="p" variant="bodyMd">{testResult.message}</Text>
+                  <Text as="p" variant="bodyMd">
+                    {testResult.message}
+                  </Text>
                 </Banner>
               )}
             </BlockStack>
@@ -315,17 +346,23 @@ export default function Settings() {
         <Layout.Section>
           <Card>
             <BlockStack gap="200">
-              <Text as="h2" variant="headingMd">About this app</Text>
+              <Text as="h2" variant="headingMd">
+                About this app
+              </Text>
               <Text as="p" tone="subdued" variant="bodyMd">
-                Klyna Bundles is part of the Klyna indie suite - open, fast, free where it
-                can be. The bundle builder, volume breaks, and FBT mining are deterministic
-                and never need an API key. AI is only used to title and describe suggested
-                bundles, and only when you have added a key.
+                Klyna Bundles is part of the Klyna indie suite - open, fast, free where it can be.
+                The bundle builder, volume breaks, and FBT mining are deterministic and never need
+                an API key. AI is only used to title and describe suggested bundles, and only when
+                you have added a key.
               </Text>
               <Box>
-                <Link url="https://klyna.dev" target="_blank">klyna.dev</Link>
+                <Link url="https://klyna.dev" target="_blank">
+                  klyna.dev
+                </Link>
                 {' . '}
-                <Link url="https://github.com/klynahq/klyna" target="_blank">GitHub</Link>
+                <Link url="https://github.com/klynahq/klyna" target="_blank">
+                  GitHub
+                </Link>
               </Box>
             </BlockStack>
           </Card>
@@ -333,9 +370,9 @@ export default function Settings() {
 
         <Layout.Section>
           <Banner tone="info">
-            Storefront settings drive the Klyna Bundles theme app extension. After changing
-            them, the block picks up new values on the next storefront page load - add
-            the block in the theme editor under Add block - Apps.
+            Storefront settings drive the Klyna Bundles theme app extension. After changing them,
+            the block picks up new values on the next storefront page load - add the block in the
+            theme editor under Add block - Apps.
           </Banner>
         </Layout.Section>
       </Layout>

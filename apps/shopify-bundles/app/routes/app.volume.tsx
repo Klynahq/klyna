@@ -1,5 +1,5 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
-import { useFetcher, useLoaderData } from '@remix-run/react';
+import { useLoaderData, useRevalidator } from '@remix-run/react';
 import {
   Badge,
   Banner,
@@ -21,6 +21,7 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import prisma from '../db.server';
 import { type CatalogProduct, createAutomaticDiscount, searchProducts } from '../lib/admin.server';
+import { useAuthenticatedAction } from '../lib/authenticated-action';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getPlanSelectionUrl, getShopPlan, planLimitMessage } from '../lib/plans.server';
 import {
@@ -171,8 +172,10 @@ const SAMPLE_PRICE = 20;
 export default function VolumeDiscounts() {
   const { groups, plan, upgradeUrl } = useLoaderData<typeof loader>();
   const embeddedRoute = useEmbeddedRoute();
-  const searchFetcher = useFetcher<{ products: CatalogProduct[] }>();
-  const saveFetcher = useFetcher<{ ok: boolean; error?: string }>();
+  const revalidator = useRevalidator();
+  const searchAction = useAuthenticatedAction<{ products: CatalogProduct[] }>();
+  const saveAction = useAuthenticatedAction<{ ok: boolean }>();
+  const deleteAction = useAuthenticatedAction<{ ok: boolean }>();
 
   const [query, setQuery] = useState('');
   const [product, setProduct] = useState<CatalogProduct | null>(null);
@@ -181,17 +184,17 @@ export default function VolumeDiscounts() {
     { id: 'tier-5', minQuantity: 5, discountType: 'percentage', discountValue: 10 },
   ]);
 
-  const results = searchFetcher.data?.products ?? [];
-  const submitSearch = searchFetcher.submit;
+  const results = searchAction.data?.products ?? [];
+  const submitSearch = searchAction.submit;
 
   useEffect(() => {
-    if (!plan.canUseVolume) return;
+    if (!plan.canUseVolume || !query.trim()) return;
 
     const h = setTimeout(() => {
       const fd = new FormData();
       fd.set('intent', 'search');
       fd.set('query', query);
-      submitSearch(fd, { method: 'post', action: embeddedRoute('/app/volume') });
+      void submitSearch(embeddedRoute('/app/volume'), fd);
     }, 250);
     return () => clearTimeout(h);
   }, [embeddedRoute, plan.canUseVolume, query, submitSearch]);
@@ -237,24 +240,26 @@ export default function VolumeDiscounts() {
       });
   }, [tiers, tierInputs, unitPrice]);
 
-  const save = () => {
+  const save = async () => {
     if (!product) return;
     const fd = new FormData();
     fd.set('intent', 'save');
     fd.set('product', JSON.stringify(product));
     fd.set('tiers', JSON.stringify(tiers));
-    saveFetcher.submit(fd, { method: 'post', action: embeddedRoute('/app/volume') });
+    const result = await saveAction.submit(embeddedRoute('/app/volume'), fd);
+    if (result?.ok) revalidator.revalidate();
   };
 
-  const saving = saveFetcher.state !== 'idle';
-  const saveError = saveFetcher.data && !saveFetcher.data.ok ? saveFetcher.data.error : null;
-  const saved = saveFetcher.data?.ok;
+  const saving = saveAction.loading;
+  const saveError = saveAction.error;
+  const saved = saveAction.data?.ok;
 
-  const deleteProduct = (productGid: string) => {
+  const deleteProduct = async (productGid: string) => {
     const fd = new FormData();
     fd.set('intent', 'deleteProduct');
     fd.set('productGid', productGid);
-    saveFetcher.submit(fd, { method: 'post', action: embeddedRoute('/app/volume') });
+    const result = await deleteAction.submit(embeddedRoute('/app/volume'), fd);
+    if (result?.ok) revalidator.revalidate();
   };
 
   if (!plan.canUseVolume) {
@@ -327,8 +332,9 @@ export default function VolumeDiscounts() {
                     onChange={setQuery}
                     autoComplete="off"
                     placeholder="Search by title or SKU"
-                    loading={searchFetcher.state !== 'idle'}
+                    loading={searchAction.loading}
                   />
+                  {searchAction.error && <Banner tone="critical">{searchAction.error}</Banner>}
                   {results.slice(0, 8).map((p) => (
                     <InlineStack key={p.gid} align="space-between" blockAlign="center" wrap={false}>
                       <InlineStack gap="300" blockAlign="center">
@@ -402,6 +408,7 @@ export default function VolumeDiscounts() {
               </BlockStack>
 
               {saveError && <Banner tone="critical">{saveError}</Banner>}
+              {deleteAction.error && <Banner tone="critical">{deleteAction.error}</Banner>}
               {saved && (
                 <Banner tone="success">Tiers saved and automatic discounts created.</Banner>
               )}

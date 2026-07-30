@@ -1,5 +1,5 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
-import { useFetcher, useLoaderData } from '@remix-run/react';
+import { useLoaderData, useRevalidator } from '@remix-run/react';
 import {
   Badge,
   Banner,
@@ -16,6 +16,7 @@ import {
   Text,
 } from '@shopify/polaris';
 import prisma from '../db.server';
+import { useAuthenticatedAction } from '../lib/authenticated-action';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getPlanSelectionUrl, getShopPlan } from '../lib/plans.server';
 import { type DiscountType, quoteBundle } from '../lib/pricing';
@@ -76,12 +77,20 @@ function statusTone(s: string) {
 
 export default function BundlesIndex() {
   const { rows, plan, upgradeUrl } = useLoaderData<typeof loader>();
-  const fetcher = useFetcher();
+  const revalidator = useRevalidator();
+  const toggleAction = useAuthenticatedAction<{ ok: boolean }>();
   const embeddedRoute = useEmbeddedRoute();
   const atBundleLimit = rows.length >= plan.maxBundles;
   const newBundleAction = atBundleLimit
     ? undefined
     : { content: 'New bundle', url: embeddedRoute('/app/bundles/new') };
+  const toggleBundle = async (id: string) => {
+    const fd = new FormData();
+    fd.set('id', id);
+    fd.set('intent', 'toggle');
+    const result = await toggleAction.submit(embeddedRoute('/app/bundles'), fd);
+    if (result?.ok) revalidator.revalidate();
+  };
 
   if (rows.length === 0) {
     return (
@@ -109,6 +118,14 @@ export default function BundlesIndex() {
   return (
     <Page title="Bundles" primaryAction={newBundleAction}>
       <Layout>
+        {toggleAction.error && (
+          <Layout.Section>
+            <Banner tone="critical" title="Bundle status could not be updated">
+              {toggleAction.error}
+            </Banner>
+          </Layout.Section>
+        )}
+
         {atBundleLimit && (
           <Layout.Section>
             <Banner tone="warning" title={`${plan.label} bundle limit reached`}>
@@ -156,13 +173,14 @@ export default function BundlesIndex() {
                         <Text as="span" variant="bodyMd" fontWeight="semibold">
                           {b.total.toFixed(2)}
                         </Text>
-                        <fetcher.Form method="post" action={embeddedRoute('/app/bundles')}>
-                          <input type="hidden" name="id" value={b.id} />
-                          <input type="hidden" name="intent" value="toggle" />
-                          <Button size="slim" submit variant="tertiary">
-                            {b.status === 'active' ? 'Pause' : 'Activate'}
-                          </Button>
-                        </fetcher.Form>
+                        <Button
+                          size="slim"
+                          variant="tertiary"
+                          loading={toggleAction.loading}
+                          onClick={() => void toggleBundle(b.id)}
+                        >
+                          {b.status === 'active' ? 'Pause' : 'Activate'}
+                        </Button>
                       </InlineStack>
                     </Box>
                   </InlineStack>

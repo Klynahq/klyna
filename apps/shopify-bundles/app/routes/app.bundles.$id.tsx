@@ -1,5 +1,5 @@
-import { type ActionFunctionArgs, type LoaderFunctionArgs, json, redirect } from '@remix-run/node';
-import { useFetcher, useLoaderData, useNavigation, useSubmit } from '@remix-run/react';
+import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
+import { useLoaderData } from '@remix-run/react';
 import {
   Badge,
   Banner,
@@ -20,6 +20,7 @@ import {
 import { useEffect, useState } from 'react';
 import prisma from '../db.server';
 import { type CatalogProduct, createAutomaticDiscount, searchProducts } from '../lib/admin.server';
+import { useAuthenticatedAction } from '../lib/authenticated-action';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getPlanSelectionUrl, getShopPlan, planLimitMessage } from '../lib/plans.server';
 import { type DiscountType, quoteBundle } from '../lib/pricing';
@@ -203,16 +204,14 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
     }
   }
 
-  const url = new URL(request.url);
-  return redirect(`/app/bundles${url.search}`);
+  return json({ ok: true, bundleId: bundle.id });
 };
 
 export default function BundleBuilder() {
   const { isNew, bundle, plan, upgradeUrl, limitReached } = useLoaderData<typeof loader>();
   const embeddedRoute = useEmbeddedRoute();
-  const submit = useSubmit();
-  const nav = useNavigation();
-  const searchFetcher = useFetcher<{ products: CatalogProduct[] }>();
+  const searchAction = useAuthenticatedAction<{ products: CatalogProduct[] }>();
+  const saveAction = useAuthenticatedAction<{ ok: boolean; bundleId: string }>();
 
   const [title, setTitle] = useState(bundle.title);
   const [kind, setKind] = useState<string>(bundle.kind);
@@ -222,20 +221,25 @@ export default function BundleBuilder() {
   const [items, setItems] = useState<DraftItem[]>(bundle.items);
   const [query, setQuery] = useState('');
 
-  const saving = nav.state === 'submitting';
-  const results = searchFetcher.data?.products ?? [];
-  const submitSearch = searchFetcher.submit;
+  const saving = saveAction.loading;
+  const results = searchAction.data?.products ?? [];
+  const submitSearch = searchAction.submit;
 
   // Debounced product search.
   useEffect(() => {
+    if (!query.trim()) return;
+
     const handle = setTimeout(() => {
       const fd = new FormData();
       fd.set('intent', 'search');
       fd.set('query', query);
-      submitSearch(fd, { method: 'post' });
+      void submitSearch(
+        embeddedRoute(isNew ? '/app/bundles/new' : `/app/bundles/${bundle.id}`),
+        fd,
+      );
     }, 250);
     return () => clearTimeout(handle);
-  }, [query, submitSearch]);
+  }, [bundle.id, embeddedRoute, isNew, query, submitSearch]);
 
   const addItem = (p: CatalogProduct) => {
     if (items.some((it) => it.productGid === p.gid)) return;
@@ -266,7 +270,7 @@ export default function BundleBuilder() {
     Number(discountValue) || 0,
   );
 
-  const save = (activate: boolean) => {
+  const save = async (activate: boolean) => {
     const payload = {
       title,
       kind,
@@ -279,10 +283,11 @@ export default function BundleBuilder() {
     const fd = new FormData();
     fd.set('intent', 'save');
     fd.set('payload', JSON.stringify(payload));
-    submit(fd, {
-      method: 'post',
-      action: embeddedRoute(isNew ? '/app/bundles/new' : `/app/bundles/${bundle.id}`),
-    });
+    const result = await saveAction.submit(
+      embeddedRoute(isNew ? '/app/bundles/new' : `/app/bundles/${bundle.id}`),
+      fd,
+    );
+    if (result?.ok) window.open(embeddedRoute('/app/bundles'), '_self');
   };
 
   return (
@@ -300,6 +305,14 @@ export default function BundleBuilder() {
       ]}
     >
       <Layout>
+        {saveAction.error && (
+          <Layout.Section>
+            <Banner tone="critical" title="Bundle could not be saved">
+              {saveAction.error}
+            </Banner>
+          </Layout.Section>
+        )}
+
         {isNew && limitReached && (
           <Layout.Section>
             <Banner tone="warning" title={`${plan.label} bundle limit reached`}>
@@ -419,8 +432,9 @@ export default function BundleBuilder() {
                   onChange={setQuery}
                   autoComplete="off"
                   placeholder="Search by title or SKU"
-                  loading={searchFetcher.state !== 'idle'}
+                  loading={searchAction.loading}
                 />
+                {searchAction.error && <Banner tone="critical">{searchAction.error}</Banner>}
                 {results.length > 0 && (
                   <BlockStack gap="100">
                     {results.slice(0, 8).map((p) => {
