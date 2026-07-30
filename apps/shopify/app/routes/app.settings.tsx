@@ -23,7 +23,15 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
   const settings = await getShopAiSettings(session.shop);
   const usedToday = await getTodayUsage(session.shop);
-  return { settings, usedToday };
+  return {
+    settings: {
+      provider: settings.provider,
+      model: settings.model,
+      dailyCap: settings.dailyCap,
+      hasApiKey: Boolean(settings.apiKey),
+    },
+    usedToday,
+  };
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -32,17 +40,24 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const intent = String(form.get('intent') ?? 'save');
 
   const provider = String(form.get('provider') ?? 'off') as AiProvider;
-  const apiKey = String(form.get('apiKey') ?? '').trim() || undefined;
+  const submittedApiKey = String(form.get('apiKey') ?? '').trim();
   const model = String(form.get('model') ?? '').trim() || undefined;
   const dailyCap = Math.max(1, Math.min(10000, Number(form.get('dailyCap') ?? 100) || 100));
 
   if (intent === 'test') {
+    const existing = await getShopAiSettings(session.shop);
+    const apiKey = submittedApiKey || existing.apiKey;
     const client = createAiClient({ provider, apiKey, model });
     const result = await client.test();
     return json({ test: result });
   }
 
-  await saveShopAiSettings(session.shop, { provider, apiKey, model, dailyCap });
+  await saveShopAiSettings(session.shop, {
+    provider,
+    apiKey: submittedApiKey || undefined,
+    model,
+    dailyCap,
+  });
   return json({ saved: true });
 };
 
@@ -78,7 +93,7 @@ export default function Settings() {
   const testing = testFetcher.state === 'submitting';
 
   const [provider, setProvider] = useState<string>(settings.provider);
-  const [apiKey, setApiKey] = useState(settings.apiKey ?? '');
+  const [apiKey, setApiKey] = useState('');
   const [model, setModel] = useState(settings.model ?? '');
   const [dailyCap, setDailyCap] = useState(String(settings.dailyCap));
 
@@ -102,6 +117,24 @@ export default function Settings() {
   return (
     <Page title="Settings" backAction={{ url: '/app' }}>
       <Layout>
+        <Layout.Section>
+          <Card>
+            <BlockStack gap="300">
+              <BlockStack gap="100">
+                <Text as="h2" variant="headingMd">
+                  Plan and billing
+                </Text>
+                <Text as="p" tone="subdued">
+                  Start or manage the Growth plan through Shopify's secure billing page.
+                </Text>
+              </BlockStack>
+              <InlineStack>
+                <Button url="/app/billing">View plans and billing</Button>
+              </InlineStack>
+            </BlockStack>
+          </Card>
+        </Layout.Section>
+
         <Layout.Section>
           <Card>
             <BlockStack gap="400">
@@ -135,13 +168,19 @@ export default function Settings() {
                         onChange={setApiKey}
                         name="apiKey"
                         autoComplete="off"
+                        placeholder={
+                          settings.hasApiKey ? 'Saved key — leave blank to keep it' : undefined
+                        }
                         helpText={
                           help ? (
                             <>
                               <Link url={help.url} target="_blank">
                                 Get a free key →
                               </Link>{' '}
-                              {help.hint}
+                              {help.hint}{' '}
+                              {settings.hasApiKey
+                                ? 'A key is already saved securely; enter a new one only to replace it.'
+                                : ''}
                             </>
                           ) : null
                         }

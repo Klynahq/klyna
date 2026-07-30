@@ -5,6 +5,7 @@
 
 import { type AiClient, type AiProvider, createAiClient } from '~/lib/klyna-ai-client';
 import prisma from '../db.server';
+import { decryptSecret, encryptSecret } from './secret.server';
 
 export type ShopAiSettings = {
   provider: AiProvider;
@@ -20,7 +21,7 @@ export async function getShopAiSettings(shop: string): Promise<ShopAiSettings> {
   }
   return {
     provider: row.provider as AiProvider,
-    apiKey: row.apiKey ?? undefined,
+    apiKey: row.apiKey ? decryptSecret(row.apiKey) : undefined,
     model: row.model ?? undefined,
     dailyCap: row.dailyCap,
   };
@@ -35,14 +36,18 @@ export async function saveShopAiSettings(
     where: { shop },
     update: {
       provider: input.provider ?? existing?.provider ?? 'off',
-      apiKey: input.apiKey ?? existing?.apiKey,
+      apiKey: input.apiKey
+        ? encryptSecret(input.apiKey)
+        : existing?.apiKey
+          ? encryptSecret(existing.apiKey)
+          : undefined,
       model: input.model ?? existing?.model,
       dailyCap: input.dailyCap ?? existing?.dailyCap ?? 100,
     },
     create: {
       shop,
       provider: input.provider ?? 'off',
-      apiKey: input.apiKey,
+      apiKey: input.apiKey ? encryptSecret(input.apiKey) : undefined,
       model: input.model,
       dailyCap: input.dailyCap ?? 100,
     },
