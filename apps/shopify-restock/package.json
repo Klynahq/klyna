@@ -7,6 +7,7 @@
   "type": "module",
   "scripts": {
     "build": "remix vite:build",
+    "vercel-build": "prisma db execute --file prisma/migrations/20260731023500_add_session_refresh_tokens/migration.sql --schema prisma/schema.prisma && prisma db execute --file prisma/migrations/20260731035000_dedupe_smart_timing_queue/migration.sql --schema prisma/schema.prisma && prisma generate && remix vite:build",
     "dev": "shopify app dev",
     "start": "remix-serve ./build/server/index.js",
     "config:link": "shopify app config link",
