@@ -1,13 +1,12 @@
 import { type ActionFunctionArgs } from '@remix-run/node';
 import { authenticate } from '../shopify.server';
 
-// GDPR / Shopify App Store mandatory webhook.
-// Klyna Back-in-Stock stores only the email or phone the shopper submitted
-// to the waitlist plus the variant they subscribed to - no order history,
-// no profile data, no addresses. There is nothing to assemble into a data
-// export here, so we just acknowledge the request.
+// Shopify sends this verified webhook when a customer requests their data.
+// Waitlist records are already available to the merchant in Subscribers and
+// its CSV export. Acknowledge the request without copying customer identifiers
+// into application logs.
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { shop, topic, payload } = await authenticate.webhook(request);
-  console.log(`Received ${topic} webhook for ${shop}`, JSON.stringify(payload));
+  const { shop, topic } = await authenticate.webhook(request);
+  console.log(`Received ${topic} webhook for ${shop}`);
   return new Response(null, { status: 200 });
 };
