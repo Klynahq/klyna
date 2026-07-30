@@ -1,7 +1,7 @@
-import { useLocation } from '@remix-run/react';
-import { useCallback } from 'react';
+const route = (path: string) => path;
 
 export function useEmbeddedRoute() {
-  const { search } = useLocation();
-  return useCallback((path: string) => `${path}${search}`, [search]);
+  // App Bridge adds a fresh session token to same-origin Remix requests.
+  // Persisting the launch query would reuse its short-lived id_token.
+  return route;
 }
