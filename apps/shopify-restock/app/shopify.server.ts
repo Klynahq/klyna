@@ -4,25 +4,55 @@ import {
   shopifyApp,
   type ApiVersion,
 } from '@shopify/shopify-app-remix/server';
+import { shopifyApi, type Session } from '@shopify/shopify-api';
 import { PrismaSessionStorage } from '@shopify/shopify-app-session-storage-prisma';
 import prisma from './db.server';
 
 const SHOPIFY_API_VERSION = '2026-04' as ApiVersion;
+const SHOPIFY_APP_URL =
+  process.env.SHOPIFY_APP_URL || 'https://klyna-restock.vercel.app';
 
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY ?? '',
   apiSecretKey: process.env.SHOPIFY_API_SECRET ?? '',
   apiVersion: SHOPIFY_API_VERSION,
   scopes: process.env.SCOPES?.split(','),
-  appUrl: process.env.SHOPIFY_APP_URL || 'https://klyna-restock.vercel.app',
+  appUrl: SHOPIFY_APP_URL,
   authPathPrefix: '/auth',
   sessionStorage: new PrismaSessionStorage(prisma),
   distribution: AppDistribution.AppStore,
   future: {
     unstable_newEmbeddedAuthStrategy: true,
-    removeRest: true,
+    expiringOfflineAccessTokens: true,
   },
 });
+
+const tokenMigrationApi = shopifyApi({
+  apiKey: process.env.SHOPIFY_API_KEY ?? '',
+  apiSecretKey: process.env.SHOPIFY_API_SECRET ?? '',
+  apiVersion: SHOPIFY_API_VERSION,
+  scopes: process.env.SCOPES?.split(',') ?? [],
+  hostName: new URL(SHOPIFY_APP_URL).hostname,
+  isEmbeddedApp: true,
+});
+
+export async function migrateOfflineSessionIfNeeded(
+  session: Session,
+): Promise<boolean> {
+  if (session.isOnline || session.refreshToken) return false;
+  if (!session.accessToken) {
+    throw new Error('Shopify offline session is missing an access token.');
+  }
+
+  const { session: migratedSession } =
+    await tokenMigrationApi.auth.migrateToExpiringToken({
+      shop: session.shop,
+      nonExpiringOfflineAccessToken: session.accessToken,
+    });
+
+  await shopify.sessionStorage?.storeSession(migratedSession);
+  return true;
+}
 
 export default shopify;
 export const apiVersion = SHOPIFY_API_VERSION;

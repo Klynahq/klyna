@@ -237,7 +237,11 @@ export default function Timing() {
                 checked={on}
                 onChange={toggle}
                 disabled={busy || planHandle !== 'growth'}
-                helpText="Off: alerts fire the instant inventory returns, regardless of recipient's local time."
+                helpText={
+                  on
+                    ? "On: alerts wait for each recipient's local daytime when needed."
+                    : "Off: alerts fire the instant inventory returns, regardless of recipient's local time."
+                }
               />
             </BlockStack>
           </Card>

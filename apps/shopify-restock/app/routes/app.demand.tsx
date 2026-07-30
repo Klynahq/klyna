@@ -101,11 +101,32 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     // Pull live availability for every waitlisted variant and auto-flush any
     // that are back in stock. This is the manual fallback when webhooks aren't
     // wired (local dev) or to reconcile after downtime.
-    const result = await syncWaitlistedVariants(admin, shop);
-    return json({
-      ok: true,
-      message: `Synced ${result.synced} variant(s); sent ${result.alertsSent} alert(s).`,
-    });
+    try {
+      const result = await syncWaitlistedVariants(admin, shop);
+      return json({
+        ok: true,
+        message: `Synced ${result.synced} variant(s); sent ${result.alertsSent} alert(s).`,
+      });
+    } catch (error) {
+      const response = error instanceof Response ? error : null;
+      const body = response
+        ? (await response.clone().text()).slice(0, 500)
+        : undefined;
+      console.error(
+        '[restock-demand-sync-error]',
+        JSON.stringify({
+          status: response?.status,
+          name: error instanceof Error ? error.name : typeof error,
+          message: error instanceof Error ? error.message : String(error),
+          body,
+        }),
+      );
+      return json({
+        ok: false,
+        message:
+          'Shopify could not refresh inventory. Try again, or contact Klyna support if the issue persists.',
+      });
+    }
   }
 
   if (intent === 'flush') {
@@ -147,7 +168,7 @@ export default function DemandReport() {
                 Restocks fire alerts automatically via webhook. Use “Check stock now”
                 to reconcile against the Admin API on demand.
               </Text>
-              <Form method="post" action={embeddedRoute('/app/demand')}>
+              <Form method="post">
                 <input type="hidden" name="intent" value="sync" />
                 <Button submit variant="primary" loading={syncing}>
                   Check stock now
@@ -211,7 +232,7 @@ export default function DemandReport() {
                       )}
                     </IndexTable.Cell>
                     <IndexTable.Cell>
-                      <Form method="post" action={embeddedRoute('/app/demand')}>
+                      <Form method="post">
                         <input type="hidden" name="intent" value="flush" />
                         <input type="hidden" name="variantId" value={row.variantId} />
                         <Button submit size="slim" disabled={!row.inStock} variant="plain">

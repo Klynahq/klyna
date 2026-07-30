@@ -4,14 +4,21 @@ import { boundary } from '@shopify/shopify-app-remix/server';
 import { AppProvider } from '@shopify/shopify-app-remix/react';
 import { NavMenu } from '@shopify/app-bridge-react';
 import polarisStyles from '@shopify/polaris/build/esm/styles.css?url';
-import { authenticate } from '../shopify.server';
+import {
+  authenticate,
+  migrateOfflineSessionIfNeeded,
+} from '../shopify.server';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { planSelectionUrl, syncPlanFromRequest } from '../lib/plans.server';
 
 export const links = () => [{ rel: 'stylesheet', href: polarisStyles }];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session, redirect } = await authenticate.admin(request);
+  if (await migrateOfflineSessionIfNeeded(session)) {
+    const url = new URL(request.url);
+    return redirect(`${url.pathname}${url.search}`);
+  }
   const planHandle = await syncPlanFromRequest(session.shop, request, admin);
   return {
     apiKey: process.env.SHOPIFY_API_KEY ?? '',

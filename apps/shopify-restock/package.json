@@ -25,8 +25,9 @@
     "@remix-run/serve": "^2.15.0",
     "@shopify/app-bridge-react": "^4.1.6",
     "@shopify/polaris": "^13.9.0",
-    "@shopify/shopify-app-remix": "^3.7.0",
-    "@shopify/shopify-app-session-storage-prisma": "^6.0.0",
+    "@shopify/shopify-api": "^13.1.0",
+    "@shopify/shopify-app-remix": "^4.2.1",
+    "@shopify/shopify-app-session-storage-prisma": "^9.0.1",
     "isbot": "^5.1.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"

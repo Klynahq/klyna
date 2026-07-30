@@ -192,20 +192,16 @@ export default function Subscribers() {
               <Text as="p" variant="bodyMd" tone="subdued">
                 Export the current tab — or every signup — as CSV. Your list, your data.
               </Text>
-              <Form
-                method="post"
-                action={embeddedRoute('/app/subscribers')}
-                reloadDocument
-              >
+              <form method="post">
                 <input type="hidden" name="intent" value="export" />
                 <input type="hidden" name="status" value={filter} />
                 <Button submit disabled={planHandle !== 'growth'}>Export CSV</Button>
-              </Form>
+              </form>
             </InlineStack>
           </Card>
         </Layout.Section>
 
-        {data && 'message' in data && (
+        {data && typeof data === 'object' && 'message' in data && (
           <Layout.Section>
             <Card>
               <Text as="p" tone={data.ok ? 'success' : 'critical'}>{data.message}</Text>
@@ -254,7 +250,6 @@ export default function Subscribers() {
                           {s.status === 'NOTIFIED' && (
                             <Form
                               method="post"
-                              action={embeddedRoute('/app/subscribers')}
                             >
                               <input type="hidden" name="intent" value="rearm" />
                               <input type="hidden" name="id" value={s.id} />
@@ -266,7 +261,6 @@ export default function Subscribers() {
                           {s.status !== 'CANCELLED' && (
                             <Form
                               method="post"
-                              action={embeddedRoute('/app/subscribers')}
                             >
                               <input type="hidden" name="intent" value="cancel" />
                               <input type="hidden" name="id" value={s.id} />
