@@ -20,6 +20,7 @@ import {
 } from '@shopify/polaris';
 import { useEffect, useMemo, useState } from 'react';
 import prisma from '../db.server';
+import { withAdminSessionRecovery } from '../lib/admin-session-recovery.server';
 import { type CatalogProduct, createAutomaticDiscount, searchProducts } from '../lib/admin.server';
 import { useAuthenticatedAction } from '../lib/authenticated-action';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
@@ -76,7 +77,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const intent = String(form.get('intent') ?? '');
 
   if (intent === 'search') {
-    const products = await searchProducts(admin, String(form.get('query') ?? ''));
+    const products = await withAdminSessionRecovery(session, () =>
+      searchProducts(admin, String(form.get('query') ?? '')),
+    );
     return json({ products });
   }
 
@@ -141,19 +144,22 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     // Create one native automatic discount per break point so checkout enforces
     // the best applicable tier for the quantity in cart.
     const errors: string[] = [];
-    for (const t of clean) {
-      try {
-        await createAutomaticDiscount(admin, {
-          title: `Klyna Volume · ${product.title} · ${t.minQuantity}+`,
-          percentage: t.discountType === 'percentage' ? t.discountValue / 100 : null,
-          amount: t.discountType === 'fixed_amount' ? t.discountValue : null,
-          productGids: [product.gid],
-          minQuantity: t.minQuantity,
-        });
-      } catch (err) {
-        errors.push(err instanceof Error ? err.message : 'discount error');
+    await withAdminSessionRecovery(session, async () => {
+      for (const t of clean) {
+        try {
+          await createAutomaticDiscount(admin, {
+            title: `Klyna Volume · ${product.title} · ${t.minQuantity}+`,
+            percentage: t.discountType === 'percentage' ? t.discountValue / 100 : null,
+            amount: t.discountType === 'fixed_amount' ? t.discountValue : null,
+            productGids: [product.gid],
+            minQuantity: t.minQuantity,
+          });
+        } catch (err) {
+          if (err instanceof Response) throw err;
+          errors.push(err instanceof Error ? err.message : 'discount error');
+        }
       }
-    }
+    });
 
     if (errors.length > 0) {
       return json(

@@ -11,6 +11,8 @@ interface AuthenticatedActionResult<T> {
   submit: (action: string, formData: FormData) => Promise<T | null>;
 }
 
+const RETRY_HEADER = 'X-Shopify-Retry-Invalid-Session-Request';
+
 function errorMessage(payload: unknown, status: number): string {
   if (payload && typeof payload === 'object' && 'error' in payload) {
     const error = (payload as { error?: unknown }).error;
@@ -50,16 +52,23 @@ export function useAuthenticatedAction<T>(): AuthenticatedActionResult<T> {
       const shopify = (window as Window & { shopify?: ShopifyAppBridge }).shopify;
       if (!shopify) throw new Error('Shopify authentication is not ready. Please reload the app.');
 
-      const token = await shopify.idToken();
-      const response = await fetch(action, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-        signal: controller.signal,
-      });
+      const send = async () => {
+        const token = await shopify.idToken();
+        return fetch(action, {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+          signal: controller.signal,
+        });
+      };
+
+      let response = await send();
+      if (response.status === 401 && response.headers.get(RETRY_HEADER) === '1') {
+        response = await send();
+      }
       const payload = await parseJson(response);
 
       if (!response.ok) throw new Error(errorMessage(payload, response.status));

@@ -19,6 +19,7 @@ import {
 } from '@shopify/polaris';
 import { useEffect, useState } from 'react';
 import prisma from '../db.server';
+import { withAdminSessionRecovery } from '../lib/admin-session-recovery.server';
 import { type CatalogProduct, createAutomaticDiscount, searchProducts } from '../lib/admin.server';
 import { useAuthenticatedAction } from '../lib/authenticated-action';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
@@ -112,7 +113,7 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
   // Live product search for the picker (returns JSON, no navigation).
   if (intent === 'search') {
     const query = String(form.get('query') ?? '');
-    const products = await searchProducts(admin, query);
+    const products = await withAdminSessionRecovery(session, () => searchProducts(admin, query));
     return json({ products });
   }
 
@@ -179,15 +180,18 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
   // actually enforced at checkout for this bundle's products.
   if (status === 'active') {
     try {
-      await createAutomaticDiscount(admin, {
-        title: `Klyna Bundle · ${title}`,
-        percentage: data.discountType === 'percentage' ? data.discountValue / 100 : null,
-        amount: data.discountType === 'fixed_amount' ? data.discountValue : null,
-        productGids: payload.items.map((it) => it.productGid),
-        minQuantity:
-          data.kind === 'mix_and_match' ? Math.max(1, data.minItems) : payload.items.length,
-      });
+      await withAdminSessionRecovery(session, () =>
+        createAutomaticDiscount(admin, {
+          title: `Klyna Bundle · ${title}`,
+          percentage: data.discountType === 'percentage' ? data.discountValue / 100 : null,
+          amount: data.discountType === 'fixed_amount' ? data.discountValue : null,
+          productGids: payload.items.map((it) => it.productGid),
+          minQuantity:
+            data.kind === 'mix_and_match' ? Math.max(1, data.minItems) : payload.items.length,
+        }),
+      );
     } catch (err) {
+      if (err instanceof Response) throw err;
       // Surface the failure but keep the bundle saved as draft so the merchant
       // can retry — never silently claim an active discount that wasn't created.
       await prisma.bundle.update({ where: { id: bundle.id }, data: { status: 'draft' } });
