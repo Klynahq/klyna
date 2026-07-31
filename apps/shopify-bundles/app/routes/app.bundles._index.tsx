@@ -5,7 +5,6 @@ import {
   Banner,
   BlockStack,
   Box,
-  Button,
   Card,
   EmptyState,
   InlineStack,
@@ -196,6 +195,14 @@ export default function BundlesIndex() {
                   id={b.id}
                   url={embeddedRoute(`/app/bundles/${b.id}`)}
                   accessibilityLabel={`Edit ${b.title}`}
+                  persistActions
+                  shortcutActions={[
+                    {
+                      content: b.status === 'active' ? 'Pause' : 'Activate',
+                      disabled: toggleAction.loading,
+                      onAction: () => void toggleBundle(b.id),
+                    },
+                  ]}
                 >
                   <InlineStack align="space-between" blockAlign="center" wrap={false}>
                     <BlockStack gap="100">
@@ -219,22 +226,6 @@ export default function BundlesIndex() {
                         <Text as="span" variant="bodyMd" fontWeight="semibold">
                           {b.total.toFixed(2)}
                         </Text>
-                        <span
-                          onClick={(event) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                          }}
-                          onKeyDown={(event) => event.stopPropagation()}
-                        >
-                          <Button
-                            size="slim"
-                            variant="tertiary"
-                            loading={toggleAction.loading}
-                            onClick={() => void toggleBundle(b.id)}
-                          >
-                            {b.status === 'active' ? 'Pause' : 'Activate'}
-                          </Button>
-                        </span>
                       </InlineStack>
                     </Box>
                   </InlineStack>
