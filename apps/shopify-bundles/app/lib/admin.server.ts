@@ -8,10 +8,7 @@
 // its shopify.server re-exports.
 
 export interface AdminClient {
-  graphql: (
-    query: string,
-    options?: { variables?: Record<string, unknown> },
-  ) => Promise<Response>;
+  graphql: (query: string, options?: { variables?: Record<string, unknown> }) => Promise<Response>;
 }
 
 export interface CatalogProduct {
@@ -86,10 +83,7 @@ export async function searchProducts(
 }
 
 /** Fetch a single product by GID (used when hydrating a saved bundle). */
-export async function getProduct(
-  admin: AdminClient,
-  gid: string,
-): Promise<CatalogProduct | null> {
+export async function getProduct(admin: AdminClient, gid: string): Promise<CatalogProduct | null> {
   const data = await gql<{ product: ProductNode | null }>(
     admin,
     `#graphql
@@ -265,7 +259,6 @@ export async function createAutomaticDiscount(
           quantity: { greaterThanOrEqualToQuantity: String(Math.max(1, input.minQuantity)) },
         },
         customerGets,
-        customerSelection: { all: true },
       },
     },
   );
