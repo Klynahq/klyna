@@ -1,0 +1,2 @@
+ALTER TABLE "Bundle" ADD COLUMN IF NOT EXISTS "discountGid" TEXT;
+ALTER TABLE "VolumeTier" ADD COLUMN IF NOT EXISTS "discountGid" TEXT;

@@ -47,6 +47,8 @@ model Bundle {
   minItems      Int          @default(0)
   // Optional product the bundle is "attached" to on the storefront block.
   productGid    String?
+  // Shopify DiscountAutomaticNode backing the checkout discount.
+  discountGid   String?
   imageUrl      String?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
@@ -82,6 +84,8 @@ model VolumeTier {
   minQuantity   Int
   discountType  String   @default("percentage") // "percentage" | "fixed_amount"
   discountValue Float
+  // Shopify DiscountAutomaticNode backing this quantity break.
+  discountGid   String?
   label         String?
   createdAt     DateTime @default(now())
 

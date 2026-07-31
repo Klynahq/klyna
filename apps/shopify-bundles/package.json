@@ -7,7 +7,7 @@
   "type": "module",
   "scripts": {
     "build": "remix vite:build",
-    "vercel-build": "pnpm exec prisma db execute --schema prisma/schema.prisma --file prisma/migrations/20260717000000_add_shop_plan/migration.sql && pnpm exec prisma db execute --schema prisma/schema.prisma --file prisma/migrations/20260731000000_expiring_offline_tokens/migration.sql && pnpm exec prisma generate && pnpm exec remix vite:build",
+    "vercel-build": "pnpm exec prisma db execute --schema prisma/schema.prisma --file prisma/migrations/20260717000000_add_shop_plan/migration.sql && pnpm exec prisma db execute --schema prisma/schema.prisma --file prisma/migrations/20260731000000_expiring_offline_tokens/migration.sql && pnpm exec prisma db execute --schema prisma/schema.prisma --file prisma/migrations/20260731010000_track_shopify_discounts/migration.sql && pnpm exec prisma generate && pnpm exec remix vite:build",
     "dev": "shopify app dev",
     "start": "remix-serve ./build/server/index.js",
     "config:link": "shopify app config link",

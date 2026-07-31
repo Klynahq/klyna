@@ -20,7 +20,7 @@ import {
 import { useEffect, useState } from 'react';
 import prisma from '../db.server';
 import { withAdminSessionRecovery } from '../lib/admin-session-recovery.server';
-import { type CatalogProduct, createAutomaticDiscount, searchProducts } from '../lib/admin.server';
+import { type CatalogProduct, searchProducts, syncAutomaticDiscount } from '../lib/admin.server';
 import { useAuthenticatedAction } from '../lib/authenticated-action';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getPlanSelectionUrl, getShopPlan, planLimitMessage } from '../lib/plans.server';
@@ -135,6 +135,16 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
   }
 
   const isNew = params.id === 'new';
+  const existingBundle = isNew
+    ? null
+    : await prisma.bundle.findFirst({
+        where: { id: params.id, shop },
+        include: { items: true },
+      });
+  if (!isNew && !existingBundle) {
+    return json({ ok: false, error: 'Bundle not found.' }, { status: 404 });
+  }
+
   if (isNew) {
     const plan = await getShopPlan(shop, request);
     const bundleCount = await prisma.bundle.count({ where: { shop } });
@@ -157,56 +167,69 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
     minItems: payload.kind === 'mix_and_match' ? Math.max(0, Number(payload.minItems) || 0) : 0,
   };
 
-  const bundle = isNew
-    ? await prisma.bundle.create({ data })
-    : await prisma.bundle.update({ where: { id: params.id }, data });
+  const discountTitle = `Klyna Bundle · ${title}`;
+  let discountGid = existingBundle?.discountGid ?? null;
 
-  // Replace the item set.
-  await prisma.bundleItem.deleteMany({ where: { bundleId: bundle.id } });
-  await prisma.bundleItem.createMany({
-    data: payload.items.map((it, i) => ({
-      bundleId: bundle.id,
-      productGid: it.productGid,
-      variantGid: it.variantGid,
-      title: it.title,
-      imageUrl: it.imageUrl,
-      price: it.price,
-      quantity: Math.max(1, it.quantity),
-      position: i,
-    })),
-  });
-
-  // When activating, create a native automatic discount so the savings are
-  // actually enforced at checkout for this bundle's products.
-  if (status === 'active') {
+  // Synchronize Shopify first so Klyna never reports an active state when the
+  // checkout discount failed. Exact-title lookup adopts discounts made by
+  // builds that predate persisted discount IDs.
+  if (!isNew || status === 'active') {
     try {
-      await withAdminSessionRecovery(session, () =>
-        createAutomaticDiscount(admin, {
-          title: `Klyna Bundle · ${title}`,
-          percentage: data.discountType === 'percentage' ? data.discountValue / 100 : null,
-          amount: data.discountType === 'fixed_amount' ? data.discountValue : null,
-          productGids: payload.items.map((it) => it.productGid),
-          minQuantity:
-            data.kind === 'mix_and_match' ? Math.max(1, data.minItems) : payload.items.length,
+      discountGid = await withAdminSessionRecovery(session, () =>
+        syncAutomaticDiscount(admin, {
+          discountGid,
+          previousTitle: `Klyna Bundle · ${existingBundle?.title ?? title}`,
+          active: status === 'active',
+          discount: {
+            title: discountTitle,
+            percentage: data.discountType === 'percentage' ? data.discountValue / 100 : null,
+            amount: data.discountType === 'fixed_amount' ? data.discountValue : null,
+            productGids: payload.items.map((it) => it.productGid),
+            minQuantity:
+              data.kind === 'mix_and_match'
+                ? Math.max(1, data.minItems)
+                : payload.items.reduce((sum, item) => sum + Math.max(1, item.quantity), 0),
+          },
         }),
       );
     } catch (err) {
       if (err instanceof Response) throw err;
-      // Surface the failure but keep the bundle saved as draft so the merchant
-      // can retry — never silently claim an active discount that wasn't created.
-      await prisma.bundle.update({ where: { id: bundle.id }, data: { status: 'draft' } });
       return json(
         {
           ok: false,
           error:
             err instanceof Error
-              ? `Saved as draft — discount could not be created: ${err.message}`
-              : 'Saved as draft — discount could not be created.',
+              ? `Bundle was not changed — checkout discount could not be synchronized: ${err.message}`
+              : 'Bundle was not changed — checkout discount could not be synchronized.',
         },
         { status: 502 },
       );
     }
   }
+
+  const bundle = await prisma.$transaction(async (tx) => {
+    const saved = isNew
+      ? await tx.bundle.create({ data: { ...data, discountGid } })
+      : await tx.bundle.update({
+          where: { id: existingBundle?.id },
+          data: { ...data, discountGid },
+        });
+
+    await tx.bundleItem.deleteMany({ where: { bundleId: saved.id } });
+    await tx.bundleItem.createMany({
+      data: payload.items.map((it, i) => ({
+        bundleId: saved.id,
+        productGid: it.productGid,
+        variantGid: it.variantGid,
+        title: it.title,
+        imageUrl: it.imageUrl,
+        price: it.price,
+        quantity: Math.max(1, it.quantity),
+        position: i,
+      })),
+    });
+    return saved;
+  });
 
   return json({ ok: true, bundleId: bundle.id });
 };

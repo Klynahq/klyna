@@ -216,16 +216,13 @@ export interface AutomaticDiscountInput {
   minQuantity: number;
 }
 
-/**
- * Create a native Shopify automatic discount (basic / order) so the savings a
- * bundle or volume tier promises are actually enforced at checkout. Returns the
- * created discount's GID. Uses `discountAutomaticBasicCreate`, which applies to
- * the whole cart subject to the item/quantity constraints we pass.
- */
-export async function createAutomaticDiscount(
-  admin: AdminClient,
-  input: AutomaticDiscountInput,
-): Promise<string> {
+export interface AutomaticDiscountRecord {
+  id: string;
+  title: string;
+  status: 'ACTIVE' | 'EXPIRED' | 'SCHEDULED';
+}
+
+function automaticDiscountInput(input: AutomaticDiscountInput): Record<string, unknown> {
   const customerGets: Record<string, unknown> = {
     value:
       input.percentage != null
@@ -237,6 +234,38 @@ export async function createAutomaticDiscount(
         : { all: true },
   };
 
+  return {
+    title: input.title,
+    startsAt: new Date().toISOString(),
+    endsAt: null,
+    minimumRequirement: {
+      quantity: { greaterThanOrEqualToQuantity: String(Math.max(1, input.minQuantity)) },
+    },
+    customerGets,
+  };
+}
+
+function assertDiscountMutation(
+  operation: string,
+  result: { userErrors: { message: string }[] },
+): void {
+  if (result.userErrors.length > 0) {
+    throw new Error(
+      `${operation} failed: ${result.userErrors.map((error) => error.message).join('; ')}`,
+    );
+  }
+}
+
+/**
+ * Create a native Shopify automatic discount (basic / order) so the savings a
+ * bundle or volume tier promises are actually enforced at checkout. Returns the
+ * created discount's GID. Uses `discountAutomaticBasicCreate`, which applies to
+ * the whole cart subject to the item/quantity constraints we pass.
+ */
+export async function createAutomaticDiscount(
+  admin: AdminClient,
+  input: AutomaticDiscountInput,
+): Promise<string> {
   const data = await gql<{
     discountAutomaticBasicCreate: {
       automaticDiscountNode: { id: string } | null;
@@ -250,26 +279,221 @@ export async function createAutomaticDiscount(
           automaticDiscountNode { id }
           userErrors { field message }
         }
-      }`,
+    }`,
     {
-      discount: {
-        title: input.title,
-        startsAt: new Date().toISOString(),
-        minimumRequirement: {
-          quantity: { greaterThanOrEqualToQuantity: String(Math.max(1, input.minQuantity)) },
-        },
-        customerGets,
-      },
+      discount: automaticDiscountInput(input),
     },
   );
 
   const result = data.discountAutomaticBasicCreate;
-  if (result.userErrors.length > 0) {
-    throw new Error(
-      `Discount create failed: ${result.userErrors.map((e) => e.message).join('; ')}`,
-    );
-  }
+  assertDiscountMutation('Discount create', result);
   const gid = result.automaticDiscountNode?.id;
   if (!gid) throw new Error('Discount create returned no node.');
   return gid;
+}
+
+/** Fetch one app-managed automatic discount and its current checkout state. */
+export async function getAutomaticDiscount(
+  admin: AdminClient,
+  id: string,
+): Promise<AutomaticDiscountRecord | null> {
+  const data = await gql<{
+    automaticDiscountNode: {
+      id: string;
+      automaticDiscount: { title?: string; status?: AutomaticDiscountRecord['status'] };
+    } | null;
+  }>(
+    admin,
+    `#graphql
+      query AutomaticDiscount($id: ID!) {
+        automaticDiscountNode(id: $id) {
+          id
+          automaticDiscount {
+            ... on DiscountAutomaticBasic {
+              title
+              status
+            }
+          }
+        }
+      }`,
+    { id },
+  );
+
+  const node = data.automaticDiscountNode;
+  const title = node?.automaticDiscount.title;
+  const status = node?.automaticDiscount.status;
+  return node && title && status ? { id: node.id, title, status } : null;
+}
+
+/**
+ * Find exact-title automatic basic discounts. This repairs records created
+ * before Klyna started persisting Shopify discount IDs.
+ */
+export async function findAutomaticDiscountsByTitle(
+  admin: AdminClient,
+  title: string,
+): Promise<AutomaticDiscountRecord[]> {
+  const data = await gql<{
+    automaticDiscountNodes: {
+      nodes: {
+        id: string;
+        automaticDiscount: { title?: string; status?: AutomaticDiscountRecord['status'] };
+      }[];
+    };
+  }>(
+    admin,
+    `#graphql
+      query AutomaticDiscountsByTitle($query: String!) {
+        automaticDiscountNodes(first: 50, query: $query) {
+          nodes {
+            id
+            automaticDiscount {
+              ... on DiscountAutomaticBasic {
+                title
+                status
+              }
+            }
+          }
+        }
+      }`,
+    { query: `"${title.replace(/["\\]/g, '\\$&')}"` },
+  );
+
+  return data.automaticDiscountNodes.nodes.flatMap((node) => {
+    const nodeTitle = node.automaticDiscount.title;
+    const status = node.automaticDiscount.status;
+    return nodeTitle === title && status ? [{ id: node.id, title: nodeTitle, status }] : [];
+  });
+}
+
+/** Replace the rules of an existing automatic basic discount. */
+export async function updateAutomaticDiscount(
+  admin: AdminClient,
+  id: string,
+  input: AutomaticDiscountInput,
+): Promise<void> {
+  const data = await gql<{
+    discountAutomaticBasicUpdate: {
+      automaticDiscountNode: { id: string } | null;
+      userErrors: { message: string }[];
+    };
+  }>(
+    admin,
+    `#graphql
+      mutation UpdateAutoDiscount($id: ID!, $discount: DiscountAutomaticBasicInput!) {
+        discountAutomaticBasicUpdate(id: $id, automaticBasicDiscount: $discount) {
+          automaticDiscountNode { id }
+          userErrors { field message }
+        }
+      }`,
+    { id, discount: automaticDiscountInput(input) },
+  );
+
+  assertDiscountMutation('Discount update', data.discountAutomaticBasicUpdate);
+}
+
+export async function activateAutomaticDiscount(admin: AdminClient, id: string): Promise<void> {
+  const data = await gql<{
+    discountAutomaticActivate: { userErrors: { message: string }[] };
+  }>(
+    admin,
+    `#graphql
+      mutation ActivateAutoDiscount($id: ID!) {
+        discountAutomaticActivate(id: $id) {
+          automaticDiscountNode { id }
+          userErrors { field message }
+        }
+      }`,
+    { id },
+  );
+  assertDiscountMutation('Discount activation', data.discountAutomaticActivate);
+}
+
+export async function deactivateAutomaticDiscount(admin: AdminClient, id: string): Promise<void> {
+  const data = await gql<{
+    discountAutomaticDeactivate: { userErrors: { message: string }[] };
+  }>(
+    admin,
+    `#graphql
+      mutation DeactivateAutoDiscount($id: ID!) {
+        discountAutomaticDeactivate(id: $id) {
+          automaticDiscountNode { id }
+          userErrors { field message }
+        }
+      }`,
+    { id },
+  );
+  assertDiscountMutation('Discount deactivation', data.discountAutomaticDeactivate);
+}
+
+export async function deleteAutomaticDiscount(admin: AdminClient, id: string): Promise<void> {
+  const data = await gql<{
+    discountAutomaticDelete: {
+      deletedAutomaticDiscountId: string | null;
+      userErrors: { message: string }[];
+    };
+  }>(
+    admin,
+    `#graphql
+      mutation DeleteAutoDiscount($id: ID!) {
+        discountAutomaticDelete(id: $id) {
+          deletedAutomaticDiscountId
+          userErrors { field message }
+        }
+      }`,
+    { id },
+  );
+  assertDiscountMutation('Discount deletion', data.discountAutomaticDelete);
+}
+
+export interface SyncAutomaticDiscountInput {
+  discountGid: string | null;
+  previousTitle: string;
+  active: boolean;
+  discount: AutomaticDiscountInput;
+}
+
+/**
+ * Keep one Klyna record and one Shopify checkout discount in lockstep. Exact
+ * title lookup also adopts and deduplicates legacy discounts from older builds.
+ */
+export async function syncAutomaticDiscount(
+  admin: AdminClient,
+  input: SyncAutomaticDiscountInput,
+): Promise<string | null> {
+  const titleMatches = await findAutomaticDiscountsByTitle(admin, input.previousTitle);
+  let current = input.discountGid ? await getAutomaticDiscount(admin, input.discountGid) : null;
+  current ??= titleMatches[0] ?? null;
+
+  for (const duplicate of titleMatches) {
+    if (duplicate.id !== current?.id) await deleteAutomaticDiscount(admin, duplicate.id);
+  }
+
+  if (!input.active) {
+    if (current && current.status !== 'EXPIRED') {
+      await deactivateAutomaticDiscount(admin, current.id);
+    }
+    return current?.id ?? null;
+  }
+
+  if (!current) return createAutomaticDiscount(admin, input.discount);
+
+  await updateAutomaticDiscount(admin, current.id, input.discount);
+  const refreshed = await getAutomaticDiscount(admin, current.id);
+  if (refreshed?.status !== 'ACTIVE') {
+    await activateAutomaticDiscount(admin, current.id);
+  }
+  return current.id;
+}
+
+/** Delete every matching Klyna-owned discount, including pre-ID legacy rows. */
+export async function removeAutomaticDiscount(
+  admin: AdminClient,
+  discountGid: string | null,
+  title: string,
+): Promise<void> {
+  const ids = new Set<string>();
+  if (discountGid && (await getAutomaticDiscount(admin, discountGid))) ids.add(discountGid);
+  for (const match of await findAutomaticDiscountsByTitle(admin, title)) ids.add(match.id);
+  for (const id of ids) await deleteAutomaticDiscount(admin, id);
 }

@@ -21,7 +21,12 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import prisma from '../db.server';
 import { withAdminSessionRecovery } from '../lib/admin-session-recovery.server';
-import { type CatalogProduct, createAutomaticDiscount, searchProducts } from '../lib/admin.server';
+import {
+  type CatalogProduct,
+  removeAutomaticDiscount,
+  searchProducts,
+  syncAutomaticDiscount,
+} from '../lib/admin.server';
 import { useAuthenticatedAction } from '../lib/authenticated-action';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getPlanSelectionUrl, getShopPlan, planLimitMessage } from '../lib/plans.server';
@@ -87,6 +92,30 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   if (intent === 'deleteProduct') {
     const productGid = String(form.get('productGid') ?? '');
+    const rows = await prisma.volumeTier.findMany({ where: { shop, productGid } });
+    try {
+      await withAdminSessionRecovery(session, async () => {
+        for (const row of rows) {
+          await removeAutomaticDiscount(
+            admin,
+            row.discountGid,
+            `Klyna Volume · ${row.productTitle} · ${row.minQuantity}+`,
+          );
+        }
+      });
+    } catch (error) {
+      if (error instanceof Response) throw error;
+      return json(
+        {
+          ok: false,
+          error:
+            error instanceof Error
+              ? `Volume discounts could not be removed from Shopify: ${error.message}`
+              : 'Volume discounts could not be removed from Shopify.',
+        },
+        { status: 502 },
+      );
+    }
     await prisma.volumeTier.deleteMany({ where: { shop, productGid } });
     return json({ ok: true });
   }
@@ -127,46 +156,75 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       return json({ ok: false, error: 'Add at least one tier (min qty ≥ 2).' }, { status: 400 });
     }
 
-    // Replace this product's tier ladder.
-    await prisma.volumeTier.deleteMany({ where: { shop, productGid: product.gid } });
-    await prisma.volumeTier.createMany({
-      data: clean.map((t) => ({
-        shop,
-        productGid: product.gid,
-        productTitle: product.title,
-        minQuantity: t.minQuantity,
-        discountType: t.discountType,
-        discountValue: t.discountValue,
-        label: `Buy ${t.minQuantity}+`,
-      })),
+    const existingRows = await prisma.volumeTier.findMany({
+      where: { shop, productGid: product.gid },
+      orderBy: { createdAt: 'asc' },
     });
+    const matchedRowIds = new Set<string>();
+    const synced: { tier: (typeof clean)[number]; discountGid: string }[] = [];
 
-    // Create one native automatic discount per break point so checkout enforces
-    // the best applicable tier for the quantity in cart.
-    const errors: string[] = [];
-    await withAdminSessionRecovery(session, async () => {
-      for (const t of clean) {
-        try {
-          await createAutomaticDiscount(admin, {
-            title: `Klyna Volume · ${product.title} · ${t.minQuantity}+`,
-            percentage: t.discountType === 'percentage' ? t.discountValue / 100 : null,
-            amount: t.discountType === 'fixed_amount' ? t.discountValue : null,
-            productGids: [product.gid],
-            minQuantity: t.minQuantity,
+    try {
+      await withAdminSessionRecovery(session, async () => {
+        for (const tier of clean) {
+          const previous = existingRows.find(
+            (row) => row.minQuantity === tier.minQuantity && !matchedRowIds.has(row.id),
+          );
+          if (previous) matchedRowIds.add(previous.id);
+
+          const discountGid = await syncAutomaticDiscount(admin, {
+            discountGid: previous?.discountGid ?? null,
+            previousTitle: `Klyna Volume · ${previous?.productTitle ?? product.title} · ${tier.minQuantity}+`,
+            active: true,
+            discount: {
+              title: `Klyna Volume · ${product.title} · ${tier.minQuantity}+`,
+              percentage: tier.discountType === 'percentage' ? tier.discountValue / 100 : null,
+              amount: tier.discountType === 'fixed_amount' ? tier.discountValue : null,
+              productGids: [product.gid],
+              minQuantity: tier.minQuantity,
+            },
           });
-        } catch (err) {
-          if (err instanceof Response) throw err;
-          errors.push(err instanceof Error ? err.message : 'discount error');
+          if (!discountGid) throw new Error('Shopify returned no discount ID.');
+          synced.push({ tier, discountGid });
         }
-      }
-    });
 
-    if (errors.length > 0) {
+        for (const oldRow of existingRows) {
+          if (matchedRowIds.has(oldRow.id)) continue;
+          await removeAutomaticDiscount(
+            admin,
+            oldRow.discountGid,
+            `Klyna Volume · ${oldRow.productTitle} · ${oldRow.minQuantity}+`,
+          );
+        }
+      });
+    } catch (error) {
+      if (error instanceof Response) throw error;
       return json(
-        { ok: false, error: `Tiers saved, but some discounts failed: ${errors.join('; ')}` },
+        {
+          ok: false,
+          error:
+            error instanceof Error
+              ? `Tier ladder was not saved — Shopify discount sync failed: ${error.message}`
+              : 'Tier ladder was not saved — Shopify discount sync failed.',
+        },
         { status: 502 },
       );
     }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.volumeTier.deleteMany({ where: { shop, productGid: product.gid } });
+      await tx.volumeTier.createMany({
+        data: synced.map(({ tier, discountGid }) => ({
+          shop,
+          productGid: product.gid,
+          productTitle: product.title,
+          minQuantity: tier.minQuantity,
+          discountType: tier.discountType,
+          discountValue: tier.discountValue,
+          discountGid,
+          label: `Buy ${tier.minQuantity}+`,
+        })),
+      });
+    });
     return json({ ok: true });
   }
 

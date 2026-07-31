@@ -16,6 +16,8 @@ import {
   Text,
 } from '@shopify/polaris';
 import prisma from '../db.server';
+import { withAdminSessionRecovery } from '../lib/admin-session-recovery.server';
+import { removeAutomaticDiscount, syncAutomaticDiscount } from '../lib/admin.server';
 import { useAuthenticatedAction } from '../lib/authenticated-action';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getPlanSelectionUrl, getShopPlan } from '../lib/plans.server';
@@ -51,22 +53,62 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
+  const { admin, session } = await authenticate.admin(request);
   const form = await request.formData();
   const id = String(form.get('id') ?? '');
   const intent = String(form.get('intent') ?? '');
 
-  const bundle = await prisma.bundle.findFirst({ where: { id, shop: session.shop } });
+  const bundle = await prisma.bundle.findFirst({
+    where: { id, shop: session.shop },
+    include: { items: true },
+  });
   if (!bundle) return json({ ok: false, error: 'Bundle not found' }, { status: 404 });
 
-  if (intent === 'delete') {
-    await prisma.bundle.delete({ where: { id } });
-    return json({ ok: true });
-  }
-  if (intent === 'toggle') {
-    const next = bundle.status === 'active' ? 'paused' : 'active';
-    await prisma.bundle.update({ where: { id }, data: { status: next } });
-    return json({ ok: true });
+  try {
+    if (intent === 'delete') {
+      await withAdminSessionRecovery(session, () =>
+        removeAutomaticDiscount(admin, bundle.discountGid, `Klyna Bundle · ${bundle.title}`),
+      );
+      await prisma.bundle.delete({ where: { id } });
+      return json({ ok: true });
+    }
+    if (intent === 'toggle') {
+      const next = bundle.status === 'active' ? 'paused' : 'active';
+      const discountGid = await withAdminSessionRecovery(session, () =>
+        syncAutomaticDiscount(admin, {
+          discountGid: bundle.discountGid,
+          previousTitle: `Klyna Bundle · ${bundle.title}`,
+          active: next === 'active',
+          discount: {
+            title: `Klyna Bundle · ${bundle.title}`,
+            percentage: bundle.discountType === 'percentage' ? bundle.discountValue / 100 : null,
+            amount: bundle.discountType === 'fixed_amount' ? bundle.discountValue : null,
+            productGids: bundle.items.map((item) => item.productGid),
+            minQuantity:
+              bundle.kind === 'mix_and_match'
+                ? Math.max(1, bundle.minItems)
+                : bundle.items.reduce((sum, item) => sum + Math.max(1, item.quantity), 0),
+          },
+        }),
+      );
+      await prisma.bundle.update({
+        where: { id },
+        data: { status: next, discountGid },
+      });
+      return json({ ok: true });
+    }
+  } catch (error) {
+    if (error instanceof Response) throw error;
+    return json(
+      {
+        ok: false,
+        error:
+          error instanceof Error
+            ? `Shopify discount could not be updated: ${error.message}`
+            : 'Shopify discount could not be updated.',
+      },
+      { status: 502 },
+    );
   }
   return json({ ok: false, error: 'Unknown intent' }, { status: 400 });
 };
@@ -177,14 +219,22 @@ export default function BundlesIndex() {
                         <Text as="span" variant="bodyMd" fontWeight="semibold">
                           {b.total.toFixed(2)}
                         </Text>
-                        <Button
-                          size="slim"
-                          variant="tertiary"
-                          loading={toggleAction.loading}
-                          onClick={() => void toggleBundle(b.id)}
+                        <span
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                          }}
+                          onKeyDown={(event) => event.stopPropagation()}
                         >
-                          {b.status === 'active' ? 'Pause' : 'Activate'}
-                        </Button>
+                          <Button
+                            size="slim"
+                            variant="tertiary"
+                            loading={toggleAction.loading}
+                            onClick={() => void toggleBundle(b.id)}
+                          >
+                            {b.status === 'active' ? 'Pause' : 'Activate'}
+                          </Button>
+                        </span>
                       </InlineStack>
                     </Box>
                   </InlineStack>
