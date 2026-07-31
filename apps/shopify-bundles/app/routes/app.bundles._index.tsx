@@ -88,7 +88,11 @@ export default function BundlesIndex() {
     const fd = new FormData();
     fd.set('id', id);
     fd.set('intent', 'toggle');
-    const result = await toggleAction.submit(embeddedRoute('/app/bundles'), fd);
+    const result = await toggleAction.submit(
+      embeddedRoute('/app/bundles'),
+      'routes/app.bundles._index',
+      fd,
+    );
     if (result?.ok) revalidator.revalidate();
   };
 

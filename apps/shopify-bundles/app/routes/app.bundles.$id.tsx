@@ -239,6 +239,7 @@ export default function BundleBuilder() {
       fd.set('query', query);
       void submitSearch(
         embeddedRoute(isNew ? '/app/bundles/new' : `/app/bundles/${bundle.id}`),
+        'routes/app.bundles.$id',
         fd,
       );
     }, 250);
@@ -289,6 +290,7 @@ export default function BundleBuilder() {
     fd.set('payload', JSON.stringify(payload));
     const result = await saveAction.submit(
       embeddedRoute(isNew ? '/app/bundles/new' : `/app/bundles/${bundle.id}`),
+      'routes/app.bundles.$id',
       fd,
     );
     if (result?.ok) window.open(embeddedRoute('/app/bundles'), '_self');

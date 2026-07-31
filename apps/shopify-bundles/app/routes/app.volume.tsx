@@ -200,7 +200,7 @@ export default function VolumeDiscounts() {
       const fd = new FormData();
       fd.set('intent', 'search');
       fd.set('query', query);
-      void submitSearch(embeddedRoute('/app/volume'), fd);
+      void submitSearch(embeddedRoute('/app/volume'), 'routes/app.volume', fd);
     }, 250);
     return () => clearTimeout(h);
   }, [embeddedRoute, plan.canUseVolume, query, submitSearch]);
@@ -252,7 +252,7 @@ export default function VolumeDiscounts() {
     fd.set('intent', 'save');
     fd.set('product', JSON.stringify(product));
     fd.set('tiers', JSON.stringify(tiers));
-    const result = await saveAction.submit(embeddedRoute('/app/volume'), fd);
+    const result = await saveAction.submit(embeddedRoute('/app/volume'), 'routes/app.volume', fd);
     if (result?.ok) revalidator.revalidate();
   };
 
@@ -264,7 +264,7 @@ export default function VolumeDiscounts() {
     const fd = new FormData();
     fd.set('intent', 'deleteProduct');
     fd.set('productGid', productGid);
-    const result = await deleteAction.submit(embeddedRoute('/app/volume'), fd);
+    const result = await deleteAction.submit(embeddedRoute('/app/volume'), 'routes/app.volume', fd);
     if (result?.ok) revalidator.revalidate();
   };
 

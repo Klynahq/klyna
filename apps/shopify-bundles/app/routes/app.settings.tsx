@@ -125,7 +125,7 @@ export default function Settings() {
     fd.set('bundleHeading', bundleHeading);
     fd.set('accentColor', accentColor);
     if (showSavingsBadge) fd.set('showSavingsBadge', 'on');
-    void storefrontAction.submit(embeddedRoute('/app/settings'), fd);
+    void storefrontAction.submit(embeddedRoute('/app/settings'), 'routes/app.settings', fd);
   };
 
   const runTest = () => {
@@ -135,7 +135,7 @@ export default function Settings() {
     fd.set('apiKey', apiKey);
     fd.set('model', model);
     fd.set('dailyCap', dailyCap);
-    void testAction.submit(embeddedRoute('/app/settings'), fd);
+    void testAction.submit(embeddedRoute('/app/settings'), 'routes/app.settings', fd);
   };
 
   const saveAi = () => {
@@ -145,7 +145,7 @@ export default function Settings() {
     fd.set('apiKey', apiKey);
     fd.set('model', model);
     fd.set('dailyCap', dailyCap);
-    void aiAction.submit(embeddedRoute('/app/settings'), fd);
+    void aiAction.submit(embeddedRoute('/app/settings'), 'routes/app.settings', fd);
   };
 
   return (
