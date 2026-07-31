@@ -3,7 +3,6 @@ import { type LoaderFunctionArgs, json } from '@remix-run/node';
 import { Link, useLoaderData } from '@remix-run/react';
 import {
   Badge,
-  Banner,
   BlockStack,
   Button,
   Card,
@@ -168,6 +167,8 @@ export default function Dashboard() {
 
   const totalIssues = errors + warnings + infos;
   const score = avgScore ?? 0;
+  const hasCompletedScan = Boolean(lastScan?.finishedAt);
+  const pagesForSummary = pagesScanned > 0 ? pagesScanned : (lastScan?.scannedUrls ?? 0);
 
   const coreActions = [
     {
@@ -176,7 +177,7 @@ export default function Dashboard() {
       desc: 'Scan products, collections, and pages. Review issues in priority order.',
       to: '/app/bulk',
       cta: 'Run store audit',
-      badge: pagesScanned > 0 ? `${pagesScanned} pages` : undefined,
+      badge: pagesForSummary > 0 ? `${pagesForSummary} URLs` : undefined,
     },
     {
       icon: CodeIcon,
@@ -269,27 +270,15 @@ export default function Dashboard() {
   return (
     <Page title="SEO overview" subtitle={`${shopName} | ${shop}`}>
       <Layout>
-        {avgScore === null && (
-          <Layout.Section>
-            <Banner
-              tone="info"
-              title="Start with a full store audit"
-              action={{ content: 'Run store audit', url: '/app/bulk' }}
-            >
-              <Text as="p" variant="bodyMd">
-                Scan products, collections, and pages to create a prioritized SEO worklist.
-              </Text>
-            </Banner>
-          </Layout.Section>
-        )}
-
         <Layout.Section>
           <div className="KlynaDashboardLead">
             <div className="KlynaDashboardLead__copy">
               <p className="KlynaEyebrow">Store health</p>
               <h2 className="KlynaLeadTitle">
                 {avgScore === null
-                  ? 'Build your first SEO worklist'
+                  ? hasCompletedScan
+                    ? 'Run a fresh audit to calculate your score'
+                    : 'Build your first SEO worklist'
                   : totalIssues === 0
                     ? 'Your latest scan found no open issues'
                     : `${totalIssues} issue${totalIssues === 1 ? '' : 's'} need review`}
@@ -297,11 +286,17 @@ export default function Dashboard() {
               <p className="KlynaLeadBody">
                 {pagesScanned > 0
                   ? `This score reflects the latest result for ${pagesScanned} scanned page${pagesScanned === 1 ? '' : 's'}. Fix high-impact errors first, then scan again to measure progress.`
-                  : 'Klyna checks the technical and on-page signals that affect how search engines understand your store.'}
+                  : hasCompletedScan
+                    ? `Your last scan checked ${pagesForSummary} URL${pagesForSummary === 1 ? '' : 's'}, but no page scores are available. Run a fresh audit to rebuild the worklist.`
+                    : 'Klyna checks the technical and on-page signals that affect how search engines understand your store.'}
               </p>
               <div className="KlynaActions">
                 <Button url="/app/bulk" variant="primary">
-                  {avgScore === null ? 'Run store audit' : 'Scan again'}
+                  {avgScore === null
+                    ? hasCompletedScan
+                      ? 'Run fresh audit'
+                      : 'Run store audit'
+                    : 'Scan again'}
                 </Button>
                 <Button url="/app/audit">Audit one page</Button>
               </div>
@@ -324,9 +319,11 @@ export default function Dashboard() {
           <Card padding="0">
             <div className="KlynaMetricStrip">
               <div className="KlynaMetric">
-                <span className="KlynaMetric__label">Pages scanned</span>
+                <span className="KlynaMetric__label">
+                  {pagesScanned > 0 ? 'Pages scored' : 'URLs checked'}
+                </span>
                 <strong className="KlynaMetric__value KlynaMetric__value--data">
-                  {pagesScanned}
+                  {pagesForSummary}
                 </strong>
               </div>
               <div className="KlynaMetric">
