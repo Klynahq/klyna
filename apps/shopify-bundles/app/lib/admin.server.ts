@@ -333,37 +333,55 @@ export async function findAutomaticDiscountsByTitle(
   admin: AdminClient,
   title: string,
 ): Promise<AutomaticDiscountRecord[]> {
-  const data = await gql<{
+  type DiscountPage = {
     automaticDiscountNodes: {
       nodes: {
         id: string;
         automaticDiscount: { title?: string; status?: AutomaticDiscountRecord['status'] };
       }[];
+      pageInfo: { hasNextPage: boolean; endCursor: string | null };
     };
-  }>(
-    admin,
-    `#graphql
-      query AutomaticDiscountsByTitle($query: String!) {
-        automaticDiscountNodes(first: 50, query: $query) {
-          nodes {
-            id
-            automaticDiscount {
-              ... on DiscountAutomaticBasic {
-                title
-                status
+  };
+
+  const matches: AutomaticDiscountRecord[] = [];
+  let after: string | null = null;
+
+  // Search with a plain stable term and compare titles in code. Shopify search
+  // syntax treats characters such as the "+" in "2+" as operators.
+  for (let page = 0; page < 20; page += 1) {
+    const data: DiscountPage = await gql(
+      admin,
+      `#graphql
+        query AutomaticDiscountsByTitle($query: String!, $after: String) {
+          automaticDiscountNodes(first: 250, after: $after, query: $query) {
+            nodes {
+              id
+              automaticDiscount {
+                ... on DiscountAutomaticBasic {
+                  title
+                  status
+                }
               }
             }
+            pageInfo { hasNextPage endCursor }
           }
-        }
-      }`,
-    { query: `"${title.replace(/["\\]/g, '\\$&')}"` },
-  );
+        }`,
+      { query: title.includes('Klyna') ? 'Klyna' : title.split(/\s+/)[0] || title, after },
+    );
 
-  return data.automaticDiscountNodes.nodes.flatMap((node) => {
-    const nodeTitle = node.automaticDiscount.title;
-    const status = node.automaticDiscount.status;
-    return nodeTitle === title && status ? [{ id: node.id, title: nodeTitle, status }] : [];
-  });
+    for (const node of data.automaticDiscountNodes.nodes) {
+      const nodeTitle = node.automaticDiscount.title;
+      const status = node.automaticDiscount.status;
+      if (nodeTitle === title && status) {
+        matches.push({ id: node.id, title: nodeTitle, status });
+      }
+    }
+
+    if (!data.automaticDiscountNodes.pageInfo.hasNextPage) break;
+    after = data.automaticDiscountNodes.pageInfo.endCursor;
+  }
+
+  return matches;
 }
 
 /** Replace the rules of an existing automatic basic discount. */
