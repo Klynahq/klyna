@@ -205,6 +205,9 @@ importers:
 
   apps/shopify-bundles:
     dependencies:
+      '@klyna/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       '@prisma/client':
         specifier: ^6.0.0
         version: 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)
@@ -223,6 +226,9 @@ importers:
       '@shopify/polaris':
         specifier: ^13.9.0
         version: 13.9.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@shopify/polaris-icons':
+        specifier: ^9.3.1
+        version: 9.3.1(react@18.3.1)
       '@shopify/shopify-app-remix':
         specifier: ^4.2.1
         version: 4.2.1(@remix-run/node@2.17.5(typescript@5.9.3))(@remix-run/react@2.17.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@shopify/polaris@13.9.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(typescript@5.9.3)

@@ -1,3 +1,4 @@
+import adminStyles from '@klyna/ui/shopify-admin.css?url';
 import type { HeadersFunction, LoaderFunctionArgs } from '@remix-run/node';
 import { Link, Outlet, useLoaderData, useRouteError } from '@remix-run/react';
 import { NavMenu } from '@shopify/app-bridge-react';
@@ -8,7 +9,10 @@ import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getShopPlan } from '../lib/plans.server';
 import { authenticate } from '../shopify.server';
 
-export const links = () => [{ rel: 'stylesheet', href: polarisStyles }];
+export const links = () => [
+  { rel: 'stylesheet', href: polarisStyles },
+  { rel: 'stylesheet', href: adminStyles },
+];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
@@ -30,7 +34,9 @@ export default function App() {
         <Link to={embeddedRoute('/app/volume')}>Volume discounts</Link>
         <Link to={embeddedRoute('/app/settings')}>Settings</Link>
       </NavMenu>
-      <Outlet />
+      <div className="KlynaAdmin">
+        <Outlet />
+      </div>
     </AppProvider>
   );
 }

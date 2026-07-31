@@ -3,15 +3,17 @@ import { Link, useLoaderData } from '@remix-run/react';
 import {
   Badge,
   BlockStack,
-  Box,
+  Button,
   Card,
   Divider,
-  InlineGrid,
+  Icon,
   InlineStack,
   Layout,
   Page,
   Text,
 } from '@shopify/polaris';
+import { DiscountIcon, ProductIcon } from '@shopify/polaris-icons';
+import type { CSSProperties } from 'react';
 import prisma from '../db.server';
 import { getShopInfo } from '../lib/admin.server';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
@@ -81,95 +83,97 @@ export default function Dashboard() {
     { label: 'Current plan', value: plan.label },
   ];
 
-  const tiles: {
-    title: string;
-    body: string;
-    to: string;
-    badge?: string;
-    ai?: boolean;
-  }[] = [
+  const tiles = [
     {
+      icon: ProductIcon,
       title: 'Bundles',
-      body: 'Build fixed sets or mix-and-match bundles and apply a percentage or fixed discount.',
+      body: 'Create fixed sets or mix-and-match offers with percentage or fixed savings.',
       to: '/app/bundles',
       badge: counts.activeBundles > 0 ? `${counts.activeBundles} active` : undefined,
     },
     {
+      icon: DiscountIcon,
       title: 'Volume discounts',
-      body: 'Add quantity-break tiers - buy more, save more - enforced with native automatic discounts.',
+      body: 'Create quantity breaks that Shopify enforces with native automatic discounts.',
       to: '/app/volume',
       badge: counts.volumeCount > 0 ? `${counts.volumeCount} tiers` : undefined,
     },
   ];
 
   return (
-    <Page
-      title="Klyna Bundles"
-      subtitle={`Connected to ${shop}`}
-      primaryAction={{ content: 'New bundle', url: embeddedRoute('/app/bundles/new') }}
-    >
+    <Page title="Bundles overview" subtitle={`Klyna Bundles | ${shop}`}>
       <Layout>
         <Layout.Section>
-          <Card>
-            <BlockStack gap="200">
-              <Text as="h2" variant="headingMd">
-                Create bundles and quantity breaks from one dashboard.
-              </Text>
-              <Text as="p" variant="bodyMd" tone="subdued">
-                Klyna Bundles helps merchants build curated bundles and quantity discounts, show
-                them on product pages, and apply savings with native automatic discounts. The launch
-                build works without protected order or customer data.
-              </Text>
-            </BlockStack>
+          <div className="KlynaDashboardLead">
+            <div className="KlynaDashboardLead__copy">
+              <p className="KlynaEyebrow">Offer workspace</p>
+              <h2 className="KlynaLeadTitle">
+                Build offers shoppers understand and Shopify enforces
+              </h2>
+              <p className="KlynaLeadBody">
+                Create curated bundles and quantity breaks, place them on product pages, and manage
+                every active offer from one workspace.
+              </p>
+              <div className="KlynaActions">
+                <Button url={embeddedRoute('/app/bundles/new')} variant="primary">
+                  Create bundle
+                </Button>
+                <Button url={embeddedRoute('/app/volume')}>Create volume discount</Button>
+              </div>
+            </div>
+            <div className="KlynaScore KlynaScore--stat">
+              <span className="KlynaScore__label">Active offers</span>
+              <span className="KlynaScore__value">
+                <strong>{counts.activeBundles + counts.volumeCount}</strong>
+              </span>
+              <span className="KlynaScore__total">
+                {counts.draftBundles} draft{counts.draftBundles === 1 ? '' : 's'}
+              </span>
+            </div>
+          </div>
+        </Layout.Section>
+
+        <Layout.Section>
+          <Card padding="0">
+            <div className="KlynaMetricStrip">
+              {stats.map((stat, index) => (
+                <div className="KlynaMetric" key={stat.label}>
+                  <span className="KlynaMetric__label">{stat.label}</span>
+                  <strong
+                    className={`KlynaMetric__value${index === 0 ? ' KlynaMetric__value--data' : ''}`}
+                  >
+                    {stat.value}
+                  </strong>
+                </div>
+              ))}
+            </div>
           </Card>
         </Layout.Section>
 
         <Layout.Section>
-          <Card>
-            <InlineStack align="space-between" blockAlign="center" gap="300">
-              <BlockStack gap="100">
-                <InlineStack gap="200" blockAlign="center">
-                  <Text as="h2" variant="headingMd">
-                    Plan
-                  </Text>
-                  <Badge tone={plan.paid ? 'success' : 'attention'}>{plan.label}</Badge>
-                </InlineStack>
-                <Text as="p" variant="bodyMd" tone="subdued">
-                  Starter includes one bundle. Growth and Pro unlock more bundles plus
-                  quantity-break tiers for paid merchants.
+          <div className="KlynaPlanBar">
+            <div className="KlynaPlanBar__copy">
+              <InlineStack gap="200" blockAlign="center">
+                <Text as="h2" variant="headingSm">
+                  Current plan
                 </Text>
-              </BlockStack>
-              {!plan.paid && (
-                <a href={upgradeUrl} target="_top" rel="noreferrer">
-                  View paid plans
-                </a>
-              )}
-            </InlineStack>
-          </Card>
-        </Layout.Section>
-
-        <Layout.Section>
-          <InlineGrid columns={{ xs: 2, md: 4 }} gap="300">
-            {stats.map((s) => (
-              <Card key={s.label}>
-                <BlockStack gap="100">
-                  <Text as="p" variant="bodySm" tone="subdued">
-                    {s.label}
-                  </Text>
-                  <Text as="p" variant="headingLg" fontWeight="bold">
-                    {s.value}
-                  </Text>
-                </BlockStack>
-              </Card>
-            ))}
-          </InlineGrid>
+                <Badge tone={plan.paid ? 'success' : 'attention'}>{plan.label}</Badge>
+              </InlineStack>
+              <p>Starter includes one bundle. Paid plans add more offers and volume tiers.</p>
+            </div>
+            {!plan.paid && (
+              <a className="KlynaButtonLink" href={upgradeUrl} target="_top" rel="noreferrer">
+                View plans
+              </a>
+            )}
+          </div>
         </Layout.Section>
 
         <Layout.Section>
           <Card>
             <BlockStack gap="300">
               <Text as="h2" variant="headingMd">
-                {hasData ? `Revenue by source · last ${WINDOW_DAYS} days` : 'Launch checklist'}
+                {hasData ? `Offer revenue, last ${WINDOW_DAYS} days` : 'Publish your first offer'}
               </Text>
               {hasData ? (
                 <BlockStack gap="200">
@@ -202,45 +206,38 @@ export default function Dashboard() {
                   </InlineStack>
                 </BlockStack>
               ) : (
-                <BlockStack gap="200">
-                  <Text as="p" tone="subdued">
-                    Sales attribution is disabled in the approval-safe launch build. Core bundles
-                    and volume discounts are ready to test without protected order data.
-                  </Text>
-                  <Text as="p" variant="bodySm">
-                    1. Create a bundle or volume tier. 2. Add the Klyna Bundles app block to a
-                    product template. 3. Verify the discount appears under Shopify automatic
-                    discounts.
-                  </Text>
-                </BlockStack>
+                <ol className="KlynaChecklist">
+                  <li>Create a bundle or set quantity-break tiers.</li>
+                  <li>Add the Klyna Bundles app block to the matching product template.</li>
+                  <li>Preview the storefront and confirm the automatic discount in Shopify.</li>
+                </ol>
               )}
             </BlockStack>
           </Card>
         </Layout.Section>
 
         <Layout.Section>
-          <InlineGrid columns={{ xs: 1, sm: 2, md: 4 }} gap="300">
-            {tiles.map((t) => (
-              <Card key={t.to}>
-                <BlockStack gap="200">
-                  <InlineStack align="space-between" blockAlign="center">
-                    <Text as="h3" variant="headingSm">
-                      {t.title}
-                    </Text>
-                    {t.ai ? (
-                      <Badge tone="info">AI</Badge>
-                    ) : t.badge ? (
-                      <Badge tone="success">{t.badge}</Badge>
-                    ) : null}
-                  </InlineStack>
-                  <Text as="p" variant="bodyMd" tone="subdued">
-                    {t.body}
-                  </Text>
-                  <Link to={embeddedRoute(t.to)}>Open</Link>
-                </BlockStack>
-              </Card>
+          <div className="KlynaSectionHeader">
+            <div>
+              <h2>Manage offers</h2>
+              <p>Create, publish, and update offers without leaving Shopify admin.</p>
+            </div>
+          </div>
+          <div className="KlynaToolGrid">
+            {tiles.map((tile) => (
+              <Link className="KlynaToolLink" key={tile.to} to={embeddedRoute(tile.to)}>
+                <span className="KlynaToolLink__icon">
+                  <Icon source={tile.icon} />
+                </span>
+                <span className="KlynaToolLink__content">
+                  <span className="KlynaToolLink__title">{tile.title}</span>
+                  <span className="KlynaToolLink__body">{tile.body}</span>
+                  {tile.badge && <span className="KlynaInlineBadge">{tile.badge}</span>}
+                  <span className="KlynaToolLink__action">Open workspace</span>
+                </span>
+              </Link>
             ))}
-          </InlineGrid>
+          </div>
         </Layout.Section>
       </Layout>
     </Page>
@@ -269,9 +266,12 @@ function RevenueRow({
           {fmt(value, currency)}
         </Text>
       </InlineStack>
-      <Box background="bg-surface-secondary" borderRadius="100" minHeight="6px" width="100%">
-        <Box background="bg-fill-brand" borderRadius="100" minHeight="6px" width={`${pct}%`} />
-      </Box>
+      <span className="KlynaRevenueTrack">
+        <span
+          className="KlynaRevenueTrack__fill"
+          style={{ '--revenue-share': `${pct}%` } as CSSProperties}
+        />
+      </span>
     </BlockStack>
   );
 }
