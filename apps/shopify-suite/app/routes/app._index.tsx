@@ -1,18 +1,42 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
-import { Form, Link, useLoaderData, useNavigation } from '@remix-run/react';
-import { Badge, BlockStack, Button, Card, InlineStack, Layout, Page, Text } from '@shopify/polaris';
+import { Form, Link, useActionData, useLoaderData, useNavigation } from '@remix-run/react';
+import {
+  Badge,
+  Banner,
+  BlockStack,
+  Button,
+  Card,
+  InlineStack,
+  Layout,
+  Page,
+  Text,
+} from '@shopify/polaris';
 import type { CSSProperties } from 'react';
 import prisma from '../db.server';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { type ProductReport, getProductKey, products, toneForStatus } from '../lib/products';
 import { buildReport } from '../lib/scanners.server';
 import { getShopSnapshot } from '../lib/shopify-data.server';
-import { authenticate } from '../shopify.server';
+import { STARTER_PLAN, authenticate, isBillingTest } from '../shopify.server';
+
+const FREE_SCAN_LIMIT = 3;
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { session, admin } = await authenticate.admin(request);
+  const { session, admin, billing } = await authenticate.admin(request);
   const productKey = getProductKey();
   const product = products[productKey];
+  let hasActivePayment = false;
+
+  try {
+    const billingCheck = await billing.check({
+      plans: [STARTER_PLAN],
+      isTest: isBillingTest(),
+    });
+    hasActivePayment = billingCheck.hasActivePayment;
+  } catch (error) {
+    console.error('Billing check failed on dashboard; using free access.', error);
+  }
+
   const latest = await prisma.diagnosticScan.findFirst({
     where: { shop: session.shop, productKey },
     orderBy: { createdAt: 'desc' },
@@ -35,16 +59,27 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     await saveReport(session.shop, report);
   }
 
+  const monthlyScanCount = await prisma.diagnosticScan.count({
+    where: {
+      shop: session.shop,
+      productKey,
+      createdAt: { gte: startOfCurrentUtcMonth() },
+    },
+  });
+
   const history = await prisma.diagnosticScan.findMany({
     where: { shop: session.shop, productKey },
     orderBy: { createdAt: 'desc' },
-    take: 5,
+    take: hasActivePayment ? 5 : 1,
   });
 
   return json({
     shop: session.shop,
     product,
     report,
+    hasActivePayment,
+    monthlyScanCount,
+    freeScanLimit: FREE_SCAN_LIMIT,
     history: history.map((scan) => ({
       id: scan.id,
       score: scan.score,
@@ -55,12 +90,44 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { session, admin } = await authenticate.admin(request);
+  const { session, admin, billing } = await authenticate.admin(request);
   const productKey = getProductKey();
+  let hasActivePayment = false;
+
+  try {
+    const billingCheck = await billing.check({
+      plans: [STARTER_PLAN],
+      isTest: isBillingTest(),
+    });
+    hasActivePayment = billingCheck.hasActivePayment;
+  } catch (error) {
+    console.error('Billing check failed before scan; using free access.', error);
+  }
+
+  if (!hasActivePayment) {
+    const monthlyScanCount = await prisma.diagnosticScan.count({
+      where: {
+        shop: session.shop,
+        productKey,
+        createdAt: { gte: startOfCurrentUtcMonth() },
+      },
+    });
+
+    if (monthlyScanCount >= FREE_SCAN_LIMIT) {
+      return json(
+        {
+          ok: false,
+          error: `The free plan includes ${FREE_SCAN_LIMIT} checks each month. Upgrade to Pro for unlimited checks and exports.`,
+        },
+        { status: 429 },
+      );
+    }
+  }
+
   const snapshot = await getShopSnapshot(admin, productKey);
   const report = await buildReport(productKey, snapshot);
   await saveReport(session.shop, report);
-  return json({ ok: true });
+  return json({ ok: true, error: null });
 };
 
 async function saveReport(shop: string, report: ProductReport) {
@@ -78,17 +145,30 @@ async function saveReport(shop: string, report: ProductReport) {
 }
 
 export default function Dashboard() {
-  const { shop, product, report, history } = useLoaderData<typeof loader>();
+  const { shop, product, report, history, hasActivePayment, monthlyScanCount, freeScanLimit } =
+    useLoaderData<typeof loader>();
+  const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isRunning = navigation.state !== 'idle';
   const historyUrl = useEmbeddedRoute('/app/history');
   const playbookUrl = useEmbeddedRoute('/app/playbook');
+  const billingUrl = useEmbeddedRoute('/app/billing');
   const workspaceLabel =
     product.key === 'redirect-guard' ? 'Open redirect workspace' : 'Open operating guide';
+  const freeChecksRemaining = Math.max(0, freeScanLimit - monthlyScanCount);
+  const canRunScan = hasActivePayment || freeChecksRemaining > 0;
 
   return (
     <Page title={product.name} subtitle={shop}>
       <Layout>
+        {actionData?.error ? (
+          <Layout.Section>
+            <Banner tone="warning" title="Free check limit reached">
+              <Text as="p">{actionData.error}</Text>
+            </Banner>
+          </Layout.Section>
+        ) : null}
+
         <Layout.Section>
           <div className="KlynaDashboardLead">
             <div className="KlynaDashboardLead__copy">
@@ -100,12 +180,22 @@ export default function Dashboard() {
               <p className="KlynaLeadBody">{product.outcome}</p>
               <div className="KlynaActions">
                 <Form method="post">
-                  <Button submit variant="primary" loading={isRunning}>
+                  <Button submit variant="primary" loading={isRunning} disabled={!canRunScan}>
                     {product.primaryAction}
                   </Button>
                 </Form>
                 <Button url={playbookUrl}>{workspaceLabel}</Button>
+                {hasActivePayment ? (
+                  <Button onClick={() => downloadReport(product.name, report)}>Export CSV</Button>
+                ) : (
+                  <Button url={billingUrl}>Upgrade to Pro</Button>
+                )}
               </div>
+              {!hasActivePayment ? (
+                <Text as="p" tone="subdued">
+                  {monthlyScanCount} of {freeScanLimit} free checks used this month.
+                </Text>
+              ) : null}
             </div>
             <div
               className="KlynaScore"
@@ -180,12 +270,15 @@ export default function Dashboard() {
               <Card>
                 <BlockStack gap="200">
                   <Text as="h2" variant="headingMd">
-                    Monitoring and exports
+                    Plan and reports
                   </Text>
+                  {hasActivePayment ? <Badge tone="success">Pro</Badge> : <Badge>Free</Badge>}
                   <Text as="p" tone="subdued">
                     {product.paidValue}
                   </Text>
-                  <Button url="/app/billing">Review plan</Button>
+                  <Button url={billingUrl}>
+                    {hasActivePayment ? 'Review plan' : 'Compare plans'}
+                  </Button>
                 </BlockStack>
               </Card>
 
@@ -217,6 +310,46 @@ export default function Dashboard() {
       </Layout>
     </Page>
   );
+}
+
+function startOfCurrentUtcMonth() {
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+}
+
+function downloadReport(productName: string, report: ProductReport) {
+  const rows = [
+    ['Product', productName],
+    ['Generated at', report.generatedAt],
+    ['Health score', String(report.score)],
+    ['Status', report.status],
+    [],
+    ['Metric', 'Value'],
+    ...report.metrics.map((metric) => [metric.label, metric.value]),
+    [],
+    ['Severity', 'Finding', 'Detail', 'Evidence', 'Next step'],
+    ...report.findings.map((finding) => [
+      finding.severity,
+      finding.title,
+      finding.detail,
+      finding.evidence ?? '',
+      finding.action,
+    ]),
+  ];
+  const csv = rows.map((row) => row.map(csvCell).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${productName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-report.csv`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function csvCell(value: string) {
+  return `"${value.replace(/"/g, '""')}"`;
 }
 
 function badgeTone(severity: string) {

@@ -41,6 +41,7 @@ export interface ProductDefinition {
   primaryAction: string;
   listingPositioning: string;
   paidValue: string;
+  proFeatures: string[];
 }
 
 export const products: Record<ProductKey, ProductDefinition> = {
@@ -54,7 +55,13 @@ export const products: Record<ProductKey, ProductDefinition> = {
     listingPositioning:
       'Safe theme cleanup evidence for merchants who have installed too many apps.',
     paidValue:
-      'Paid plans unlock monitored scans, cleanup exports, theme duplicate workflow, and rollback notes.',
+      'Pro adds unlimited debris scans, a 50-scan history, and CSV evidence exports for cleanup handoff.',
+    proFeatures: [
+      'Unlimited manual debris scans',
+      'Full history for up to 50 scans',
+      'CSV exports with findings, evidence, and next steps',
+      'Cleanup evidence for developer and agency handoff',
+    ],
   },
   'promo-qa': {
     key: 'promo-qa',
@@ -66,7 +73,13 @@ export const products: Record<ProductKey, ProductDefinition> = {
     primaryAction: 'Check promo stack',
     listingPositioning: 'Preflight QA for Shopify promotions, not another discount builder.',
     paidValue:
-      'Paid plans unlock saved campaign scenarios, margin thresholds, scheduled preflight checks, and launch reports.',
+      'Pro adds unlimited promotion checks, a 50-scan history, and CSV launch-readiness reports.',
+    proFeatures: [
+      'Unlimited promotion preflight checks',
+      'Full history for up to 50 checks',
+      'CSV exports with collision evidence and next steps',
+      'Launch-readiness records for campaign handoff',
+    ],
   },
   'redirect-guard': {
     key: 'redirect-guard',
@@ -79,7 +92,13 @@ export const products: Record<ProductKey, ProductDefinition> = {
     listingPositioning:
       'SEO-safe URL monitoring for product deletions, migrations, and content changes.',
     paidValue:
-      'Starter includes URL-loss baselines, redirect-map risk detection, destination validation, guarded redirect creation, CSV export, and a timestamped change log.',
+      'Pro includes URL-loss baselines, redirect-map risk detection, destination validation, guarded redirect creation, CSV export, and a timestamped change log.',
+    proFeatures: [
+      'URL-loss baselines for deleted and renamed content',
+      'Redirect chain, loop, and destination validation',
+      'Guarded redirect creation with a change log',
+      'CSV redirect-map exports for migrations',
+    ],
   },
   'pixel-doctor': {
     key: 'pixel-doctor',
@@ -92,7 +111,13 @@ export const products: Record<ProductKey, ProductDefinition> = {
     primaryAction: 'Inspect tracking',
     listingPositioning: 'A neutral pixel and consent debugger for stores with messy app stacks.',
     paidValue:
-      'Paid plans unlock monitoring, event-origin maps, post-checkout checklists, and agency exports.',
+      'Pro adds unlimited tracking inspections, a 50-scan history, and CSV evidence exports for implementation handoff.',
+    proFeatures: [
+      'Unlimited tracking-stack inspections',
+      'Full history for up to 50 inspections',
+      'CSV exports with platform evidence and next steps',
+      'Duplicate-event records for developer handoff',
+    ],
   },
   'feed-doctor': {
     key: 'feed-doctor',
@@ -105,7 +130,13 @@ export const products: Record<ProductKey, ProductDefinition> = {
     listingPositioning:
       'A feed diagnostics layer for merchants who are not ready to replace their feed app.',
     paidValue:
-      'Paid plans unlock variant-level exports, metafield fix queues, scheduled checks, and channel-specific reports.',
+      'Pro adds unlimited feed checks, a 50-scan history, and CSV evidence exports for catalog cleanup.',
+    proFeatures: [
+      'Unlimited catalog feed-readiness checks',
+      'Full history for up to 50 checks',
+      'CSV exports with product and variant evidence',
+      'Catalog cleanup records for channel handoff',
+    ],
   },
 };
 

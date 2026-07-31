@@ -1,5 +1,5 @@
 import adminStyles from '@klyna/ui/shopify-admin.css?url';
-import { type HeadersFunction, type LoaderFunctionArgs, json, redirect } from '@remix-run/node';
+import { type HeadersFunction, type LoaderFunctionArgs, json } from '@remix-run/node';
 import { Link, Outlet, useLoaderData, useRouteError } from '@remix-run/react';
 import { NavMenu } from '@shopify/app-bridge-react';
 import polarisStyles from '@shopify/polaris/build/esm/styles.css?url';
@@ -7,7 +7,7 @@ import { AppProvider } from '@shopify/shopify-app-remix/react';
 import { boundary } from '@shopify/shopify-app-remix/server';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getProductKey, products } from '../lib/products';
-import { STARTER_PLAN, authenticate, isBillingRequired, isBillingTest } from '../shopify.server';
+import { authenticate } from '../shopify.server';
 
 export const links = () => [
   { rel: 'stylesheet', href: polarisStyles },
@@ -15,27 +15,7 @@ export const links = () => [
 ];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { billing } = await authenticate.admin(request);
-  const url = new URL(request.url);
-
-  if (isBillingRequired() && !url.pathname.endsWith('/app/billing')) {
-    try {
-      const { hasActivePayment } = await billing.check({
-        plans: [STARTER_PLAN],
-        isTest: isBillingTest(),
-      });
-
-      if (!hasActivePayment) {
-        throw redirect(`/app/billing${url.search}`);
-      }
-    } catch (error) {
-      if (error instanceof Response) {
-        throw error;
-      }
-
-      console.error('Billing check failed; continuing without blocking app load.', error);
-    }
-  }
+  await authenticate.admin(request);
 
   return json({ apiKey: process.env.SHOPIFY_API_KEY ?? '', product: products[getProductKey()] });
 };

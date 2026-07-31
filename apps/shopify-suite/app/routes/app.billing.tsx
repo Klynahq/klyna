@@ -4,7 +4,6 @@ import {
   Badge,
   Banner,
   BlockStack,
-  Box,
   Button,
   Card,
   InlineGrid,
@@ -42,7 +41,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     product,
     hasActivePayment,
     billingError,
-    planName: 'Starter',
+    planName: 'Pro',
     price: '$9/month',
     trialDays,
     isTest: isBillingTest(),
@@ -75,25 +74,55 @@ export default function Billing() {
               <BlockStack gap="300">
                 <InlineStack gap="200" blockAlign="center">
                   <Text as="h2" variant="headingLg">
+                    Free
+                  </Text>
+                  {!hasActivePayment ? (
+                    <Badge tone="success">Current</Badge>
+                  ) : (
+                    <Badge>Included</Badge>
+                  )}
+                </InlineStack>
+                <Text as="p" variant="headingMd">
+                  $0
+                </Text>
+                <Text as="p" tone="subdued">
+                  Get a useful store diagnosis before deciding whether Pro fits your workflow.
+                </Text>
+                <List type="bullet">
+                  <List.Item>Three manual checks each month.</List.Item>
+                  <List.Item>Latest score, findings, evidence, and next steps.</List.Item>
+                  <List.Item>Product-specific operating guide.</List.Item>
+                </List>
+                <Button url={dashboardUrl}>Open dashboard</Button>
+              </BlockStack>
+            </Card>
+
+            <Card>
+              <BlockStack gap="300">
+                <InlineStack gap="200" blockAlign="center">
+                  <Text as="h2" variant="headingLg">
                     {planName}
                   </Text>
-                  {hasActivePayment ? <Badge tone="success">Active</Badge> : <Badge>Required</Badge>}
+                  {hasActivePayment ? (
+                    <Badge tone="success">Active</Badge>
+                  ) : (
+                    <Badge>7-day trial</Badge>
+                  )}
                   {isTest ? <Badge tone="info">Test billing</Badge> : null}
                 </InlineStack>
                 <Text as="p" variant="headingMd">
                   {price}
                 </Text>
                 <Text as="p" tone="subdued">
-                  Start with a {trialDays}-day trial. The plan unlocks the redirect audit
-                  dashboard, URL-loss monitoring, redirect validation, guarded fixes, and exports.
+                  {product.paidValue}
                 </Text>
+                <List type="bullet">
+                  {product.proFeatures.map((feature) => (
+                    <List.Item key={feature}>{feature}</List.Item>
+                  ))}
+                </List>
                 {billingError ? (
-                  <>
-                    <Banner tone="warning">{billingError}</Banner>
-                    <Button url={dashboardUrl} variant="primary">
-                      Open dashboard
-                    </Button>
-                  </>
+                  <Banner tone="warning">{billingError}</Banner>
                 ) : hasActivePayment ? (
                   <Button url={dashboardUrl} variant="primary">
                     Open dashboard
@@ -105,26 +134,9 @@ export default function Billing() {
                     </Button>
                   </Form>
                 )}
-              </BlockStack>
-            </Card>
-
-            <Card>
-              <BlockStack gap="300">
-                <Text as="h2" variant="headingMd">
-                  Included
+                <Text as="p" tone="subdued">
+                  Billing is handled through Shopify and can be managed from the merchant admin.
                 </Text>
-                <List type="bullet">
-                  <List.Item>URL-loss baselines for deleted and renamed content.</List.Item>
-                  <List.Item>Redirect chain, loop, and destination validation.</List.Item>
-                  <List.Item>Guarded Shopify redirect creation with a change log.</List.Item>
-                  <List.Item>CSV redirect-map exports for migrations and agency handoff.</List.Item>
-                </List>
-                <Box paddingBlockStart="200">
-                  <Text as="p" tone="subdued">
-                    Billing is handled through Shopify, so merchants can manage subscription
-                    changes from their admin.
-                  </Text>
-                </Box>
               </BlockStack>
             </Card>
           </InlineGrid>
