@@ -1,0 +1,575 @@
+/*
+ * Klyna Admin UI
+ *
+ * A Shopify-native visual layer for embedded Klyna products. Brand color is
+ * used for identity and action; Shopify semantic colors keep their meaning.
+ */
+
+.KlynaAdmin {
+  --klyna-accent: #6847f5;
+  --klyna-accent-hover: #5738c9;
+  --klyna-accent-soft: #eeeaff;
+  --klyna-accent-border: #cfc5ff;
+  --klyna-data: #0f766e;
+  --klyna-data-soft: #e7f6f3;
+  --klyna-ink: #202124;
+  --klyna-muted: #61666d;
+  --klyna-subtle: #8a8f98;
+  --klyna-border: #d9dadd;
+  --klyna-border-strong: #b7b9bd;
+  --klyna-surface: #ffffff;
+  --klyna-canvas: #f4f5f7;
+  min-height: 100%;
+  color: var(--klyna-ink);
+}
+
+.KlynaAdmin .Polaris-Page {
+  padding-block-end: 40px;
+}
+
+.KlynaAdmin .Polaris-Card {
+  overflow: hidden;
+  border: 1px solid var(--klyna-border);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgb(32 33 36 / 6%);
+}
+
+.KlynaAdmin .Polaris-Banner {
+  border-radius: 8px;
+}
+
+.KlynaAdmin .Polaris-Button {
+  min-height: 36px;
+  border-radius: 8px;
+  font-weight: 650;
+}
+
+.KlynaAdmin .Polaris-Button--variantPrimary {
+  border-color: var(--klyna-accent) !important;
+  background: var(--klyna-accent) !important;
+  color: #ffffff !important;
+  box-shadow: 0 1px 2px rgb(49 31 128 / 18%) !important;
+}
+
+.KlynaAdmin .Polaris-Button--variantPrimary:hover:not(:disabled) {
+  border-color: var(--klyna-accent-hover) !important;
+  background: var(--klyna-accent-hover) !important;
+  box-shadow: 0 2px 5px rgb(49 31 128 / 22%) !important;
+}
+
+.KlynaAdmin .Polaris-Button--variantPrimary:active:not(:disabled) {
+  background: #4b2fb7 !important;
+}
+
+.KlynaAdmin .Polaris-Button--variantPlain,
+.KlynaAdmin .Polaris-Link,
+.KlynaAdmin .Polaris-Link:visited {
+  color: var(--klyna-accent-hover) !important;
+}
+
+.KlynaAdmin .Polaris-Button--variantPlain:hover:not(:disabled) {
+  background: var(--klyna-accent-soft) !important;
+  color: var(--klyna-accent-hover) !important;
+}
+
+.KlynaAdmin :where(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid var(--klyna-accent) !important;
+  outline-offset: 2px;
+}
+
+.KlynaAdmin .Polaris-TextField__Backdrop,
+.KlynaAdmin .Polaris-Select__Backdrop {
+  border-radius: 8px;
+}
+
+.KlynaAdmin .Polaris-TextField__Input:focus ~ .Polaris-TextField__Backdrop {
+  border-color: var(--klyna-accent) !important;
+  box-shadow: 0 0 0 1px var(--klyna-accent) !important;
+}
+
+.KlynaAdmin .Polaris-Checkbox__Input:checked + .Polaris-Checkbox__Backdrop {
+  border-color: var(--klyna-accent) !important;
+  background: var(--klyna-accent) !important;
+}
+
+.KlynaAdmin .Polaris-Tabs__Tab--selected .Polaris-Tabs__Title::after {
+  background: var(--klyna-accent) !important;
+}
+
+.KlynaAdmin .Polaris-ProgressBar__Indicator--tonePrimary {
+  background: var(--klyna-accent) !important;
+}
+
+.KlynaAdmin .Polaris-Badge--toneInfo,
+.KlynaAdmin .Polaris-Badge--toneMagic {
+  background: var(--klyna-accent-soft) !important;
+  color: #4b2fb7 !important;
+}
+
+.KlynaAdmin .KlynaDashboardLead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 24px;
+  align-items: center;
+  padding: 24px;
+  border: 1px solid var(--klyna-border);
+  border-radius: 8px;
+  background: var(--klyna-surface);
+  box-shadow: 0 1px 2px rgb(32 33 36 / 6%);
+}
+
+.KlynaAdmin .KlynaDashboardLead__copy {
+  max-width: 720px;
+}
+
+.KlynaAdmin .KlynaEyebrow {
+  margin: 0 0 8px;
+  color: var(--klyna-accent-hover);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.KlynaAdmin .KlynaLeadTitle {
+  margin: 0;
+  color: var(--klyna-ink);
+  font-size: 20px;
+  font-weight: 720;
+  line-height: 1.3;
+}
+
+.KlynaAdmin .KlynaLeadBody {
+  max-width: 68ch;
+  margin: 8px 0 0;
+  color: var(--klyna-muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.KlynaAdmin .KlynaActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.KlynaAdmin .KlynaScore {
+  position: relative;
+  display: grid;
+  width: 148px;
+  min-height: 116px;
+  align-content: center;
+  padding: 16px;
+  border: 1px solid var(--klyna-accent-border);
+  border-radius: 8px;
+  background: var(--klyna-accent-soft);
+}
+
+.KlynaAdmin .KlynaScore__label {
+  color: #4b2fb7;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.KlynaAdmin .KlynaScore__value {
+  display: flex;
+  gap: 3px;
+  align-items: baseline;
+  margin-top: 4px;
+}
+
+.KlynaAdmin .KlynaScore strong {
+  color: var(--klyna-ink);
+  font-size: 32px;
+  font-weight: 760;
+  line-height: 1;
+}
+
+.KlynaAdmin .KlynaScore__total {
+  color: var(--klyna-muted);
+  font-size: 13px;
+}
+
+.KlynaAdmin .KlynaScore__track {
+  height: 5px;
+  margin-top: 12px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #dcd5fb;
+}
+
+.KlynaAdmin .KlynaScore__fill {
+  display: block;
+  width: calc(var(--score) * 1%);
+  height: 100%;
+  border-radius: inherit;
+  background: var(--klyna-accent);
+}
+
+.KlynaAdmin .KlynaScore--stat {
+  background: var(--klyna-data-soft);
+  border-color: #b8ded7;
+}
+
+.KlynaAdmin .KlynaScore--stat .KlynaScore__label {
+  color: var(--klyna-data);
+}
+
+.KlynaAdmin .KlynaMetricStrip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.KlynaAdmin .KlynaMetric {
+  min-width: 0;
+  padding: 18px 20px;
+  border-inline-end: 1px solid var(--klyna-border);
+}
+
+.KlynaAdmin .KlynaMetric:last-child {
+  border-inline-end: 0;
+}
+
+.KlynaAdmin .KlynaMetric__label {
+  color: var(--klyna-muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.KlynaAdmin .KlynaMetric__value {
+  display: block;
+  margin-top: 5px;
+  overflow-wrap: anywhere;
+  color: var(--klyna-ink);
+  font-size: 21px;
+  font-weight: 720;
+  line-height: 1.2;
+}
+
+.KlynaAdmin .KlynaMetric__value--data {
+  color: var(--klyna-data);
+}
+
+.KlynaAdmin .KlynaMetric__value--critical {
+  color: #b42318;
+}
+
+.KlynaAdmin .KlynaMetric__value--warning {
+  color: #8a6400;
+}
+
+.KlynaAdmin .KlynaSectionHeader {
+  display: flex;
+  gap: 16px;
+  align-items: end;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.KlynaAdmin .KlynaSectionHeader h2 {
+  margin: 0;
+  color: var(--klyna-ink);
+  font-size: 16px;
+  font-weight: 720;
+  line-height: 1.35;
+}
+
+.KlynaAdmin .KlynaSectionHeader p {
+  margin: 4px 0 0;
+  color: var(--klyna-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.KlynaAdmin .KlynaToolGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.KlynaAdmin .KlynaWorkspaceGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.KlynaAdmin .KlynaSidebar {
+  display: grid;
+  gap: 16px;
+}
+
+.KlynaAdmin .KlynaToolLink {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 14px;
+  min-height: 132px;
+  padding: 18px;
+  border: 1px solid var(--klyna-border);
+  border-radius: 8px;
+  background: var(--klyna-surface);
+  color: inherit;
+  text-decoration: none;
+  box-shadow: 0 1px 2px rgb(32 33 36 / 4%);
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+
+.KlynaAdmin .KlynaToolLink:hover {
+  border-color: var(--klyna-accent-border);
+  box-shadow: 0 5px 14px rgb(32 33 36 / 9%);
+  transform: translateY(-1px);
+}
+
+.KlynaAdmin .KlynaToolLink__icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid var(--klyna-accent-border);
+  border-radius: 8px;
+  background: var(--klyna-accent-soft);
+  color: var(--klyna-accent-hover);
+}
+
+.KlynaAdmin .KlynaToolLink__content {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.KlynaAdmin .KlynaToolLink__title {
+  color: var(--klyna-ink);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.KlynaAdmin .KlynaToolLink__body {
+  margin-top: 5px;
+  color: var(--klyna-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.KlynaAdmin .KlynaToolLink__action {
+  margin-top: auto;
+  padding-top: 12px;
+  color: var(--klyna-accent-hover);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.KlynaAdmin .KlynaFinding {
+  padding: 16px 18px;
+  border: 1px solid var(--klyna-border);
+  border-inline-start: 3px solid var(--klyna-border-strong);
+  border-radius: 8px;
+  background: var(--klyna-surface);
+}
+
+.KlynaAdmin .KlynaFinding[data-severity="critical"] {
+  border-inline-start-color: #c70a24;
+}
+
+.KlynaAdmin .KlynaFinding[data-severity="warning"] {
+  border-inline-start-color: #b98900;
+}
+
+.KlynaAdmin .KlynaFinding[data-severity="info"] {
+  border-inline-start-color: #2274a5;
+}
+
+.KlynaAdmin .KlynaFinding[data-severity="success"] {
+  border-inline-start-color: #16845b;
+}
+
+.KlynaAdmin .KlynaDataRows {
+  border-top: 1px solid var(--klyna-border);
+}
+
+.KlynaAdmin .KlynaDataRow {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  border-bottom: 1px solid var(--klyna-border);
+  color: var(--klyna-muted);
+  font-size: 13px;
+}
+
+.KlynaAdmin .KlynaDataRow:last-child {
+  border-bottom: 0;
+}
+
+.KlynaAdmin .KlynaPlanBar {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border: 1px solid var(--klyna-border);
+  border-radius: 8px;
+  background: var(--klyna-surface);
+}
+
+.KlynaAdmin .KlynaPlanBar__copy {
+  min-width: 0;
+}
+
+.KlynaAdmin .KlynaPlanBar__copy p {
+  margin: 3px 0 0;
+  color: var(--klyna-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.KlynaAdmin .KlynaButtonLink {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  padding: 6px 14px;
+  border: 1px solid var(--klyna-border-strong);
+  border-radius: 8px;
+  background: var(--klyna-surface);
+  color: var(--klyna-ink);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.4;
+  text-decoration: none;
+}
+
+.KlynaAdmin .KlynaButtonLink:hover {
+  border-color: var(--klyna-accent-border);
+  background: var(--klyna-accent-soft);
+  color: var(--klyna-accent-hover);
+}
+
+.KlynaAdmin .KlynaChecklist {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  counter-reset: klyna-step;
+  list-style: none;
+}
+
+.KlynaAdmin .KlynaChecklist li {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  color: var(--klyna-muted);
+  font-size: 14px;
+  line-height: 1.5;
+  counter-increment: klyna-step;
+}
+
+.KlynaAdmin .KlynaChecklist li::before {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid var(--klyna-accent-border);
+  border-radius: 50%;
+  background: var(--klyna-accent-soft);
+  color: var(--klyna-accent-hover);
+  content: counter(klyna-step);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.KlynaAdmin .KlynaRevenueRow {
+  display: grid;
+  gap: 7px;
+}
+
+.KlynaAdmin .KlynaRevenueRow__header {
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  color: var(--klyna-muted);
+  font-size: 13px;
+}
+
+.KlynaAdmin .KlynaRevenueTrack {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #e6e7e9;
+}
+
+.KlynaAdmin .KlynaRevenueTrack__fill {
+  display: block;
+  width: var(--revenue-share);
+  height: 100%;
+  border-radius: inherit;
+  background: var(--klyna-data);
+}
+
+.KlynaAdmin .KlynaInlineBadge {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  min-height: 24px;
+  margin-top: 10px;
+  padding: 2px 8px;
+  border: 1px solid var(--klyna-accent-border);
+  border-radius: 12px;
+  background: var(--klyna-accent-soft);
+  color: #4b2fb7;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+@media (max-width: 760px) {
+  .KlynaAdmin .KlynaDashboardLead {
+    grid-template-columns: 1fr;
+    padding: 20px;
+  }
+
+  .KlynaAdmin .KlynaScore {
+    width: 100%;
+  }
+
+  .KlynaAdmin .KlynaMetricStrip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .KlynaAdmin .KlynaMetric:nth-child(2) {
+    border-inline-end: 0;
+  }
+
+  .KlynaAdmin .KlynaMetric:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--klyna-border);
+  }
+
+  .KlynaAdmin .KlynaToolGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .KlynaAdmin .KlynaWorkspaceGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .KlynaAdmin .KlynaMetricStrip {
+    grid-template-columns: 1fr;
+  }
+
+  .KlynaAdmin .KlynaMetric,
+  .KlynaAdmin .KlynaMetric:nth-child(2) {
+    border-inline-end: 0;
+    border-bottom: 1px solid var(--klyna-border);
+  }
+
+  .KlynaAdmin .KlynaMetric:last-child {
+    border-bottom: 0;
+  }
+
+  .KlynaAdmin .KlynaPlanBar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

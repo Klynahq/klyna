@@ -5,17 +5,30 @@ import {
   Badge,
   Banner,
   BlockStack,
-  Box,
   Button,
   Card,
-  Divider,
-  InlineGrid,
+  Icon,
   InlineStack,
   Layout,
   Page,
   ProgressBar,
   Text,
 } from '@shopify/polaris';
+import {
+  AutomationIcon,
+  CodeIcon,
+  EditIcon,
+  GaugeIcon,
+  ImageAltIcon,
+  LinkIcon,
+  MagicIcon,
+  PageIcon,
+  SearchIcon,
+  SearchListIcon,
+  SettingsIcon,
+  TextIcon,
+} from '@shopify/polaris-icons';
+import type { CSSProperties } from 'react';
 import prisma from '../db.server';
 import { getShopAiSettings } from '../lib/ai.server';
 import { authenticate } from '../shopify.server';
@@ -154,261 +167,201 @@ export default function Dashboard() {
   } = useLoaderData<typeof loader>();
 
   const totalIssues = errors + warnings + infos;
+  const score = avgScore ?? 0;
 
   const coreActions = [
     {
-      icon: '🔍',
-      title: 'Bulk Store Audit',
-      desc: 'Scan every product, collection, and page in one pass. Issues sorted by impact.',
+      icon: AutomationIcon,
+      title: 'Store audit',
+      desc: 'Scan products, collections, and pages. Review issues in priority order.',
       to: '/app/bulk',
-      cta: 'Scan store',
+      cta: 'Run store audit',
       badge: pagesScanned > 0 ? `${pagesScanned} pages` : undefined,
     },
     {
-      icon: '🏷️',
-      title: 'Schema Markup',
-      desc: 'Inject Organization, Product, Breadcrumb, and FAQ schema. Unlock rich results in Google.',
+      icon: CodeIcon,
+      title: 'Schema markup',
+      desc: 'Manage Organization, Product, Breadcrumb, and FAQ structured data.',
       to: '/app/schema',
-      cta: 'Configure schema',
+      cta: 'Manage schema',
     },
     {
-      icon: '🖼️',
-      title: 'Image Alt Text',
-      desc: 'Find every product image missing alt text. Fix all at once with auto-generated descriptions.',
+      icon: ImageAltIcon,
+      title: 'Image alt text',
+      desc: 'Find missing image descriptions and update them in bulk.',
       to: '/app/alt-text',
-      cta: 'Fix alt text',
+      cta: 'Review images',
     },
     {
-      icon: '✏️',
-      title: 'Meta Bulk Editor',
-      desc: 'Edit SEO titles and descriptions for all products, collections, and pages in one view.',
+      icon: EditIcon,
+      title: 'Meta editor',
+      desc: 'Update search titles and descriptions across store content.',
       to: '/app/meta-editor',
       cta: 'Open editor',
     },
     {
-      icon: '🔗',
-      title: 'Internal Links',
-      desc: 'Find orphaned pages and missing links using TF-IDF semantic similarity — no third-party API.',
+      icon: LinkIcon,
+      title: 'Internal links',
+      desc: 'Find orphaned pages and relevant places to add internal links.',
       to: '/app/links',
-      cta: 'Find links',
+      cta: 'Review links',
     },
     {
-      icon: '📎',
-      title: 'Canonical Auditor',
-      desc: 'Detect products in multiple collections generating duplicate indexable URLs — and the one-line Liquid fix.',
+      icon: PageIcon,
+      title: 'Canonical URLs',
+      desc: 'Detect duplicate indexable URLs and review the preferred page version.',
       to: '/app/canonical',
-      cta: 'Audit URLs',
+      cta: 'Check URLs',
     },
   ];
 
   const advancedActions = [
     {
-      icon: '⚡',
+      icon: GaugeIcon,
       title: 'Core Web Vitals',
-      desc: 'Real Lighthouse + CrUX field data via Google PageSpeed Insights. LCP, CLS, FCP — no API key needed.',
+      desc: 'Check Lighthouse and field performance data for important store pages.',
       to: '/app/vitals',
       cta: 'Check speed',
-      badge: 'Free · No key',
+      badge: 'No API key',
     },
     {
-      icon: '🔤',
-      title: 'Keyword Analysis',
-      desc: 'Semantic keyword gap detector powered by Datamuse. Finds missing terms across your entire store content.',
+      icon: TextIcon,
+      title: 'Keyword coverage',
+      desc: 'Compare target topics with the words shoppers see on each page.',
       to: '/app/keywords',
-      cta: 'Analyse keywords',
-      badge: 'Free · No key',
+      cta: 'Review keywords',
+      badge: 'No API key',
     },
     {
-      icon: '🤖',
-      title: 'GEO Score',
-      desc: 'Measure AI-engine citation readiness and generate llms.txt for ChatGPT, Claude, and Perplexity crawlers.',
+      icon: MagicIcon,
+      title: 'AI search readiness',
+      desc: 'Review citation signals and create an llms.txt file for AI crawlers.',
       to: '/app/geo',
-      cta: 'Check GEO score',
+      cta: 'Check readiness',
       badge: 'New',
     },
     {
-      icon: '🕵️',
-      title: 'Competitor Audit',
-      desc: 'Run the same SEO audit engine on competitor URLs. See their errors — those are your opportunities.',
+      icon: SearchListIcon,
+      title: 'Competitor comparison',
+      desc: 'Compare a competitor page with the same checks used for your store.',
       to: '/app/competitor',
-      cta: 'Analyse competitors',
+      cta: 'Compare a page',
     },
     {
-      icon: '📄',
-      title: 'Page Audit',
-      desc: 'Single-URL deep audit. Full findings list, meta preview, schema check, and content stats.',
+      icon: SearchIcon,
+      title: 'Page audit',
+      desc: 'Inspect one URL for metadata, headings, schema, links, and content.',
       to: '/app/audit',
       cta: 'Audit a page',
     },
     {
-      icon: '⚙️',
+      icon: SettingsIcon,
       title: 'Settings',
       desc: aiEnabled
-        ? `AI connected via ${aiProvider}. Content generation is active.`
-        : 'Connect a free AI provider (OpenRouter / Groq / Gemini) for content suggestions.',
+        ? `AI suggestions are connected through ${aiProvider}.`
+        : 'Connect an AI provider to generate optional content suggestions.',
       to: '/app/settings',
-      cta: aiEnabled ? `Connected · ${aiProvider}` : 'Set up AI',
+      cta: aiEnabled ? 'Manage connection' : 'Connect AI',
       badge: aiEnabled ? 'AI active' : undefined,
     },
   ];
 
   return (
-    <Page title={`Klyna SEO — ${shopName}`} subtitle={shop}>
+    <Page title="SEO overview" subtitle={`${shopName} | ${shop}`}>
       <Layout>
-        {/* Quick-start banner — only shown before first scan */}
         {avgScore === null && (
           <Layout.Section>
             <Banner
               tone="info"
-              title="Start with a Bulk Audit to get your store's SEO score"
-              action={{ content: 'Run Bulk Audit', url: '/app/bulk' }}
+              title="Start with a full store audit"
+              action={{ content: 'Run store audit', url: '/app/bulk' }}
             >
               <Text as="p" variant="bodyMd">
-                Klyna will scan every product, collection, and page in your store, score each one,
-                and show you exactly what to fix — sorted by impact.
+                Scan products, collections, and pages to create a prioritized SEO worklist.
               </Text>
             </Banner>
           </Layout.Section>
         )}
 
-        {/* Store Score */}
         <Layout.Section>
-          <Card>
-            <BlockStack gap="400">
-              <InlineStack align="space-between" blockAlign="center">
-                <BlockStack gap="100">
-                  <Text as="h2" variant="headingLg">
-                    Store SEO score
-                  </Text>
-                  <Text as="p" variant="bodyMd" tone="subdued">
-                    {pagesScanned > 0
-                      ? `Averaged across ${pagesScanned} scanned page${pagesScanned !== 1 ? 's' : ''}`
-                      : 'Run a bulk audit to see your store score'}
-                  </Text>
-                </BlockStack>
-                {avgScore !== null && overallGrade && (
-                  <InlineStack gap="400" blockAlign="center">
-                    <Box
-                      background={
-                        overallGrade === 'A' || overallGrade === 'B'
-                          ? 'bg-fill-success'
-                          : overallGrade === 'C' || overallGrade === 'D'
-                            ? 'bg-fill-caution'
-                            : 'bg-fill-critical'
-                      }
-                      borderRadius="full"
-                      padding="500"
-                      minWidth="80px"
-                    >
-                      <BlockStack inlineAlign="center" gap="0">
-                        <Text
-                          as="p"
-                          variant="heading2xl"
-                          fontWeight="bold"
-                          tone={
-                            overallGrade === 'A' || overallGrade === 'B'
-                              ? 'success'
-                              : overallGrade === 'C' || overallGrade === 'D'
-                                ? 'caution'
-                                : 'critical'
-                          }
-                        >
-                          {avgScore}
-                        </Text>
-                        <Text
-                          as="p"
-                          variant="bodySm"
-                          fontWeight="semibold"
-                          tone={
-                            overallGrade === 'A' || overallGrade === 'B'
-                              ? 'success'
-                              : overallGrade === 'C' || overallGrade === 'D'
-                                ? 'caution'
-                                : 'critical'
-                          }
-                        >
-                          {`Grade ${overallGrade}`}
-                        </Text>
-                      </BlockStack>
-                    </Box>
-                  </InlineStack>
-                )}
-                {avgScore === null && (
-                  <Button url="/app/bulk" variant="primary">
-                    Scan your store
-                  </Button>
-                )}
-              </InlineStack>
+          <div className="KlynaDashboardLead">
+            <div className="KlynaDashboardLead__copy">
+              <p className="KlynaEyebrow">Store health</p>
+              <h2 className="KlynaLeadTitle">
+                {avgScore === null
+                  ? 'Build your first SEO worklist'
+                  : totalIssues === 0
+                    ? 'Your latest scan found no open issues'
+                    : `${totalIssues} issue${totalIssues === 1 ? '' : 's'} need review`}
+              </h2>
+              <p className="KlynaLeadBody">
+                {pagesScanned > 0
+                  ? `This score reflects the latest result for ${pagesScanned} scanned page${pagesScanned === 1 ? '' : 's'}. Fix high-impact errors first, then scan again to measure progress.`
+                  : 'Klyna checks the technical and on-page signals that affect how search engines understand your store.'}
+              </p>
+              <div className="KlynaActions">
+                <Button url="/app/bulk" variant="primary">
+                  {avgScore === null ? 'Run store audit' : 'Scan again'}
+                </Button>
+                <Button url="/app/audit">Audit one page</Button>
+              </div>
+            </div>
+            <div className="KlynaScore" style={{ '--score': score } as CSSProperties}>
+              <span className="KlynaScore__label">SEO score</span>
+              <span className="KlynaScore__value">
+                <strong>{avgScore ?? '--'}</strong>
+                <span className="KlynaScore__total">/ 100</span>
+              </span>
+              <span className="KlynaScore__track">
+                <span className="KlynaScore__fill" />
+              </span>
+              {overallGrade && <span className="KlynaScore__label">Grade {overallGrade}</span>}
+            </div>
+          </div>
+        </Layout.Section>
 
-              {avgScore !== null && (
-                <>
-                  <Divider />
-                  <InlineGrid columns={3} gap="400">
-                    <BlockStack gap="100">
-                      <Text as="p" variant="headingXl" tone="critical" fontWeight="bold">
-                        {errors}
-                      </Text>
-                      <Text as="p" variant="bodySm" tone="subdued">
-                        Errors
-                      </Text>
-                    </BlockStack>
-                    <BlockStack gap="100">
-                      <Text as="p" variant="headingXl" tone="caution" fontWeight="bold">
-                        {warnings}
-                      </Text>
-                      <Text as="p" variant="bodySm" tone="subdued">
-                        Warnings
-                      </Text>
-                    </BlockStack>
-                    <BlockStack gap="100">
-                      <Text as="p" variant="headingXl" fontWeight="bold">
-                        {infos}
-                      </Text>
-                      <Text as="p" variant="bodySm" tone="subdued">
-                        Info
-                      </Text>
-                    </BlockStack>
-                  </InlineGrid>
-
-                  {totalIssues > 0 && (
-                    <Box paddingBlockStart="100">
-                      <BlockStack gap="100">
-                        <Text as="p" variant="bodySm" tone="subdued">
-                          Issues breakdown
-                        </Text>
-                        <ProgressBar
-                          progress={
-                            errors > 0 ? Math.max(5, Math.round((errors / totalIssues) * 100)) : 0
-                          }
-                          tone="critical"
-                          size="small"
-                        />
-                        <ProgressBar
-                          progress={
-                            warnings > 0
-                              ? Math.max(5, Math.round((warnings / totalIssues) * 100))
-                              : 0
-                          }
-                          tone="highlight"
-                          size="small"
-                        />
-                      </BlockStack>
-                    </Box>
-                  )}
-                </>
-              )}
-            </BlockStack>
+        <Layout.Section>
+          <Card padding="0">
+            <div className="KlynaMetricStrip">
+              <div className="KlynaMetric">
+                <span className="KlynaMetric__label">Pages scanned</span>
+                <strong className="KlynaMetric__value KlynaMetric__value--data">
+                  {pagesScanned}
+                </strong>
+              </div>
+              <div className="KlynaMetric">
+                <span className="KlynaMetric__label">Errors</span>
+                <strong className="KlynaMetric__value KlynaMetric__value--critical">
+                  {errors}
+                </strong>
+              </div>
+              <div className="KlynaMetric">
+                <span className="KlynaMetric__label">Warnings</span>
+                <strong className="KlynaMetric__value KlynaMetric__value--warning">
+                  {warnings}
+                </strong>
+              </div>
+              <div className="KlynaMetric">
+                <span className="KlynaMetric__label">Recommendations</span>
+                <strong className="KlynaMetric__value">{infos}</strong>
+              </div>
+            </div>
           </Card>
         </Layout.Section>
 
-        {/* Worst pages */}
         {worst.length > 0 && (
           <Layout.Section>
             <Card>
               <BlockStack gap="300">
-                <Text as="h2" variant="headingMd">
-                  Pages needing attention
-                </Text>
+                <div className="KlynaSectionHeader">
+                  <div>
+                    <h2>Pages needing attention</h2>
+                    <p>Start with the lowest-scoring pages from the latest scan.</p>
+                  </div>
+                  <Button url="/app/bulk" variant="plain">
+                    View audit
+                  </Button>
+                </div>
                 <BlockStack gap="200">
                   {worst.map((p) => (
                     <BlockStack key={p.url} gap="100">
@@ -428,7 +381,11 @@ export default function Dashboard() {
                           <Badge tone={gradeTone(p.grade)}>{`Grade ${p.grade}`}</Badge>
                         </InlineStack>
                       </InlineStack>
-                      <ProgressBar progress={p.score} tone="critical" size="small" />
+                      <ProgressBar
+                        progress={p.score}
+                        tone={p.score >= 80 ? 'success' : p.score >= 60 ? 'highlight' : 'critical'}
+                        size="small"
+                      />
                     </BlockStack>
                   ))}
                 </BlockStack>
@@ -437,13 +394,12 @@ export default function Dashboard() {
           </Layout.Section>
         )}
 
-        {/* Score history */}
         {scoreHistory.length > 1 && (
           <Layout.Section>
             <Card>
               <BlockStack gap="300">
                 <Text as="h2" variant="headingMd">
-                  Score trend · last 7 days
+                  Score trend, last 7 days
                 </Text>
                 <InlineStack gap="400" blockAlign="end">
                   {scoreHistory.map((s) => (
@@ -460,99 +416,71 @@ export default function Dashboard() {
           </Layout.Section>
         )}
 
-        {/* Last scan info */}
         {lastScan && (
           <Layout.Section>
-            <Box paddingBlockEnd="200">
-              <InlineStack gap="200" blockAlign="center">
-                <Text as="p" variant="bodySm" tone="subdued">
-                  Last full scan: {lastScan.scannedUrls} / {lastScan.totalUrls} URLs
-                  {lastScan.finishedAt
-                    ? ` · ${new Date(lastScan.finishedAt).toLocaleString()}`
-                    : ' · In progress'}
+            <div className="KlynaPlanBar">
+              <div className="KlynaPlanBar__copy">
+                <Text as="h2" variant="headingSm">
+                  Last full scan
                 </Text>
-                <Button url="/app/bulk" variant="plain" size="slim">
-                  Re-scan →
-                </Button>
-              </InlineStack>
-            </Box>
+                <p>
+                  {lastScan.scannedUrls} of {lastScan.totalUrls} URLs
+                  {lastScan.finishedAt
+                    ? ` | ${new Date(lastScan.finishedAt).toLocaleString()}`
+                    : ' | In progress'}
+                </p>
+              </div>
+              <Button url="/app/bulk">Open scan</Button>
+            </div>
           </Layout.Section>
         )}
 
-        {/* Core fix modules */}
         <Layout.Section>
-          <BlockStack gap="300">
-            <Text as="h2" variant="headingMd">
-              Fix SEO issues
-            </Text>
-            <InlineGrid columns={{ xs: 1, sm: 2, md: 3 }} gap="300">
-              {coreActions.map((a) => (
-                <Card key={a.to}>
-                  <BlockStack gap="300">
-                    <InlineStack align="space-between" blockAlign="start">
-                      <InlineStack gap="150" blockAlign="center">
-                        <Text as="span" variant="headingMd">
-                          {a.icon}
-                        </Text>
-                        <Text as="h3" variant="headingSm">
-                          {a.title}
-                        </Text>
-                      </InlineStack>
-                      {a.badge && <Badge tone="success">{a.badge}</Badge>}
-                    </InlineStack>
-                    <Text as="p" variant="bodyMd" tone="subdued">
-                      {a.desc}
-                    </Text>
-                    <Link to={a.to}>{a.cta} →</Link>
-                  </BlockStack>
-                </Card>
-              ))}
-            </InlineGrid>
-          </BlockStack>
+          <div className="KlynaSectionHeader">
+            <div>
+              <h2>Fix store SEO</h2>
+              <p>Work through the checks that affect discovery and search appearance.</p>
+            </div>
+          </div>
+          <div className="KlynaToolGrid">
+            {coreActions.map((action) => (
+              <Link className="KlynaToolLink" key={action.to} to={action.to}>
+                <span className="KlynaToolLink__icon">
+                  <Icon source={action.icon} />
+                </span>
+                <span className="KlynaToolLink__content">
+                  <span className="KlynaToolLink__title">{action.title}</span>
+                  <span className="KlynaToolLink__body">{action.desc}</span>
+                  {action.badge && <span className="KlynaInlineBadge">{action.badge}</span>}
+                  <span className="KlynaToolLink__action">{action.cta}</span>
+                </span>
+              </Link>
+            ))}
+          </div>
         </Layout.Section>
 
-        {/* Advanced tools */}
         <Layout.Section>
-          <BlockStack gap="300">
-            <Text as="h2" variant="headingMd">
-              Advanced tools
-            </Text>
-            <InlineGrid columns={{ xs: 1, sm: 2, md: 3 }} gap="300">
-              {advancedActions.map((a) => (
-                <Card key={a.to}>
-                  <BlockStack gap="300">
-                    <InlineStack align="space-between" blockAlign="start">
-                      <InlineStack gap="150" blockAlign="center">
-                        <Text as="span" variant="headingMd">
-                          {a.icon}
-                        </Text>
-                        <Text as="h3" variant="headingSm">
-                          {a.title}
-                        </Text>
-                      </InlineStack>
-                      {a.badge && (
-                        <Badge
-                          tone={
-                            a.badge === 'New'
-                              ? 'info'
-                              : a.badge === 'AI active'
-                                ? 'success'
-                                : 'magic'
-                          }
-                        >
-                          {a.badge}
-                        </Badge>
-                      )}
-                    </InlineStack>
-                    <Text as="p" variant="bodyMd" tone="subdued">
-                      {a.desc}
-                    </Text>
-                    <Link to={a.to}>{a.cta} →</Link>
-                  </BlockStack>
-                </Card>
-              ))}
-            </InlineGrid>
-          </BlockStack>
+          <div className="KlynaSectionHeader">
+            <div>
+              <h2>Research and performance</h2>
+              <p>Go deeper on speed, topics, AI search, and competitor pages.</p>
+            </div>
+          </div>
+          <div className="KlynaToolGrid">
+            {advancedActions.map((action) => (
+              <Link className="KlynaToolLink" key={action.to} to={action.to}>
+                <span className="KlynaToolLink__icon">
+                  <Icon source={action.icon} />
+                </span>
+                <span className="KlynaToolLink__content">
+                  <span className="KlynaToolLink__title">{action.title}</span>
+                  <span className="KlynaToolLink__body">{action.desc}</span>
+                  {action.badge && <span className="KlynaInlineBadge">{action.badge}</span>}
+                  <span className="KlynaToolLink__action">{action.cta}</span>
+                </span>
+              </Link>
+            ))}
+          </div>
         </Layout.Section>
       </Layout>
     </Page>

@@ -1,3 +1,4 @@
+import adminStyles from '@klyna/ui/shopify-admin.css?url';
 import { type HeadersFunction, type LoaderFunctionArgs, json, redirect } from '@remix-run/node';
 import { Link, Outlet, useLoaderData, useRouteError } from '@remix-run/react';
 import { NavMenu } from '@shopify/app-bridge-react';
@@ -7,11 +8,10 @@ import { boundary } from '@shopify/shopify-app-remix/server';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getProductKey, products } from '../lib/products';
 import { STARTER_PLAN, authenticate, isBillingRequired, isBillingTest } from '../shopify.server';
-import suiteStyles from '../styles/klyna-suite.css?url';
 
 export const links = () => [
   { rel: 'stylesheet', href: polarisStyles },
-  { rel: 'stylesheet', href: suiteStyles },
+  { rel: 'stylesheet', href: adminStyles },
 ];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -46,7 +46,8 @@ export default function App() {
   const historyUrl = useEmbeddedRoute('/app/history');
   const playbookUrl = useEmbeddedRoute('/app/playbook');
   const billingUrl = useEmbeddedRoute('/app/billing');
-  const workspaceLabel = product.key === 'redirect-guard' ? 'Redirect workspace' : 'Operating guide';
+  const workspaceLabel =
+    product.key === 'redirect-guard' ? 'Redirect workspace' : 'Operating guide';
 
   return (
     <AppProvider isEmbeddedApp apiKey={apiKey}>
@@ -58,7 +59,9 @@ export default function App() {
         <Link to={playbookUrl}>{workspaceLabel}</Link>
         <Link to={billingUrl}>Plan</Link>
       </NavMenu>
-      <Outlet />
+      <div className="KlynaAdmin">
+        <Outlet />
+      </div>
     </AppProvider>
   );
 }

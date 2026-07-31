@@ -1,19 +1,7 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
 import { Form, Link, useLoaderData, useNavigation } from '@remix-run/react';
-import {
-  Badge,
-  BlockStack,
-  Box,
-  Button,
-  Card,
-  Divider,
-  InlineGrid,
-  InlineStack,
-  Layout,
-  List,
-  Page,
-  Text,
-} from '@shopify/polaris';
+import { Badge, BlockStack, Button, Card, InlineStack, Layout, Page, Text } from '@shopify/polaris';
+import type { CSSProperties } from 'react';
 import prisma from '../db.server';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { type ProductReport, getProductKey, products, toneForStatus } from '../lib/products';
@@ -95,119 +83,109 @@ export default function Dashboard() {
   const isRunning = navigation.state !== 'idle';
   const historyUrl = useEmbeddedRoute('/app/history');
   const playbookUrl = useEmbeddedRoute('/app/playbook');
+  const workspaceLabel =
+    product.key === 'redirect-guard' ? 'Open redirect workspace' : 'Open operating guide';
 
   return (
     <Page title={product.name} subtitle={shop}>
       <Layout>
         <Layout.Section>
-          <Card>
-            <BlockStack gap="400">
-              <InlineStack align="space-between" blockAlign="center" gap="400">
-                <BlockStack gap="200">
-                  <InlineStack gap="200" blockAlign="center">
-                    <Text as="h2" variant="headingLg">
-                      {product.tagline}
-                    </Text>
-                    <Badge tone={toneForStatus(report.status)}>{report.status}</Badge>
-                  </InlineStack>
-                  <Text as="p" tone="subdued">
-                    {product.outcome}
-                  </Text>
-                  <InlineStack gap="300">
-                    <Form method="post">
-                      <Button submit variant="primary" loading={isRunning}>
-                        {product.primaryAction}
-                      </Button>
-                    </Form>
-                    <Button url={playbookUrl}>
-                      {product.key === 'redirect-guard' ? 'Open redirect workspace' : 'Open operating guide'}
-                    </Button>
-                  </InlineStack>
-                </BlockStack>
-                <div
-                  className="KlynaScore"
-                  style={{ '--score': report.score } as React.CSSProperties}
-                >
-                  <strong>{report.score}</strong>
-                </div>
+          <div className="KlynaDashboardLead">
+            <div className="KlynaDashboardLead__copy">
+              <InlineStack gap="200" blockAlign="center">
+                <p className="KlynaEyebrow">Latest store check</p>
+                <Badge tone={toneForStatus(report.status)}>{labelFor(report.status)}</Badge>
               </InlineStack>
+              <h2 className="KlynaLeadTitle">{product.tagline}</h2>
+              <p className="KlynaLeadBody">{product.outcome}</p>
+              <div className="KlynaActions">
+                <Form method="post">
+                  <Button submit variant="primary" loading={isRunning}>
+                    {product.primaryAction}
+                  </Button>
+                </Form>
+                <Button url={playbookUrl}>{workspaceLabel}</Button>
+              </div>
+            </div>
+            <div
+              className="KlynaScore"
+              style={{ '--score': Math.max(0, Math.min(report.score, 100)) } as CSSProperties}
+            >
+              <span className="KlynaScore__label">Health score</span>
+              <span className="KlynaScore__value">
+                <strong>{report.score}</strong>
+                <span className="KlynaScore__total">/ 100</span>
+              </span>
+              <span className="KlynaScore__track">
+                <span className="KlynaScore__fill" />
+              </span>
+            </div>
+          </div>
+        </Layout.Section>
 
-              <Divider />
-
-              <InlineGrid columns={{ xs: 2, md: 4 }} gap="300">
-                {report.metrics.map((metric) => (
-                  <Box
-                    key={metric.label}
-                    padding="300"
-                    borderColor="border"
-                    borderWidth="025"
-                    borderRadius="200"
+        <Layout.Section>
+          <Card padding="0">
+            <div className="KlynaMetricStrip">
+              {report.metrics.map((metric) => (
+                <div className="KlynaMetric" key={metric.label}>
+                  <span className="KlynaMetric__label">{metric.label}</span>
+                  <strong
+                    className={`KlynaMetric__value${metric.tone === 'critical' ? ' KlynaMetric__value--critical' : metric.tone === 'warning' ? ' KlynaMetric__value--warning' : ''}`}
                   >
-                    <BlockStack gap="100">
-                      <Text as="span" variant="bodySm" tone="subdued">
-                        {metric.label}
-                      </Text>
-                      <InlineStack gap="150" blockAlign="center">
-                        <Text as="strong" variant="headingLg">
-                          {metric.value}
-                        </Text>
-                        {metric.tone && <Badge tone={metric.tone}>{metric.tone}</Badge>}
-                      </InlineStack>
-                    </BlockStack>
-                  </Box>
-                ))}
-              </InlineGrid>
-            </BlockStack>
+                    {metric.value}
+                  </strong>
+                </div>
+              ))}
+            </div>
           </Card>
         </Layout.Section>
 
         <Layout.Section>
-          <InlineGrid columns={{ xs: 1, lg: 3 }} gap="400">
-            <div style={{ gridColumn: 'span 2' }}>
-              <Card>
-                <BlockStack gap="300">
-                  <BlockStack gap="100">
-                    <Text as="h2" variant="headingMd">
-                      Current findings
-                    </Text>
-                    <Text as="p" tone="subdued">
-                      {report.summary}
-                    </Text>
-                  </BlockStack>
-                  {report.findings.map((finding) => (
-                    <div key={finding.id} className="KlynaFinding" data-severity={finding.severity}>
-                      <BlockStack gap="150">
-                        <InlineStack align="space-between" gap="200">
-                          <Text as="h3" variant="headingSm">
-                            {finding.title}
-                          </Text>
-                          <Badge tone={badgeTone(finding.severity)}>{finding.severity}</Badge>
-                        </InlineStack>
-                        <Text as="p">{finding.detail}</Text>
-                        {finding.evidence && (
-                          <Text as="p" tone="subdued">
-                            Evidence: {finding.evidence}
-                          </Text>
-                        )}
-                        <Text as="p" tone="subdued">
-                          Next step: {finding.action}
+          <div className="KlynaWorkspaceGrid">
+            <Card>
+              <BlockStack gap="300">
+                <div className="KlynaSectionHeader">
+                  <div>
+                    <h2>Current findings</h2>
+                    <p>{report.summary}</p>
+                  </div>
+                </div>
+                {report.findings.map((finding) => (
+                  <div key={finding.id} className="KlynaFinding" data-severity={finding.severity}>
+                    <BlockStack gap="150">
+                      <InlineStack align="space-between" gap="200">
+                        <Text as="h3" variant="headingSm">
+                          {finding.title}
                         </Text>
-                      </BlockStack>
-                    </div>
-                  ))}
-                </BlockStack>
-              </Card>
-            </div>
+                        <Badge tone={badgeTone(finding.severity)}>
+                          {labelFor(finding.severity)}
+                        </Badge>
+                      </InlineStack>
+                      <Text as="p">{finding.detail}</Text>
+                      {finding.evidence && (
+                        <Text as="p" tone="subdued">
+                          Evidence: {finding.evidence}
+                        </Text>
+                      )}
+                      <Text as="p" tone="subdued">
+                        Next step: {finding.action}
+                      </Text>
+                    </BlockStack>
+                  </div>
+                ))}
+              </BlockStack>
+            </Card>
 
-            <BlockStack gap="400">
+            <div className="KlynaSidebar">
               <Card>
                 <BlockStack gap="200">
                   <Text as="h2" variant="headingMd">
-                    Paid value
+                    Monitoring and exports
                   </Text>
                   <Text as="p" tone="subdued">
                     {product.paidValue}
                   </Text>
+                  <Button url="/app/billing">Review plan</Button>
                 </BlockStack>
               </Card>
 
@@ -221,19 +199,20 @@ export default function Dashboard() {
                       No scan history yet.
                     </Text>
                   ) : (
-                    <List type="bullet">
+                    <div className="KlynaDataRows">
                       {history.map((scan) => (
-                        <List.Item key={scan.id}>
-                          {scan.score} on {scan.createdAtLabel}
-                        </List.Item>
+                        <div className="KlynaDataRow" key={scan.id}>
+                          <span>{scan.createdAtLabel}</span>
+                          <strong>{scan.score}</strong>
+                        </div>
                       ))}
-                    </List>
+                    </div>
                   )}
-                  <Link to={historyUrl}>Open full history</Link>
+                  <Link to={historyUrl}>View scan history</Link>
                 </BlockStack>
               </Card>
-            </BlockStack>
-          </InlineGrid>
+            </div>
+          </div>
         </Layout.Section>
       </Layout>
     </Page>
@@ -245,6 +224,13 @@ function badgeTone(severity: string) {
   if (severity === 'warning') return 'warning' as const;
   if (severity === 'success') return 'success' as const;
   return 'info' as const;
+}
+
+function labelFor(value: string) {
+  return value
+    .split(/[-_]/)
+    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+    .join(' ');
 }
 
 function formatScanDate(date: Date) {

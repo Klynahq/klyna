@@ -1,2 +1,2 @@
-export { brand, palette, typography, spacing } from './tokens.ts';
-export type { Palette, Typography } from './tokens.ts';
+export { adminPalette, brand, palette, spacing, typography } from './tokens.ts';
+export type { AdminPalette, Palette, Typography } from './tokens.ts';

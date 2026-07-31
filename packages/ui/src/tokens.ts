@@ -32,6 +32,26 @@ export const palette = {
   danger: '#f87171',
 } as const;
 
+export const adminPalette = {
+  canvas: '#f4f5f7',
+  surface: '#ffffff',
+  ink: '#202124',
+  muted: '#61666d',
+  subtle: '#8a8f98',
+  border: '#d9dadd',
+  borderStrong: '#b7b9bd',
+
+  // High-contrast Klyna action color for light Shopify admin surfaces.
+  accent: '#6847f5',
+  accentHover: '#5738c9',
+  accentSoft: '#eeeaff',
+  accentBorder: '#cfc5ff',
+
+  // Secondary data color. Status colors continue to come from Polaris.
+  data: '#0f766e',
+  dataSoft: '#e7f6f3',
+} as const;
+
 export const typography = {
   sans: '"Geist", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif',
   mono: '"Geist Mono", "JetBrains Mono", ui-monospace, "SF Mono", monospace',
@@ -46,4 +66,5 @@ export const spacing = {
 } as const;
 
 export type Palette = typeof palette;
+export type AdminPalette = typeof adminPalette;
 export type Typography = typeof typography;
