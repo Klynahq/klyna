@@ -243,6 +243,7 @@ export default function VolumeDiscounts() {
 
   const [query, setQuery] = useState('');
   const [product, setProduct] = useState<CatalogProduct | null>(null);
+  const [saveConfirmed, setSaveConfirmed] = useState(false);
   const [tiers, setTiers] = useState<DraftTier[]>([
     { id: 'tier-2', minQuantity: 2, discountType: 'percentage', discountValue: 5 },
     { id: 'tier-5', minQuantity: 5, discountType: 'percentage', discountValue: 10 },
@@ -306,19 +307,23 @@ export default function VolumeDiscounts() {
 
   const save = async () => {
     if (!product) return;
+    setSaveConfirmed(false);
     const fd = new FormData();
     fd.set('intent', 'save');
     fd.set('product', JSON.stringify(product));
     fd.set('tiers', JSON.stringify(tiers));
     const result = await saveAction.submit(embeddedRoute('/app/volume'), 'routes/app.volume', fd);
-    if (result?.ok) revalidator.revalidate();
+    if (result?.ok) {
+      setSaveConfirmed(true);
+      revalidator.revalidate();
+    }
   };
 
   const saving = saveAction.loading;
   const saveError = saveAction.error;
-  const saved = saveAction.data?.ok;
 
   const deleteProduct = async (productGid: string) => {
+    setSaveConfirmed(false);
     const fd = new FormData();
     fd.set('intent', 'deleteProduct');
     fd.set('productGid', productGid);
@@ -473,8 +478,8 @@ export default function VolumeDiscounts() {
 
               {saveError && <Banner tone="critical">{saveError}</Banner>}
               {deleteAction.error && <Banner tone="critical">{deleteAction.error}</Banner>}
-              {saved && (
-                <Banner tone="success">Tiers saved and automatic discounts created.</Banner>
+              {saveConfirmed && (
+                <Banner tone="success">Tiers saved and Shopify discounts synchronized.</Banner>
               )}
 
               <InlineStack align="end">
