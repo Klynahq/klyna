@@ -1,9 +1,5 @@
-import '@shopify/shopify-app-remix/adapters/node';
-import {
-  AppDistribution,
-  shopifyApp,
-  type ApiVersion,
-} from '@shopify/shopify-app-remix/server';
+import '@shopify/shopify-app-remix/server/adapters/node';
+import { type ApiVersion, AppDistribution, shopifyApp } from '@shopify/shopify-app-remix/server';
 import { PrismaSessionStorage } from '@shopify/shopify-app-session-storage-prisma';
 import prisma from './db.server';
 
@@ -19,8 +15,8 @@ const shopify = shopifyApp({
   sessionStorage: new PrismaSessionStorage(prisma),
   distribution: AppDistribution.AppStore,
   future: {
+    expiringOfflineAccessTokens: true,
     unstable_newEmbeddedAuthStrategy: true,
-    removeRest: true,
   },
 });
 
