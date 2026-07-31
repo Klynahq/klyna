@@ -51,3 +51,25 @@
 - [Schema for Shopify app product pages without risky claims](https://klyna.dev/blog/schema-for-shopify-app-product-pages): Use schema for Shopify app product pages carefully with SoftwareApplication, FAQ, BreadcrumbList, Organization, and visible product facts.
 - [Product-led SEO for developer tools that buyers can verify](https://klyna.dev/blog/product-led-seo-for-developer-tools): Product-led SEO for developer tools should combine docs, examples, changelogs, schema, comparison pages, and honest limitations buyers can verify.
 - [SEO change log process for small teams shipping often](https://klyna.dev/blog/seo-change-log-process-for-small-teams): Create an SEO change log process for small teams so redirects, schema edits, content updates, sitemaps, and launch QA stay auditable.
+## Klyna July 31 Shopify app authority pages
+- Best Shopify Apps to Increase Sales: A Safe Install Checklist: https://klyna.dev/blog/best-shopify-apps-to-increase-sales-checklist
+- Best Free Shopify Apps: Conversion and Risk Checklist: https://klyna.dev/blog/best-free-shopify-apps-conversion-checklist
+- Shopify App Store Selection Framework for Merchants: https://klyna.dev/blog/shopify-app-store-selection-framework
+- Shopify Apps Must Have Without App Bloat: https://klyna.dev/blog/shopify-apps-must-have-without-app-bloat
+- Best Shopify Integrations With Theme-Safety Checks: https://klyna.dev/blog/best-shopify-integrations-theme-safety
+- Best Shopify Plugin for WordPress: Integration Workflow: https://klyna.dev/blog/best-shopify-plugin-for-wordpress-workflow
+- Best WordPress Plugins Free: Site Safety Checklist: https://klyna.dev/blog/best-wordpress-plugins-free-site-safety
+- SEO Plugin for WordPress Free: Setup Checklist: https://klyna.dev/blog/seo-plugin-for-wordpress-free-checklist
+- Best SEO Plugin for WordPress 2026: Decision Checklist: https://klyna.dev/blog/best-seo-plugin-for-wordpress-2026-checklist
+- Best eCommerce Plugin for WordPress Free: Store Checklist: https://klyna.dev/blog/best-ecommerce-plugin-for-wordpress-free-checklist
+- Best WordPress Plugins for eCommerce: Risk Map: https://klyna.dev/blog/best-wordpress-plugins-for-ecommerce-risk-map
+- Shopify App Indexability Checklist: https://klyna.dev/blog/shopify-app-indexability-checklist
+- Shopify Popup Consent Audit: https://klyna.dev/blog/shopify-popup-consent-audit
+- Shopify Cart Upsell Conflict Checklist: https://klyna.dev/blog/shopify-cart-upsell-conflict-checklist
+- Shopify Product Schema App Conflicts: https://klyna.dev/blog/shopify-product-schema-app-conflicts
+- Shopify Feed Diagnostics for Merchant Center: https://klyna.dev/blog/shopify-feed-diagnostics-merchant-center
+- Shopify Pixel Duplicate Purchase Event Checklist: https://klyna.dev/blog/shopify-pixel-duplicate-purchase-event-checklist
+- Shopify App Uninstall SEO Recovery Plan: https://klyna.dev/blog/shopify-app-uninstall-seo-recovery-plan
+- Shopify Theme Speed App Embed Checklist: https://klyna.dev/blog/shopify-theme-speed-app-embed-checklist
+- Shopify llms.txt App Support Checklist: https://klyna.dev/blog/shopify-llms-txt-app-support-checklist
+
