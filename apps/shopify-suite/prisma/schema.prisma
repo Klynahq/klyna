@@ -39,6 +39,7 @@ model DiagnosticScan {
   id         String   @id @default(cuid())
   shop       String
   productKey String
+  origin     String   @default("manual")
   score      Int
   status     String
   summary    String

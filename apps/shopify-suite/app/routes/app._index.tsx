@@ -56,13 +56,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   } else {
     const snapshot = await getShopSnapshot(admin, productKey);
     report = await buildReport(productKey, snapshot);
-    await saveReport(session.shop, report);
+    await saveReport(session.shop, report, 'baseline');
   }
 
   const monthlyScanCount = await prisma.diagnosticScan.count({
     where: {
       shop: session.shop,
       productKey,
+      origin: 'manual',
       createdAt: { gte: startOfCurrentUtcMonth() },
     },
   });
@@ -109,6 +110,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       where: {
         shop: session.shop,
         productKey,
+        origin: 'manual',
         createdAt: { gte: startOfCurrentUtcMonth() },
       },
     });
@@ -130,11 +132,16 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   return json({ ok: true, error: null });
 };
 
-async function saveReport(shop: string, report: ProductReport) {
+async function saveReport(
+  shop: string,
+  report: ProductReport,
+  origin: 'baseline' | 'manual' = 'manual',
+) {
   await prisma.diagnosticScan.create({
     data: {
       shop,
       productKey: report.productKey,
+      origin,
       score: report.score,
       status: report.status,
       summary: report.summary,
