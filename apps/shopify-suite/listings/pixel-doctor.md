@@ -4,6 +4,13 @@
 
 Detect duplicate tracking and consent timing risks without replacing your analytics stack.
 
+## App Store metadata
+
+- Subtitle: Detect duplicate pixels and consent signal risks
+- Search terms: pixel audit, duplicate tracking, Meta pixel, Google tag, consent
+- Category fit: Marketing and conversion, Analytics
+- Pricing: Free plan available. Pro is $9/month with a 7-day trial.
+
 ## Merchant problem
 
 Meta, Google, TikTok, Pinterest, Shopify Customer Events, app snippets, and hardcoded theme pixels can overlap. The result is duplicate events, bad attribution, and confusing ad-platform diagnostics.
@@ -14,13 +21,20 @@ Meta, Google, TikTok, Pinterest, Shopify Customer Events, app snippets, and hard
 - Duplicate event-source risk flags by platform.
 - Consent/privacy marker detection.
 - Tracking cleanup checklist for agencies and merchants.
-- Scan history after installing or removing apps.
+- Latest tracking findings with storefront evidence.
+- Pro inspection history and downloadable CSV evidence reports.
 
-## Pricing draft
+## Pricing
 
-- Free: one storefront tracking diagnostic.
-- Starter: $29/month for monitoring and event-source reports.
-- Pro: $59/month for agency exports and multi-store monitoring.
+- Free: three manual inspections each month, latest findings, and the tracking operating guide.
+- Pro: $9/month for unlimited inspections, up to 50 historical checks, and CSV reports.
+- Trial: seven days through Shopify Billing.
+
+## Benefit statements
+
+- See which major ad and analytics platforms appear in sampled storefront HTML.
+- Flag possible duplicate event sources without replacing the merchant tracking stack.
+- Hand developers a focused evidence report for cleanup and verification.
 
 ## Review guardrails
 
