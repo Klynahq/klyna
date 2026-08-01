@@ -1,8 +1,7 @@
 import { type LoaderFunctionArgs, json } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
-import { Badge, Banner, BlockStack, Button, Card, IndexTable, Page, Text } from '@shopify/polaris';
+import { Badge, Banner, BlockStack, Card, IndexTable, Page, Text } from '@shopify/polaris';
 import prisma from '../db.server';
-import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getProductKey, products, toneForStatus } from '../lib/products';
 import { STARTER_PLAN, authenticate, isBillingTest } from '../shopify.server';
 
@@ -42,17 +41,15 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 export default function History() {
   const { product, scans, hasActivePayment } = useLoaderData<typeof loader>();
-  const billingUrl = useEmbeddedRoute('/app/billing');
 
   return (
     <Page title={`${product.name} history`}>
       <BlockStack gap="400">
         {!hasActivePayment ? (
-          <Banner tone="info" title="Free plan shows your latest check">
-            <BlockStack gap="200">
-              <Text as="p">Upgrade to Pro for up to 50 historical checks and CSV exports.</Text>
-              <Button url={billingUrl}>Compare plans</Button>
-            </BlockStack>
+          <Banner tone="info" title="Latest scan evidence">
+            <Text as="p">
+              Review the most recent completed scan below and rerun it after theme or app changes.
+            </Text>
           </Banner>
         ) : null}
         <Card>
