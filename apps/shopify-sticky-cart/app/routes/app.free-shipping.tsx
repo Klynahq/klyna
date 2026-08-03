@@ -20,7 +20,6 @@ import { authenticate } from '../shopify.server';
 import {
   getSettings,
   saveSettings,
-  syncSettingsMetaobject,
   type StickyCartSettings,
 } from '../models/settings.server';
 
@@ -44,7 +43,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { admin, session } = await authenticate.admin(request);
+  const { session } = await authenticate.admin(request);
   const form = await request.formData();
 
   const bool = (k: string) => form.get(k) === 'true';
@@ -62,9 +61,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   };
 
   const settings = await saveSettings(session.shop, patch);
-  const synced = await syncSettingsMetaobject(admin, settings);
-
-  return json({ ok: true, synced, settings });
+  return json({ ok: true, settings });
 };
 
 export default function FreeShipping() {
@@ -113,12 +110,8 @@ export default function FreeShipping() {
       <Layout>
         {actionData?.ok && (
           <Layout.Section>
-            <Banner tone={actionData.synced ? 'success' : 'warning'} title="Saved">
-              <p>
-                {actionData.synced
-                  ? 'Free-shipping progress bar updated and live.'
-                  : 'Saved. The storefront mirror could not refresh just now — the bar still reads live settings through the app proxy.'}
-              </p>
+            <Banner tone="success" title="Saved">
+              <p>Free-shipping settings are updated and live through the storefront app proxy.</p>
             </Banner>
           </Layout.Section>
         )}
