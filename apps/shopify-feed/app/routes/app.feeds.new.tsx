@@ -86,6 +86,7 @@ export default function NewFeed() {
   const submitting = nav.state === 'submitting';
 
   const preset = (searchParams.get('channel') as Channel) || 'google';
+  const [name, setName] = useState('');
   const [channel, setChannel] = useState<Channel>(CHANNELS[preset] ? preset : 'google');
   const [refresh, setRefresh] = useState('360');
   const [currencyVal, setCurrencyVal] = useState(currency);
@@ -104,6 +105,8 @@ export default function NewFeed() {
                   label="Feed name"
                   name="name"
                   autoComplete="off"
+                  value={name}
+                  onChange={setName}
                   helpText="Just for you — e.g. 'Google Shopping — US'."
                   requiredIndicator
                 />
