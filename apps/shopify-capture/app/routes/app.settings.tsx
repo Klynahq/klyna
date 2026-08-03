@@ -48,23 +48,23 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 const PROVIDER_OPTIONS = [
   { label: 'Off — no AI assistance', value: 'off' },
-  { label: 'OpenRouter (free models, indefinite)', value: 'openrouter' },
-  { label: 'Groq (2k/day free)', value: 'groq' },
-  { label: 'Google Gemini (1.5k/day free)', value: 'gemini' },
+  { label: 'OpenRouter', value: 'openrouter' },
+  { label: 'Groq', value: 'groq' },
+  { label: 'Google Gemini', value: 'gemini' },
 ];
 
 const PROVIDER_HELP: Record<string, { url: string; hint: string }> = {
   openrouter: {
     url: 'https://openrouter.ai/keys',
-    hint: 'Free models like Llama 3.3 70B work great. Look for the ":free" suffix.',
+    hint: 'Choose a supported model from your OpenRouter account.',
   },
   groq: {
     url: 'https://console.groq.com/keys',
-    hint: 'Fastest free tier — ~2,000 requests/day. Default: llama-3.3-70b-versatile.',
+    hint: 'Use the default model or enter another supported Groq model below.',
   },
   gemini: {
     url: 'https://aistudio.google.com/apikey',
-    hint: '1,500 free requests/day on gemini-2.0-flash. Best for nuance.',
+    hint: 'Use the default model or enter another supported Gemini model below.',
   },
 };
 
@@ -108,9 +108,9 @@ export default function Settings() {
               <BlockStack gap="100">
                 <Text as="h2" variant="headingMd">AI assistant</Text>
                 <Text as="p" tone="subdued">
-                  Klyna Capture writes popup copy that adapts to first-time vs returning
-                  visitors. Add a free-tier API key from any provider below to turn on
-                  AI-generated headlines. Your key stays on this app's database.
+                  Klyna Capture drafts focused popup headlines for first-time and
+                  returning-visitor campaigns. Add your own provider key to generate
+                  options on demand. Your key stays in this app's database.
                 </Text>
               </BlockStack>
 
@@ -196,9 +196,10 @@ export default function Settings() {
             <BlockStack gap="200">
               <Text as="h2" variant="headingMd">About this app</Text>
               <Text as="p" tone="subdued" variant="bodyMd">
-                Klyna Capture is part of the Klyna indie suite. Email and SMS popups,
-                spin-to-win, exit-intent, and AI-personalized copy that adapts to first-time
-                vs returning visitors. Free where it can be — bring your own AI key.
+                Klyna Capture is part of the Klyna app suite. Build email and SMS
+                popups, spin-to-win campaigns, and exit-intent offers; then measure
+                impressions and conversions. AI-assisted headline drafts are optional
+                and use your own provider key.
               </Text>
               <Box>
                 <Link url="https://klyna.dev" target="_blank">klyna.dev</Link>
