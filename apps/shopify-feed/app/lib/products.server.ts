@@ -33,7 +33,6 @@ const PRODUCTS_QUERY = `#graphql
         status
         tags
         onlineStoreUrl
-        publishedOnPublication: publishedOnCurrentPublication
         featuredImage {
           url
         }
@@ -100,7 +99,6 @@ interface RawProduct {
   status: 'ACTIVE' | 'DRAFT' | 'ARCHIVED';
   tags: string[];
   onlineStoreUrl: string | null;
-  publishedOnPublication: boolean;
   featuredImage: { url: string } | null;
   images: { nodes: { url: string }[] };
   collections: { nodes: { id: string; handle: string }[] };
@@ -167,7 +165,7 @@ function flatten(product: RawProduct): ProductView[] {
       productType: product.productType ?? '',
       tags: product.tags ?? [],
       status: product.status,
-      onlineStorePublished: product.publishedOnPublication || Boolean(product.onlineStoreUrl),
+      onlineStorePublished: Boolean(product.onlineStoreUrl),
       collectionHandles,
       collectionIds,
       sku: v.sku ?? '',
