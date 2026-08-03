@@ -1,4 +1,4 @@
-// Killer feature: AI personalized popup copy by visitor state.
+// AI-assisted popup copy for two useful visitor contexts.
 //
 // Generates two variants side by side:
 //   1. First-time visitor   — a generic 1-line headline (<40ch).
@@ -6,8 +6,7 @@
 //                             last product the visitor viewed.
 //
 // Both prompts are cached for 24h per prompt hash via getAiClientForShop.
-// Merchants pick which to apply to their popup, or use both — the storefront
-// widget decides which to show at impression time based on visitor cookies.
+// Merchants review the drafts and copy the strongest option into a popup.
 
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
 import { Form, useActionData, useLoaderData, useNavigation } from '@remix-run/react';
@@ -155,13 +154,14 @@ export default function AiCopy() {
   const [offer, setOffer] = useState('10% off your first order');
   const [tone, setTone] = useState('friendly');
   const [lastProduct, setLastProduct] = useState('Linen Crew Sweater');
+  const [copiedAudience, setCopiedAudience] = useState<Variant['audience'] | null>(null);
 
   const variants: Variant[] = data && 'variants' in data ? data.variants : [];
 
   return (
     <Page
       title="AI personalized copy"
-      subtitle="Headlines that adapt to first-time vs returning visitors"
+      subtitle="Generate focused headline options for key visitor contexts"
       backAction={{ url: '/app' }}
     >
       <Layout>
@@ -229,7 +229,7 @@ export default function AiCopy() {
                       onChange={setLastProduct}
                       name="lastProduct"
                       autoComplete="off"
-                      helpText="Used only for the returning-visitor variant."
+                      helpText="Gives the returning-visitor draft useful context."
                     />
                   </InlineGrid>
 
@@ -277,9 +277,18 @@ export default function AiCopy() {
                         <Text as="p" tone="subdued" variant="bodySm">
                           {v.headline.length} characters ·{' '}
                           {v.audience === 'new'
-                            ? 'shown when no visitor cookie is set'
-                            : 'shown when the visitor has browsed before without converting'}
+                            ? 'written for a first-time visitor'
+                            : 'written for a returning visitor'}
                         </Text>
+                        <Button
+                          onClick={() => {
+                            void navigator.clipboard.writeText(v.headline);
+                            setCopiedAudience(v.audience);
+                            window.setTimeout(() => setCopiedAudience(null), 1500);
+                          }}
+                        >
+                          {copiedAudience === v.audience ? 'Copied' : 'Copy headline'}
+                        </Button>
                       </>
                     )}
                   </BlockStack>
@@ -292,13 +301,11 @@ export default function AiCopy() {
         <Layout.Section>
           <Card>
             <BlockStack gap="200">
-              <Text as="h2" variant="headingMd">How it ships to the storefront</Text>
+              <Text as="h2" variant="headingMd">How to use these headlines</Text>
               <Text as="p" tone="subdued" variant="bodyMd">
-                The capture widget reads a "klyna_visited" cookie. First visit gets the
-                generic headline. Returning visitors who have not purchased get the
-                product-aware variant — the widget reads the last viewed product from
-                the visitor's local history. Both variants are stored on the popup row
-                and swapped client-side, so the AI is never called per impression.
+                Generate two concise options, compare them, and copy the strongest one
+                into a popup. Generation happens only when you request it and never on
+                the storefront, so popup rendering stays fast and predictable.
               </Text>
               {popups.length === 0 ? (
                 <Text as="p" tone="subdued" variant="bodyMd">
@@ -307,7 +314,8 @@ export default function AiCopy() {
               ) : (
                 <Text as="p" tone="subdued" variant="bodyMd">
                   You have {popups.length} popup{popups.length === 1 ? '' : 's'}. Open
-                  one from the Popups page and paste in the variant you like.
+                  one from the Popups page and paste the headline you choose into its
+                  Headline field.
                 </Text>
               )}
             </BlockStack>
