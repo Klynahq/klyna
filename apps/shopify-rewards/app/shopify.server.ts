@@ -16,6 +16,7 @@ const shopify = shopifyApp({
   scopes: process.env.SCOPES?.split(','),
   appUrl: process.env.SHOPIFY_APP_URL ?? 'https://klyna-rewards.vercel.app',
   authPathPrefix: '/auth',
+  isEmbeddedApp: true,
   sessionStorage: new PrismaSessionStorage(prisma),
   distribution: AppDistribution.AppStore,
   future: {
