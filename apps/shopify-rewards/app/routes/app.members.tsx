@@ -77,10 +77,28 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const program = await getProgram(shop);
 
   if (intent === 'sync') {
-    const res = await admin.graphql(CUSTOMERS_QUERY);
-    const body = (await res.json()) as {
+    let body: {
       data?: { customers?: { edges: { node: { id: string; email: string | null; displayName: string | null } }[] } };
     };
+
+    try {
+      const res = await admin.graphql(CUSTOMERS_QUERY);
+      body = (await res.json()) as typeof body;
+    } catch (error) {
+      console.error('Customer sync failed', error);
+      const message = error instanceof Error ? error.message : '';
+      const needsProtectedDataAccess = message.includes('not approved to access the Customer object');
+
+      return json(
+        {
+          error: needsProtectedDataAccess
+            ? 'Customer sync needs protected customer data access, including Name and Email, enabled for this app in Shopify.'
+            : 'Shopify could not return customers. Check the app permissions and try again.',
+        },
+        { status: 403 },
+      );
+    }
+
     const edges = body.data?.customers?.edges ?? [];
     let added = 0;
     for (const { node } of edges) {
