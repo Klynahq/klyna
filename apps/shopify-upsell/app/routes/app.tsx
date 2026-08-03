@@ -19,7 +19,7 @@ export default function App() {
   const embeddedRoute = useEmbeddedRoute();
 
   return (
-    <AppProvider isEmbeddedApp apiKey={apiKey}>
+    <AppProvider isEmbeddedApp={false} apiKey={apiKey}>
       <NavMenu>
         <Link to={embeddedRoute('/app')} rel="home">Dashboard</Link>
         <Link to={embeddedRoute('/app/offers')}>Offers</Link>
