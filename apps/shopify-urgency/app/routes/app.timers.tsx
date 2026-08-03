@@ -1,6 +1,6 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
 import { useCallback, useState } from 'react';
-import { Link, useActionData, useLoaderData, useNavigation, useSubmit } from '@remix-run/react';
+import { Form, Link, useActionData, useLoaderData, useNavigation, useSubmit } from '@remix-run/react';
 import {
   Badge,
   BlockStack,
@@ -8,7 +8,6 @@ import {
   Button,
   Card,
   EmptyState,
-  Form as PolarisForm,
   FormLayout,
   InlineStack,
   Layout,
@@ -329,7 +328,7 @@ function TimerEditor({
     <Card>
       <BlockStack gap="300">
         <Text as="h2" variant="headingMd">{timer.id ? 'Edit timer' : 'New timer'}</Text>
-        <PolarisForm method="post" onSubmit={() => undefined}>
+        <Form method="post">
           <input type="hidden" name="intent" value="save" />
           {timer.id && <input type="hidden" name="id" value={timer.id} />}
           {/* Polaris fields are controlled-only and Button does not accept
@@ -452,7 +451,7 @@ function TimerEditor({
               <Button onClick={onCancel}>Cancel</Button>
             </InlineStack>
           </FormLayout>
-        </PolarisForm>
+        </Form>
       </BlockStack>
     </Card>
   );

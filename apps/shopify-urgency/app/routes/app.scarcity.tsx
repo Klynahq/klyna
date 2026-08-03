@@ -1,6 +1,6 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
 import { useState } from 'react';
-import { useActionData, useLoaderData, useNavigation, useSubmit } from '@remix-run/react';
+import { Form, useActionData, useLoaderData, useNavigation, useSubmit } from '@remix-run/react';
 import {
   Badge,
   BlockStack,
@@ -8,7 +8,6 @@ import {
   Button,
   Card,
   EmptyState,
-  Form as PolarisForm,
   FormLayout,
   InlineStack,
   Layout,
@@ -329,7 +328,7 @@ function ScarcityEditor({
     <Card>
       <BlockStack gap="300">
         <Text as="h2" variant="headingMd">{rule.id ? 'Edit rule' : 'New rule'}</Text>
-        <PolarisForm method="post" onSubmit={() => undefined}>
+        <Form method="post">
           <input type="hidden" name="intent" value="save" />
           {rule.id && <input type="hidden" name="id" value={rule.id} />}
           <input type="hidden" name="productGid" value={productGid} />
@@ -389,7 +388,7 @@ function ScarcityEditor({
               <Button onClick={onCancel}>Cancel</Button>
             </InlineStack>
           </FormLayout>
-        </PolarisForm>
+        </Form>
       </BlockStack>
     </Card>
   );
