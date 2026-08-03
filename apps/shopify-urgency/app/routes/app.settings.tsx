@@ -108,9 +108,9 @@ export default function Settings() {
               <BlockStack gap="100">
                 <Text as="h2" variant="headingMd">AI assistant</Text>
                 <Text as="p" tone="subdued">
-                  Klyna ships with auto-fixes for the SEO basics — title, description, OG tags.
-                  For content generation (h1, expanded copy, FAQ blocks), add a free-tier API
-                  key from any provider below. Your key stays on this app's database.
+                  Klyna Urgency's countdown timers, scarcity rules, and social proof work
+                  without AI. To draft optional dynamic copy from live inventory and recent
+                  sales, add a free-tier API key below. Your key stays on this app's database.
                 </Text>
               </BlockStack>
 
