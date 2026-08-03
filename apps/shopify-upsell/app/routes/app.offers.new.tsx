@@ -20,19 +20,36 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     return json({ errors }, { status: 400 });
   }
 
-  // Refresh the product snapshot (title/image) from the Admin API so the
-  // storefront always renders current data even if the picker was stale.
+  // Refresh the product snapshot when possible, but keep the picker data when
+  // Shopify temporarily rejects the optional lookup.
   for (const variant of input.variants) {
-    const fresh = await getProduct(admin, variant.productGid);
-    if (fresh) {
-      variant.productHandle = fresh.handle;
-      variant.productTitle = fresh.title;
-      variant.productImage = fresh.image;
+    try {
+      const fresh = await getProduct(admin, variant.productGid);
+      if (fresh) {
+        variant.productHandle = fresh.handle;
+        variant.productTitle = fresh.title;
+        variant.productImage = fresh.image;
+      }
+    } catch (error) {
+      console.warn('[upsell] Using the product picker snapshot after refresh failed', {
+        status: error instanceof Response ? error.status : 500,
+      });
     }
   }
 
-  await saveOffer(session.shop, input);
-  return redirect('/app/offers');
+  try {
+    await saveOffer(session.shop, input);
+    return redirect('/app/offers');
+  } catch (error) {
+    console.error('[upsell] Offer save failed', {
+      status: error instanceof Response ? error.status : 500,
+      message: error instanceof Error ? error.message : 'Response error',
+    });
+    return json(
+      { errors: ['We could not save this offer. Please try again.'] },
+      { status: 500 },
+    );
+  }
 };
 
 export default function NewOffer() {
