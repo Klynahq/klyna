@@ -4,10 +4,16 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
   useMatches,
 } from '@remix-run/react';
 
+export const loader = () => ({
+  apiKey: process.env.SHOPIFY_API_KEY ?? '',
+});
+
 export default function App() {
+  const { apiKey } = useLoaderData<typeof loader>();
   const matches = useMatches();
   const shouldHydrate = matches.every((match) => {
     const handle = match.handle as { hydrate?: boolean } | undefined;
@@ -19,6 +25,8 @@ export default function App() {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <meta name="shopify-api-key" content={apiKey} />
+        <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js" />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="preconnect" href="https://cdn.shopify.com/" />
         <link
