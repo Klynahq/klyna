@@ -59,6 +59,63 @@ export const products: Product[] = [
     installNote: 'Unzip → shopify app config link → pnpm dev',
   },
 
+  // --- Research-led Shopify App Store batch ---
+  {
+    slug: 'shopify-cleanroom',
+    name: 'Klyna Cleanroom',
+    tagline: 'Find old app code, duplicate pixels, and theme debris safely.',
+    description:
+      'Diagnostic-first cleanup assistant for Shopify themes. Scans sampled storefront pages for leftover app signatures, duplicate tracking, heavy script stacks, and cleanup risks before any theme edit is made.',
+    status: 'beta',
+    surface: 'shopify',
+    href: '/shopify/cleanroom',
+    installNote: 'Public App Store app - diagnostic scan first, cleanup workflow guarded',
+  },
+  {
+    slug: 'shopify-promo-qa',
+    name: 'Klyna Promo QA',
+    tagline: 'Test discount collisions before campaigns go live.',
+    description:
+      'Promotion preflight for automatic discounts, code discounts, free shipping, markets, and margin risk. Helps merchants catch non-combinable campaigns and forgotten expiry dates before launch.',
+    status: 'beta',
+    surface: 'shopify',
+    href: '/shopify/promo-qa',
+    installNote: 'Public App Store app - campaign QA and scenario history',
+  },
+  {
+    slug: 'shopify-redirect-guard',
+    name: 'Klyna Redirect Guard',
+    tagline: 'Protect SEO traffic from deleted URLs and migration gaps.',
+    description:
+      'URL safety monitor for product deletions, collection changes, migrations, 404s, and redirect coverage. Built for merchants who need a clear redirect map before traffic leaks.',
+    status: 'beta',
+    surface: 'shopify',
+    href: '/shopify/redirect-guard',
+    installNote: 'Public App Store app - redirect monitoring and exports',
+  },
+  {
+    slug: 'shopify-pixel-doctor',
+    name: 'Klyna Pixel Doctor',
+    tagline: 'Detect duplicate tracking and consent timing issues.',
+    description:
+      'Neutral storefront tracking diagnostic for Meta, Google, TikTok, Pinterest, consent markers, and hardcoded pixel residue. Helps clean attribution without forcing merchants to replace their stack.',
+    status: 'beta',
+    surface: 'shopify',
+    href: '/shopify/pixel-doctor',
+    installNote: 'Public App Store app - pixel QA and monitoring',
+  },
+  {
+    slug: 'shopify-feed-doctor',
+    name: 'Klyna Feed Doctor',
+    tagline: 'Find catalog issues before Google Merchant Center rejects products.',
+    description:
+      'Feed readiness scanner for GTIN/barcode, SKU, brand, images, product metadata, and variant data. Designed as a fix queue for merchants who are not ready to replace their feed app.',
+    status: 'beta',
+    surface: 'shopify',
+    href: '/shopify/feed-doctor',
+    installNote: 'Public App Store app - feed diagnostics and variant-level exports',
+  },
+
   // ─── 10 Shopify Apps ──────────────────────────────────────────────────────
   {
     slug: 'shopify-bundles',
@@ -310,20 +367,29 @@ export const products: Product[] = [
 
 export function statusLabel(status: ProductStatus): string {
   switch (status) {
-    case 'live':     return 'Live';
-    case 'beta':     return 'Beta';
-    case 'soon':     return 'Coming soon';
-    case 'planning': return 'Planning';
+    case 'live':
+      return 'Live';
+    case 'beta':
+      return 'Beta';
+    case 'soon':
+      return 'Coming soon';
+    case 'planning':
+      return 'Planning';
   }
 }
 
 export function surfaceLabel(surface: ProductSurface): string {
   switch (surface) {
-    case 'extension': return 'Browser Extension';
-    case 'wordpress': return 'WordPress Plugin';
-    case 'shopify':   return 'Shopify App';
-    case 'web':       return 'Web App';
-    case 'theme':     return 'Shopify Theme';
+    case 'extension':
+      return 'Browser Extension';
+    case 'wordpress':
+      return 'WordPress Plugin';
+    case 'shopify':
+      return 'Shopify App';
+    case 'web':
+      return 'Web App';
+    case 'theme':
+      return 'Shopify Theme';
   }
 }
 

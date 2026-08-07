@@ -73,3 +73,15 @@
 - Shopify Theme Speed App Embed Checklist: https://klyna.dev/blog/shopify-theme-speed-app-embed-checklist
 - Shopify llms.txt App Support Checklist: https://klyna.dev/blog/shopify-llms-txt-app-support-checklist
 
+
+## August 2026 DataForSEO Shopify audit cluster
+- [Shopify Store Audit Checklist for Speed, SEO, and Conversion](https://klyna.dev/blog/shopify-store-audit-checklist): Use this Shopify store audit checklist to review speed, SEO, apps, redirects, pixels, feeds, and product-page conversion risks before changing a theme.
+- [Shopify Store Audit Tool Selection: What to Check Before Installing](https://klyna.dev/blog/shopify-store-audit-tool-selection): Choose a Shopify store audit tool by checking what it can safely inspect, what it changes, and whether the report turns into real storefront fixes.
+- [Shopify Speed Optimization App Checklist for Safer Storefronts](https://klyna.dev/blog/shopify-speed-optimization-app-checklist): Evaluate a Shopify speed optimization app by looking at scripts, image handling, theme edits, app embeds, reporting, and rollback safety.
+- [Best Shopify Speed Optimization App: A Safe Selection Framework](https://klyna.dev/blog/best-shopify-speed-optimization-app-safe-selection): A safe framework for choosing the best Shopify speed optimization app without breaking tracking, schema, product media, or conversion paths.
+- [Shopify Page Speed Optimization App Risk Map](https://klyna.dev/blog/shopify-page-speed-optimization-app-risk-map): Map the risks of a Shopify page speed optimization app before using script deferral, lazy loading, image compression, or theme-level edits.
+- [Shopify App for Speed Optimization vs Cleanup: Which Comes First?](https://klyna.dev/blog/shopify-app-for-speed-optimization-vs-cleanup): Decide whether a Shopify store needs a speed optimization app or an app-code cleanup pass first, especially after multiple installs and uninstalls.
+- [Shopify Performance Audit: The First Five Minutes That Matter](https://klyna.dev/blog/shopify-performance-audit-first-five-minutes): Run the first five minutes of a Shopify performance audit by checking mobile storefront behavior, app weight, tracking duplication, and page intent.
+- [Shopify Core Web Vitals App Stack Audit](https://klyna.dev/blog/shopify-core-web-vitals-app-stack-audit): Audit a Shopify app stack for Core Web Vitals risk by checking app embeds, third-party scripts, media, layout shifts, and mobile interactions.
+- [Free Shopify Store Audit Before Installing More Apps](https://klyna.dev/blog/free-shopify-store-audit-before-apps): Use a free Shopify store audit before installing more apps so speed, tracking, SEO, feed, and redirect issues are separated from app recommendations.
+- [Shopify SEO Audit Tool App Store Checklist](https://klyna.dev/blog/shopify-seo-audit-tool-app-store-checklist): Evaluate a Shopify SEO audit tool from the App Store by checking schema support, GSC-style reporting, crawl issues, product data, and safe fixes.
