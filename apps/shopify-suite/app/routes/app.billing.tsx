@@ -12,26 +12,57 @@ import {
   Layout,
   List,
   Page,
+  RadioButton,
   Text,
 } from '@shopify/polaris';
+import {
+  PRO_PLAN,
+  normalizeBillingPlanName,
+  parseRequestedPlan,
+  publicBillingPlans,
+} from '../lib/billing-plans';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getProductKey, products } from '../lib/products';
-import { STARTER_PLAN, authenticate, isBillingTest } from '../shopify.server';
+import { BILLING_PLAN_NAMES, authenticate, isBillingTest } from '../shopify.server';
 
 const trialDays = 7;
+
+function appAdminBillingUrl(request: Request) {
+  const url = new URL(request.url);
+  const shop = url.searchParams.get('shop');
+
+  if (!shop?.endsWith('.myshopify.com')) {
+    url.searchParams.delete('charge_id');
+    return url.toString();
+  }
+
+  const storeHandle = shop.replace(/\.myshopify\.com$/, '');
+  return `https://admin.shopify.com/store/${storeHandle}/apps/klyna-${getProductKey()}/app/billing`;
+}
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { billing } = await authenticate.admin(request);
   const product = products[getProductKey()];
   let hasActivePayment = false;
+  let activePlan: string | null = null;
+  let activeSubscriptionName: string | null = null;
   let billingError: string | null = null;
 
   try {
     const billingCheck = await billing.check({
-      plans: [STARTER_PLAN],
+      plans: [...BILLING_PLAN_NAMES],
       isTest: isBillingTest(),
     });
     hasActivePayment = billingCheck.hasActivePayment;
+    const activeSubscriptions = [...billingCheck.appSubscriptions].sort(
+      (a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt),
+    );
+    const activeSubscription =
+      activeSubscriptions.find(
+        (subscription) => normalizeBillingPlanName(subscription.name) === PRO_PLAN,
+      ) ?? activeSubscriptions[0];
+    activeSubscriptionName = activeSubscription?.name ?? null;
+    activePlan = normalizeBillingPlanName(activeSubscriptionName);
   } catch (error) {
     console.error('Billing check failed on plan page.', error);
     billingError =
@@ -41,9 +72,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   return json({
     product,
     hasActivePayment,
+    activePlan,
+    activeSubscriptionName,
     billingError,
-    planName: 'Starter',
-    price: '$9/month',
+    plans: publicBillingPlans(),
     trialDays,
     isTest: isBillingTest(),
   });
@@ -51,17 +83,28 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { billing } = await authenticate.admin(request);
+  const formData = await request.formData();
+  const plan = parseRequestedPlan(formData.get('plan'));
 
   return billing.request({
-    plan: STARTER_PLAN,
+    plan,
     isTest: isBillingTest(),
     trialDays,
+    returnUrl: appAdminBillingUrl(request),
   });
 };
 
 export default function Billing() {
-  const { product, hasActivePayment, billingError, planName, price, trialDays, isTest } =
-    useLoaderData<typeof loader>();
+  const {
+    product,
+    hasActivePayment,
+    activePlan,
+    activeSubscriptionName,
+    billingError,
+    plans,
+    trialDays,
+    isTest,
+  } = useLoaderData<typeof loader>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state !== 'idle';
   const dashboardUrl = useEmbeddedRoute('/app');
@@ -71,58 +114,81 @@ export default function Billing() {
       <Layout>
         <Layout.Section>
           <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
-            <Card>
-              <BlockStack gap="300">
-                <InlineStack gap="200" blockAlign="center">
-                  <Text as="h2" variant="headingLg">
-                    {planName}
-                  </Text>
-                  {hasActivePayment ? <Badge tone="success">Active</Badge> : <Badge>Required</Badge>}
-                  {isTest ? <Badge tone="info">Test billing</Badge> : null}
-                </InlineStack>
-                <Text as="p" variant="headingMd">
-                  {price}
-                </Text>
-                <Text as="p" tone="subdued">
-                  Start with a {trialDays}-day trial. The plan unlocks the redirect audit
-                  dashboard, URL-loss monitoring, redirect validation, guarded fixes, and exports.
-                </Text>
-                {billingError ? (
-                  <>
-                    <Banner tone="warning">{billingError}</Banner>
-                    <Button url={dashboardUrl} variant="primary">
-                      Open dashboard
-                    </Button>
-                  </>
-                ) : hasActivePayment ? (
-                  <Button url={dashboardUrl} variant="primary">
-                    Open dashboard
-                  </Button>
-                ) : (
-                  <Form method="post">
-                    <Button submit variant="primary" loading={isSubmitting}>
-                      {`Start ${trialDays}-day trial`}
-                    </Button>
-                  </Form>
-                )}
-              </BlockStack>
-            </Card>
+            {plans.map((plan) => {
+              const isActive = activePlan === plan.name;
+
+              return (
+                <Card key={plan.name}>
+                  <BlockStack gap="300">
+                    <InlineStack gap="200" blockAlign="center">
+                      <Text as="h2" variant="headingLg">
+                        {plan.name}
+                      </Text>
+                      {isActive ? <Badge tone="success">Active plan</Badge> : null}
+                      {!hasActivePayment ? <Badge>Available</Badge> : null}
+                      {isTest ? <Badge tone="info">Test billing</Badge> : null}
+                    </InlineStack>
+                    <Text as="p" variant="headingMd">
+                      {plan.priceLabel}
+                    </Text>
+                    <Text as="p" tone="subdued">
+                      {plan.summary} Start with a {trialDays}-day trial.
+                    </Text>
+                    <List type="bullet">
+                      {plan.features.map((feature) => (
+                        <List.Item key={feature}>{feature}</List.Item>
+                      ))}
+                    </List>
+                    {billingError ? (
+                      <>
+                        <Banner tone="warning">{billingError}</Banner>
+                        <Button url={dashboardUrl} variant="primary">
+                          Open dashboard
+                        </Button>
+                      </>
+                    ) : isActive ? (
+                      <Button url={dashboardUrl} variant="primary">
+                        Open dashboard
+                      </Button>
+                    ) : (
+                      <Form method="post">
+                        <input type="hidden" name="plan" value={plan.name} />
+                        <Button
+                          submit
+                          variant={plan.name === 'Pro' ? 'primary' : 'secondary'}
+                          loading={isSubmitting}
+                        >
+                          {hasActivePayment ? `Switch to ${plan.name}` : plan.cta}
+                        </Button>
+                      </Form>
+                    )}
+                  </BlockStack>
+                </Card>
+              );
+            })}
 
             <Card>
               <BlockStack gap="300">
                 <Text as="h2" variant="headingMd">
-                  Included
+                  Current subscription
                 </Text>
-                <List type="bullet">
-                  <List.Item>URL-loss baselines for deleted and renamed content.</List.Item>
-                  <List.Item>Redirect chain, loop, and destination validation.</List.Item>
-                  <List.Item>Guarded Shopify redirect creation with a change log.</List.Item>
-                  <List.Item>CSV redirect-map exports for migrations and agency handoff.</List.Item>
-                </List>
+                <RadioButton
+                  label={activePlan ? `${activePlan} is active` : 'No active paid plan yet'}
+                  checked={hasActivePayment}
+                  disabled
+                />
+                {activeSubscriptionName && activeSubscriptionName !== activePlan ? (
+                  <Text as="p" tone="subdued">
+                    Shopify returned subscription name: {activeSubscriptionName}
+                  </Text>
+                ) : null}
+                <Text as="p" tone="subdued">
+                  {product.paidValue}
+                </Text>
                 <Box paddingBlockStart="200">
                   <Text as="p" tone="subdued">
-                    Billing is handled through Shopify, so merchants can manage subscription
-                    changes from their admin.
+                    Billing is handled through Shopify, so merchants can manage subscription changes
+                    from their admin.
                   </Text>
                 </Box>
               </BlockStack>

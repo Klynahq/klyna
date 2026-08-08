@@ -6,14 +6,10 @@ import {
   shopifyApp,
 } from '@shopify/shopify-app-remix/server';
 import prisma from './db.server';
+import { LEGACY_STARTER_PLAN, PRO_PLAN, STARTER_PLAN, planPrice } from './lib/billing-plans';
 import { ProductSessionStorage } from './lib/product-session-storage.server';
 
-export const STARTER_PLAN = 'starter';
-
-function monthlyPrice() {
-  const value = Number(process.env.KLYNA_MONTHLY_PRICE ?? 9);
-  return Number.isFinite(value) && value > 0 ? value : 9;
-}
+export { BILLING_PLAN_NAMES, PRO_PLAN, STARTER_PLAN } from './lib/billing-plans';
 
 export function isBillingRequired() {
   return process.env.KLYNA_BILLING_REQUIRED !== 'false';
@@ -40,7 +36,25 @@ const shopify = shopifyApp({
     [STARTER_PLAN]: {
       lineItems: [
         {
-          amount: monthlyPrice(),
+          amount: planPrice(STARTER_PLAN),
+          currencyCode: 'USD',
+          interval: BillingInterval.Every30Days,
+        },
+      ],
+    },
+    [PRO_PLAN]: {
+      lineItems: [
+        {
+          amount: planPrice(PRO_PLAN),
+          currencyCode: 'USD',
+          interval: BillingInterval.Every30Days,
+        },
+      ],
+    },
+    [LEGACY_STARTER_PLAN]: {
+      lineItems: [
+        {
+          amount: planPrice(LEGACY_STARTER_PLAN),
           currencyCode: 'USD',
           interval: BillingInterval.Every30Days,
         },

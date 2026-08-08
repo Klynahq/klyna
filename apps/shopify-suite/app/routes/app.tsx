@@ -6,7 +6,12 @@ import { AppProvider } from '@shopify/shopify-app-remix/react';
 import { boundary } from '@shopify/shopify-app-remix/server';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getProductKey, products } from '../lib/products';
-import { STARTER_PLAN, authenticate, isBillingRequired, isBillingTest } from '../shopify.server';
+import {
+  BILLING_PLAN_NAMES,
+  authenticate,
+  isBillingRequired,
+  isBillingTest,
+} from '../shopify.server';
 import suiteStyles from '../styles/klyna-suite.css?url';
 
 export const links = () => [
@@ -21,7 +26,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   if (isBillingRequired() && !url.pathname.endsWith('/app/billing')) {
     try {
       const { hasActivePayment } = await billing.check({
-        plans: [STARTER_PLAN],
+        plans: [...BILLING_PLAN_NAMES],
         isTest: isBillingTest(),
       });
 
