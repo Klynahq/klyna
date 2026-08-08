@@ -1,7 +1,7 @@
 ---
 import '../styles/global.css';
-import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
+import Nav from '../components/Nav.astro';
 import SiteSchema from '../components/seo/SiteSchema.astro';
 
 interface Props {
@@ -10,6 +10,7 @@ interface Props {
   canonical?: string;
   ogType?: 'website' | 'article';
   ogImage?: string;
+  ogImageAlt?: string;
   noIndex?: boolean;
 }
 
@@ -19,6 +20,7 @@ const {
   canonical,
   ogType = 'website',
   ogImage = '/favicon.svg',
+  ogImageAlt,
   noIndex = false,
 } = Astro.props;
 
@@ -44,12 +46,14 @@ const fullOgImage = ogImage.startsWith('http') ? ogImage : new URL(ogImage, Astr
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonicalURL} />
     <meta property="og:image" content={fullOgImage} />
+    {ogImageAlt && <meta property="og:image:alt" content={ogImageAlt} />}
     <meta property="og:site_name" content="Klyna" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={fullOgImage} />
+    {ogImageAlt && <meta name="twitter:image:alt" content={ogImageAlt} />}
 
     <meta name="theme-color" content="#0b0b0f" />
 

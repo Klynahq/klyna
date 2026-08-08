@@ -16,8 +16,9 @@ const statusColor: Record<string, string> = {
   planning: 'text-[color:var(--color-text-muted)] bg-white/5 border-[color:var(--color-border)]',
 };
 
-const hasDownload = showDownload && !!product.downloadUrl;
-const hasProductLink = !showDownload && !!product.href;
+const hasAppStoreLink = !!product.appStoreUrl;
+const hasDownload = showDownload && !!product.downloadUrl && !hasAppStoreLink;
+const hasProductLink = !!product.href;
 ---
 
 <article
@@ -60,7 +61,7 @@ const hasProductLink = !showDownload && !!product.href;
     </div>
   )}
 
-  {showDownload && !product.downloadUrl && (
+  {showDownload && !product.downloadUrl && !hasAppStoreLink && (
     <div class="mt-5 pt-5 border-t border-[color:var(--color-border)]/60">
       <span class="inline-flex items-center gap-1.5 text-xs text-[color:var(--color-text-dim)]">
         <span class="w-1.5 h-1.5 rounded-full bg-[color:var(--color-text-dim)] animate-pulse"></span>
@@ -69,15 +70,27 @@ const hasProductLink = !showDownload && !!product.href;
     </div>
   )}
 
-  {hasProductLink && (
-    <div class="mt-5 pt-5 border-t border-[color:var(--color-border)]/60">
-      <a
-        href={product.href}
-        class="inline-flex items-center gap-2 text-sm font-semibold text-[color:var(--color-accent)] hover:text-[color:var(--color-accent-hover)] transition-colors"
-      >
-        Learn more
-        <span aria-hidden="true">→</span>
-      </a>
+  {(hasAppStoreLink || hasProductLink) && !hasDownload && (
+    <div class="mt-5 pt-5 border-t border-[color:var(--color-border)]/60 flex flex-wrap items-center gap-3">
+      {hasAppStoreLink && (
+        <a
+          href={product.appStoreUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex min-h-10 items-center justify-center px-4 py-2 rounded-lg bg-[color:var(--color-accent)] hover:bg-[color:var(--color-accent-hover)] text-white text-sm font-semibold transition-colors"
+        >
+          Install on Shopify
+        </a>
+      )}
+      {hasProductLink && (
+        <a
+          href={product.href}
+          class="inline-flex min-h-10 items-center gap-2 px-1 text-sm font-semibold text-[color:var(--color-accent)] hover:text-[color:var(--color-accent-hover)] transition-colors"
+        >
+          {hasAppStoreLink ? 'Read the guide' : 'Learn more'}
+          <span aria-hidden="true">→</span>
+        </a>
+      )}
     </div>
   )}
 </article>

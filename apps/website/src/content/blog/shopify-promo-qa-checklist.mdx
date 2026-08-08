@@ -1,78 +1,114 @@
 ---
-title: "Shopify promo QA checklist for discount and landing page launches"
-description: "Check Shopify promotions before launch with a QA workflow for discount logic, landing pages, collection filters, pixels, redirects, and mobile conversion paths."
+title: "Shopify Discount QA: Test Promotions Before Launch"
+description: "Test Shopify discounts for eligibility, combinations, expiry, landing-page claims, markets, mobile cart behavior, tracking, and campaign rollback."
 publishedAt: 2026-07-21
-updatedAt: 2026-07-21
+updatedAt: 2026-08-08
 author: "Klyna"
+tags: ["Shopify","discount QA","promotions","campaign launch"]
 category: "Tutorials"
-tags: ["shopify","cro","promotions","qa"]
+draft: false
 featured: false
+ogImage: "/seo-visuals/shopify-promo-qa-checklist-1.svg"
+ogImageAlt: "Klyna Promo QA: Promotion truth chain"
 ---
 
-Shopify promo QA checklist is useful only when it protects the real workflow: a page, product, feed, store, or content system that buyers and crawlers can understand. For Ecommerce teams launching discounts, bundles, seasonal pages, and campaign collections, the practical problem is that promo launches can fail through small mismatches between discount rules, product eligibility, landing page copy, and tracking.
+Merchants searching for **shopify discount QA checklist** usually have a live store problem, not a research assignment. This guide turns that problem into a selection and QA workflow, then explains where Klyna Promo QA fits without pretending an app can guarantee the business outcome.
 
 ## Short answer
 
-Shopify promo QA checklist means checking the smallest set of signals that can change search visibility, buyer confidence, or launch safety. The goal is not a bigger report. The goal is a page or storefront change that can be verified before and after it ships.
+> Shopify discount QA means testing the exact promise from landing page to cart and checkout: who qualifies, which products count, what combines, when it starts and ends, and what happens in excluded scenarios. A promotion is not ready because the discount exists in admin; it is ready when the customer-facing claim matches actual checkout behavior.
 
-For Klyna, that means three things: the issue should be visible, the fix should be reversible, and the final page should make the next action clearer for humans and search systems.
+## Search demand and platform context
 
-## Search intent to satisfy
+Search intent around Shopify promotions is fragmented across discount combinations, codes not working, free shipping, automatic discounts, and campaign checks. That makes a scenario-based QA page more useful than another generic guide to creating a discount.
 
-**Searcher job:** Understand how Shopify promo QA checklist for discount and landing page launches turns into a practical Shopify store workflow without buying a large platform or stitching together paid APIs.
+Shopify groups discounts into product, order, and shipping classes and lets eligible combinations be configured. Combination behavior depends on the specific classes and rules, so the QA matrix must test both the intended winning cart and carts that should not qualify.
 
-**Competitor gap:** Generic guides usually explain the concept but stop before implementation. This page should connect the problem to Klyna's downloadable products, help docs, and a concrete validation path.
+![Launch ownership: Every campaign needs named evidence](/seo-visuals/shopify-promo-qa-checklist-3.svg)
 
-**Klyna next action:** Match the issue to Klyna SEO for Shopify, Klyna Feed, Redirect Guard-style workflows, and the Shopify app fleet, then continue through [Products](/products), [Help](/help), [Downloads](/downloads), or [Contact](/contact) when a team needs an install or adoption path.
+_Every campaign needs named evidence_
 
+## What to check before choosing an app
 
-## When this matters
+| Check | What to inspect | Why it matters |
+| --- | --- | --- |
+| Eligibility | Customer, product, collection, quantity, subtotal, and market | The offer copy must describe who and what actually qualifies. |
+| Combination | Product, order, shipping, automatic, and code interactions | Two valid discounts do not automatically combine. |
+| Timing | Timezone, start, end, and no-expiry campaigns | A stale promotion can leak margin long after creative stops. |
+| Storefront | Landing page, collection, product card, cart, and checkout | Every touchpoint should state the same offer. |
+| Measurement | UTM, pixel event, order discount, and post-launch report | The team needs to separate campaign traffic from discount usage. |
 
-Run this check before a redesign, migration, app install, theme publish, content refresh, or campaign launch. Those are the moments when small technical changes can quietly affect crawlability, analytics, structured data, or conversion paths.
+![Minimum QA matrix: A winning cart alone is not enough](/seo-visuals/shopify-promo-qa-checklist-2.svg)
 
-It also matters when a page already has search impressions but weak clicks or weak action. In that case, the page usually needs sharper intent, better internal links, cleaner schema, and fewer unsupported claims.
+_A winning cart alone is not enough_
 
-## What to inspect first
+## How Klyna Promo QA approaches the job
 
-1. Test the discount rule with eligible and ineligible products before publishing campaign links.
-2. Check landing page copy against actual discount behavior, exclusions, and deadlines.
-3. Confirm mobile product cards, filters, and add-to-cart flows work inside the promo collection.
-4. Keep redirect and rollback notes for after the campaign ends.
+Klyna Promo QA reviews active automatic and code discounts, flags missing end dates and possible combine-rule conflicts, and creates a campaign QA record. It is designed as a preflight and evidence workflow rather than another discount builder.
 
-## The Klyna workflow
+- Review active automatic and code discounts through Shopify Admin GraphQL.
+- Flag missing expiry dates and non-combinable campaign risks.
+- Create a campaign QA history for merchants and agencies.
+- Keep launch testing separate from discount creation.
 
-The practical Klyna workflow is to validate the offer path from ad click to product, cart, checkout entry, tracking, and post-launch rollback. That keeps the work close to the page or store change instead of turning SEO into a separate document that nobody uses during launch.
+<div class="article-app-cta">
+  <div>
+    <span class="article-app-cta__eyebrow">Klyna product preview</span>
+    <strong>Klyna Promo QA</strong>
+    <p>Klyna Promo QA reviews active automatic and code discounts, flags missing end dates and possible combine-rule conflicts, and creates a campaign QA record. It is designed as a preflight and evidence workflow rather than another discount builder.</p>
+  </div>
+  <a href="/shopify/promo-qa">Explore Klyna Promo QA</a>
+</div>
 
-Klyna Promo QA helps teams treat promotions as a launch checklist, not a Slack thread full of last-minute screenshots.
+## Setup and QA workflow
 
-A good workflow also creates a record. Note the URL, the signal, the fix, the deployment, and the date to check again. That is especially important for Shopify and WordPress sites where apps, plugins, snippets, and editors can all change the same output.
+1. Write the promotion as a testable rule: audience, products, saving, dates, and exclusions.
+2. Build a matrix with an eligible cart, boundary cart, excluded cart, and competing discount.
+3. Test each scenario in the target market, currency, customer state, and mobile viewport.
+4. Verify landing-page copy, product badges, cart total, checkout entry, and tracking.
+5. Record screenshots, order or cart references, owner, and final go or no-go decision.
+6. Schedule expiry, redirect removal, creative takedown, and post-campaign margin review.
 
-## What to avoid
+![Post-campaign review: Revenue is only one line of the result](/seo-visuals/shopify-promo-qa-checklist-4.svg)
 
-- announcing exclusions that the discount rule does not enforce.
-- forgetting to remove campaign redirects.
-- testing only desktop before launch.
+_Revenue is only one line of the result_
 
-Avoid reacting to every weak signal with a large rewrite. Many SEO and GEO problems are best fixed with one clear paragraph, one correct canonical, one removed duplicate script, or one internal link from a page that already has authority.
+## Common mistakes
 
-## Internal links
+- Testing only the cart that should receive the discount.
+- Saying discounts stack when the configured classes do not combine.
+- Forgetting timezone, market, customer-segment, or currency differences.
+- Ending ads while leaving the automatic discount active indefinitely.
 
-Use these Klyna paths as the next step when this topic matches the current site problem: [Products](/products) · [Help center](/help) · [Shopify install guide](/help/getting-started/install-shopify-app) · [WordPress install guide](/help/getting-started/install-wordpress-plugin) · [Contact](/contact).
+## Where Klyna Promo QA fits - and where it does not
+
+Klyna Promo QA fits teams that already build discounts in Shopify and need a repeatable preflight, collision check, and launch record. It does not replace the discount engine or guarantee that every checkout customization and third-party app combination is compatible.
+
+**Important limit:** A read-only rule review can identify likely risks, but every important scenario still needs storefront and checkout-adjacent testing in the target context.
+
+## Related Klyna tools
+
+- [Browse the Klyna product catalog](/products) to match one app to one store job.
+- [Audit Shopify app and performance risk](/blog/shopify-store-audit-checklist) before stacking another storefront tool.
+- [Check leftover app code](/blog/shopify-leftover-app-code-cleanup) after installs, removals, or theme migrations.
+- [Protect changed URLs](/blog/shopify-redirect-monitoring-app) during catalog cleanup and launches.
+
+## Sources and further reading
+
+- [Shopify discount combinations](https://help.shopify.com/en/manual/discounts/discount-combinations) - Discount classes and eligible combination behavior.
+- [Shopify discounts FAQ](https://help.shopify.com/en/manual/discounts/discounts-faq) - Collection, variant, and application behavior.
+- [Klyna Promo QA product page](https://klyna.dev/shopify/promo-qa) - Current diagnostic scope and release information.
 
 ## FAQ
 
-### What is the first step for Shopify promo QA checklist?
+### Can Shopify automatic discounts and discount codes combine?
 
-Start with the highest-risk page or template, then verify the visible output before changing anything. For Shopify that is often a product, collection, or campaign page. For WordPress it is usually a high-traffic post, service page, or plugin-controlled template.
+They can combine only when the discounts and their classes are configured as eligible combinations. Test the exact cart rather than assuming two active discounts will stack.
 
-### Should this be automated?
+### What carts belong in a promotion QA matrix?
 
-Automate the repeatable checks after the rule is trusted. Keep human review for claims, redirects, schema that affects eligibility, analytics changes, and anything that could remove useful content.
+Include an intended winner, a cart just below the threshold, an excluded product or customer, a competing discount, a maximum-quantity case, and the markets or currencies used by the campaign.
 
-### How does this help AI search?
+### What should happen after a promotion ends?
 
-AI search systems need direct answers, clean entities, consistent links, and trustworthy source pages. A page that states the issue, shows the workflow, and avoids exaggerated claims is easier to summarize and cite.
-
-### What should be logged after the fix?
-
-Log the affected URL, the change type, the reason, the validation result, the deployment, and the next measurement date. If the work touches backlink or authority signals, keep bad sources in a reject log and do not send outreach to spam, scraped, PBN, or link-selling sites.
+Expire the discount, remove or update creative and landing-page claims, review redirects, confirm tracking labels, and compare discount cost, margin, returns, and new-customer quality.

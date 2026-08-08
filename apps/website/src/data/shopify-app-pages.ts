@@ -9,6 +9,7 @@ export type ShopifyProductPage = {
   features: string[];
   useCases: string[];
   reviewNotes: string[];
+  appStoreUrl?: string;
 };
 
 export const shopifyProductPages: ShopifyProductPage[] = [
@@ -104,6 +105,7 @@ export const shopifyProductPages: ShopifyProductPage[] = [
       'Bulk write actions should stay explicit and previewed.',
       'Avoids claiming ranking guarantees.',
     ],
+    appStoreUrl: 'https://apps.shopify.com/klyna-redirect-guard',
   },
   {
     slug: 'pixel-doctor',
