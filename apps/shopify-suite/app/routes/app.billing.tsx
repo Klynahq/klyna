@@ -1,4 +1,4 @@
-import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
+import { type ActionFunctionArgs, type LoaderFunctionArgs, json, redirect } from '@remix-run/node';
 import { Form, useLoaderData, useNavigation } from '@remix-run/react';
 import {
   Badge,
@@ -13,24 +13,57 @@ import {
   Page,
   Text,
 } from '@shopify/polaris';
+import {
+  PRO_PLAN,
+  normalizeBillingPlanName,
+  parseRequestedPlan,
+  proPrice,
+} from '../lib/billing-plans';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getProductKey, products } from '../lib/products';
-import { STARTER_PLAN, authenticate, isBillingTest } from '../shopify.server';
+import { BILLING_PLAN_NAMES, authenticate, isBillingTest } from '../shopify.server';
 
 const trialDays = 7;
+
+function appAdminBillingUrl(request: Request) {
+  const url = new URL(request.url);
+  const shop = url.searchParams.get('shop');
+
+  if (!shop?.endsWith('.myshopify.com')) {
+    url.searchParams.delete('charge_id');
+    return url.toString();
+  }
+
+  const storeHandle = shop.replace(/\.myshopify\.com$/, '');
+  return `https://admin.shopify.com/store/${storeHandle}/apps/klyna-${getProductKey()}/app/billing`;
+}
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { billing } = await authenticate.admin(request);
   const product = products[getProductKey()];
   let hasActivePayment = false;
+  let activePlan: string | null = null;
+  let activeSubscriptionId: string | null = null;
+  let activeSubscriptionName: string | null = null;
   let billingError: string | null = null;
 
   try {
     const billingCheck = await billing.check({
-      plans: [STARTER_PLAN],
+      plans: [...BILLING_PLAN_NAMES],
       isTest: isBillingTest(),
     });
-    hasActivePayment = billingCheck.hasActivePayment;
+    const activeSubscriptions = [...billingCheck.appSubscriptions].sort(
+      (a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt),
+    );
+    const activeSubscription =
+      activeSubscriptions.find(
+        (subscription) => normalizeBillingPlanName(subscription.name) === PRO_PLAN,
+      ) ?? activeSubscriptions[0];
+
+    hasActivePayment = Boolean(activeSubscription) || billingCheck.hasActivePayment;
+    activeSubscriptionId = activeSubscription?.id ?? null;
+    activeSubscriptionName = activeSubscription?.name ?? null;
+    activePlan = normalizeBillingPlanName(activeSubscriptionName);
   } catch (error) {
     console.error('Billing check failed on plan page.', error);
     billingError =
@@ -40,9 +73,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   return json({
     product,
     hasActivePayment,
+    activePlan,
+    activeSubscriptionId,
+    activeSubscriptionName,
     billingError,
-    planName: 'Pro',
-    price: '$9/month',
+    planName: PRO_PLAN,
+    price: `$${proPrice()}/month`,
     trialDays,
     isTest: isBillingTest(),
   });
@@ -50,20 +86,50 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { billing } = await authenticate.admin(request);
+  const formData = await request.formData();
+  const intent = formData.get('intent');
+
+  if (intent === 'downgrade') {
+    const subscriptionId = formData.get('subscriptionId');
+
+    if (typeof subscriptionId === 'string' && subscriptionId.length > 0) {
+      await billing.cancel({
+        subscriptionId,
+        isTest: isBillingTest(),
+        prorate: true,
+      });
+    }
+
+    throw redirect(appAdminBillingUrl(request));
+  }
+
+  const plan = parseRequestedPlan(formData.get('plan'));
 
   return billing.request({
-    plan: STARTER_PLAN,
+    plan,
     isTest: isBillingTest(),
     trialDays,
+    returnUrl: appAdminBillingUrl(request),
   });
 };
 
 export default function Billing() {
-  const { product, hasActivePayment, billingError, planName, price, trialDays, isTest } =
-    useLoaderData<typeof loader>();
+  const {
+    product,
+    hasActivePayment,
+    activePlan,
+    activeSubscriptionId,
+    activeSubscriptionName,
+    billingError,
+    planName,
+    price,
+    trialDays,
+    isTest,
+  } = useLoaderData<typeof loader>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state !== 'idle';
   const dashboardUrl = useEmbeddedRoute('/app');
+  const proIsActive = hasActivePayment && activePlan === PRO_PLAN;
 
   return (
     <Page title={`${product.name} plan`} subtitle={product.listingPositioning}>
@@ -79,7 +145,7 @@ export default function Billing() {
                   {!hasActivePayment ? (
                     <Badge tone="success">Current</Badge>
                   ) : (
-                    <Badge>Included</Badge>
+                    <Badge>Available</Badge>
                   )}
                 </InlineStack>
                 <Text as="p" variant="headingMd">
@@ -93,7 +159,17 @@ export default function Billing() {
                   <List.Item>Latest score, findings, evidence, and next steps.</List.Item>
                   <List.Item>Product-specific operating guide.</List.Item>
                 </List>
-                <Button url={dashboardUrl}>Open dashboard</Button>
+                {hasActivePayment && activeSubscriptionId ? (
+                  <Form method="post">
+                    <input type="hidden" name="intent" value="downgrade" />
+                    <input type="hidden" name="subscriptionId" value={activeSubscriptionId} />
+                    <Button submit loading={isSubmitting}>
+                      Downgrade to Free
+                    </Button>
+                  </Form>
+                ) : (
+                  <Button url={dashboardUrl}>Open dashboard</Button>
+                )}
               </BlockStack>
             </Card>
 
@@ -103,8 +179,8 @@ export default function Billing() {
                   <Text as="h2" variant="headingLg">
                     {planName}
                   </Text>
-                  {hasActivePayment ? (
-                    <Badge tone="success">Active</Badge>
+                  {proIsActive ? (
+                    <Badge tone="success">Active plan</Badge>
                   ) : (
                     <Badge>7-day trial</Badge>
                   )}
@@ -123,17 +199,24 @@ export default function Billing() {
                 </List>
                 {billingError ? (
                   <Banner tone="warning">{billingError}</Banner>
-                ) : hasActivePayment ? (
+                ) : proIsActive ? (
                   <Button url={dashboardUrl} variant="primary">
                     Open dashboard
                   </Button>
                 ) : (
                   <Form method="post">
+                    <input type="hidden" name="intent" value="upgrade" />
+                    <input type="hidden" name="plan" value={PRO_PLAN} />
                     <Button submit variant="primary" loading={isSubmitting}>
                       {`Start ${trialDays}-day trial`}
                     </Button>
                   </Form>
                 )}
+                {activeSubscriptionName && activeSubscriptionName !== activePlan ? (
+                  <Text as="p" tone="subdued">
+                    Shopify returned subscription name: {activeSubscriptionName}
+                  </Text>
+                ) : null}
                 <Text as="p" tone="subdued">
                   Billing is handled through Shopify and can be managed from the merchant admin.
                 </Text>

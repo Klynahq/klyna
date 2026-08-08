@@ -3,7 +3,7 @@ import { useLoaderData } from '@remix-run/react';
 import { Badge, Banner, BlockStack, Card, IndexTable, Page, Text } from '@shopify/polaris';
 import prisma from '../db.server';
 import { getProductKey, products, toneForStatus } from '../lib/products';
-import { STARTER_PLAN, authenticate, isBillingTest } from '../shopify.server';
+import { BILLING_PLAN_NAMES, authenticate, isBillingTest } from '../shopify.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session, billing } = await authenticate.admin(request);
@@ -12,7 +12,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   try {
     const billingCheck = await billing.check({
-      plans: [STARTER_PLAN],
+      plans: [...BILLING_PLAN_NAMES],
       isTest: isBillingTest(),
     });
     hasActivePayment = billingCheck.hasActivePayment;

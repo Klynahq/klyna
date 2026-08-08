@@ -17,7 +17,7 @@ import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { type ProductReport, getProductKey, products, toneForStatus } from '../lib/products';
 import { buildReport } from '../lib/scanners.server';
 import { getShopSnapshot } from '../lib/shopify-data.server';
-import { STARTER_PLAN, authenticate, isBillingTest } from '../shopify.server';
+import { BILLING_PLAN_NAMES, authenticate, isBillingTest } from '../shopify.server';
 
 const FREE_SCAN_LIMIT = 3;
 
@@ -29,7 +29,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   try {
     const billingCheck = await billing.check({
-      plans: [STARTER_PLAN],
+      plans: [...BILLING_PLAN_NAMES],
       isTest: isBillingTest(),
     });
     hasActivePayment = billingCheck.hasActivePayment;
@@ -97,7 +97,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   try {
     const billingCheck = await billing.check({
-      plans: [STARTER_PLAN],
+      plans: [...BILLING_PLAN_NAMES],
       isTest: isBillingTest(),
     });
     hasActivePayment = billingCheck.hasActivePayment;
