@@ -1,0 +1,154 @@
+---
+import { shopifyProductPages } from '../../data/shopify-app-pages';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export function getStaticPaths() {
+  return shopifyProductPages.map((page) => ({
+    params: { slug: page.slug },
+    props: { page },
+  }));
+}
+
+const { page } = Astro.props;
+const listingStatus = page.appStoreUrl ? 'Published' : 'In review';
+const listingStatusClass = page.appStoreUrl
+  ? 'border-[color:var(--color-success)]/40 text-[color:var(--color-success)] bg-[color:var(--color-success)]/10'
+  : 'border-[color:var(--color-warning)]/40 text-[color:var(--color-warning)] bg-[color:var(--color-warning)]/10';
+---
+
+<BaseLayout title={`${page.name} — Klyna`} description={page.description}>
+  <section class="relative overflow-hidden">
+    <div class="grid-bg absolute inset-0 opacity-35 pointer-events-none"></div>
+    <div class="relative max-w-7xl mx-auto px-6 pt-20 pb-16 md:pt-28">
+      <div class="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+        <div>
+          <div class="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-accent)] mb-4">
+            {page.eyebrow}
+          </div>
+          <h1 class="text-4xl md:text-6xl font-bold tracking-tight leading-tight mb-5">
+            {page.name}
+          </h1>
+          <p class="text-lg text-[color:var(--color-text-muted)] leading-relaxed max-w-2xl mb-8">
+            {page.hero}
+          </p>
+          <div class="flex flex-wrap gap-3">
+            {page.appStoreUrl ? (
+              <a
+                href={page.appStoreUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-[color:var(--color-accent)] hover:bg-[color:var(--color-accent-hover)] text-white font-medium transition-colors"
+              >
+                Install on Shopify
+                <span aria-hidden="true">→</span>
+              </a>
+            ) : (
+              <a
+                href={page.guideUrl}
+                class="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-[color:var(--color-accent)] hover:bg-[color:var(--color-accent-hover)] text-white font-medium transition-colors"
+              >
+                Read the launch guide
+                <span aria-hidden="true">→</span>
+              </a>
+            )}
+            <a
+              href={page.guideUrl}
+              class="inline-flex items-center gap-2 px-5 py-3 rounded-lg border border-[color:var(--color-border)] hover:border-[color:var(--color-accent)] text-[color:var(--color-text-muted)] hover:text-white transition-colors"
+            >
+              Product guide
+            </a>
+          </div>
+        </div>
+
+        <div class="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] overflow-hidden shadow-2xl shadow-black/30">
+          <div class="flex items-center justify-between border-b border-[color:var(--color-border)] px-4 py-3">
+            <div class="flex gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-[color:var(--color-danger)]"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-[color:var(--color-warning)]"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-[color:var(--color-success)]"></span>
+            </div>
+            <span class="text-xs font-mono text-[color:var(--color-text-dim)]">embedded admin</span>
+          </div>
+          <div class="p-5">
+            <div class="flex items-center justify-between gap-4 mb-5">
+              <div>
+                <p class="text-xs text-[color:var(--color-text-dim)] uppercase tracking-wider mb-1">{page.scoreLabel}</p>
+                <p class="text-4xl font-bold">86</p>
+              </div>
+              <span class={`px-3 py-1 rounded-full border text-xs font-semibold ${listingStatusClass}`}>
+                {listingStatus}
+              </span>
+            </div>
+            <div class="grid grid-cols-3 gap-3 mb-5">
+              {page.metrics.map((metric) => (
+                <div class="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
+                  <p class="text-lg font-semibold">{metric.value}</p>
+                  <p class="text-[11px] text-[color:var(--color-text-muted)] leading-tight">{metric.label}</p>
+                </div>
+              ))}
+            </div>
+            <div class="space-y-2">
+              {page.features.slice(0, 3).map((feature) => (
+                <div class="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2 text-sm text-[color:var(--color-text-muted)]">
+                  {feature}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-6 py-14">
+    <div class="grid gap-8 lg:grid-cols-3">
+      <div>
+        <div class="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-accent)] mb-3">
+          What it does
+        </div>
+        <h2 class="text-3xl font-bold tracking-tight">Built around a specific merchant pain.</h2>
+      </div>
+      <div class="lg:col-span-2 grid gap-4 md:grid-cols-2">
+        {page.features.map((feature) => (
+          <article class="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] p-5">
+            <p class="text-sm text-[color:var(--color-text-muted)] leading-relaxed">{feature}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-6 py-14">
+    <div class="grid gap-8 lg:grid-cols-3">
+      <div>
+        <div class="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-warning)] mb-3">
+          Best use cases
+        </div>
+        <h2 class="text-3xl font-bold tracking-tight">Where merchants feel the pain.</h2>
+      </div>
+      <div class="lg:col-span-2">
+        <div class="grid gap-3">
+          {page.useCases.map((item) => (
+            <div class="flex gap-3 border-b border-[color:var(--color-border)] pb-3">
+              <span class="mt-2 h-1.5 w-1.5 rounded-full bg-[color:var(--color-accent)] shrink-0"></span>
+              <p class="text-[color:var(--color-text-muted)]">{item}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-6 pt-10 pb-24">
+    <div class="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] p-6 md:p-8">
+      <div class="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-success)] mb-3">
+        Safety posture
+      </div>
+      <div class="grid gap-4 md:grid-cols-3">
+        {page.reviewNotes.map((note) => (
+          <p class="text-sm text-[color:var(--color-text-muted)] leading-relaxed">{note}</p>
+        ))}
+      </div>
+    </div>
+  </section>
+</BaseLayout>

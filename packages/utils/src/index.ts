@@ -61,6 +61,52 @@ export const products: Product[] = [
     appStoreUrl: 'https://apps.shopify.com/klyna-seo-clean',
   },
 
+  // --- Shopify App Store review batch ---
+  {
+    slug: 'shopify-cleanroom',
+    name: 'Klyna Cleanroom',
+    tagline: 'Find old app code, duplicate pixels, and theme debris safely.',
+    description:
+      'Diagnostic-first cleanup assistant for Shopify themes. Scans sampled storefront pages for leftover app signatures, duplicate tracking, heavy script stacks, and cleanup risks before any theme edit is made.',
+    status: 'beta',
+    surface: 'shopify',
+    href: '/shopify/cleanroom',
+    installNote: 'Public App Store app - submitted for review',
+  },
+  {
+    slug: 'shopify-promo-qa',
+    name: 'Klyna Promo QA',
+    tagline: 'Test discount collisions before campaigns go live.',
+    description:
+      'Promotion preflight for automatic discounts, code discounts, free shipping, markets, and margin risk. Helps merchants catch non-combinable campaigns and forgotten expiry dates before launch.',
+    status: 'beta',
+    surface: 'shopify',
+    href: '/shopify/promo-qa',
+    installNote: 'Public App Store app - submitted for review',
+  },
+  {
+    slug: 'shopify-pixel-doctor',
+    name: 'Klyna Pixel Doctor',
+    tagline: 'Detect duplicate tracking and consent timing issues.',
+    description:
+      'Neutral storefront tracking diagnostic for Meta, Google, TikTok, Pinterest, consent markers, and hardcoded pixel residue. Helps clean attribution without forcing merchants to replace their stack.',
+    status: 'beta',
+    surface: 'shopify',
+    href: '/shopify/pixel-doctor',
+    installNote: 'Public App Store app - submitted for review',
+  },
+  {
+    slug: 'shopify-feed-doctor',
+    name: 'Klyna Feed Doctor',
+    tagline: 'Find catalog issues before Merchant Center rejects products.',
+    description:
+      'Feed readiness scanner for GTIN/barcode, SKU, brand, images, product metadata, and variant data. Designed as a fix queue for merchants who are not ready to replace their feed app.',
+    status: 'beta',
+    surface: 'shopify',
+    href: '/shopify/feed-doctor',
+    installNote: 'Public App Store app - submitted for review',
+  },
+
   // ─── Shopify Apps ─────────────────────────────────────────────────────────
   {
     slug: 'shopify-bundles',
@@ -81,7 +127,7 @@ export const products: Product[] = [
       'Audit live product, collection, and page URLs for redirect coverage, failed samples, duplicate targets, and migration risk with scan history and a practical fix playbook.',
     status: 'live',
     surface: 'shopify',
-    href: '/blog/shopify-redirect-monitoring-app',
+    href: '/shopify/redirect-guard',
     appStoreUrl: 'https://apps.shopify.com/klyna-redirect-guard',
   },
   {
