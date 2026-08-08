@@ -1,5 +1,6 @@
-import { defineCollection, z } from 'astro:content';
+import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
+import { z } from 'astro/zod';
 
 /**
  * Blog collection. Powered by the Astro Content Layer API (v5+).
@@ -19,6 +20,7 @@ const blog = defineCollection({
     draft: z.boolean().default(false),
     featured: z.boolean().default(false),
     ogImage: z.string().optional(),
+    ogImageAlt: z.string().optional(),
   }),
 });
 

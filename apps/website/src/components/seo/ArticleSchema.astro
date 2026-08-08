@@ -1,11 +1,11 @@
 ---
+import { isoDate, siteAuthor, siteOrg } from '../../utils/blog.ts';
 /**
  * BlogPosting schema for a single blog post.
  * Includes the Article, the BreadcrumbList, and the Author.
  * This is the structured data LLMs lean on for citations — keep it accurate.
  */
 import JsonLd from './JsonLd.astro';
-import { siteAuthor, siteOrg, isoDate } from '../../utils/blog.ts';
 
 interface Props {
   title: string;
@@ -31,6 +31,8 @@ const {
   readingTimeMinutes,
 } = Astro.props;
 
+const imageUrl = image ? new URL(image, Astro.site).toString() : undefined;
+
 const graph = [
   {
     '@type': 'BlogPosting',
@@ -51,7 +53,7 @@ const graph = [
     inLanguage: 'en-US',
     keywords: tags.join(', '),
     articleSection: category,
-    ...(image ? { image } : {}),
+    ...(imageUrl ? { image: imageUrl } : {}),
     ...(readingTimeMinutes
       ? {
           timeRequired: `PT${readingTimeMinutes}M`,

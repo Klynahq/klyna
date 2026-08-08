@@ -1,12 +1,8 @@
 ---
 import { render } from 'astro:content';
-import BaseLayout from '../../layouts/BaseLayout.astro';
 import ArticleSchema from '../../components/seo/ArticleSchema.astro';
-import {
-  getPublishedPosts,
-  formatDate,
-  estimateReadingTime,
-} from '../../utils/blog.ts';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { estimateReadingTime, formatDate, getPublishedPosts } from '../../utils/blog.ts';
 
 export async function getStaticPaths() {
   const posts = await getPublishedPosts();
@@ -36,6 +32,7 @@ const tocItems = headings.filter((h) => h.depth === 2 || h.depth === 3);
   canonical={url}
   ogType="article"
   ogImage={post.data.ogImage}
+  ogImageAlt={post.data.ogImageAlt}
 >
   <ArticleSchema
     slot="head"
@@ -70,13 +67,28 @@ const tocItems = headings.filter((h) => h.depth === 2 || h.depth === 3);
         <span class="text-[color:var(--color-text-dim)]">·</span>
         <span class="text-[color:var(--color-text-dim)]">{readingMinutes} min read</span>
       </div>
-      <h1 class="text-4xl md:text-5xl font-bold tracking-tight leading-tight mb-6">
+      <h1 class="text-4xl md:text-5xl font-bold tracking-normal leading-tight mb-6">
         {post.data.title}
       </h1>
       <p class="text-lg text-[color:var(--color-text-muted)] leading-relaxed">
         {post.data.description}
       </p>
     </header>
+
+    {
+      post.data.ogImage && (
+        <figure class="article-hero-media mb-12">
+          <img
+            src={post.data.ogImage}
+            alt={post.data.ogImageAlt ?? post.data.title}
+            width="1600"
+            height="900"
+            loading="eager"
+            fetchpriority="high"
+          />
+        </figure>
+      )
+    }
 
     {
       tocItems.length >= 3 && (
@@ -155,6 +167,7 @@ const tocItems = headings.filter((h) => h.depth === 2 || h.depth === 3);
     color: var(--color-text);
     line-height: 1.75;
     font-size: 17px;
+    overflow-wrap: anywhere;
   }
   .prose-klyna > * + * {
     margin-top: 1.25em;
@@ -162,7 +175,7 @@ const tocItems = headings.filter((h) => h.depth === 2 || h.depth === 3);
   .prose-klyna h2 {
     font-size: 1.5rem;
     font-weight: 700;
-    letter-spacing: -0.02em;
+    letter-spacing: 0;
     margin-top: 2.5em;
     margin-bottom: 0.6em;
     scroll-margin-top: 5rem;
@@ -229,7 +242,106 @@ const tocItems = headings.filter((h) => h.depth === 2 || h.depth === 3);
     border-left: 3px solid var(--color-accent);
     padding-left: 1em;
     color: var(--color-text-muted);
-    font-style: italic;
+    font-style: normal;
+  }
+  .article-hero-media,
+  .prose-klyna img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: contain;
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+  }
+  .article-hero-media {
+    overflow: hidden;
+  }
+  .article-hero-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .prose-klyna table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  .prose-klyna th,
+  .prose-klyna td {
+    padding: 0.75rem;
+    border: 1px solid var(--color-border);
+    text-align: left;
+    vertical-align: top;
+  }
+  .prose-klyna th {
+    color: var(--color-text);
+    background: var(--color-surface);
+  }
+  .prose-klyna td {
+    color: var(--color-text-muted);
+  }
+  .article-app-cta {
+    display: grid;
+    gap: 1rem;
+    align-items: center;
+    padding: 1.25rem;
+    border: 1px solid color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+    border-radius: 8px;
+    background: var(--color-bg-elevated);
+  }
+  .article-app-cta > div {
+    min-width: 0;
+  }
+  .article-app-cta__eyebrow {
+    display: block;
+    margin-bottom: 0.35rem;
+    color: var(--color-accent);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .article-app-cta strong {
+    display: block;
+    font-size: 1.1rem;
+  }
+  .article-app-cta p {
+    margin-top: 0.4rem;
+    font-size: 0.95rem;
+  }
+  .article-app-cta a {
+    display: inline-flex;
+    width: fit-content;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0.65rem 1rem;
+    border-radius: 8px;
+    background: var(--color-accent);
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .article-app-cta a:hover {
+    background: var(--color-accent-hover);
+  }
+  @media (min-width: 640px) {
+    .article-app-cta {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+  }
+  @media (max-width: 639px) {
+    .prose-klyna table {
+      display: block;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .prose-klyna th,
+    .prose-klyna td {
+      min-width: 9rem;
+    }
   }
   .prose-klyna hr {
     border-color: var(--color-border);

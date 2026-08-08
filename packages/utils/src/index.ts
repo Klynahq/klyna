@@ -15,6 +15,8 @@ export interface Product {
   href?: string;
   /** Relative path to a downloadable zip served from /public/downloads/ */
   downloadUrl?: string;
+  /** Public Shopify App Store listing for approved apps. */
+  appStoreUrl?: string;
   /** One-line install instruction shown in the download card */
   installNote?: string;
 }
@@ -49,27 +51,38 @@ export const products: Product[] = [
   },
   {
     slug: 'shopify-seo-suite',
-    name: 'Klyna SEO for Shopify',
-    tagline: 'Organic growth engine for stores — schema, links, audit.',
+    name: 'Klyna SEO',
+    tagline: 'Prioritized SEO audits for products, collections, and content.',
     description:
-      'Embedded Remix + Polaris app. Per-page audit, product Organization/Product JSON-LD, AggregateRating schema, internal-link suggestions across collections, and orphan recovery. OAuth via @shopify/shopify-app-remix, Prisma session storage.',
-    status: 'beta',
+      'Audit titles, descriptions, headings, images, links, schema, canonical tags, keywords, Core Web Vitals signals, and AI-search readiness from Shopify admin.',
+    status: 'live',
     surface: 'shopify',
-    downloadUrl: '/downloads/shopify-seo-suite.zip',
-    installNote: 'Unzip → shopify app config link → pnpm dev',
+    href: '/blog/shopify-seo-audit-tool-app-store-checklist',
+    appStoreUrl: 'https://apps.shopify.com/klyna-seo-clean',
   },
 
-  // ─── 10 Shopify Apps ──────────────────────────────────────────────────────
+  // ─── Shopify Apps ─────────────────────────────────────────────────────────
   {
     slug: 'shopify-bundles',
     name: 'Klyna Bundles',
-    tagline: 'Bundles, FBT & volume discounts that lift AOV.',
+    tagline: 'Fixed bundles, mix-and-match offers, and quantity breaks.',
     description:
-      'Bundle builder with fixed + mix-and-match modes, frequently-bought-together from order history, volume discount tiers, and a Theme App Extension block on your PDP.',
-    status: 'beta',
+      'Build fixed and mix-and-match offers, add quantity-break tiers, show them through a theme app block, and apply savings with Shopify-native automatic discounts.',
+    status: 'live',
     surface: 'shopify',
-    downloadUrl: '/downloads/shopify-bundles.zip',
-    installNote: 'Unzip → shopify app config link → pnpm dev',
+    href: '/blog/shopify-bundle-app-guide',
+    appStoreUrl: 'https://apps.shopify.com/klyna-bundles',
+  },
+  {
+    slug: 'shopify-redirect-guard',
+    name: 'Klyna Redirect Guard',
+    tagline: 'Protect SEO traffic from deleted URLs and migration gaps.',
+    description:
+      'Audit live product, collection, and page URLs for redirect coverage, failed samples, duplicate targets, and migration risk with scan history and a practical fix playbook.',
+    status: 'live',
+    surface: 'shopify',
+    href: '/blog/shopify-redirect-monitoring-app',
+    appStoreUrl: 'https://apps.shopify.com/klyna-redirect-guard',
   },
   {
     slug: 'shopify-upsell',
@@ -96,13 +109,13 @@ export const products: Product[] = [
   {
     slug: 'shopify-reviews',
     name: 'Klyna Reviews',
-    tagline: 'Photo reviews, UGC & rich-snippet stars that build trust and rank.',
+    tagline: 'Photo reviews, moderation, replies, and product-rating markup.',
     description:
-      'Collect star + photo reviews, automate review-request emails after fulfillment, moderate from admin, and inject AggregateRating JSON-LD for Google rich snippets.',
-    status: 'beta',
+      'Show star and photo reviews, moderate submissions, apply spam controls, reply to customers, track rating trends, and add Product and AggregateRating markup.',
+    status: 'live',
     surface: 'shopify',
-    downloadUrl: '/downloads/shopify-reviews.zip',
-    installNote: 'Unzip → shopify app config link → pnpm dev',
+    href: '/blog/shopify-product-reviews-app-guide',
+    appStoreUrl: 'https://apps.shopify.com/klyna-reviews',
   },
   {
     slug: 'shopify-urgency',
@@ -118,13 +131,13 @@ export const products: Product[] = [
   {
     slug: 'shopify-restock',
     name: 'Klyna Back-in-Stock',
-    tagline: 'Restock alerts & waitlists that recover lost sold-out demand.',
+    tagline: 'Variant waitlists and timely alerts for sold-out demand.',
     description:
-      '"Notify me" on sold-out variants, email/SMS interest capture, back-in-stock alerts on inventory webhook, and a demand report of most-wanted products.',
-    status: 'beta',
+      'Add a variant-level waitlist block, rank demand by item, send automatic email alerts when inventory returns, and filter, re-arm, or export subscribers.',
+    status: 'live',
     surface: 'shopify',
-    downloadUrl: '/downloads/shopify-restock.zip',
-    installNote: 'Unzip → shopify app config link → pnpm dev',
+    href: '/blog/shopify-restock-alert-app-checklist',
+    appStoreUrl: 'https://apps.shopify.com/klyna-back-in-stock',
   },
   {
     slug: 'shopify-wishlist',
@@ -310,20 +323,29 @@ export const products: Product[] = [
 
 export function statusLabel(status: ProductStatus): string {
   switch (status) {
-    case 'live':     return 'Live';
-    case 'beta':     return 'Beta';
-    case 'soon':     return 'Coming soon';
-    case 'planning': return 'Planning';
+    case 'live':
+      return 'Live';
+    case 'beta':
+      return 'Beta';
+    case 'soon':
+      return 'Coming soon';
+    case 'planning':
+      return 'Planning';
   }
 }
 
 export function surfaceLabel(surface: ProductSurface): string {
   switch (surface) {
-    case 'extension': return 'Browser Extension';
-    case 'wordpress': return 'WordPress Plugin';
-    case 'shopify':   return 'Shopify App';
-    case 'web':       return 'Web App';
-    case 'theme':     return 'Shopify Theme';
+    case 'extension':
+      return 'Browser Extension';
+    case 'wordpress':
+      return 'WordPress Plugin';
+    case 'shopify':
+      return 'Shopify App';
+    case 'web':
+      return 'Web App';
+    case 'theme':
+      return 'Shopify Theme';
   }
 }
 

@@ -1,17 +1,17 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import ProductCard from '../components/ProductCard.astro';
 import { products } from '@klyna/utils';
+import ProductCard from '../components/ProductCard.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
 
-const shopifyApps = products.filter(p => p.surface === 'shopify');
-const wpPlugins   = products.filter(p => p.surface === 'wordpress');
-const themes      = products.filter(p => p.surface === 'theme');
-const other       = products.filter(p => !['shopify','wordpress','theme'].includes(p.surface));
+const shopifyApps = products.filter((p) => p.surface === 'shopify');
+const wpPlugins = products.filter((p) => p.surface === 'wordpress');
+const themes = products.filter((p) => p.surface === 'theme');
+const other = products.filter((p) => !['shopify', 'wordpress', 'theme'].includes(p.surface));
 ---
 
 <BaseLayout
   title="Products — Klyna"
-  description="The full Klyna lineup — 10 Shopify apps, 10 WordPress plugins, 2 themes, and a browser extension. SEO and growth tools for the whole stack."
+  description="The full Klyna lineup of Shopify apps, WordPress plugins, themes, and browser tools for SEO, storefront operations, and growth."
 >
   <!-- Hero -->
   <section class="max-w-7xl mx-auto px-6 pt-20 pb-12">
