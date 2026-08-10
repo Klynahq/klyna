@@ -113,3 +113,15 @@
 - [Shopify App for Product Reviews and Photo Reviews](https://klyna.dev/blog/shopify-app-for-product-reviews-photo-reviews): Choose a Shopify app for product reviews by checking photo review handling, moderation flow, request emails, schema, and mobile gallery UX.
 - [Product Reviews Shopify App Migration Checklist](https://klyna.dev/blog/product-reviews-shopify-app-migration-checklist): Use this product reviews Shopify app migration checklist to protect review imports, schema, product trust, URLs, moderation, and page speed.
 - [Shopify App Stack for Bundles, Restock, and Reviews](https://klyna.dev/blog/shopify-app-stack-for-bundles-restock-reviews): Plan a Shopify app stack for bundles, restock alerts, and reviews without creating app bloat, duplicate scripts, weak schema, or checkout risk.
+
+## 2026-08-10 Shopify app indexing and conversion QA cluster
+- Shopify GSC Indexing Issues After App Install: https://klyna.dev/blog/shopify-gsc-indexing-issues-after-app-install/
+- Shopify Collection Page SEO App Checklist: https://klyna.dev/blog/shopify-collection-page-seo-app-checklist/
+- Shopify Product Feed SEO Diagnostics: https://klyna.dev/blog/shopify-product-feed-seo-diagnostics/
+- Shopify App Script Budget Checklist: https://klyna.dev/blog/shopify-app-script-budget-checklist/
+- Shopify Theme Section SEO QA: https://klyna.dev/blog/shopify-theme-section-seo-qa/
+- Shopify App Proxy Indexing Checklist: https://klyna.dev/blog/shopify-app-proxy-indexing-checklist/
+- Shopify Conversion App Install Rollback Plan: https://klyna.dev/blog/shopify-conversion-app-install-rollback-plan/
+- Shopify Product Page Internal Linking Workflow: https://klyna.dev/blog/shopify-product-page-internal-linking-workflow/
+- Shopify AI Overview Product Page Format: https://klyna.dev/blog/shopify-ai-overview-product-page-format/
+- Shopify Storefront Event Tracking QA: https://klyna.dev/blog/shopify-storefront-event-tracking-qa/
