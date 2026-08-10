@@ -20,4 +20,5 @@ Allow: /
 User-agent: CCBot
 Allow: /
 
+Sitemap: https://klyna.dev/sitemap.xml
 Sitemap: https://klyna.dev/sitemap-index.xml
