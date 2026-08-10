@@ -25,9 +25,9 @@ const tags = (await getAllTags()).slice(0, 12);
     {
       tags.length > 0 && (
         <div class="mt-8 flex flex-wrap gap-2">
-          {tags.map(({ tag, count }) => (
+          {tags.map(({ tag, slug, count }) => (
             <a
-              href={`/blog/tags/${tag}`}
+              href={`/blog/tags/${slug}`}
               class="text-xs px-3 py-1.5 rounded-full border border-[color:var(--color-border)] text-[color:var(--color-text-muted)] hover:border-[color:var(--color-accent)] hover:text-white transition-colors"
             >
               #{tag} <span class="text-[color:var(--color-text-dim)]">·{count}</span>

@@ -2,7 +2,7 @@
 import { render } from 'astro:content';
 import ArticleSchema from '../../components/seo/ArticleSchema.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { estimateReadingTime, formatDate, getPublishedPosts } from '../../utils/blog.ts';
+import { estimateReadingTime, formatDate, getPublishedPosts, getTagSlug } from '../../utils/blog.ts';
 
 export async function getStaticPaths() {
   const posts = await getPublishedPosts();
@@ -18,9 +18,10 @@ const { Content, headings } = await render(post);
 const url = new URL(`/blog/${post.id}`, Astro.site).toString();
 const readingMinutes = estimateReadingTime(post.body ?? '');
 const allPosts = await getPublishedPosts();
+const postTagSlugs = new Set(post.data.tags.map(getTagSlug));
 const related = allPosts
   .filter((p) => p.id !== post.id)
-  .filter((p) => p.data.tags.some((t) => post.data.tags.includes(t)))
+  .filter((p) => p.data.tags.some((t) => postTagSlugs.has(getTagSlug(t))))
   .slice(0, 3);
 
 const tocItems = headings.filter((h) => h.depth === 2 || h.depth === 3);
@@ -121,7 +122,7 @@ const tocItems = headings.filter((h) => h.depth === 2 || h.depth === 3);
         <div class="mt-12 pt-8 border-t border-[color:var(--color-border)]/50 flex flex-wrap gap-2">
           {post.data.tags.map((tag) => (
             <a
-              href={`/blog/tags/${tag}`}
+              href={`/blog/tags/${getTagSlug(tag)}`}
               class="text-xs px-3 py-1.5 rounded-full border border-[color:var(--color-border)] text-[color:var(--color-text-muted)] hover:border-[color:var(--color-accent)] hover:text-white transition-colors"
             >
               #{tag}

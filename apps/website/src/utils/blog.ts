@@ -3,6 +3,12 @@ import readingTime from 'reading-time';
 
 export type Post = CollectionEntry<'blog'>;
 
+export type BlogTag = {
+  tag: string;
+  slug: string;
+  count: number;
+};
+
 /** All published (non-draft) posts, newest first. */
 export async function getPublishedPosts(): Promise<Post[]> {
   const posts = await getCollection('blog', ({ data }) => !data.draft);
@@ -15,24 +21,40 @@ export async function getFeaturedPosts(): Promise<Post[]> {
   return posts.filter((p) => p.data.featured);
 }
 
+export function getTagSlug(tag: string): string {
+  return tag
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 /** All unique tags across published posts, sorted by post count desc. */
-export async function getAllTags(): Promise<Array<{ tag: string; count: number }>> {
+export async function getAllTags(): Promise<BlogTag[]> {
   const posts = await getPublishedPosts();
-  const counts = new Map<string, number>();
+  const counts = new Map<string, BlogTag>();
   for (const post of posts) {
     for (const tag of post.data.tags) {
-      counts.set(tag, (counts.get(tag) ?? 0) + 1);
+      const slug = getTagSlug(tag);
+      if (!slug) continue;
+      const existing = counts.get(slug);
+      counts.set(slug, {
+        tag: existing?.tag ?? tag,
+        slug,
+        count: (existing?.count ?? 0) + 1,
+      });
     }
   }
-  return Array.from(counts.entries())
-    .map(([tag, count]) => ({ tag, count }))
-    .sort((a, b) => b.count - a.count);
+  return Array.from(counts.values()).sort((a, b) => b.count - a.count);
 }
 
 /** All published posts that include a given tag. */
-export async function getPostsByTag(tag: string): Promise<Post[]> {
+export async function getPostsByTag(tagSlug: string): Promise<Post[]> {
   const posts = await getPublishedPosts();
-  return posts.filter((p) => p.data.tags.includes(tag));
+  return posts.filter((p) => p.data.tags.some((tag) => getTagSlug(tag) === tagSlug));
 }
 
 /** Format a date as "Jun 10, 2026". */

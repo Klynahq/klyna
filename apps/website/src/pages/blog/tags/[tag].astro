@@ -4,16 +4,20 @@ import { getAllTags, getPostsByTag, formatDate } from '../../../utils/blog.ts';
 
 export async function getStaticPaths() {
   const tags = await getAllTags();
-  return tags.map(({ tag }) => ({ params: { tag } }));
+  return tags.map(({ tag, slug }) => ({
+    params: { tag: slug },
+    props: { tagLabel: tag },
+  }));
 }
 
 const { tag } = Astro.params;
+const { tagLabel } = Astro.props;
 const posts = await getPostsByTag(tag);
 ---
 
 <BaseLayout
-  title={`#${tag} — Klyna Blog`}
-  description={`All Klyna blog posts tagged ${tag}.`}
+  title={`#${tagLabel} — Klyna Blog`}
+  description={`All Klyna blog posts tagged ${tagLabel}.`}
 >
   <section class="max-w-4xl mx-auto px-6 pt-20 pb-12">
     <nav class="mb-6 text-sm text-[color:var(--color-text-dim)]">
@@ -23,11 +27,11 @@ const posts = await getPostsByTag(tag);
       Tag
     </div>
     <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-      #{tag}
+      #{tagLabel}
     </h1>
     <p class="text-[color:var(--color-text-muted)]">
       {posts.length} {posts.length === 1 ? 'post' : 'posts'} tagged
-      <code class="text-[color:var(--color-text)]">{tag}</code>.
+      <code class="text-[color:var(--color-text)]">{tagLabel}</code>.
     </p>
   </section>
 
