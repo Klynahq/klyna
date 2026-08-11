@@ -18,10 +18,12 @@ const posts = await getPostsByTag(tag);
 <BaseLayout
   title={`#${tagLabel} — Klyna Blog`}
   description={`All Klyna blog posts tagged ${tagLabel}.`}
+  canonical={new URL(`/blog/tags/${tag}/`, Astro.site).toString()}
+  noIndex={true}
 >
   <section class="max-w-4xl mx-auto px-6 pt-20 pb-12">
     <nav class="mb-6 text-sm text-[color:var(--color-text-dim)]">
-      <a href="/blog" class="hover:text-white">← All posts</a>
+      <a href="/blog/" class="hover:text-white">← All posts</a>
     </nav>
     <div class="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-accent)] mb-3">
       Tag
@@ -41,7 +43,7 @@ const posts = await getPostsByTag(tag);
         posts.map((post) => (
           <li>
             <a
-              href={`/blog/${post.id}`}
+              href={`/blog/${post.id}/`}
               class="group block py-6 px-4 -mx-4 rounded-xl hover:bg-white/5 transition-colors"
             >
               <div class="flex items-center gap-3 mb-2 text-xs">

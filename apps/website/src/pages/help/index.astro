@@ -127,14 +127,29 @@ const searchIndex = articles.map((a) => ({
           .slice(0, 12);
         cats.classList.add('hidden');
         results.classList.remove('hidden');
-        results.innerHTML = hits.length
-          ? hits
-              .map(
-                (a) =>
-                  `<li><a href="${a.url}" class="block px-4 py-3 hover:bg-white/5"><div class="font-medium">${a.title}</div><div class="text-sm text-[color:var(--color-text-muted)] mt-0.5">${a.description}</div></a></li>`
-              )
-              .join('')
-          : '<li class="px-4 py-6 text-center text-sm text-[color:var(--color-text-muted)]">No matches. Try the <a href="/contact" class="text-[color:var(--color-accent)] hover:underline">contact form</a>.</li>';
+        results.replaceChildren();
+        if (!hits.length) {
+          const empty = document.createElement('li');
+          empty.className = 'px-4 py-6 text-center text-sm text-[color:var(--color-text-muted)]';
+          empty.textContent = 'No matches. Try the contact form.';
+          results.append(empty);
+          return;
+        }
+        hits.forEach((a) => {
+          const item = document.createElement('li');
+          const link = document.createElement('a');
+          link.href = a.url;
+          link.className = 'block px-4 py-3 hover:bg-white/5';
+          const title = document.createElement('div');
+          title.className = 'font-medium';
+          title.textContent = a.title;
+          const description = document.createElement('div');
+          description.className = 'text-sm text-[color:var(--color-text-muted)] mt-0.5';
+          description.textContent = a.description;
+          link.append(title, description);
+          item.append(link);
+          results.append(item);
+        });
       });
     })();
   </script>

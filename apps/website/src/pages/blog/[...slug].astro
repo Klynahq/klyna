@@ -15,7 +15,7 @@ export async function getStaticPaths() {
 const { post } = Astro.props;
 const { Content, headings } = await render(post);
 
-const url = new URL(`/blog/${post.id}`, Astro.site).toString();
+const url = new URL(`/blog/${post.id}/`, Astro.site).toString();
 const readingMinutes = estimateReadingTime(post.body ?? '');
 const allPosts = await getPublishedPosts();
 const postTagSlugs = new Set(post.data.tags.map(getTagSlug));
@@ -50,7 +50,7 @@ const tocItems = headings.filter((h) => h.depth === 2 || h.depth === 3);
 
   <article class="max-w-3xl mx-auto px-6 pt-16 pb-24">
     <nav class="mb-8 text-sm text-[color:var(--color-text-dim)]">
-      <a href="/blog" class="hover:text-white">← All posts</a>
+      <a href="/blog/" class="hover:text-white">← All posts</a>
     </nav>
 
     <header class="mb-10">
@@ -122,7 +122,7 @@ const tocItems = headings.filter((h) => h.depth === 2 || h.depth === 3);
         <div class="mt-12 pt-8 border-t border-[color:var(--color-border)]/50 flex flex-wrap gap-2">
           {post.data.tags.map((tag) => (
             <a
-              href={`/blog/tags/${getTagSlug(tag)}`}
+              href={`/blog/tags/${getTagSlug(tag)}/`}
               class="text-xs px-3 py-1.5 rounded-full border border-[color:var(--color-border)] text-[color:var(--color-text-muted)] hover:border-[color:var(--color-accent)] hover:text-white transition-colors"
             >
               #{tag}
@@ -142,7 +142,7 @@ const tocItems = headings.filter((h) => h.depth === 2 || h.depth === 3);
             {related.map((r) => (
               <li>
                 <a
-                  href={`/blog/${r.id}`}
+                  href={`/blog/${r.id}/`}
                   class="block p-4 rounded-xl border border-[color:var(--color-border)] hover:border-[color:var(--color-accent)]/50 hover:bg-white/5 transition-colors"
                 >
                   <div class="text-xs text-[color:var(--color-accent)] font-semibold uppercase tracking-wider mb-1">
