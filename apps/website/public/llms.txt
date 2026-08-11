@@ -125,3 +125,15 @@
 - Shopify Product Page Internal Linking Workflow: https://klyna.dev/blog/shopify-product-page-internal-linking-workflow/
 - Shopify AI Overview Product Page Format: https://klyna.dev/blog/shopify-ai-overview-product-page-format/
 - Shopify Storefront Event Tracking QA: https://klyna.dev/blog/shopify-storefront-event-tracking-qa/
+
+## 2026-08-11 Shopify and WordPress indexing QA cluster
+- Shopify Search Console Discovered Not Indexed: https://klyna.dev/blog/shopify-search-console-discovered-not-indexed/
+- Shopify Redirect Chain After App Uninstall: https://klyna.dev/blog/shopify-redirect-chain-after-app-uninstall/
+- Shopify Collection Canonical Audit: https://klyna.dev/blog/shopify-collection-canonical-audit/
+- Shopify Product Image Alt Audit: https://klyna.dev/blog/shopify-product-image-alt-audit/
+- Shopify App Stack Core Web Vitals Triage: https://klyna.dev/blog/shopify-app-stack-core-web-vitals-triage/
+- Shopify Indexing Issue Validation Workflow: https://klyna.dev/blog/shopify-indexing-issue-validation-workflow/
+- Shopify Product Page Answer Box Template: https://klyna.dev/blog/shopify-product-page-answer-box-template/
+- Shopify Theme App Embed Cleanup Plan: https://klyna.dev/blog/shopify-theme-app-embed-cleanup-plan/
+- Shopify App Review Schema Risk Check: https://klyna.dev/blog/shopify-app-review-schema-risk-check/
+- WordPress Plugin SEO Cleanup After Uninstall: https://klyna.dev/blog/wordpress-plugin-seo-cleanup-after-uninstall/

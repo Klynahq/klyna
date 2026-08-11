@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Shopify Search Console Discovered Not Indexed 2</title>
+  <desc id="desc">Workflow diagram for Shopify Search Console Discovered Not Indexed 2</desc>
+  <rect width="1200" height="675" fill="#f8faf9"/>
+  <rect x="70" y="70" width="1060" height="535" rx="24" fill="#ffffff" stroke="#dbe7e1" stroke-width="3"/>
+  <circle cx="120" cy="126" r="18" fill="#1d4ed8"/>
+  <text x="160" y="138" font-family="Inter, Arial, sans-serif" font-size="38" font-weight="700" fill="#121817">Shopify Search Console Discovered Not Indexed 2</text>
+  <rect x="130" y="183" width="940" height="62" rx="14" fill="#f0f6f3" stroke="#dbe7e1"/>
+  <text x="165" y="225" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="650" fill="#20302b">1. GSC or DataForSEO signal</text>
+  <rect x="130" y="271" width="940" height="62" rx="14" fill="#f0f6f3" stroke="#dbe7e1"/>
+  <text x="165" y="313" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="650" fill="#20302b">2. Theme/app safety gate</text>
+  <rect x="130" y="359" width="940" height="62" rx="14" fill="#f0f6f3" stroke="#dbe7e1"/>
+  <text x="165" y="401" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="650" fill="#20302b">3. Merchant decision path</text>
+  <rect x="130" y="447" width="940" height="62" rx="14" fill="#f0f6f3" stroke="#dbe7e1"/>
+  <text x="165" y="489" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="650" fill="#20302b">4. Klyna QA follow-through</text>
+  <text x="130" y="560" font-family="Inter, Arial, sans-serif" font-size="22" fill="#62716b">Generated for the 2026-08-11 SEO production run.</text>
+</svg>
