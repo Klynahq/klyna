@@ -450,6 +450,21 @@
   box-shadow: 0 0 0 4px rgb(11 122 69 / 12%);
 }
 
+.KlynaAdmin .KlynaFinding[data-workflow-status="done"] {
+  border-color: #bce2cc;
+  background: linear-gradient(180deg, #ffffff, #f4fbf7);
+}
+
+.KlynaAdmin .KlynaFinding[data-workflow-status="done"]::before {
+  background: var(--klyna-success);
+  box-shadow: 0 0 0 4px rgb(11 122 69 / 12%);
+}
+
+.KlynaAdmin .KlynaFinding[data-workflow-status="snoozed"] {
+  border-style: dashed;
+  background: linear-gradient(180deg, #ffffff, #fffaf0);
+}
+
 .KlynaAdmin .KlynaFinding__footer {
   display: flex;
   padding-top: 4px;

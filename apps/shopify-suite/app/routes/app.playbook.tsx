@@ -89,9 +89,13 @@ type WorkspaceItem = {
   action: string;
   actionLabel: string;
   tone: 'critical' | 'warning' | 'info' | 'success';
+  workflowStatus?: FixTaskStatus;
+  workflowUpdatedAt?: string | null;
   adminUrl?: string;
   storefrontUrl?: string;
 };
+
+type FixTaskStatus = 'open' | 'done' | 'snoozed';
 
 type ProductWorkspace = {
   title: string;
@@ -111,12 +115,15 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   if (productKey !== 'redirect-guard') {
     const snapshot = await getShopSnapshot(admin, productKey);
     const report = await buildReport(productKey, snapshot);
+    const states = await prisma.fixTaskState.findMany({
+      where: { shop: session.shop, productKey },
+    });
 
     return json({
       mode: 'workspace' as const,
       product,
       shop: session.shop,
-      workspace: buildProductWorkspace(productKey, snapshot, report),
+      workspace: applyWorkflowStates(buildProductWorkspace(productKey, snapshot, report), states),
     });
   }
 
@@ -163,15 +170,42 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { session, admin } = await authenticate.admin(request);
-  if (getProductKey() !== 'redirect-guard') {
+  const productKey = getProductKey();
+  const form = await request.formData();
+  const intent = String(form.get('intent') ?? '');
+
+  if (intent === 'update-workspace-item') {
+    const itemId = String(form.get('itemId') ?? '');
+    const status = parseFixTaskStatus(String(form.get('status') ?? ''));
+
+    if (!itemId || !status) {
+      return json({ error: 'Choose a valid queue item and status.' }, { status: 400 });
+    }
+
+    await prisma.fixTaskState.upsert({
+      where: { shop_productKey_itemId: { shop: session.shop, productKey, itemId } },
+      update: { status },
+      create: { shop: session.shop, productKey, itemId, status },
+    });
+
+    return json({
+      itemUpdated: true,
+      message:
+        status === 'done'
+          ? 'Fix marked done. Rerun the scan when the Shopify change is saved.'
+          : status === 'snoozed'
+            ? 'Fix snoozed. It stays in the queue for the next review.'
+            : 'Fix reopened.',
+    });
+  }
+
+  if (productKey !== 'redirect-guard') {
     return json(
       { error: 'Redirect actions are only available in Redirect Guard.' },
       { status: 400 },
     );
   }
 
-  const form = await request.formData();
-  const intent = String(form.get('intent') ?? '');
   const snapshot = await getShopSnapshot(admin, 'redirect-guard');
   const currentPaths = contentInventory(snapshot).map((item) => item.path);
 
@@ -257,6 +291,15 @@ type RedirectWorkspaceData = Extract<LoaderData, { mode: 'redirect' }>;
 
 function ProductFixWorkspace({ data }: { data: ProductWorkspaceData }) {
   const { product, workspace } = data;
+  const actionData = useActionData<typeof action>();
+  const navigation = useNavigation();
+  const activeItemId = String(navigation.formData?.get('itemId') ?? '');
+  const isSubmitting = navigation.state !== 'idle';
+  const openCount = workspace.items.filter(
+    (item) => (item.workflowStatus ?? 'open') === 'open',
+  ).length;
+  const doneCount = workspace.items.filter((item) => item.workflowStatus === 'done').length;
+  const snoozedCount = workspace.items.filter((item) => item.workflowStatus === 'snoozed').length;
 
   return (
     <Page
@@ -268,6 +311,21 @@ function ProductFixWorkspace({ data }: { data: ProductWorkspaceData }) {
       }}
     >
       <Layout>
+        {actionData && 'error' in actionData && actionData.error ? (
+          <Layout.Section>
+            <Banner tone="critical" title="Queue update failed">
+              <Text as="p">{actionData.error}</Text>
+            </Banner>
+          </Layout.Section>
+        ) : null}
+        {actionData && 'message' in actionData && actionData.message ? (
+          <Layout.Section>
+            <Banner tone="success" title="Queue updated">
+              <Text as="p">{actionData.message}</Text>
+            </Banner>
+          </Layout.Section>
+        ) : null}
+
         <Layout.Section>
           <div className="KlynaDashboardLead KlynaDashboardLead--workspace">
             <div className="KlynaDashboardLead__copy">
@@ -283,6 +341,17 @@ function ProductFixWorkspace({ data }: { data: ProductWorkspaceData }) {
               </InlineStack>
               <h2 className="KlynaLeadTitle">{product.workspaceDescription}</h2>
               <p className="KlynaLeadBody">{workspace.summary}</p>
+              <div className="KlynaSignalRow" aria-label="Fix queue progress">
+                <span>
+                  <strong>{openCount}</strong> open
+                </span>
+                <span>
+                  <strong>{doneCount}</strong> done
+                </span>
+                <span>
+                  <strong>{snoozedCount}</strong> snoozed
+                </span>
+              </div>
             </div>
             <div className="KlynaWorkspaceStamp">
               <span>Last checked</span>
@@ -319,13 +388,23 @@ function ProductFixWorkspace({ data }: { data: ProductWorkspaceData }) {
                   </div>
                 </div>
                 {workspace.items.map((item) => (
-                  <div className="KlynaFinding" data-severity={item.tone} key={item.id}>
+                  <div
+                    className="KlynaFinding"
+                    data-severity={item.tone}
+                    data-workflow-status={item.workflowStatus ?? 'open'}
+                    key={item.id}
+                  >
                     <BlockStack gap="150">
                       <InlineStack align="space-between" gap="200">
                         <Text as="h3" variant="headingSm">
                           {item.title}
                         </Text>
-                        <Badge tone={badgeTone(item.tone)}>{labelFor(item.tone)}</Badge>
+                        <InlineStack gap="150">
+                          <Badge tone={workflowBadgeTone(item.workflowStatus ?? 'open')}>
+                            {workflowStatusLabel(item.workflowStatus ?? 'open')}
+                          </Badge>
+                          <Badge tone={badgeTone(item.tone)}>{labelFor(item.tone)}</Badge>
+                        </InlineStack>
                       </InlineStack>
                       <Text as="p">{item.detail}</Text>
                       <Text as="p" tone="subdued">
@@ -334,7 +413,12 @@ function ProductFixWorkspace({ data }: { data: ProductWorkspaceData }) {
                       <Text as="p" tone="subdued">
                         Next step: {item.action}
                       </Text>
-                      <InlineStack gap="200">
+                      {item.workflowUpdatedAt ? (
+                        <Text as="p" tone="subdued">
+                          Queue updated: {item.workflowUpdatedAt}
+                        </Text>
+                      ) : null}
+                      <InlineStack gap="200" blockAlign="center">
                         {item.adminUrl ? (
                           <Button size="slim" url={item.adminUrl} external>
                             {item.actionLabel}
@@ -345,6 +429,48 @@ function ProductFixWorkspace({ data }: { data: ProductWorkspaceData }) {
                             View storefront page
                           </Button>
                         ) : null}
+                        {(item.workflowStatus ?? 'open') !== 'done' ? (
+                          <Form method="post">
+                            <input type="hidden" name="intent" value="update-workspace-item" />
+                            <input type="hidden" name="itemId" value={item.id} />
+                            <input type="hidden" name="status" value="done" />
+                            <Button
+                              submit
+                              size="slim"
+                              variant="primary"
+                              loading={isSubmitting && activeItemId === item.id}
+                            >
+                              Mark done
+                            </Button>
+                          </Form>
+                        ) : null}
+                        {(item.workflowStatus ?? 'open') === 'open' ? (
+                          <Form method="post">
+                            <input type="hidden" name="intent" value="update-workspace-item" />
+                            <input type="hidden" name="itemId" value={item.id} />
+                            <input type="hidden" name="status" value="snoozed" />
+                            <Button
+                              submit
+                              size="slim"
+                              loading={isSubmitting && activeItemId === item.id}
+                            >
+                              Snooze
+                            </Button>
+                          </Form>
+                        ) : (
+                          <Form method="post">
+                            <input type="hidden" name="intent" value="update-workspace-item" />
+                            <input type="hidden" name="itemId" value={item.id} />
+                            <input type="hidden" name="status" value="open" />
+                            <Button
+                              submit
+                              size="slim"
+                              loading={isSubmitting && activeItemId === item.id}
+                            >
+                              Reopen
+                            </Button>
+                          </Form>
+                        )}
                       </InlineStack>
                     </BlockStack>
                   </div>
@@ -759,6 +885,52 @@ function buildProductWorkspace(
   }
 }
 
+function applyWorkflowStates(
+  workspace: ProductWorkspace,
+  states: { itemId: string; status: string; updatedAt: Date }[],
+): ProductWorkspace {
+  const stateMap = new Map(states.map((state) => [state.itemId, state]));
+
+  return {
+    ...workspace,
+    items: workspace.items
+      .map((item) => {
+        const state = stateMap.get(item.id);
+        const workflowStatus = parseFixTaskStatus(state?.status ?? '') ?? 'open';
+
+        return {
+          ...item,
+          workflowStatus,
+          workflowUpdatedAt: state ? formatDate(state.updatedAt) : null,
+        };
+      })
+      .sort((a, b) => {
+        const workflowDiff =
+          workflowRank(a.workflowStatus ?? 'open') - workflowRank(b.workflowStatus ?? 'open');
+        if (workflowDiff !== 0) return workflowDiff;
+        return severityRank(a.tone) - severityRank(b.tone);
+      }),
+  };
+}
+
+function parseFixTaskStatus(value: string): FixTaskStatus | null {
+  if (value === 'open' || value === 'done' || value === 'snoozed') return value;
+  return null;
+}
+
+function workflowRank(status: FixTaskStatus) {
+  if (status === 'open') return 0;
+  if (status === 'snoozed') return 1;
+  return 2;
+}
+
+function severityRank(tone: WorkspaceItem['tone']) {
+  if (tone === 'critical') return 0;
+  if (tone === 'warning') return 1;
+  if (tone === 'info') return 2;
+  return 3;
+}
+
 function promoWorkspace(
   snapshot: ShopSnapshot,
   report: { metrics: ProductMetric[]; findings: Finding[]; generatedAt: string },
@@ -931,6 +1103,18 @@ function badgeTone(severity: string) {
   return 'info' as const;
 }
 
+function workflowBadgeTone(status: FixTaskStatus) {
+  if (status === 'done') return 'success' as const;
+  if (status === 'snoozed') return 'warning' as const;
+  return 'info' as const;
+}
+
+function workflowStatusLabel(status: FixTaskStatus) {
+  if (status === 'done') return 'Done';
+  if (status === 'snoozed') return 'Snoozed';
+  return 'Open';
+}
+
 function labelFor(value: string) {
   return value
     .split(/[-_]/)
@@ -1099,8 +1283,9 @@ function formatIsoDate(value: string) {
 
 function downloadWorkspace(productName: string, items: WorkspaceItem[]) {
   const rows = [
-    ['Priority', 'Item', 'Detail', 'Evidence', 'Next step', 'Shopify admin URL'],
+    ['Queue status', 'Priority', 'Item', 'Detail', 'Evidence', 'Next step', 'Shopify admin URL'],
     ...items.map((item) => [
+      item.workflowStatus ?? 'open',
       item.tone,
       item.title,
       item.detail,
