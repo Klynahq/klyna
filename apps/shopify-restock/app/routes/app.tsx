@@ -1,17 +1,18 @@
+import adminStyles from '@klyna/ui/shopify-admin.css?url';
 import type { HeadersFunction, LoaderFunctionArgs } from '@remix-run/node';
 import { Link, Outlet, useLoaderData, useRouteError } from '@remix-run/react';
-import { boundary } from '@shopify/shopify-app-remix/server';
-import { AppProvider } from '@shopify/shopify-app-remix/react';
 import { NavMenu } from '@shopify/app-bridge-react';
 import polarisStyles from '@shopify/polaris/build/esm/styles.css?url';
-import {
-  authenticate,
-  migrateOfflineSessionIfNeeded,
-} from '../shopify.server';
+import { AppProvider } from '@shopify/shopify-app-remix/react';
+import { boundary } from '@shopify/shopify-app-remix/server';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { planSelectionUrl, syncPlanFromRequest } from '../lib/plans.server';
+import { authenticate, migrateOfflineSessionIfNeeded } from '../shopify.server';
 
-export const links = () => [{ rel: 'stylesheet', href: polarisStyles }];
+export const links = () => [
+  { rel: 'stylesheet', href: polarisStyles },
+  { rel: 'stylesheet', href: adminStyles },
+];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { admin, session, redirect } = await authenticate.admin(request);
@@ -34,13 +35,17 @@ export default function App() {
   return (
     <AppProvider isEmbeddedApp apiKey={apiKey}>
       <NavMenu>
-        <Link to={embeddedRoute('/app')} rel="home">Dashboard</Link>
+        <Link to={embeddedRoute('/app')} rel="home">
+          Dashboard
+        </Link>
         <Link to={embeddedRoute('/app/demand')}>Demand report</Link>
         <Link to={embeddedRoute('/app/subscribers')}>Subscribers</Link>
         <Link to={embeddedRoute('/app/timing')}>Smart timing</Link>
         <Link to={embeddedRoute('/app/settings')}>Settings</Link>
       </NavMenu>
-      <Outlet />
+      <div className="KlynaAdmin">
+        <Outlet />
+      </div>
     </AppProvider>
   );
 }

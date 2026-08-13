@@ -1,21 +1,23 @@
-import { type LoaderFunctionArgs } from '@remix-run/node';
-import { Link, useLoaderData } from '@remix-run/react';
+import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
+import { Form, Link, useActionData, useLoaderData, useNavigation } from '@remix-run/react';
 import {
   Badge,
   Banner,
   BlockStack,
   Box,
+  Button,
   Card,
-  InlineGrid,
   InlineStack,
   Layout,
   Page,
   Text,
 } from '@shopify/polaris';
-import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getShopPlan, planSelectionUrl } from '../lib/plans.server';
+import { syncWaitlistedVariants } from '../services/inventory.server';
+import { flushVariant, storefrontProductUrl } from '../services/waitlist.server';
+import { authenticate } from '../shopify.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { admin, session } = await authenticate.admin(request);
@@ -52,19 +54,27 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const titleFor = (id: string) => {
     const snap = snapshots.find((s) => s.variantId === id);
     const subscription = subscriptions.find((candidate) => candidate.variantId === id);
-    return [
-      snap?.productTitle ?? subscription?.productTitle,
-      snap?.variantTitle ?? subscription?.variantTitle,
-    ]
-      .filter(Boolean)
-      .join(' — ') || 'Product details unavailable';
+    return (
+      [
+        snap?.productTitle ?? subscription?.productTitle,
+        snap?.variantTitle ?? subscription?.variantTitle,
+      ]
+        .filter(Boolean)
+        .join(' — ') || 'Product details unavailable'
+    );
   };
 
-  const top = topVariants.map((t) => ({
-    variantId: t.variantId,
-    title: titleFor(t.variantId),
-    count: t._count.variantId,
-  }));
+  const top = topVariants.map((t) => {
+    const snap = snapshots.find((s) => s.variantId === t.variantId);
+    return {
+      variantId: t.variantId,
+      title: titleFor(t.variantId),
+      count: t._count.variantId,
+      available: snap?.available ?? null,
+      inStock: snap?.inStock ?? false,
+      productUrl: storefrontProductUrl(shop, snap?.productHandle),
+    };
+  });
 
   return {
     shop,
@@ -75,13 +85,65 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     top,
     planHandle,
     pricingUrl: planSelectionUrl(shop),
+    themeEditorUrl: `https://admin.shopify.com/store/${shop.replace('.myshopify.com', '')}/themes/current/editor`,
   };
 };
 
+export const action = async ({ request }: ActionFunctionArgs) => {
+  const { session, admin } = await authenticate.admin(request);
+  const shop = session.shop;
+  const form = await request.formData();
+  const intent = String(form.get('intent') ?? '');
+
+  if (intent === 'sync') {
+    try {
+      const result = await syncWaitlistedVariants(admin, shop);
+      return json({
+        ok: true,
+        message: `Checked stock for ${result.synced} variant(s) and sent ${result.alertsSent} alert(s).`,
+      });
+    } catch (error) {
+      console.error('[restock-dashboard-sync-error]', error);
+      return json({
+        ok: false,
+        message: 'Shopify could not refresh inventory right now. Try again from the demand report.',
+      });
+    }
+  }
+
+  if (intent === 'flush') {
+    const variantId = String(form.get('variantId') ?? '');
+    if (!variantId) return json({ ok: false, message: 'Missing variant.' }, { status: 400 });
+    const result = await flushVariant(shop, variantId);
+    return json({
+      ok: true,
+      message:
+        result.sent > 0
+          ? `Sent ${result.sent} alert(s) for this variant.`
+          : 'No alerts sent. There are no eligible subscribers or alerts are paused.',
+    });
+  }
+
+  return json({ ok: false, message: 'Unknown action.' }, { status: 400 });
+};
+
 export default function Dashboard() {
-  const { shop, pending, notified, alertsSent, alertsFailed, top, planHandle, pricingUrl } =
-    useLoaderData<typeof loader>();
+  const {
+    shop,
+    pending,
+    notified,
+    alertsSent,
+    alertsFailed,
+    top,
+    planHandle,
+    pricingUrl,
+    themeEditorUrl,
+  } = useLoaderData<typeof loader>();
+  const data = useActionData<typeof action>();
+  const nav = useNavigation();
   const embeddedRoute = useEmbeddedRoute();
+  const busy = nav.state !== 'idle';
+  const syncing = busy && nav.formData?.get('intent') === 'sync';
 
   const stats = [
     { label: 'On waitlists', value: pending, hint: 'Shoppers waiting on a restock' },
@@ -116,6 +178,30 @@ export default function Dashboard() {
       ai: false,
     },
   ];
+  const recoveryScore = Math.min(
+    100,
+    Math.round(
+      (pending > 0 ? 42 : 20) +
+        Math.min(alertsSent, 40) +
+        Math.min(notified, 20) -
+        Math.min(alertsFailed * 8, 24),
+    ),
+  );
+  const firstInStock = top.find((t) => t.inStock);
+  const nextAction = firstInStock
+    ? {
+        title: `${firstInStock.title} is ready to alert`,
+        body: `${firstInStock.count} shopper${firstInStock.count === 1 ? '' : 's'} can be notified from this dashboard.`,
+      }
+    : pending > 0
+      ? {
+          title: 'Check inventory before the next drop',
+          body: 'Reconcile Shopify stock now to catch products that returned while webhooks were delayed.',
+        }
+      : {
+          title: 'Install the Notify me block',
+          body: 'Capture demand on sold-out variants so the next restock has an audience waiting.',
+        };
 
   return (
     <Page title="Klyna Back-in-Stock" subtitle={`Connected to ${shop}`}>
@@ -128,91 +214,198 @@ export default function Dashboard() {
               action={{ content: 'View Growth plan', url: pricingUrl }}
             >
               <Text as="p">
-                Upgrade for unlimited demand capture, CSV export, smart timing,
-                and AI assistance.
+                Upgrade for unlimited demand capture, CSV export, smart timing, and AI assistance.
               </Text>
             </Banner>
           </Layout.Section>
         )}
         <Layout.Section>
-          <Card>
-            <BlockStack gap="200">
-              <Text as="h2" variant="headingMd">Recover the demand you're losing to sold-out.</Text>
-              <Text as="p" variant="bodyMd" tone="subdued">
-                Klyna adds a “Notify me” button to every sold-out variant, captures
-                email interest, and auto-alerts shoppers the moment inventory
-                returns — turning stockouts into a recovery channel instead of lost sales.
-              </Text>
-            </BlockStack>
-          </Card>
+          <div className="KlynaDashboardLead">
+            <div className="KlynaDashboardLead__copy">
+              <InlineStack gap="200" blockAlign="center">
+                <p className="KlynaEyebrow">Demand recovery</p>
+                <Badge tone={planHandle === 'growth' ? 'success' : 'info'}>
+                  {planHandle === 'growth' ? 'Growth' : 'Free'}
+                </Badge>
+              </InlineStack>
+              <h2 className="KlynaLeadTitle">
+                Recover revenue before stockouts become lost customers.
+              </h2>
+              <p className="KlynaLeadBody">
+                Klyna adds a Notify me block to sold-out variants, ranks hidden demand by product,
+                and sends guarded alerts the moment inventory returns.
+              </p>
+              <div className="KlynaSignalRow" aria-label="Back-in-stock workload summary">
+                <span>
+                  <strong>{pending}</strong> waiting
+                </span>
+                <span>
+                  <strong>{notified}</strong> notified
+                </span>
+                <span>
+                  <strong>{alertsFailed}</strong> failed
+                </span>
+              </div>
+              <div className="KlynaActions">
+                <Form method="post">
+                  <input type="hidden" name="intent" value="sync" />
+                  <Button submit variant="primary" loading={syncing}>
+                    Check stock now
+                  </Button>
+                </Form>
+                <Button url={themeEditorUrl} target="_top">
+                  Open theme editor
+                </Button>
+              </div>
+            </div>
+            <div className="KlynaHealthPanel">
+              <div className="KlynaScore">
+                <span className="KlynaScore__label">Recovery readiness</span>
+                <span className="KlynaScore__value">
+                  <strong>{recoveryScore}</strong>
+                  <span className="KlynaScore__total">/ 100</span>
+                </span>
+                <span className="KlynaScore__track">
+                  <span className="KlynaScore__fill" style={{ width: `${recoveryScore}%` }} />
+                </span>
+              </div>
+              <div className="KlynaNextAction">
+                <span className="KlynaNextAction__label">Next best move</span>
+                <strong>{nextAction.title}</strong>
+                <p>{nextAction.body}</p>
+              </div>
+            </div>
+          </div>
         </Layout.Section>
 
-        <Layout.Section>
-          <InlineGrid columns={{ xs: 2, md: 4 }} gap="300">
-            {stats.map((s) => (
-              <Card key={s.label}>
-                <BlockStack gap="100">
-                  <Text as="p" variant="bodySm" tone="subdued">{s.label}</Text>
-                  <Text as="p" variant="heading2xl" fontWeight="bold">{String(s.value)}</Text>
-                  <Text as="p" variant="bodySm" tone="subdued">{s.hint}</Text>
-                </BlockStack>
-              </Card>
-            ))}
-          </InlineGrid>
-        </Layout.Section>
-
-        {top.length > 0 && (
+        {data?.message && (
           <Layout.Section>
             <Card>
-              <BlockStack gap="300">
-                <InlineStack align="space-between" blockAlign="center">
-                  <Text as="h2" variant="headingMd">Most-wanted right now</Text>
-                  <Link to={embeddedRoute('/app/demand')}>Full report →</Link>
-                </InlineStack>
-                <BlockStack gap="200">
-                  {top.map((t) => (
-                    <Box key={t.variantId} paddingBlock="100" borderColor="border" borderBlockEndWidth="025">
-                      <InlineStack align="space-between" blockAlign="center">
-                        <Text as="span" variant="bodyMd">{t.title}</Text>
-                        <Badge tone="attention">{`${t.count} waiting`}</Badge>
-                      </InlineStack>
-                    </Box>
-                  ))}
-                </BlockStack>
-              </BlockStack>
+              <Text as="p" tone={data.ok ? 'success' : 'critical'}>
+                {data.message}
+              </Text>
             </Card>
           </Layout.Section>
         )}
 
         <Layout.Section>
-          <InlineGrid columns={{ xs: 1, md: 4 }} gap="300">
-            {tiles.map((t) => (
-              <Card key={t.to}>
+          <Card padding="0">
+            <div className="KlynaMetricStrip">
+              {stats.map((s) => (
+                <div className="KlynaMetric" key={s.label}>
+                  <span className="KlynaMetric__label">{s.label}</span>
+                  <strong
+                    className={`KlynaMetric__value${s.label === 'Failed' && s.value > 0 ? ' KlynaMetric__value--critical' : ''}`}
+                  >
+                    {String(s.value)}
+                  </strong>
+                  <span className="KlynaMetric__label">{s.hint}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </Layout.Section>
+
+        {top.length > 0 && (
+          <Layout.Section>
+            <Card padding="0">
+              <Box padding="400" paddingBlockEnd="0">
+                <div className="KlynaSectionHeader">
+                  <div>
+                    <h2>Most-wanted right now</h2>
+                    <p>Variants with the highest waitlists, ready to reconcile or notify.</p>
+                  </div>
+                  <Link to={embeddedRoute('/app/demand')}>Full report</Link>
+                </div>
+              </Box>
+              <Box padding="400">
                 <BlockStack gap="200">
-                  <InlineStack gap="200" blockAlign="center">
-                    <Text as="h3" variant="headingSm">{t.title}</Text>
-                    {t.ai && <Badge tone="info">AI</Badge>}
-                  </InlineStack>
-                  <Text as="p" variant="bodyMd" tone="subdued">{t.body}</Text>
-                  <Link to={embeddedRoute(t.to)}>Open →</Link>
+                  {top.map((t) => (
+                    <div
+                      className="KlynaFinding"
+                      data-severity={t.inStock ? 'success' : 'warning'}
+                      key={t.variantId}
+                    >
+                      <InlineStack align="space-between" blockAlign="center">
+                        <BlockStack gap="050">
+                          <Text as="span" variant="bodyMd" fontWeight="semibold">
+                            {t.title}
+                          </Text>
+                          <InlineStack gap="200" blockAlign="center">
+                            <Badge tone="attention">{`${t.count} waiting`}</Badge>
+                            {t.inStock ? (
+                              <Badge tone="success">
+                                {`In stock${t.available != null ? ` · ${t.available}` : ''}`}
+                              </Badge>
+                            ) : (
+                              <Badge tone="critical">Sold out</Badge>
+                            )}
+                          </InlineStack>
+                        </BlockStack>
+                        <InlineStack gap="200" blockAlign="center">
+                          <Button url={t.productUrl} target="_blank">
+                            View product
+                          </Button>
+                          <Form method="post">
+                            <input type="hidden" name="intent" value="flush" />
+                            <input type="hidden" name="variantId" value={t.variantId} />
+                            <Button
+                              submit
+                              disabled={!t.inStock}
+                              loading={busy && nav.formData?.get('variantId') === t.variantId}
+                            >
+                              Notify now
+                            </Button>
+                          </Form>
+                        </InlineStack>
+                      </InlineStack>
+                    </div>
+                  ))}
                 </BlockStack>
-              </Card>
+              </Box>
+            </Card>
+          </Layout.Section>
+        )}
+
+        <Layout.Section>
+          <div className="KlynaSectionHeader">
+            <div>
+              <h2>Recovery workspace</h2>
+              <p>
+                Every shortcut opens a real workflow for demand, delivery, subscribers, or setup.
+              </p>
+            </div>
+          </div>
+          <div className="KlynaToolGrid">
+            {tiles.map((t) => (
+              <Link className="KlynaShortcut" key={t.to} to={embeddedRoute(t.to)}>
+                <InlineStack gap="200" blockAlign="center">
+                  <Text as="h3" variant="headingSm">
+                    {t.title}
+                  </Text>
+                  {t.ai && <Badge tone="info">AI</Badge>}
+                </InlineStack>
+                <small>{t.body}</small>
+              </Link>
             ))}
-          </InlineGrid>
+          </div>
         </Layout.Section>
 
         <Layout.Section>
-          <Card>
-            <BlockStack gap="200">
-              <Text as="h3" variant="headingSm">Turn on the storefront button</Text>
-              <Text as="p" variant="bodyMd" tone="subdued">
-                In your theme editor, open a product template and add the
-                <Text as="span" fontWeight="semibold"> Klyna Notify me </Text>
-                app block (under “Apps”). It renders automatically only when the
-                selected variant is sold out — no theme code required.
+          <div className="KlynaPlanBar">
+            <div className="KlynaPlanBar__copy">
+              <Text as="h3" variant="headingSm">
+                Turn on the storefront button
               </Text>
-            </BlockStack>
-          </Card>
+              <p>
+                Add the Klyna Notify me app block to a product template. It renders only when the
+                selected variant is sold out, so the storefront stays clean.
+              </p>
+            </div>
+            <Button url={themeEditorUrl} target="_top">
+              Open theme editor
+            </Button>
+          </div>
         </Layout.Section>
       </Layout>
     </Page>

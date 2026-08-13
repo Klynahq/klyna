@@ -1,0 +1,697 @@
+/*
+ * Klyna Admin UI
+ *
+ * Premium Shopify-native operating surfaces for Klyna apps. The interface keeps
+ * Polaris semantics and adds a clear Klyna command layer for diagnosis, queues,
+ * exports, and guarded store actions.
+ */
+
+.KlynaAdmin {
+  --klyna-accent: #7c5cff;
+  --klyna-accent-hover: #6546dc;
+  --klyna-accent-soft: #f0ecff;
+  --klyna-accent-border: #d6ccff;
+  --klyna-ink: #17151f;
+  --klyna-muted: #596171;
+  --klyna-subtle: #81899a;
+  --klyna-border: #dfe3ea;
+  --klyna-border-strong: #bdc4d1;
+  --klyna-canvas: #f5f7fb;
+  --klyna-surface: #ffffff;
+  --klyna-surface-raised: #fbfcff;
+  --klyna-night: #10121a;
+  --klyna-night-2: #171827;
+  --klyna-data: #087f75;
+  --klyna-data-soft: #e4f7f4;
+  --klyna-info: #146b8d;
+  --klyna-info-soft: #e9f6fb;
+  --klyna-warning: #955f00;
+  --klyna-warning-soft: #fff5da;
+  --klyna-critical: #b42318;
+  --klyna-critical-soft: #fff1ef;
+  --klyna-success: #0b7a45;
+  --klyna-success-soft: #eaf8f0;
+  min-height: 100%;
+  color: var(--klyna-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+.KlynaAdmin .Polaris-Page {
+  padding-block-end: 44px;
+}
+
+.KlynaAdmin .Polaris-Card {
+  overflow: hidden;
+  border: 1px solid var(--klyna-border);
+  border-radius: 8px;
+  background: var(--klyna-surface);
+  box-shadow: 0 1px 2px rgb(23 21 31 / 6%), 0 12px 28px rgb(23 21 31 / 4%);
+}
+
+.KlynaAdmin .Polaris-Banner,
+.KlynaAdmin .Polaris-TextField__Backdrop,
+.KlynaAdmin .Polaris-Select__Backdrop {
+  border-radius: 8px;
+}
+
+.KlynaAdmin .Polaris-Button {
+  min-height: 38px;
+  border-radius: 8px;
+  font-weight: 680;
+  transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease, transform
+    150ms ease;
+}
+
+.KlynaAdmin .Polaris-Button:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.KlynaAdmin .Polaris-Button--variantPrimary {
+  border-color: var(--klyna-accent) !important;
+  background: var(--klyna-accent) !important;
+  color: #ffffff !important;
+  box-shadow: 0 1px 2px rgb(50 35 120 / 22%), 0 8px 18px rgb(124 92 255 / 20%) !important;
+}
+
+.KlynaAdmin .Polaris-Button--variantPrimary:hover:not(:disabled) {
+  border-color: var(--klyna-accent-hover) !important;
+  background: var(--klyna-accent-hover) !important;
+  box-shadow: 0 2px 4px rgb(50 35 120 / 24%), 0 12px 24px rgb(124 92 255 / 24%) !important;
+}
+
+.KlynaAdmin .Polaris-Button--variantPrimary:active:not(:disabled) {
+  background: #5738c9 !important;
+}
+
+.KlynaAdmin .Polaris-Button--variantPlain,
+.KlynaAdmin .Polaris-Link,
+.KlynaAdmin .Polaris-Link:visited {
+  color: var(--klyna-accent-hover) !important;
+}
+
+.KlynaAdmin .Polaris-Button--variantPlain:hover:not(:disabled) {
+  background: var(--klyna-accent-soft) !important;
+  color: var(--klyna-accent-hover) !important;
+}
+
+.KlynaAdmin :where(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid var(--klyna-accent) !important;
+  outline-offset: 2px;
+}
+
+.KlynaAdmin .Polaris-TextField__Input:focus ~ .Polaris-TextField__Backdrop {
+  border-color: var(--klyna-accent) !important;
+  box-shadow: 0 0 0 1px var(--klyna-accent) !important;
+}
+
+.KlynaAdmin .Polaris-Checkbox__Input:checked + .Polaris-Checkbox__Backdrop {
+  border-color: var(--klyna-accent) !important;
+  background: var(--klyna-accent) !important;
+}
+
+.KlynaAdmin .Polaris-Tabs__Tab--selected .Polaris-Tabs__Title::after,
+.KlynaAdmin .Polaris-ProgressBar__Indicator--tonePrimary {
+  background: var(--klyna-accent) !important;
+}
+
+.KlynaAdmin .Polaris-Badge--toneInfo,
+.KlynaAdmin .Polaris-Badge--toneMagic {
+  background: var(--klyna-accent-soft) !important;
+  color: #4b31b8 !important;
+}
+
+.KlynaAdmin .KlynaDashboardLead {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(238px, 328px);
+  gap: 24px;
+  align-items: stretch;
+  padding: 26px;
+  overflow: hidden;
+  border: 1px solid #24263a;
+  border-radius: 8px;
+  background: radial-gradient(circle at 7% 0%, rgb(124 92 255 / 34%), transparent 32%),
+    linear-gradient(135deg, var(--klyna-night), #12141d 48%, #0f1d1b);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgb(23 21 31 / 18%), 0 18px 44px rgb(23 21 31 / 12%);
+}
+
+.KlynaAdmin .KlynaDashboardLead::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 3%));
+  content: "";
+}
+
+.KlynaAdmin .KlynaDashboardLead--workspace {
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 240px);
+}
+
+.KlynaAdmin .KlynaDashboardLead__copy {
+  position: relative;
+  z-index: 1;
+  max-width: 760px;
+}
+
+.KlynaAdmin .KlynaEyebrow {
+  margin: 0;
+  color: #cabfff;
+  font-size: 12px;
+  font-weight: 760;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.KlynaAdmin .KlynaLeadTitle {
+  max-width: 860px;
+  margin: 10px 0 0;
+  color: #ffffff;
+  font-size: 26px;
+  font-weight: 780;
+  line-height: 1.18;
+  text-wrap: balance;
+}
+
+.KlynaAdmin .KlynaLeadBody {
+  max-width: 68ch;
+  margin: 10px 0 0;
+  color: #d8dbe7;
+  font-size: 14px;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.KlynaAdmin .KlynaSignalRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.KlynaAdmin .KlynaSignalRow span {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  min-height: 30px;
+  padding: 4px 10px;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 7%);
+  color: #eef0f6;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.KlynaAdmin .KlynaSignalRow strong {
+  color: #ffffff;
+}
+
+.KlynaAdmin .KlynaActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.KlynaAdmin .KlynaHealthPanel {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.KlynaAdmin .KlynaScore {
+  position: relative;
+  display: grid;
+  min-height: 122px;
+  align-content: center;
+  padding: 18px;
+  border: 1px solid rgb(255 255 255 / 13%);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 8%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 10%);
+}
+
+.KlynaAdmin .KlynaScore__label,
+.KlynaAdmin .KlynaNextAction__label,
+.KlynaAdmin .KlynaWorkspaceStamp span {
+  color: #bfc5d8;
+  font-size: 12px;
+  font-weight: 720;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.KlynaAdmin .KlynaScore__value {
+  display: flex;
+  gap: 3px;
+  align-items: baseline;
+  margin-top: 6px;
+}
+
+.KlynaAdmin .KlynaScore strong {
+  color: #ffffff;
+  font-size: 38px;
+  font-weight: 790;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.KlynaAdmin .KlynaScore__total {
+  color: #c5c9d7;
+  font-size: 13px;
+}
+
+.KlynaAdmin .KlynaScore__track {
+  height: 6px;
+  margin-top: 14px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: rgb(255 255 255 / 12%);
+}
+
+.KlynaAdmin .KlynaScore__fill {
+  display: block;
+  width: calc(var(--score) * 1%);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #7c5cff, #17b7a8);
+}
+
+.KlynaAdmin .KlynaNextAction,
+.KlynaAdmin .KlynaWorkspaceStamp {
+  padding: 15px;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 7%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 8%);
+}
+
+.KlynaAdmin .KlynaNextAction strong,
+.KlynaAdmin .KlynaWorkspaceStamp strong {
+  display: block;
+  margin-top: 6px;
+  color: #ffffff;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.KlynaAdmin .KlynaNextAction p {
+  margin: 6px 0 0;
+  color: #d5d9e6;
+  font-size: 13px;
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
+.KlynaAdmin .KlynaMetricStrip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  background: var(--klyna-surface-raised);
+}
+
+.KlynaAdmin .KlynaMetric {
+  min-width: 0;
+  padding: 18px 20px;
+  border-inline-end: 1px solid var(--klyna-border);
+}
+
+.KlynaAdmin .KlynaMetric:last-child {
+  border-inline-end: 0;
+}
+
+.KlynaAdmin .KlynaMetric__label {
+  color: var(--klyna-muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.KlynaAdmin .KlynaMetric__value {
+  display: block;
+  margin-top: 6px;
+  overflow-wrap: anywhere;
+  color: var(--klyna-ink);
+  font-size: 22px;
+  font-weight: 760;
+  line-height: 1.16;
+  font-variant-numeric: tabular-nums;
+}
+
+.KlynaAdmin .KlynaMetric__value--success {
+  color: var(--klyna-success);
+}
+
+.KlynaAdmin .KlynaMetric__value--critical {
+  color: var(--klyna-critical);
+}
+
+.KlynaAdmin .KlynaMetric__value--warning {
+  color: var(--klyna-warning);
+}
+
+.KlynaAdmin .KlynaSectionHeader {
+  display: flex;
+  gap: 16px;
+  align-items: end;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.KlynaAdmin .KlynaSectionHeader h2 {
+  margin: 0;
+  color: var(--klyna-ink);
+  font-size: 17px;
+  font-weight: 760;
+  line-height: 1.35;
+  text-wrap: balance;
+}
+
+.KlynaAdmin .KlynaSectionHeader p {
+  max-width: 72ch;
+  margin: 5px 0 0;
+  color: var(--klyna-muted);
+  font-size: 13px;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.KlynaAdmin .KlynaWorkspaceGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(270px, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.KlynaAdmin .KlynaSidebar {
+  display: grid;
+  gap: 16px;
+}
+
+.KlynaAdmin .KlynaFinding {
+  position: relative;
+  padding: 16px 18px 16px 42px;
+  border: 1px solid var(--klyna-border);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #ffffff, #fbfcff);
+  box-shadow: 0 1px 2px rgb(23 21 31 / 5%);
+}
+
+.KlynaAdmin .KlynaFinding::before {
+  position: absolute;
+  top: 19px;
+  left: 18px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--klyna-subtle);
+  box-shadow: 0 0 0 4px rgb(129 137 154 / 13%);
+  content: "";
+}
+
+.KlynaAdmin .KlynaFinding[data-severity="critical"] {
+  border-color: #f3c6c0;
+  background: linear-gradient(180deg, #ffffff, var(--klyna-critical-soft));
+}
+
+.KlynaAdmin .KlynaFinding[data-severity="critical"]::before {
+  background: var(--klyna-critical);
+  box-shadow: 0 0 0 4px rgb(180 35 24 / 12%);
+}
+
+.KlynaAdmin .KlynaFinding[data-severity="warning"] {
+  border-color: #efd59c;
+  background: linear-gradient(180deg, #ffffff, var(--klyna-warning-soft));
+}
+
+.KlynaAdmin .KlynaFinding[data-severity="warning"]::before {
+  background: var(--klyna-warning);
+  box-shadow: 0 0 0 4px rgb(149 95 0 / 12%);
+}
+
+.KlynaAdmin .KlynaFinding[data-severity="info"] {
+  border-color: #bad7e4;
+  background: linear-gradient(180deg, #ffffff, var(--klyna-info-soft));
+}
+
+.KlynaAdmin .KlynaFinding[data-severity="info"]::before {
+  background: var(--klyna-info);
+  box-shadow: 0 0 0 4px rgb(20 107 141 / 12%);
+}
+
+.KlynaAdmin .KlynaFinding[data-severity="success"] {
+  border-color: #bce2cc;
+  background: linear-gradient(180deg, #ffffff, var(--klyna-success-soft));
+}
+
+.KlynaAdmin .KlynaFinding[data-severity="success"]::before {
+  background: var(--klyna-success);
+  box-shadow: 0 0 0 4px rgb(11 122 69 / 12%);
+}
+
+.KlynaAdmin .KlynaFinding__footer {
+  display: flex;
+  padding-top: 4px;
+}
+
+.KlynaAdmin .KlynaToolGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.KlynaAdmin .KlynaShortcut {
+  display: grid;
+  gap: 3px;
+  padding: 13px 14px;
+  border: 1px solid var(--klyna-border);
+  border-radius: 8px;
+  background: var(--klyna-surface-raised);
+  color: inherit;
+  text-decoration: none;
+  transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease, transform
+    150ms ease;
+}
+
+.KlynaAdmin .KlynaShortcut:hover {
+  border-color: var(--klyna-accent-border);
+  background: var(--klyna-accent-soft);
+  box-shadow: 0 8px 18px rgb(23 21 31 / 8%);
+  transform: translateY(-1px);
+}
+
+.KlynaAdmin .KlynaShortcut span {
+  color: var(--klyna-ink);
+  font-size: 13px;
+  font-weight: 720;
+  line-height: 1.35;
+}
+
+.KlynaAdmin .KlynaShortcut small {
+  color: var(--klyna-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.KlynaAdmin .KlynaDataRows {
+  border-top: 1px solid var(--klyna-border);
+}
+
+.KlynaAdmin .KlynaDataRow {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  border-bottom: 1px solid var(--klyna-border);
+  color: var(--klyna-muted);
+  font-size: 13px;
+}
+
+.KlynaAdmin .KlynaDataRow strong {
+  color: var(--klyna-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.KlynaAdmin .KlynaDataRow:last-child {
+  border-bottom: 0;
+}
+
+.KlynaAdmin .KlynaPlanBar {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border: 1px solid var(--klyna-border);
+  border-radius: 8px;
+  background: var(--klyna-surface);
+}
+
+.KlynaAdmin .KlynaPlanBar__copy {
+  min-width: 0;
+}
+
+.KlynaAdmin .KlynaPlanBar__copy p {
+  margin: 3px 0 0;
+  color: var(--klyna-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.KlynaAdmin .KlynaButtonLink {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  padding: 7px 14px;
+  border: 1px solid var(--klyna-border-strong);
+  border-radius: 8px;
+  background: var(--klyna-surface);
+  color: var(--klyna-ink);
+  font-size: 13px;
+  font-weight: 680;
+  line-height: 1.4;
+  text-decoration: none;
+  transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease;
+}
+
+.KlynaAdmin .KlynaButtonLink:hover {
+  border-color: var(--klyna-accent-border);
+  background: var(--klyna-accent-soft);
+  color: var(--klyna-accent-hover);
+}
+
+.KlynaAdmin .KlynaButtonLink:active {
+  transform: scale(0.96);
+}
+
+.KlynaAdmin .KlynaChecklist {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  counter-reset: klyna-step;
+  list-style: none;
+}
+
+.KlynaAdmin .KlynaChecklist li {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  color: var(--klyna-muted);
+  font-size: 14px;
+  line-height: 1.5;
+  counter-increment: klyna-step;
+}
+
+.KlynaAdmin .KlynaChecklist li::before {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid var(--klyna-accent-border);
+  border-radius: 50%;
+  background: var(--klyna-accent-soft);
+  color: var(--klyna-accent-hover);
+  content: counter(klyna-step);
+  font-size: 13px;
+  font-weight: 760;
+}
+
+.KlynaAdmin .KlynaRevenueRow {
+  display: grid;
+  gap: 7px;
+}
+
+.KlynaAdmin .KlynaRevenueRow__header {
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  color: var(--klyna-muted);
+  font-size: 13px;
+}
+
+.KlynaAdmin .KlynaRevenueTrack {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #e6e9ef;
+}
+
+.KlynaAdmin .KlynaRevenueTrack__fill {
+  display: block;
+  width: var(--revenue-share);
+  height: 100%;
+  border-radius: inherit;
+  background: var(--klyna-data);
+}
+
+.KlynaAdmin .KlynaInlineBadge {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  min-height: 24px;
+  margin-top: 10px;
+  padding: 2px 8px;
+  border: 1px solid var(--klyna-accent-border);
+  border-radius: 8px;
+  background: var(--klyna-accent-soft);
+  color: #4b31b8;
+  font-size: 13px;
+  font-weight: 680;
+}
+
+@media (max-width: 760px) {
+  .KlynaAdmin .KlynaDashboardLead,
+  .KlynaAdmin .KlynaDashboardLead--workspace {
+    grid-template-columns: 1fr;
+    padding: 22px;
+  }
+
+  .KlynaAdmin .KlynaLeadTitle {
+    font-size: 22px;
+  }
+
+  .KlynaAdmin .KlynaMetricStrip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .KlynaAdmin .KlynaMetric:nth-child(2) {
+    border-inline-end: 0;
+  }
+
+  .KlynaAdmin .KlynaMetric:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--klyna-border);
+  }
+
+  .KlynaAdmin .KlynaWorkspaceGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .KlynaAdmin .KlynaToolGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .KlynaAdmin .KlynaMetricStrip {
+    grid-template-columns: 1fr;
+  }
+
+  .KlynaAdmin .KlynaMetric,
+  .KlynaAdmin .KlynaMetric:nth-child(2) {
+    border-inline-end: 0;
+    border-bottom: 1px solid var(--klyna-border);
+  }
+
+  .KlynaAdmin .KlynaMetric:last-child {
+    border-bottom: 0;
+  }
+
+  .KlynaAdmin .KlynaPlanBar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
