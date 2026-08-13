@@ -102,11 +102,8 @@
   font-family: -apple-system, "Inter", system-ui, sans-serif;
   font-size: 15px;
   font-weight: 700;
-  letter-spacing: -0.3px;
-  background: linear-gradient(135deg, #7c5cff, #9277ff);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  letter-spacing: 0;
+  color: #5b3df0;
 }
 .klyna-header__tagline {
   font-size: 12px;
