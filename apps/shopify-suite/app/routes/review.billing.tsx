@@ -138,7 +138,10 @@ export default function BillingReviewProof() {
               </div>
               <div>
                 <dt>Downgrade</dt>
-                <dd>Paid users can cancel the active subscription and return to Free.</dd>
+                <dd>
+                  Paid users can cancel the active subscription and return to Free, with a direct
+                  Shopify cancellation fallback if the embedded billing helper fails.
+                </dd>
               </div>
             </dl>
           </aside>

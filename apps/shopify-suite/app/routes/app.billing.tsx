@@ -16,6 +16,7 @@ import {
 import {
   PRO_PLAN,
   getActiveBillingState,
+  isGraphqlSubscriptionId,
   parseRequestedPlan,
   proPrice,
 } from '../lib/billing-plans';
@@ -24,6 +25,14 @@ import { getProductKey, products } from '../lib/products';
 import { authenticate, isBillingTest } from '../shopify.server';
 
 const trialDays = 7;
+
+type AdminGraphqlClient = {
+  graphql(query: string, options?: { variables?: Record<string, unknown> }): Promise<Response>;
+};
+
+type BillingCanceller = {
+  cancel(input: { subscriptionId: string; isTest: boolean; prorate?: boolean }): Promise<unknown>;
+};
 
 function appAdminBillingUrl(request: Request) {
   const url = new URL(request.url);
@@ -75,7 +84,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { billing } = await authenticate.admin(request);
+  const { admin, billing } = await authenticate.admin(request);
   const formData = await request.formData();
   const intent = formData.get('intent');
 
@@ -83,11 +92,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const subscriptionId = formData.get('subscriptionId');
 
     if (typeof subscriptionId === 'string' && subscriptionId.length > 0) {
-      await billing.cancel({
-        subscriptionId,
-        isTest: isBillingTest(),
-        prorate: true,
-      });
+      await cancelBillingSubscription(admin, billing, subscriptionId);
     }
 
     throw redirect(appAdminBillingUrl(request));
@@ -102,6 +107,60 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     returnUrl: appAdminBillingUrl(request),
   });
 };
+
+async function cancelBillingSubscription(
+  admin: AdminGraphqlClient,
+  billing: BillingCanceller,
+  subscriptionId: string,
+) {
+  try {
+    await billing.cancel({
+      subscriptionId,
+      isTest: isBillingTest(),
+      prorate: true,
+    });
+    return;
+  } catch (error) {
+    if (!isGraphqlSubscriptionId(subscriptionId)) {
+      throw error;
+    }
+
+    console.error('Shopify billing.cancel failed; retrying with appSubscriptionCancel.', error);
+  }
+
+  const response = await admin.graphql(
+    /* GraphQL */ `
+      mutation KlynaCancelAppSubscription($id: ID!) {
+        appSubscriptionCancel(id: $id, prorate: true) {
+          appSubscription {
+            id
+            status
+          }
+          userErrors {
+            field
+            message
+          }
+        }
+      }
+    `,
+    { variables: { id: subscriptionId } },
+  );
+
+  const payload = (await response.json()) as {
+    data?: {
+      appSubscriptionCancel?: {
+        userErrors?: Array<{ field?: string[] | null; message?: string | null }>;
+      } | null;
+    };
+    errors?: unknown;
+  };
+
+  const userErrors = payload.data?.appSubscriptionCancel?.userErrors ?? [];
+
+  if (!response.ok || payload.errors || userErrors.length > 0) {
+    throw new Error(`Unable to cancel Shopify subscription: ${JSON.stringify(payload)}`);
+  }
+}
 
 export default function Billing() {
   const {
