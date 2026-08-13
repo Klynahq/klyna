@@ -15,13 +15,13 @@ import {
 } from '@shopify/polaris';
 import {
   PRO_PLAN,
-  normalizeBillingPlanName,
+  getActiveBillingState,
   parseRequestedPlan,
   proPrice,
 } from '../lib/billing-plans';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getProductKey, products } from '../lib/products';
-import { BILLING_PLAN_NAMES, authenticate, isBillingTest } from '../shopify.server';
+import { authenticate, isBillingTest } from '../shopify.server';
 
 const trialDays = 7;
 
@@ -39,7 +39,7 @@ function appAdminBillingUrl(request: Request) {
 }
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { billing } = await authenticate.admin(request);
+  const { admin, billing } = await authenticate.admin(request);
   const product = products[getProductKey()];
   let hasActivePayment = false;
   let activePlan: string | null = null;
@@ -48,22 +48,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   let billingError: string | null = null;
 
   try {
-    const billingCheck = await billing.check({
-      plans: [...BILLING_PLAN_NAMES],
-      isTest: isBillingTest(),
-    });
-    const activeSubscriptions = [...billingCheck.appSubscriptions].sort(
-      (a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt),
-    );
-    const activeSubscription =
-      activeSubscriptions.find(
-        (subscription) => normalizeBillingPlanName(subscription.name) === PRO_PLAN,
-      ) ?? activeSubscriptions[0];
+    const billingState = await getActiveBillingState(admin, billing, isBillingTest());
 
-    hasActivePayment = Boolean(activeSubscription) || billingCheck.hasActivePayment;
-    activeSubscriptionId = activeSubscription?.id ?? null;
-    activeSubscriptionName = activeSubscription?.name ?? null;
-    activePlan = normalizeBillingPlanName(activeSubscriptionName);
+    hasActivePayment = billingState.hasActivePayment;
+    activeSubscriptionId = billingState.activeSubscriptionId;
+    activeSubscriptionName = billingState.activeSubscriptionName;
+    activePlan = billingState.activePlan;
   } catch (error) {
     console.error('Billing check failed on plan page.', error);
     billingError =

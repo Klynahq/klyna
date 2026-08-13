@@ -2,20 +2,18 @@ import { type LoaderFunctionArgs, json } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
 import { Badge, Banner, BlockStack, Card, IndexTable, Page, Text } from '@shopify/polaris';
 import prisma from '../db.server';
+import { getActiveBillingState } from '../lib/billing-plans';
 import { getProductKey, products, toneForStatus } from '../lib/products';
-import { BILLING_PLAN_NAMES, authenticate, isBillingTest } from '../shopify.server';
+import { authenticate, isBillingTest } from '../shopify.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { session, billing } = await authenticate.admin(request);
+  const { session, admin, billing } = await authenticate.admin(request);
   const productKey = getProductKey();
   let hasActivePayment = false;
 
   try {
-    const billingCheck = await billing.check({
-      plans: [...BILLING_PLAN_NAMES],
-      isTest: isBillingTest(),
-    });
-    hasActivePayment = billingCheck.hasActivePayment;
+    const billingState = await getActiveBillingState(admin, billing, isBillingTest());
+    hasActivePayment = billingState.hasActivePayment;
   } catch (error) {
     console.error('Billing check failed on history; showing free history.', error);
   }
