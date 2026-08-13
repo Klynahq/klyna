@@ -137,3 +137,20 @@
 - Shopify Theme App Embed Cleanup Plan: https://klyna.dev/blog/shopify-theme-app-embed-cleanup-plan/
 - Shopify App Review Schema Risk Check: https://klyna.dev/blog/shopify-app-review-schema-risk-check/
 - WordPress Plugin SEO Cleanup After Uninstall: https://klyna.dev/blog/wordpress-plugin-seo-cleanup-after-uninstall/
+
+## 2026-08-13 Shopify app technical SEO cluster
+- Shopify App Indexing Health Check: https://klyna.dev/blog/shopify-app-indexing-health-check/
+- Shopify App Speed Budget Planner: https://klyna.dev/blog/shopify-app-speed-budget-planner/
+- Shopify Theme Leftover Script Audit: https://klyna.dev/blog/shopify-theme-leftover-script-audit/
+- Shopify Product Page Entity Map: https://klyna.dev/blog/shopify-product-page-entity-map/
+- Shopify Collection Page Internal Links: https://klyna.dev/blog/shopify-collection-page-internal-links/
+- Shopify App Analytics Event QA: https://klyna.dev/blog/shopify-app-analytics-event-qa/
+- Shopify Restock Alert SEO Support Page: https://klyna.dev/blog/shopify-restock-alert-seo-support-page/
+- Shopify Bundle App Schema Safety: https://klyna.dev/blog/shopify-bundle-app-schema-safety/
+- Shopify Review App Migration SEO Checklist: https://klyna.dev/blog/shopify-review-app-migration-seo-checklist/
+- WordPress Plugin Canonical Cleanup Checklist: https://klyna.dev/blog/wordpress-plugin-canonical-cleanup-checklist/
+- WordPress Plugin Schema Conflict Check: https://klyna.dev/blog/wordpress-plugin-schema-conflict-check/
+- Ecommerce Plugin Speed Risk Map: https://klyna.dev/blog/ecommerce-plugin-speed-risk-map/
+- AI Overview Ready Shopify App Page: https://klyna.dev/blog/ai-overview-ready-shopify-app-page/
+- llms.txt for Shopify Apps: https://klyna.dev/blog/llms-txt-for-shopify-apps/
+- Shopify App Store Content Gap Brief: https://klyna.dev/blog/shopify-app-store-content-gap-brief/
