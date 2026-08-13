@@ -1,4 +1,3 @@
-import adminStyles from '@klyna/ui/shopify-admin.css?url';
 import type { HeadersFunction, LoaderFunctionArgs } from '@remix-run/node';
 import { Link, Outlet, useLoaderData, useRouteError } from '@remix-run/react';
 import { NavMenu } from '@shopify/app-bridge-react';
@@ -8,6 +7,7 @@ import { boundary } from '@shopify/shopify-app-remix/server';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { planSelectionUrl, syncPlanFromRequest } from '../lib/plans.server';
 import { authenticate, migrateOfflineSessionIfNeeded } from '../shopify.server';
+import adminStyles from '../styles/shopify-admin.css?url';
 
 export const links = () => [
   { rel: 'stylesheet', href: polarisStyles },

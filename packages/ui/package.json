@@ -14,8 +14,7 @@
     "./tokens": {
       "types": "./src/tokens.ts",
       "default": "./src/tokens.ts"
-    },
-    "./shopify-admin.css": "./src/shopify-admin.css"
+    }
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

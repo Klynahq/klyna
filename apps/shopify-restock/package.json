@@ -20,7 +20,6 @@
     "setup": "pnpm prisma:generate && pnpm prisma:migrate"
   },
   "dependencies": {
-    "@klyna/ui": "workspace:*",
     "@prisma/client": "^6.0.0",
     "@remix-run/node": "^2.15.0",
     "@remix-run/react": "^2.15.0",
