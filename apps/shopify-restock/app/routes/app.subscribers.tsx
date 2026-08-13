@@ -1,6 +1,11 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
-import { Form, useActionData, useLoaderData, useNavigation, useSearchParams } from '@remix-run/react';
-import { useCallback } from 'react';
+import {
+  Form,
+  useActionData,
+  useLoaderData,
+  useNavigation,
+  useSearchParams,
+} from '@remix-run/react';
 import {
   Badge,
   Banner,
@@ -14,12 +19,12 @@ import {
   Page,
   Tabs,
   Text,
-  useBreakpoints,
 } from '@shopify/polaris';
-import { authenticate } from '../shopify.server';
+import { useCallback } from 'react';
 import prisma from '../db.server';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getShopPlan, planSelectionUrl } from '../lib/plans.server';
+import { authenticate } from '../shopify.server';
 
 type StatusFilter = 'ALL' | 'PENDING' | 'NOTIFIED' | 'CANCELLED';
 
@@ -60,6 +65,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       product: [s.productTitle, s.variantTitle].filter(Boolean).join(' — '),
       status: s.status,
       createdAt: s.createdAt.toISOString(),
+      createdAtLabel: formatDate(s.createdAt),
     })),
   };
 };
@@ -96,7 +102,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         { status: 403 },
       );
     }
-    const filter = (String(form.get('status') ?? 'ALL') as StatusFilter);
+    const filter = String(form.get('status') ?? 'ALL') as StatusFilter;
     const rows = await prisma.subscription.findMany({
       where: statusWhere(shop, TABS.some((t) => t.id === filter) ? filter : 'ALL'),
       orderBy: { createdAt: 'desc' },
@@ -137,16 +143,27 @@ function csvCell(value: string | null): string {
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
+function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat('en-US', {
+    day: 'numeric',
+    month: 'short',
+    timeZone: 'UTC',
+    year: 'numeric',
+  }).format(date);
+}
+
 export default function Subscribers() {
   const embeddedRoute = useEmbeddedRoute();
   const { subscribers, filter, planHandle, pricingUrl } = useLoaderData<typeof loader>();
   const data = useActionData<typeof action>();
   const nav = useNavigation();
-  const { smUp } = useBreakpoints();
   const [, setSearchParams] = useSearchParams();
   const busy = nav.state !== 'idle';
 
-  const selectedTab = Math.max(0, TABS.findIndex((t) => t.id === filter));
+  const selectedTab = Math.max(
+    0,
+    TABS.findIndex((t) => t.id === filter),
+  );
 
   const onTabChange = useCallback(
     (index: number) => {
@@ -180,8 +197,8 @@ export default function Subscribers() {
               action={{ content: 'View Growth plan', url: pricingUrl }}
             >
               <Text as="p">
-                Upgrade for unlimited active subscribers, CSV export, smart timing,
-                and AI assistance.
+                Upgrade for unlimited active subscribers, CSV export, smart timing, and AI
+                assistance.
               </Text>
             </Banner>
           </Layout.Section>
@@ -195,7 +212,9 @@ export default function Subscribers() {
               <form method="post">
                 <input type="hidden" name="intent" value="export" />
                 <input type="hidden" name="status" value={filter} />
-                <Button submit disabled={planHandle !== 'growth'}>Export CSV</Button>
+                <Button submit disabled={planHandle !== 'growth'}>
+                  Export CSV
+                </Button>
               </form>
             </InlineStack>
           </Card>
@@ -204,14 +223,20 @@ export default function Subscribers() {
         {data && typeof data === 'object' && 'message' in data && (
           <Layout.Section>
             <Card>
-              <Text as="p" tone={data.ok ? 'success' : 'critical'}>{data.message}</Text>
+              <Text as="p" tone={data.ok ? 'success' : 'critical'}>
+                {data.message}
+              </Text>
             </Card>
           </Layout.Section>
         )}
 
         <Layout.Section>
           <Card padding="0">
-            <Tabs tabs={TABS.map((t) => ({ id: t.id, content: t.content }))} selected={selectedTab} onSelect={onTabChange}>
+            <Tabs
+              tabs={TABS.map((t) => ({ id: t.id, content: t.content }))}
+              selected={selectedTab}
+              onSelect={onTabChange}
+            >
               {subscribers.length === 0 ? (
                 <EmptyState
                   heading="No subscribers in this view"
@@ -221,7 +246,7 @@ export default function Subscribers() {
                 </EmptyState>
               ) : (
                 <IndexTable
-                  condensed={!smUp}
+                  condensed={false}
                   resourceName={{ singular: 'subscriber', plural: 'subscribers' }}
                   itemCount={subscribers.length}
                   selectable={false}
@@ -236,21 +261,21 @@ export default function Subscribers() {
                   {subscribers.map((s, index) => (
                     <IndexTable.Row id={s.id} key={s.id} position={index}>
                       <IndexTable.Cell>
-                        <Text as="span" variant="bodyMd" fontWeight="semibold">{s.contact ?? '—'}</Text>
+                        <Text as="span" variant="bodyMd" fontWeight="semibold">
+                          {s.contact ?? '—'}
+                        </Text>
                       </IndexTable.Cell>
                       <IndexTable.Cell>{s.product}</IndexTable.Cell>
                       <IndexTable.Cell>{statusBadge(s.status)}</IndexTable.Cell>
                       <IndexTable.Cell>
                         <Text as="span" variant="bodySm" tone="subdued">
-                          {new Date(s.createdAt).toLocaleDateString()}
+                          {s.createdAtLabel}
                         </Text>
                       </IndexTable.Cell>
                       <IndexTable.Cell>
                         <InlineStack gap="200">
                           {s.status === 'NOTIFIED' && (
-                            <Form
-                              method="post"
-                            >
+                            <Form method="post">
                               <input type="hidden" name="intent" value="rearm" />
                               <input type="hidden" name="id" value={s.id} />
                               <Button submit size="slim" variant="plain" disabled={busy}>
@@ -259,12 +284,16 @@ export default function Subscribers() {
                             </Form>
                           )}
                           {s.status !== 'CANCELLED' && (
-                            <Form
-                              method="post"
-                            >
+                            <Form method="post">
                               <input type="hidden" name="intent" value="cancel" />
                               <input type="hidden" name="id" value={s.id} />
-                              <Button submit size="slim" variant="plain" tone="critical" disabled={busy}>
+                              <Button
+                                submit
+                                size="slim"
+                                variant="plain"
+                                tone="critical"
+                                disabled={busy}
+                              >
                                 Remove
                               </Button>
                             </Form>
@@ -282,8 +311,8 @@ export default function Subscribers() {
         <Layout.Section>
           <BlockStack gap="100">
             <Text as="p" variant="bodySm" tone="subdued">
-              Showing up to 250 most-recent signups. Export CSV for the full list,
-              filtered to the current tab.
+              Showing up to 250 most-recent signups. Export CSV for the full list, filtered to the
+              current tab.
             </Text>
           </BlockStack>
         </Layout.Section>

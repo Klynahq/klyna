@@ -11,13 +11,12 @@ import {
   Layout,
   Page,
   Text,
-  useBreakpoints,
 } from '@shopify/polaris';
-import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { syncWaitlistedVariants } from '../services/inventory.server';
 import { flushVariant, storefrontProductUrl } from '../services/waitlist.server';
+import { authenticate } from '../shopify.server';
 
 interface DemandRow {
   variantId: string;
@@ -42,9 +41,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     _count: { _all: true },
   });
 
-  const byVariant = new Map(
-    grouped.map((group) => [group.variantId, group._count._all]),
-  );
+  const byVariant = new Map(grouped.map((group) => [group.variantId, group._count._all]));
 
   const variantIds = [...byVariant.keys()];
   const [snapshots, subscriptions] = await Promise.all([
@@ -109,9 +106,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       });
     } catch (error) {
       const response = error instanceof Response ? error : null;
-      const body = response
-        ? (await response.clone().text()).slice(0, 500)
-        : undefined;
+      const body = response ? (await response.clone().text()).slice(0, 500) : undefined;
       console.error(
         '[restock-demand-sync-error]',
         JSON.stringify({
@@ -150,7 +145,6 @@ export default function DemandReport() {
   const embeddedRoute = useEmbeddedRoute();
   const data = useActionData<typeof action>();
   const nav = useNavigation();
-  const { smUp } = useBreakpoints();
   const busy = nav.state !== 'idle';
   const syncing = busy && nav.formData?.get('intent') === 'sync';
 
@@ -165,8 +159,8 @@ export default function DemandReport() {
           <Card>
             <InlineStack align="space-between" blockAlign="center" gap="300">
               <Text as="p" variant="bodyMd" tone="subdued">
-                Restocks fire alerts automatically via webhook. Use “Check stock now”
-                to reconcile against the Admin API on demand.
+                Restocks fire alerts automatically via webhook. Use “Check stock now” to reconcile
+                against the Admin API on demand.
               </Text>
               <Form method="post">
                 <input type="hidden" name="intent" value="sync" />
@@ -181,7 +175,9 @@ export default function DemandReport() {
         {data?.message && (
           <Layout.Section>
             <Card>
-              <Text as="p" tone={data.ok ? 'success' : 'critical'}>{data.message}</Text>
+              <Text as="p" tone={data.ok ? 'success' : 'critical'}>
+                {data.message}
+              </Text>
             </Card>
           </Layout.Section>
         )}
@@ -194,13 +190,13 @@ export default function DemandReport() {
                 image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
               >
                 <p>
-                  Once shoppers tap “Notify me” on a sold-out variant, the most-wanted
-                  products surface here — so you know exactly what to restock first.
+                  Once shoppers tap “Notify me” on a sold-out variant, the most-wanted products
+                  surface here — so you know exactly what to restock first.
                 </p>
               </EmptyState>
             ) : (
               <IndexTable
-                condensed={!smUp}
+                condensed={false}
                 resourceName={{ singular: 'variant', plural: 'variants' }}
                 itemCount={rows.length}
                 selectable={false}
@@ -215,14 +211,20 @@ export default function DemandReport() {
                   <IndexTable.Row id={row.variantId} key={row.variantId} position={index}>
                     <IndexTable.Cell>
                       <BlockStack gap="050">
-                        <Text as="span" variant="bodyMd" fontWeight="semibold">{row.title}</Text>
+                        <Text as="span" variant="bodyMd" fontWeight="semibold">
+                          {row.title}
+                        </Text>
                         {row.price && (
-                          <Text as="span" variant="bodySm" tone="subdued">{row.price}</Text>
+                          <Text as="span" variant="bodySm" tone="subdued">
+                            {row.price}
+                          </Text>
                         )}
                       </BlockStack>
                     </IndexTable.Cell>
                     <IndexTable.Cell>
-                      <Text as="span" variant="bodyMd" fontWeight="bold">{String(row.waiting)}</Text>
+                      <Text as="span" variant="bodyMd" fontWeight="bold">
+                        {String(row.waiting)}
+                      </Text>
                     </IndexTable.Cell>
                     <IndexTable.Cell>
                       {row.inStock ? (
@@ -251,10 +253,9 @@ export default function DemandReport() {
           <Layout.Section>
             <Card>
               <Text as="p" tone="subdued">
-                {totalWaiting} shopper{totalWaiting === 1 ? '' : 's'} waiting across{' '}
-                {rows.length} variant{rows.length === 1 ? '' : 's'}. “Notify now” is
-                enabled once a variant is back in stock; restocks also fire alerts
-                automatically via the inventory webhook.
+                {totalWaiting} shopper{totalWaiting === 1 ? '' : 's'} waiting across {rows.length}{' '}
+                variant{rows.length === 1 ? '' : 's'}. “Notify now” is enabled once a variant is
+                back in stock; restocks also fire alerts automatically via the inventory webhook.
               </Text>
             </Card>
           </Layout.Section>

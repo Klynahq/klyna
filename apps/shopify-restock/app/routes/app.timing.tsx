@@ -6,7 +6,6 @@
 
 import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
 import { useActionData, useLoaderData, useNavigation, useSubmit } from '@remix-run/react';
-import { useState } from 'react';
 import {
   Badge,
   Banner,
@@ -20,12 +19,12 @@ import {
   Page,
   Text,
 } from '@shopify/polaris';
-import { authenticate } from '../shopify.server';
+import { useState } from 'react';
 import prisma from '../db.server';
-import { useEmbeddedRoute } from '../lib/embedded-routes';
-import { getShopSettings } from '../services/waitlist.server';
 import { getAiClientForShop } from '../lib/ai.server';
 import { getShopAiSettings } from '../lib/ai.server';
+import { useEmbeddedRoute } from '../lib/embedded-routes';
+import { getShopPlan, planSelectionUrl } from '../lib/plans.server';
 import {
   NEXT_MORNING_HOUR,
   SEND_WINDOW_END_HOUR,
@@ -33,7 +32,8 @@ import {
   decideSendTime,
   timezoneForCountry,
 } from '../lib/smart-timing.server';
-import { getShopPlan, planSelectionUrl } from '../lib/plans.server';
+import { getShopSettings } from '../services/waitlist.server';
+import { authenticate } from '../shopify.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { admin, session } = await authenticate.admin(request);
@@ -69,6 +69,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       country: q.countryCode ?? '-',
       timezone: q.timezone ?? 'UTC',
       dueAt: q.dueAt.toISOString(),
+      dueAtLabel: formatDateTime(q.dueAt, q.timezone ?? 'UTC'),
     })),
     window: {
       start: SEND_WINDOW_START_HOUR,
@@ -104,6 +105,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const countryCode = String(form.get('countryCode') ?? 'US').toUpperCase();
     const decision = decideSendTime(countryCode);
     const tz = timezoneForCountry(countryCode);
+    const dueAtLabel = decision.dueAt ? formatDateTime(decision.dueAt, tz) : null;
 
     const ai = await getShopAiSettings(shop);
     if (ai.provider === 'off') {
@@ -111,6 +113,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         preview: {
           tz,
           decision,
+          dueAtLabel,
           aiText: null,
         },
       });
@@ -118,27 +121,36 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     try {
       const client = await getAiClientForShop(shop);
-      const prompt =
-        'Draft one short, friendly subject line (max 60 chars) for a back-in-stock email ' +
-        `that will be delivered to a shopper in ${countryCode} at a respectful local hour. ` +
-        'No emoji, no exclamation marks, no curly quotes. Plain ASCII only. ' +
-        'Reply with just the subject line, nothing else.';
+      const prompt = `Draft one short, friendly subject line (max 60 chars) for a back-in-stock email that will be delivered to a shopper in ${countryCode} at a respectful local hour. No emoji, no exclamation marks, no curly quotes. Plain ASCII only. Reply with just the subject line, nothing else.`;
       const out = await client.complete({ prompt, maxTokens: 60 });
       return json({
         preview: {
           tz,
           decision,
+          dueAtLabel,
           aiText: out.text.trim(),
         },
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'AI request failed.';
-      return json({ preview: { tz, decision, aiText: null }, aiError: message });
+      return json({ preview: { tz, decision, dueAtLabel, aiText: null }, aiError: message });
     }
   }
 
   return json({ ok: false });
 };
+
+function formatDateTime(date: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat('en-US', {
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    month: 'short',
+    timeZone,
+    timeZoneName: 'short',
+    year: 'numeric',
+  }).format(date);
+}
 
 export default function Timing() {
   const embeddedRoute = useEmbeddedRoute();
@@ -183,7 +195,7 @@ export default function Timing() {
     q.channel,
     q.country,
     q.timezone,
-    new Date(q.dueAt).toLocaleString(),
+    q.dueAtLabel,
   ]);
 
   return (
@@ -201,8 +213,8 @@ export default function Timing() {
               action={{ content: 'View Growth plan', url: pricingUrl }}
             >
               <Text as="p">
-                Preview the routing rule below, then upgrade to queue alerts for
-                each shopper's local daytime.
+                Preview the routing rule below, then upgrade to queue alerts for each shopper's
+                local daytime.
               </Text>
             </Banner>
           </Layout.Section>
@@ -211,10 +223,9 @@ export default function Timing() {
           <Layout.Section>
             <Banner tone="info" title="Enable AI in Settings">
               <Text as="p" variant="bodyMd">
-                Smart timing works without AI - the rule below fires immediately
-                during local 6am-10pm and queues for 10am local otherwise. Add a
-                free-tier provider in Settings to also generate context-aware
-                subject lines for queued alerts.
+                Smart timing works without AI - the rule below fires immediately during local
+                6am-10pm and queues for 10am local otherwise. Add a free-tier provider in Settings
+                to also generate context-aware subject lines for queued alerts.
               </Text>
             </Banner>
           </Layout.Section>
@@ -223,14 +234,15 @@ export default function Timing() {
         <Layout.Section>
           <Card>
             <BlockStack gap="300">
-              <Text as="h2" variant="headingMd">How it decides</Text>
+              <Text as="h2" variant="headingMd">
+                How it decides
+              </Text>
               <Text as="p" variant="bodyMd" tone="subdued">
-                For each restock alert, Klyna looks up the recipient's country
-                from their captured locale and maps it to a timezone. If the
-                local hour is between {w.start}:00 and {w.end}:00 the alert fires
-                immediately. Outside that window it's parked in the queue and
-                released at {w.morning}:00 local. Klyna checks the queue
-                automatically throughout the day.
+                For each restock alert, Klyna looks up the recipient's country from their captured
+                locale and maps it to a timezone. If the local hour is between {w.start}:00 and{' '}
+                {w.end}:00 the alert fires immediately. Outside that window it's parked in the queue
+                and released at {w.morning}:00 local. Klyna checks the queue automatically
+                throughout the day.
               </Text>
               <Checkbox
                 label="Enable smart timing"
@@ -251,8 +263,12 @@ export default function Timing() {
           <InlineGrid columns={{ xs: 1, md: 2 }} gap="300">
             <Card>
               <BlockStack gap="100">
-                <Text as="p" variant="bodySm" tone="subdued">In queue</Text>
-                <Text as="p" variant="heading2xl" fontWeight="bold">{String(queueCount)}</Text>
+                <Text as="p" variant="bodySm" tone="subdued">
+                  In queue
+                </Text>
+                <Text as="p" variant="heading2xl" fontWeight="bold">
+                  {String(queueCount)}
+                </Text>
                 <Text as="p" variant="bodySm" tone="subdued">
                   Waiting to send during recipients' local daytime.
                 </Text>
@@ -260,8 +276,12 @@ export default function Timing() {
             </Card>
             <Card>
               <BlockStack gap="100">
-                <Text as="p" variant="bodySm" tone="subdued">Released so far</Text>
-                <Text as="p" variant="heading2xl" fontWeight="bold">{String(recentSent)}</Text>
+                <Text as="p" variant="bodySm" tone="subdued">
+                  Released so far
+                </Text>
+                <Text as="p" variant="heading2xl" fontWeight="bold">
+                  {String(recentSent)}
+                </Text>
                 <Text as="p" variant="bodySm" tone="subdued">
                   Smart-timed alerts delivered during shoppers' local daytime.
                 </Text>
@@ -274,12 +294,14 @@ export default function Timing() {
           <Card>
             <BlockStack gap="300">
               <InlineStack align="space-between" blockAlign="center">
-                <Text as="h2" variant="headingMd">Preview the decision</Text>
+                <Text as="h2" variant="headingMd">
+                  Preview the decision
+                </Text>
                 {busy && <Badge tone="info">Working</Badge>}
               </InlineStack>
               <Text as="p" tone="subdued" variant="bodyMd">
-                Try a country code (ISO alpha-2 - e.g. US, GB, JP) and see how
-                the rule would route a shopper right now.
+                Try a country code (ISO alpha-2 - e.g. US, GB, JP) and see how the rule would route
+                a shopper right now.
               </Text>
               <form
                 onSubmit={(e) => {
@@ -321,7 +343,8 @@ export default function Timing() {
               {preview && (
                 <BlockStack gap="200">
                   <Text as="p" variant="bodyMd">
-                    Timezone: <strong>{preview.tz}</strong> - local hour {preview.decision.localHour}
+                    Timezone: <strong>{preview.tz}</strong> - local hour{' '}
+                    {preview.decision.localHour}
                   </Text>
                   <Text as="p" variant="bodyMd">
                     Verdict:{' '}
@@ -329,13 +352,15 @@ export default function Timing() {
                       <Badge tone="success">Send immediately</Badge>
                     ) : (
                       <Badge tone="attention">
-                        {`Queue for ${preview.decision.dueAt ? new Date(preview.decision.dueAt).toLocaleString() : 'next morning'}`}
+                        {`Queue for ${preview.dueAtLabel ?? 'next morning'}`}
                       </Badge>
                     )}
                   </Text>
                   {preview.aiText && (
                     <Banner tone="info" title="AI-drafted subject line">
-                      <Text as="p" variant="bodyMd">{preview.aiText}</Text>
+                      <Text as="p" variant="bodyMd">
+                        {preview.aiText}
+                      </Text>
                     </Banner>
                   )}
                 </BlockStack>
@@ -343,7 +368,9 @@ export default function Timing() {
 
               {typeof aiError === 'string' && aiError && (
                 <Banner tone="critical" title="AI request failed">
-                  <Text as="p" variant="bodyMd">{aiError}</Text>
+                  <Text as="p" variant="bodyMd">
+                    {aiError}
+                  </Text>
                 </Banner>
               )}
             </BlockStack>
@@ -354,7 +381,9 @@ export default function Timing() {
           <Layout.Section>
             <Card>
               <BlockStack gap="300">
-                <Text as="h2" variant="headingMd">Currently queued (sample)</Text>
+                <Text as="h2" variant="headingMd">
+                  Currently queued (sample)
+                </Text>
                 <DataTable
                   columnContentTypes={['text', 'text', 'text', 'text', 'text']}
                   headings={['Recipient', 'Channel', 'Country', 'Timezone', 'Due at']}
