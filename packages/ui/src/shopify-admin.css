@@ -455,6 +455,12 @@
   padding-top: 4px;
 }
 
+.KlynaAdmin .KlynaToolGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
 .KlynaAdmin .KlynaShortcut {
   display: grid;
   gap: 3px;
@@ -661,6 +667,10 @@
   }
 
   .KlynaAdmin .KlynaWorkspaceGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .KlynaAdmin .KlynaToolGrid {
     grid-template-columns: 1fr;
   }
 }
