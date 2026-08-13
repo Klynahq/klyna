@@ -6,6 +6,35 @@ export const PUBLIC_BILLING_PLAN_NAMES = [PRO_PLAN] as const;
 
 export type PublicBillingPlanName = (typeof PUBLIC_BILLING_PLAN_NAMES)[number];
 
+type BillingSubscription = {
+  id?: string | null;
+  name?: string | null;
+  status?: string | null;
+  createdAt?: string | null;
+  test?: boolean | null;
+};
+
+type BillingChecker = {
+  check(input: {
+    plans: Array<(typeof BILLING_PLAN_NAMES)[number]>;
+    isTest: boolean;
+  }): Promise<{
+    hasActivePayment?: boolean;
+    appSubscriptions?: BillingSubscription[];
+  }>;
+};
+
+type AdminClient = {
+  graphql(query: string, options?: { variables?: Record<string, unknown> }): Promise<Response>;
+};
+
+export interface ActiveBillingState {
+  hasActivePayment: boolean;
+  activePlan: PublicBillingPlanName | null;
+  activeSubscriptionId: string | null;
+  activeSubscriptionName: string | null;
+}
+
 export interface PublicBillingPlan {
   name: PublicBillingPlanName;
   price: number;
@@ -32,11 +61,11 @@ export function normalizeBillingPlanName(planName?: string | null): PublicBillin
   if (!planName) return null;
   const normalized = planName.trim().toLowerCase();
 
-  if (normalized === 'pro' || normalized.includes('pro plan')) {
+  if (normalized === 'pro' || normalized.includes('pro')) {
     return PRO_PLAN;
   }
 
-  if (normalized === 'starter' || normalized.includes('starter plan')) {
+  if (normalized === 'starter' || normalized.includes('starter')) {
     return PRO_PLAN;
   }
 
@@ -64,4 +93,82 @@ export function publicBillingPlans(): PublicBillingPlan[] {
       ],
     },
   ];
+}
+
+export async function getActiveBillingState(
+  admin: AdminClient,
+  billing: BillingChecker,
+  isTest: boolean,
+): Promise<ActiveBillingState> {
+  const subscriptions: BillingSubscription[] = [];
+  let hasActivePayment = false;
+
+  try {
+    const billingCheck = await billing.check({
+      plans: [...BILLING_PLAN_NAMES],
+      isTest,
+    });
+
+    hasActivePayment = Boolean(billingCheck.hasActivePayment);
+    subscriptions.push(...(billingCheck.appSubscriptions ?? []));
+  } catch (error) {
+    console.error('Shopify billing.check failed; falling back to activeSubscriptions.', error);
+  }
+
+  try {
+    subscriptions.push(...(await getCurrentAppSubscriptions(admin)));
+  } catch (error) {
+    console.error('Shopify activeSubscriptions lookup failed.', error);
+  }
+
+  const activeSubscription = pickActiveSubscription(subscriptions);
+  const activePlan = normalizeBillingPlanName(activeSubscription?.name);
+
+  return {
+    hasActivePayment: Boolean(activeSubscription) || hasActivePayment,
+    activePlan,
+    activeSubscriptionId: activeSubscription?.id ?? null,
+    activeSubscriptionName: activeSubscription?.name ?? null,
+  };
+}
+
+async function getCurrentAppSubscriptions(admin: AdminClient): Promise<BillingSubscription[]> {
+  const response = await admin.graphql(/* GraphQL */ `
+    query KlynaCurrentAppBilling {
+      currentAppInstallation {
+        activeSubscriptions {
+          id
+          name
+          status
+          createdAt
+          test
+        }
+      }
+    }
+  `);
+
+  const payload = (await response.json()) as {
+    data?: {
+      currentAppInstallation?: {
+        activeSubscriptions?: BillingSubscription[];
+      } | null;
+    };
+    errors?: unknown;
+  };
+
+  if (!response.ok || payload.errors) {
+    return [];
+  }
+
+  return payload.data?.currentAppInstallation?.activeSubscriptions ?? [];
+}
+
+function pickActiveSubscription(subscriptions: BillingSubscription[]) {
+  return subscriptions
+    .filter((subscription) => normalizeBillingPlanName(subscription.name))
+    .filter((subscription) => {
+      const status = subscription.status?.toUpperCase();
+      return !status || status === 'ACTIVE';
+    })
+    .sort((a, b) => Date.parse(b.createdAt ?? '') - Date.parse(a.createdAt ?? ''))[0];
 }

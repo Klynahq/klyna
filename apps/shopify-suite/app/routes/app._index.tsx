@@ -13,11 +13,12 @@ import {
 } from '@shopify/polaris';
 import type { CSSProperties } from 'react';
 import prisma from '../db.server';
+import { getActiveBillingState } from '../lib/billing-plans';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { type ProductReport, getProductKey, products, toneForStatus } from '../lib/products';
 import { buildReport } from '../lib/scanners.server';
 import { getShopSnapshot } from '../lib/shopify-data.server';
-import { BILLING_PLAN_NAMES, authenticate, isBillingTest } from '../shopify.server';
+import { authenticate, isBillingTest } from '../shopify.server';
 
 const FREE_SCAN_LIMIT = 3;
 
@@ -28,11 +29,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   let hasActivePayment = false;
 
   try {
-    const billingCheck = await billing.check({
-      plans: [...BILLING_PLAN_NAMES],
-      isTest: isBillingTest(),
-    });
-    hasActivePayment = billingCheck.hasActivePayment;
+    const billingState = await getActiveBillingState(admin, billing, isBillingTest());
+    hasActivePayment = billingState.hasActivePayment;
   } catch (error) {
     console.error('Billing check failed on dashboard; using free access.', error);
   }
@@ -96,11 +94,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   let hasActivePayment = false;
 
   try {
-    const billingCheck = await billing.check({
-      plans: [...BILLING_PLAN_NAMES],
-      isTest: isBillingTest(),
-    });
-    hasActivePayment = billingCheck.hasActivePayment;
+    const billingState = await getActiveBillingState(admin, billing, isBillingTest());
+    hasActivePayment = billingState.hasActivePayment;
   } catch (error) {
     console.error('Billing check failed before scan; using free access.', error);
   }
