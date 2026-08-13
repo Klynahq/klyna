@@ -13,7 +13,6 @@ import {
   Button,
   Card,
   EmptyState,
-  IndexTable,
   InlineStack,
   Layout,
   Page,
@@ -245,64 +244,69 @@ export default function Subscribers() {
                   <p>Waitlist signups from your storefront “Notify me” button appear here.</p>
                 </EmptyState>
               ) : (
-                <IndexTable
-                  condensed={false}
-                  resourceName={{ singular: 'subscriber', plural: 'subscribers' }}
-                  itemCount={subscribers.length}
-                  selectable={false}
-                  headings={[
-                    { title: 'Contact' },
-                    { title: 'Product' },
-                    { title: 'Status' },
-                    { title: 'Signed up' },
-                    { title: '' },
-                  ]}
-                >
-                  {subscribers.map((s, index) => (
-                    <IndexTable.Row id={s.id} key={s.id} position={index}>
-                      <IndexTable.Cell>
-                        <Text as="span" variant="bodyMd" fontWeight="semibold">
-                          {s.contact ?? '—'}
-                        </Text>
-                      </IndexTable.Cell>
-                      <IndexTable.Cell>{s.product}</IndexTable.Cell>
-                      <IndexTable.Cell>{statusBadge(s.status)}</IndexTable.Cell>
-                      <IndexTable.Cell>
-                        <Text as="span" variant="bodySm" tone="subdued">
-                          {s.createdAtLabel}
-                        </Text>
-                      </IndexTable.Cell>
-                      <IndexTable.Cell>
-                        <InlineStack gap="200">
-                          {s.status === 'NOTIFIED' && (
-                            <Form method="post">
-                              <input type="hidden" name="intent" value="rearm" />
-                              <input type="hidden" name="id" value={s.id} />
-                              <Button submit size="slim" variant="plain" disabled={busy}>
-                                Re-arm
-                              </Button>
-                            </Form>
-                          )}
-                          {s.status !== 'CANCELLED' && (
-                            <Form method="post">
-                              <input type="hidden" name="intent" value="cancel" />
-                              <input type="hidden" name="id" value={s.id} />
-                              <Button
-                                submit
-                                size="slim"
-                                variant="plain"
-                                tone="critical"
-                                disabled={busy}
-                              >
-                                Remove
-                              </Button>
-                            </Form>
-                          )}
-                        </InlineStack>
-                      </IndexTable.Cell>
-                    </IndexTable.Row>
-                  ))}
-                </IndexTable>
+                <div className="KlynaDataTableWrap">
+                  <table className="KlynaDataTable KlynaDataTable--subscribers">
+                    <thead>
+                      <tr>
+                        <th scope="col">Contact</th>
+                        <th scope="col">Product</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Signed up</th>
+                        <th scope="col">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {subscribers.map((s) => (
+                        <tr key={s.id}>
+                          <td data-label="Contact">
+                            <Text as="span" variant="bodyMd" fontWeight="semibold">
+                              {s.contact ?? '—'}
+                            </Text>
+                          </td>
+                          <td data-label="Product">{s.product}</td>
+                          <td data-label="Status">{statusBadge(s.status)}</td>
+                          <td data-label="Signed up">
+                            <Text as="span" variant="bodySm" tone="subdued">
+                              {s.createdAtLabel}
+                            </Text>
+                          </td>
+                          <td className="KlynaDataTable__actions" data-label="Action">
+                            {s.status === 'CANCELLED' ? (
+                              <Text as="span" variant="bodySm" tone="subdued">
+                                No action
+                              </Text>
+                            ) : (
+                              <InlineStack gap="200">
+                                {s.status === 'NOTIFIED' && (
+                                  <Form method="post">
+                                    <input type="hidden" name="intent" value="rearm" />
+                                    <input type="hidden" name="id" value={s.id} />
+                                    <Button submit size="slim" variant="plain" disabled={busy}>
+                                      Re-arm
+                                    </Button>
+                                  </Form>
+                                )}
+                                <Form method="post">
+                                  <input type="hidden" name="intent" value="cancel" />
+                                  <input type="hidden" name="id" value={s.id} />
+                                  <Button
+                                    submit
+                                    size="slim"
+                                    variant="plain"
+                                    tone="critical"
+                                    disabled={busy}
+                                  >
+                                    Remove
+                                  </Button>
+                                </Form>
+                              </InlineStack>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </Tabs>
           </Card>

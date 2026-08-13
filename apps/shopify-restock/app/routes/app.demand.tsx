@@ -6,7 +6,6 @@ import {
   Button,
   Card,
   EmptyState,
-  IndexTable,
   InlineStack,
   Layout,
   Page,
@@ -195,56 +194,57 @@ export default function DemandReport() {
                 </p>
               </EmptyState>
             ) : (
-              <IndexTable
-                condensed={false}
-                resourceName={{ singular: 'variant', plural: 'variants' }}
-                itemCount={rows.length}
-                selectable={false}
-                headings={[
-                  { title: 'Product' },
-                  { title: 'Waiting' },
-                  { title: 'Stock' },
-                  { title: '' },
-                ]}
-              >
-                {rows.map((row, index) => (
-                  <IndexTable.Row id={row.variantId} key={row.variantId} position={index}>
-                    <IndexTable.Cell>
-                      <BlockStack gap="050">
-                        <Text as="span" variant="bodyMd" fontWeight="semibold">
-                          {row.title}
-                        </Text>
-                        {row.price && (
-                          <Text as="span" variant="bodySm" tone="subdued">
-                            {row.price}
+              <div className="KlynaDataTableWrap">
+                <table className="KlynaDataTable KlynaDataTable--demand">
+                  <thead>
+                    <tr>
+                      <th scope="col">Product</th>
+                      <th scope="col">Waiting</th>
+                      <th scope="col">Stock</th>
+                      <th scope="col">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((row) => (
+                      <tr key={row.variantId}>
+                        <td data-label="Product">
+                          <BlockStack gap="050">
+                            <Text as="span" variant="bodyMd" fontWeight="semibold">
+                              {row.title}
+                            </Text>
+                            {row.price && (
+                              <Text as="span" variant="bodySm" tone="subdued">
+                                {row.price}
+                              </Text>
+                            )}
+                          </BlockStack>
+                        </td>
+                        <td data-label="Waiting">
+                          <Text as="span" variant="bodyMd" fontWeight="bold">
+                            {String(row.waiting)}
                           </Text>
-                        )}
-                      </BlockStack>
-                    </IndexTable.Cell>
-                    <IndexTable.Cell>
-                      <Text as="span" variant="bodyMd" fontWeight="bold">
-                        {String(row.waiting)}
-                      </Text>
-                    </IndexTable.Cell>
-                    <IndexTable.Cell>
-                      {row.inStock ? (
-                        <Badge tone="success">{`In stock${row.available != null ? ` · ${row.available}` : ''}`}</Badge>
-                      ) : (
-                        <Badge tone="critical">Sold out</Badge>
-                      )}
-                    </IndexTable.Cell>
-                    <IndexTable.Cell>
-                      <Form method="post">
-                        <input type="hidden" name="intent" value="flush" />
-                        <input type="hidden" name="variantId" value={row.variantId} />
-                        <Button submit size="slim" disabled={!row.inStock} variant="plain">
-                          Notify now
-                        </Button>
-                      </Form>
-                    </IndexTable.Cell>
-                  </IndexTable.Row>
-                ))}
-              </IndexTable>
+                        </td>
+                        <td data-label="Stock">
+                          {row.inStock ? (
+                            <Badge tone="success">{`In stock${row.available != null ? ` · ${row.available}` : ''}`}</Badge>
+                          ) : (
+                            <Badge tone="critical">Sold out</Badge>
+                          )}
+                        </td>
+                        <td className="KlynaDataTable__actions" data-label="Action">
+                          <Form method="post">
+                            <input type="hidden" name="intent" value="flush" />
+                            <input type="hidden" name="variantId" value={row.variantId} />
+                            <Button submit size="slim" disabled={!row.inStock} variant="plain">
+                              Notify now
+                            </Button>
+                          </Form>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </Card>
         </Layout.Section>
