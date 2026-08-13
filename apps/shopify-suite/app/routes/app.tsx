@@ -26,8 +26,6 @@ export default function App() {
   const historyUrl = useEmbeddedRoute('/app/history');
   const playbookUrl = useEmbeddedRoute('/app/playbook');
   const billingUrl = useEmbeddedRoute('/app/billing');
-  const workspaceLabel =
-    product.key === 'redirect-guard' ? 'Redirect workspace' : 'Operating guide';
 
   return (
     <AppProvider isEmbeddedApp apiKey={apiKey}>
@@ -36,7 +34,7 @@ export default function App() {
           {product.shortName}
         </Link>
         <Link to={historyUrl}>Scan history</Link>
-        <Link to={playbookUrl}>{workspaceLabel}</Link>
+        <Link to={playbookUrl}>{product.workspaceName}</Link>
         <Link to={billingUrl}>Plan</Link>
       </NavMenu>
       <div className="KlynaAdmin">

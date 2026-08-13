@@ -1,4 +1,9 @@
-import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from '@remix-run/node';
+import {
+  type ActionFunctionArgs,
+  type LoaderFunctionArgs,
+  type SerializeFrom,
+  json,
+} from '@remix-run/node';
 import {
   Form,
   useActionData,
@@ -25,7 +30,14 @@ import {
 } from '@shopify/polaris';
 import { useEffect, useState } from 'react';
 import prisma from '../db.server';
-import { getProductKey, products } from '../lib/products';
+import {
+  type Finding,
+  type ProductKey,
+  type Metric as ProductMetric,
+  getProductKey,
+  products,
+} from '../lib/products';
+import { buildReport } from '../lib/scanners.server';
 import { type ShopSnapshot, getShopSnapshot } from '../lib/shopify-data.server';
 import { authenticate } from '../shopify.server';
 
@@ -63,16 +75,48 @@ type RedirectRisk = {
   detail: string;
 };
 
+type WorkspaceLink = {
+  label: string;
+  url: string;
+  detail: string;
+};
+
+type WorkspaceItem = {
+  id: string;
+  title: string;
+  detail: string;
+  evidence: string;
+  action: string;
+  actionLabel: string;
+  tone: 'critical' | 'warning' | 'info' | 'success';
+  adminUrl?: string;
+  storefrontUrl?: string;
+};
+
+type ProductWorkspace = {
+  title: string;
+  subtitle: string;
+  summary: string;
+  metrics: ProductMetric[];
+  items: WorkspaceItem[];
+  quickLinks: WorkspaceLink[];
+  generatedAt: string;
+};
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session, admin } = await authenticate.admin(request);
   const productKey = getProductKey();
   const product = products[productKey];
 
   if (productKey !== 'redirect-guard') {
+    const snapshot = await getShopSnapshot(admin, productKey);
+    const report = await buildReport(productKey, snapshot);
+
     return json({
-      mode: 'guide' as const,
+      mode: 'workspace' as const,
       product,
-      steps: guideSteps[productKey as keyof typeof guideSteps] ?? [],
+      shop: session.shop,
+      workspace: buildProductWorkspace(productKey, snapshot, report),
     });
   }
 
@@ -120,7 +164,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { session, admin } = await authenticate.admin(request);
   if (getProductKey() !== 'redirect-guard') {
-    return json({ error: 'Redirect actions are only available in Redirect Guard.' }, { status: 400 });
+    return json(
+      { error: 'Redirect actions are only available in Redirect Guard.' },
+      { status: 400 },
+    );
   }
 
   const form = await request.formData();
@@ -200,11 +247,153 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 export default function Playbook() {
   const data = useLoaderData<typeof loader>();
-  if (data.mode === 'guide') return <Guide product={data.product} steps={data.steps} />;
+  if (data.mode === 'workspace') return <ProductFixWorkspace data={data} />;
   return <RedirectWorkspace data={data} />;
 }
 
-function RedirectWorkspace({ data }: { data: Extract<ReturnType<typeof useLoaderData<typeof loader>>, { mode: 'redirect' }> }) {
+type LoaderData = SerializeFrom<typeof loader>;
+type ProductWorkspaceData = Extract<LoaderData, { mode: 'workspace' }>;
+type RedirectWorkspaceData = Extract<LoaderData, { mode: 'redirect' }>;
+
+function ProductFixWorkspace({ data }: { data: ProductWorkspaceData }) {
+  const { product, workspace } = data;
+
+  return (
+    <Page
+      title={workspace.title}
+      subtitle={workspace.subtitle}
+      primaryAction={{
+        content: 'Export fix queue',
+        onAction: () => downloadWorkspace(product.name, workspace.items),
+      }}
+    >
+      <Layout>
+        <Layout.Section>
+          <div className="KlynaDashboardLead KlynaDashboardLead--workspace">
+            <div className="KlynaDashboardLead__copy">
+              <InlineStack gap="200" blockAlign="center">
+                <p className="KlynaEyebrow">{product.shortName} workspace</p>
+                <Badge
+                  tone={
+                    workspace.items.some((item) => item.tone === 'critical') ? 'critical' : 'info'
+                  }
+                >
+                  {`${workspace.items.length} queued`}
+                </Badge>
+              </InlineStack>
+              <h2 className="KlynaLeadTitle">{product.workspaceDescription}</h2>
+              <p className="KlynaLeadBody">{workspace.summary}</p>
+            </div>
+            <div className="KlynaWorkspaceStamp">
+              <span>Last checked</span>
+              <strong>{formatIsoDate(workspace.generatedAt)}</strong>
+            </div>
+          </div>
+        </Layout.Section>
+
+        <Layout.Section>
+          <Card padding="0">
+            <div className="KlynaMetricStrip">
+              {workspace.metrics.map((metric) => (
+                <div className="KlynaMetric" key={metric.label}>
+                  <span className="KlynaMetric__label">{metric.label}</span>
+                  <strong
+                    className={`KlynaMetric__value${metric.tone === 'critical' ? ' KlynaMetric__value--critical' : metric.tone === 'warning' ? ' KlynaMetric__value--warning' : metric.tone === 'success' ? ' KlynaMetric__value--success' : ''}`}
+                  >
+                    {metric.value}
+                  </strong>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </Layout.Section>
+
+        <Layout.Section>
+          <div className="KlynaWorkspaceGrid">
+            <Card>
+              <BlockStack gap="300">
+                <div className="KlynaSectionHeader">
+                  <div>
+                    <h2>Prioritized fix queue</h2>
+                    <p>Open the Shopify record, make the change, then rerun the dashboard scan.</p>
+                  </div>
+                </div>
+                {workspace.items.map((item) => (
+                  <div className="KlynaFinding" data-severity={item.tone} key={item.id}>
+                    <BlockStack gap="150">
+                      <InlineStack align="space-between" gap="200">
+                        <Text as="h3" variant="headingSm">
+                          {item.title}
+                        </Text>
+                        <Badge tone={badgeTone(item.tone)}>{labelFor(item.tone)}</Badge>
+                      </InlineStack>
+                      <Text as="p">{item.detail}</Text>
+                      <Text as="p" tone="subdued">
+                        Evidence: {item.evidence}
+                      </Text>
+                      <Text as="p" tone="subdued">
+                        Next step: {item.action}
+                      </Text>
+                      <InlineStack gap="200">
+                        {item.adminUrl ? (
+                          <Button size="slim" url={item.adminUrl} external>
+                            {item.actionLabel}
+                          </Button>
+                        ) : null}
+                        {item.storefrontUrl ? (
+                          <Button size="slim" url={item.storefrontUrl} external>
+                            View storefront page
+                          </Button>
+                        ) : null}
+                      </InlineStack>
+                    </BlockStack>
+                  </div>
+                ))}
+              </BlockStack>
+            </Card>
+
+            <div className="KlynaSidebar">
+              <Card>
+                <BlockStack gap="200">
+                  <Text as="h2" variant="headingMd">
+                    Shopify shortcuts
+                  </Text>
+                  {workspace.quickLinks.map((link) => (
+                    <a
+                      className="KlynaShortcut"
+                      href={link.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      key={link.label}
+                    >
+                      <span>{link.label}</span>
+                      <small>{link.detail}</small>
+                    </a>
+                  ))}
+                </BlockStack>
+              </Card>
+
+              <Card>
+                <BlockStack gap="200">
+                  <Text as="h2" variant="headingMd">
+                    Working rule
+                  </Text>
+                  <List type="bullet">
+                    {(guideSteps[product.key as keyof typeof guideSteps] ?? []).map((step) => (
+                      <List.Item key={step}>{step}</List.Item>
+                    ))}
+                  </List>
+                </BlockStack>
+              </Card>
+            </div>
+          </div>
+        </Layout.Section>
+      </Layout>
+    </Page>
+  );
+}
+
+function RedirectWorkspace({ data }: { data: RedirectWorkspaceData }) {
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const revalidator = useRevalidator();
@@ -223,8 +412,11 @@ function RedirectWorkspace({ data }: { data: Extract<ReturnType<typeof useLoader
   return (
     <Page
       title="Redirect workspace"
-      subtitle="Detect URL losses, validate destinations, and create reviewed Shopify redirects."
-      primaryAction={{ content: 'Export redirect map', onAction: () => downloadRedirects(data.redirects) }}
+      subtitle={data.product.workspaceDescription}
+      primaryAction={{
+        content: 'Export redirect map',
+        onAction: () => downloadRedirects(data.redirects),
+      }}
     >
       <Layout>
         {actionData && 'error' in actionData && actionData.error ? (
@@ -322,8 +514,8 @@ function RedirectWorkspace({ data }: { data: Extract<ReturnType<typeof useLoader
                       URL-loss baseline
                     </Text>
                     <Text as="p" tone="subdued">
-                      Save today&apos;s live catalog and content paths. Future checks flag paths that
-                      disappear without redirect coverage.
+                      Save today&apos;s live catalog and content paths. Future checks flag paths
+                      that disappear without redirect coverage.
                     </Text>
                   </BlockStack>
                   <Badge tone={data.baseline ? 'success' : 'warning'}>
@@ -443,7 +635,8 @@ function RedirectWorkspace({ data }: { data: Extract<ReturnType<typeof useLoader
                     Existing redirect map
                   </Text>
                   <Text as="p" tone="subdued">
-                    Current Shopify redirects. Export the full map before a migration or catalog cleanup.
+                    Current Shopify redirects. Export the full map before a migration or catalog
+                    cleanup.
                   </Text>
                 </BlockStack>
                 <Button onClick={() => downloadRedirects(data.redirects)}>Download CSV</Button>
@@ -503,30 +696,253 @@ function RedirectWorkspace({ data }: { data: Extract<ReturnType<typeof useLoader
   );
 }
 
-function Guide({ product, steps }: { product: (typeof products)[keyof typeof products]; steps: string[] }) {
-  return (
-    <Page title={`${product.name} operating guide`} subtitle={product.listingPositioning}>
-      <Layout>
-        <Layout.Section>
-          <Card>
-            <BlockStack gap="200">
-              <Text as="h2" variant="headingMd">
-                Safe operating rules
-              </Text>
-              <List type="bullet">
-                {steps.map((step) => (
-                  <List.Item key={step}>{step}</List.Item>
-                ))}
-              </List>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
-      </Layout>
-    </Page>
-  );
+function buildProductWorkspace(
+  productKey: Exclude<ProductKey, 'redirect-guard'>,
+  snapshot: ShopSnapshot,
+  report: { summary: string; metrics: ProductMetric[]; findings: Finding[]; generatedAt: string },
+): ProductWorkspace {
+  const base = shopifyAdminBase(snapshot);
+
+  switch (productKey) {
+    case 'cleanroom':
+      return {
+        title: 'Cleanup queue',
+        subtitle: 'Theme and app residue evidence from the current storefront.',
+        summary:
+          'Klyna samples live storefront HTML, highlights repeated app signatures and duplicate tracking, then packages a safe developer handoff.',
+        metrics: report.metrics,
+        generatedAt: report.generatedAt,
+        quickLinks: [
+          link('Theme library', `${base}/themes`, 'Duplicate the live theme before code cleanup.'),
+          link(
+            'Installed apps',
+            `${base}/settings/apps`,
+            'Match script evidence to the active app stack.',
+          ),
+          link('Online Store', `${base}/online_store`, 'Review storefront surfaces after cleanup.'),
+        ],
+        items: findingsToWorkspaceItems(report.findings, {
+          actionLabel: 'Open theme library',
+          adminUrl: `${base}/themes`,
+        }),
+      };
+    case 'promo-qa':
+      return promoWorkspace(snapshot, report, base);
+    case 'pixel-doctor':
+      return {
+        title: 'Tracking evidence map',
+        subtitle: 'Duplicate event, platform, and consent signals from sampled storefront pages.',
+        summary:
+          'Use this map to identify which app, customer event, or theme snippet should own each marketing signal before paid traffic scales.',
+        metrics: report.metrics,
+        generatedAt: report.generatedAt,
+        quickLinks: [
+          link(
+            'Customer events',
+            `${base}/settings/customer_events`,
+            'Audit Shopify pixel sources.',
+          ),
+          link(
+            'Privacy settings',
+            `${base}/settings/privacy`,
+            'Confirm consent collection settings.',
+          ),
+          link('Theme library', `${base}/themes`, 'Check hardcoded pixels in theme code.'),
+        ],
+        items: findingsToWorkspaceItems(report.findings, {
+          actionLabel: 'Open customer events',
+          adminUrl: `${base}/settings/customer_events`,
+        }),
+      };
+    case 'feed-doctor':
+      return feedWorkspace(snapshot, report, base);
+  }
 }
 
-function Metric({ label, value, tone }: { label: string; value: string; tone?: 'success' | 'warning' | 'critical' }) {
+function promoWorkspace(
+  snapshot: ShopSnapshot,
+  report: { metrics: ProductMetric[]; findings: Finding[]; generatedAt: string },
+  base: string,
+): ProductWorkspace {
+  const activeDiscounts = snapshot.discounts.filter((discount) => discount.status === 'ACTIVE');
+  const items =
+    activeDiscounts.length > 0
+      ? activeDiscounts.slice(0, 25).map((discount) => {
+          const combines = discount.combinesWith;
+          const combineValues = combines
+            ? [
+                combines.orderDiscounts ? 'order' : null,
+                combines.productDiscounts ? 'product' : null,
+                combines.shippingDiscounts ? 'shipping' : null,
+              ].filter(Boolean)
+            : [];
+          const hasNoCombinations = Boolean(combines) && combineValues.length === 0;
+          const hasNoExpiry = !discount.endsAt;
+          const tone = hasNoCombinations ? 'critical' : hasNoExpiry ? 'warning' : 'info';
+          const detailParts = [
+            discount.type.replace(/^Discount/, ''),
+            discount.endsAt ? `ends ${formatIsoDate(discount.endsAt)}` : 'no end date',
+            combineValues.length ? `combines with ${combineValues.join(', ')}` : 'does not combine',
+          ];
+
+          return {
+            id: `promo-${discount.id}`,
+            title: discount.title,
+            detail: detailParts.join(' · '),
+            evidence: discount.status ?? 'ACTIVE',
+            action: hasNoCombinations
+              ? 'Open the discount, document the winning rule, and test the campaign cart before launch.'
+              : hasNoExpiry
+                ? 'Add an end date or an owner reminder before launching paid traffic.'
+                : 'Keep this discount in the launch checklist and test it against top campaign products.',
+            actionLabel: 'Open discount',
+            tone,
+            adminUrl: discountAdminUrl(base, discount.id),
+          } satisfies WorkspaceItem;
+        })
+      : [
+          {
+            id: 'promo-empty',
+            title: 'No active discounts found',
+            detail: 'Klyna did not find active Shopify discounts in the current sample.',
+            evidence: '0 active discounts',
+            action:
+              'Create or schedule the campaign discount, then rerun Promo QA before publishing the sale.',
+            actionLabel: 'Open discounts',
+            tone: 'info',
+            adminUrl: `${base}/discounts`,
+          } satisfies WorkspaceItem,
+        ];
+
+  return {
+    title: 'Launch QA board',
+    subtitle: 'Active discounts, expiry gaps, stacking risk, and campaign test scenarios.',
+    summary:
+      'Promo QA turns discount settings into a launch board so marketing, ops, and support know what will happen before customers hit checkout.',
+    metrics: report.metrics,
+    generatedAt: report.generatedAt,
+    quickLinks: [
+      link('Discounts', `${base}/discounts`, 'Edit code and automatic discounts.'),
+      link('Products', `${base}/products`, 'Open the products used in launch carts.'),
+      link('Markets', `${base}/settings/markets`, 'Confirm market-specific campaign assumptions.'),
+    ],
+    items,
+  };
+}
+
+function feedWorkspace(
+  snapshot: ShopSnapshot,
+  report: { metrics: ProductMetric[]; findings: Finding[]; generatedAt: string },
+  base: string,
+): ProductWorkspace {
+  const productItems = snapshot.products
+    .map((product) => {
+      const missingBarcode = product.variants.filter((variant) => !variant.barcode).length;
+      const missingSku = product.variants.filter((variant) => !variant.sku).length;
+      const gaps = [
+        !product.vendor ? 'brand/vendor' : null,
+        !product.imageUrl ? 'featured image' : null,
+        !product.seoTitle ? 'SEO title' : null,
+        !product.seoDescription ? 'SEO description' : null,
+        missingBarcode ? `${missingBarcode} GTIN/barcode` : null,
+        missingSku ? `${missingSku} SKU` : null,
+      ].filter(Boolean) as string[];
+
+      if (gaps.length === 0) return null;
+
+      return {
+        id: `feed-${product.id}`,
+        title: product.title,
+        detail: `Missing ${gaps.join(', ')}.`,
+        evidence: `${product.variants.length} variants sampled`,
+        action:
+          'Open the product in Shopify, fill the missing commerce fields, then rerun Feed Doctor before submitting feeds.',
+        actionLabel: 'Open product',
+        tone: !product.imageUrl || missingBarcode > 0 ? 'critical' : 'warning',
+        adminUrl: productAdminUrl(base, product.id),
+        storefrontUrl: product.onlineStoreUrl ?? undefined,
+      } satisfies WorkspaceItem;
+    })
+    .filter(Boolean) as WorkspaceItem[];
+
+  return {
+    title: 'Catalog fix queue',
+    subtitle:
+      'Product and variant records that can block Shopping, catalog, or marketplace quality.',
+    summary:
+      'Feed Doctor prioritizes the catalog fields merchants can fix directly in Shopify before Google Merchant Center or marketplace syncs complain.',
+    metrics: report.metrics,
+    generatedAt: report.generatedAt,
+    quickLinks: [
+      link('Products', `${base}/products`, 'Edit product feed-critical fields.'),
+      link('Inventory', `${base}/products/inventory`, 'Review SKU and inventory data.'),
+      link('Markets', `${base}/settings/markets`, 'Check cross-market catalog readiness.'),
+    ],
+    items:
+      productItems.length > 0
+        ? productItems.slice(0, 30)
+        : findingsToWorkspaceItems(report.findings, {
+            actionLabel: 'Open products',
+            adminUrl: `${base}/products`,
+          }),
+  };
+}
+
+function findingsToWorkspaceItems(
+  findings: Finding[],
+  options: { actionLabel: string; adminUrl: string },
+): WorkspaceItem[] {
+  return findings.map((finding) => ({
+    id: finding.id,
+    title: finding.title,
+    detail: finding.detail,
+    evidence: finding.evidence ?? labelFor(finding.severity),
+    action: finding.action,
+    actionLabel: options.actionLabel,
+    tone: finding.severity,
+    adminUrl: options.adminUrl,
+  }));
+}
+
+function shopifyAdminBase(snapshot: ShopSnapshot) {
+  return `https://admin.shopify.com/store/${snapshot.myshopifyDomain.replace(/\.myshopify\.com$/, '')}`;
+}
+
+function productAdminUrl(base: string, gid: string) {
+  return `${base}/products/${numericId(gid)}`;
+}
+
+function discountAdminUrl(base: string, gid: string) {
+  return `${base}/discounts/${numericId(gid)}`;
+}
+
+function numericId(gid: string) {
+  return gid.split('/').pop() ?? gid;
+}
+
+function link(label: string, url: string, detail: string): WorkspaceLink {
+  return { label, url, detail };
+}
+
+function badgeTone(severity: string) {
+  if (severity === 'critical') return 'critical' as const;
+  if (severity === 'warning') return 'warning' as const;
+  if (severity === 'success') return 'success' as const;
+  return 'info' as const;
+}
+
+function labelFor(value: string) {
+  return value
+    .split(/[-_]/)
+    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+    .join(' ');
+}
+
+function Metric({
+  label,
+  value,
+  tone,
+}: { label: string; value: string; tone?: 'success' | 'warning' | 'critical' }) {
   return (
     <Card>
       <BlockStack gap="100">
@@ -546,9 +962,21 @@ function Metric({ label, value, tone }: { label: string; value: string; tone?: '
 
 function contentInventory(snapshot: ShopSnapshot) {
   return [
-    ...snapshot.products.map((item) => ({ type: 'Product', title: item.title, path: urlPath(item.onlineStoreUrl) })),
-    ...snapshot.collections.map((item) => ({ type: 'Collection', title: item.title, path: urlPath(item.onlineStoreUrl) })),
-    ...snapshot.pages.map((item) => ({ type: 'Page', title: item.title, path: urlPath(item.onlineStoreUrl) })),
+    ...snapshot.products.map((item) => ({
+      type: 'Product',
+      title: item.title,
+      path: urlPath(item.onlineStoreUrl),
+    })),
+    ...snapshot.collections.map((item) => ({
+      type: 'Collection',
+      title: item.title,
+      path: urlPath(item.onlineStoreUrl),
+    })),
+    ...snapshot.pages.map((item) => ({
+      type: 'Page',
+      title: item.title,
+      path: urlPath(item.onlineStoreUrl),
+    })),
   ].filter((item): item is { type: string; title: string; path: string } => Boolean(item.path));
 }
 
@@ -565,7 +993,9 @@ function parsePaths(value?: string | null): string[] {
   if (!value) return [];
   try {
     const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : [];
+    return Array.isArray(parsed)
+      ? parsed.filter((item): item is string => typeof item === 'string')
+      : [];
   } catch {
     return [];
   }
@@ -578,9 +1008,19 @@ function normalizePath(value: string) {
   return withSlash.length > 1 ? withSlash.replace(/\/$/, '') : withSlash;
 }
 
-function validateRedirect(path: string, target: string, currentPaths: string[], snapshot: ShopSnapshot) {
+function validateRedirect(
+  path: string,
+  target: string,
+  currentPaths: string[],
+  snapshot: ShopSnapshot,
+) {
   if (!path || !target) return 'Enter both a retired source path and a live destination path.';
-  if (path.startsWith('//') || target.startsWith('//') || path.includes('://') || target.includes('://')) {
+  if (
+    path.startsWith('//') ||
+    target.startsWith('//') ||
+    path.includes('://') ||
+    target.includes('://')
+  ) {
     return 'Use internal Shopify paths beginning with one slash. External URLs are not allowed.';
   }
   if (path === target) return 'Source and destination cannot be the same path.';
@@ -591,9 +1031,11 @@ function validateRedirect(path: string, target: string, currentPaths: string[], 
     return `${path} is currently a live catalog or content path. Retire or rename it before creating a redirect.`;
   }
   const existing = snapshot.redirects.find((redirect) => redirect.path === path);
-  if (existing) return `${path} already redirects to ${existing.target}. Review the existing map instead.`;
+  if (existing)
+    return `${path} already redirects to ${existing.target}. Review the existing map instead.`;
   const targetRedirect = snapshot.redirects.find((redirect) => redirect.path === target);
-  if (targetRedirect) return `${target} is itself a redirect source. Point directly to ${targetRedirect.target}.`;
+  if (targetRedirect)
+    return `${target} is itself a redirect source. Point directly to ${targetRedirect.target}.`;
   return null;
 }
 
@@ -607,7 +1049,8 @@ async function verifyTarget(primaryDomainUrl: string, target: string) {
       headers: { 'User-Agent': 'KlynaRedirectGuard/1.0 (+https://klyna.dev)' },
     });
     clearTimeout(timeout);
-    if (!response.ok) return `${target} returned HTTP ${response.status}. Choose a live destination.`;
+    if (!response.ok)
+      return `${target} returned HTTP ${response.status}. Choose a live destination.`;
     return null;
   } catch {
     return `Klyna could not verify ${target}. Confirm the storefront is public and try again.`;
@@ -643,6 +1086,42 @@ function formatDate(date: Date) {
     timeStyle: 'short',
     timeZone: 'UTC',
   }).format(date);
+}
+
+function formatIsoDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat('en-GB', {
+    dateStyle: 'medium',
+    timeZone: 'UTC',
+  }).format(date);
+}
+
+function downloadWorkspace(productName: string, items: WorkspaceItem[]) {
+  const rows = [
+    ['Priority', 'Item', 'Detail', 'Evidence', 'Next step', 'Shopify admin URL'],
+    ...items.map((item) => [
+      item.tone,
+      item.title,
+      item.detail,
+      item.evidence,
+      item.action,
+      item.adminUrl ?? '',
+    ]),
+  ];
+  const csv = rows
+    .map((row) => row.map((value) => `"${value.replace(/"/g, '""')}"`).join(','))
+    .join('\r\n');
+  const blobUrl = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  const anchor = document.createElement('a');
+  anchor.href = blobUrl;
+  anchor.download = `${productName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-fix-queue-${new Date()
+    .toISOString()
+    .slice(0, 10)}.csv`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(blobUrl);
 }
 
 function downloadRedirects(redirects: { path: string; target: string }[]) {

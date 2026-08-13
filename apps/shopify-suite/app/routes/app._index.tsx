@@ -160,10 +160,15 @@ export default function Dashboard() {
   const historyUrl = useEmbeddedRoute('/app/history');
   const playbookUrl = useEmbeddedRoute('/app/playbook');
   const billingUrl = useEmbeddedRoute('/app/billing');
-  const workspaceLabel =
-    product.key === 'redirect-guard' ? 'Open redirect workspace' : 'Open operating guide';
   const freeChecksRemaining = Math.max(0, freeScanLimit - monthlyScanCount);
   const canRunScan = hasActivePayment || freeChecksRemaining > 0;
+  const priorityFinding =
+    report.findings.find((finding) => finding.severity !== 'success') ?? report.findings[0];
+  const issueCounts = {
+    critical: report.findings.filter((finding) => finding.severity === 'critical').length,
+    warning: report.findings.filter((finding) => finding.severity === 'warning').length,
+    info: report.findings.filter((finding) => finding.severity === 'info').length,
+  };
 
   return (
     <Page title={product.name} subtitle={shop}>
@@ -180,18 +185,29 @@ export default function Dashboard() {
           <div className="KlynaDashboardLead">
             <div className="KlynaDashboardLead__copy">
               <InlineStack gap="200" blockAlign="center">
-                <p className="KlynaEyebrow">Latest store check</p>
+                <p className="KlynaEyebrow">Live store intelligence</p>
                 <Badge tone={toneForStatus(report.status)}>{labelFor(report.status)}</Badge>
               </InlineStack>
               <h2 className="KlynaLeadTitle">{product.tagline}</h2>
               <p className="KlynaLeadBody">{product.outcome}</p>
+              <div className="KlynaSignalRow" aria-label="Current issue summary">
+                <span>
+                  <strong>{issueCounts.critical}</strong> critical
+                </span>
+                <span>
+                  <strong>{issueCounts.warning}</strong> warnings
+                </span>
+                <span>
+                  <strong>{issueCounts.info}</strong> notes
+                </span>
+              </div>
               <div className="KlynaActions">
                 <Form method="post">
                   <Button submit variant="primary" loading={isRunning} disabled={!canRunScan}>
                     {product.primaryAction}
                   </Button>
                 </Form>
-                <Button url={playbookUrl}>{workspaceLabel}</Button>
+                <Button url={playbookUrl}>{`Open ${product.workspaceName}`}</Button>
                 {hasActivePayment ? (
                   <Button onClick={() => downloadReport(product.name, report)}>Export CSV</Button>
                 ) : (
@@ -204,18 +220,27 @@ export default function Dashboard() {
                 </Text>
               ) : null}
             </div>
-            <div
-              className="KlynaScore"
-              style={{ '--score': Math.max(0, Math.min(report.score, 100)) } as CSSProperties}
-            >
-              <span className="KlynaScore__label">Health score</span>
-              <span className="KlynaScore__value">
-                <strong>{report.score}</strong>
-                <span className="KlynaScore__total">/ 100</span>
-              </span>
-              <span className="KlynaScore__track">
-                <span className="KlynaScore__fill" />
-              </span>
+            <div className="KlynaHealthPanel">
+              <div
+                className="KlynaScore"
+                style={{ '--score': Math.max(0, Math.min(report.score, 100)) } as CSSProperties}
+              >
+                <span className="KlynaScore__label">Health score</span>
+                <span className="KlynaScore__value">
+                  <strong>{report.score}</strong>
+                  <span className="KlynaScore__total">/ 100</span>
+                </span>
+                <span className="KlynaScore__track">
+                  <span className="KlynaScore__fill" />
+                </span>
+              </div>
+              {priorityFinding ? (
+                <div className="KlynaNextAction">
+                  <span className="KlynaNextAction__label">Next best move</span>
+                  <strong>{priorityFinding.title}</strong>
+                  <p>{priorityFinding.action}</p>
+                </div>
+              ) : null}
             </div>
           </div>
         </Layout.Section>
@@ -267,6 +292,11 @@ export default function Dashboard() {
                       <Text as="p" tone="subdued">
                         Next step: {finding.action}
                       </Text>
+                      <div className="KlynaFinding__footer">
+                        <Button size="slim" url={playbookUrl}>
+                          Work this fix
+                        </Button>
+                      </div>
                     </BlockStack>
                   </div>
                 ))}

@@ -39,6 +39,8 @@ export interface ProductDefinition {
   tagline: string;
   outcome: string;
   primaryAction: string;
+  workspaceName: string;
+  workspaceDescription: string;
   listingPositioning: string;
   paidValue: string;
   proFeatures: string[];
@@ -52,6 +54,9 @@ export const products: Record<ProductKey, ProductDefinition> = {
     tagline: 'Find old app code, duplicate pixels, and theme debris before it slows your store.',
     outcome: 'A clean, faster, easier-to-maintain storefront with evidence before every cleanup.',
     primaryAction: 'Run debris scan',
+    workspaceName: 'Cleanup queue',
+    workspaceDescription:
+      'Turn scan evidence into a safe theme and app cleanup handoff with Shopify admin links.',
     listingPositioning:
       'Safe theme cleanup evidence for merchants who have installed too many apps.',
     paidValue:
@@ -71,6 +76,9 @@ export const products: Record<ProductKey, ProductDefinition> = {
     outcome:
       'Fewer broken campaigns, fewer surprise discount conflicts, and cleaner BFCM launch days.',
     primaryAction: 'Check promo stack',
+    workspaceName: 'Launch QA board',
+    workspaceDescription:
+      'Review active discounts, expiry gaps, stacking risk, and cart scenarios before traffic lands.',
     listingPositioning: 'Preflight QA for Shopify promotions, not another discount builder.',
     paidValue:
       'Pro adds unlimited promotion checks, a 50-scan history, and CSV launch-readiness reports.',
@@ -89,6 +97,9 @@ export const products: Record<ProductKey, ProductDefinition> = {
     outcome:
       'A safer catalog and migration workflow with redirect coverage merchants can understand.',
     primaryAction: 'Audit redirects',
+    workspaceName: 'Redirect workspace',
+    workspaceDescription:
+      'Detect URL losses, validate destinations, and create reviewed Shopify redirects.',
     listingPositioning:
       'SEO-safe URL monitoring for product deletions, migrations, and content changes.',
     paidValue:
@@ -109,6 +120,9 @@ export const products: Record<ProductKey, ProductDefinition> = {
     outcome:
       'Cleaner attribution and fewer double-fired events without replacing the merchant tracking stack.',
     primaryAction: 'Inspect tracking',
+    workspaceName: 'Tracking evidence map',
+    workspaceDescription:
+      'Find duplicate platform signatures and open the exact Shopify settings to clean the stack.',
     listingPositioning: 'A neutral pixel and consent debugger for stores with messy app stacks.',
     paidValue:
       'Pro adds unlimited tracking inspections, a 50-scan history, and CSV evidence exports for implementation handoff.',
@@ -127,6 +141,9 @@ export const products: Record<ProductKey, ProductDefinition> = {
     outcome:
       'Cleaner product data for Shopping ads, free listings, Meta catalogs, and marketplace feeds.',
     primaryAction: 'Check feed readiness',
+    workspaceName: 'Catalog fix queue',
+    workspaceDescription:
+      'Prioritize products and variants missing channel-critical feed data, then open them in Shopify.',
     listingPositioning:
       'A feed diagnostics layer for merchants who are not ready to replace their feed app.',
     paidValue:
