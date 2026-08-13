@@ -170,5 +170,19 @@ function pickActiveSubscription(subscriptions: BillingSubscription[]) {
       const status = subscription.status?.toUpperCase();
       return !status || status === 'ACTIVE';
     })
-    .sort((a, b) => Date.parse(b.createdAt ?? '') - Date.parse(a.createdAt ?? ''))[0];
+    .sort((a, b) => {
+      return (
+        subscriptionCreatedAtMillis(b) - subscriptionCreatedAtMillis(a) ||
+        Number(isGraphqlSubscriptionId(b.id)) - Number(isGraphqlSubscriptionId(a.id))
+      );
+    })[0];
+}
+
+function subscriptionCreatedAtMillis(subscription: BillingSubscription) {
+  const timestamp = Date.parse(subscription.createdAt ?? '');
+  return Number.isFinite(timestamp) ? timestamp : 0;
+}
+
+export function isGraphqlSubscriptionId(id?: string | null) {
+  return id?.startsWith('gid://shopify/AppSubscription/') ?? false;
 }
