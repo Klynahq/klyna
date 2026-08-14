@@ -154,3 +154,20 @@
 - AI Overview Ready Shopify App Page: https://klyna.dev/blog/ai-overview-ready-shopify-app-page/
 - llms.txt for Shopify Apps: https://klyna.dev/blog/llms-txt-for-shopify-apps/
 - Shopify App Store Content Gap Brief: https://klyna.dev/blog/shopify-app-store-content-gap-brief/
+
+## 2026-08-14 Shopify and WordPress technical SEO cluster
+- Shopify App Canonical Conflict Checklist: https://klyna.dev/blog/shopify-app-canonical-conflict-checklist/
+- Shopify App Indexing After Theme Update: https://klyna.dev/blog/shopify-app-indexing-after-theme-update/
+- Shopify App Schema Duplication Risk: https://klyna.dev/blog/shopify-app-schema-duplication-risk/
+- Shopify Speed App Script Budget: https://klyna.dev/blog/shopify-speed-app-script-budget/
+- Shopify Product Page App Stack Audit: https://klyna.dev/blog/shopify-product-page-app-stack-audit/
+- Shopify Collection Filter Indexing Plan: https://klyna.dev/blog/shopify-collection-filter-indexing-plan/
+- Shopify App Uninstall Leftover Code QA: https://klyna.dev/blog/shopify-app-uninstall-leftover-code-qa/
+- Shopify Restock Alert Event Tracking: https://klyna.dev/blog/shopify-restock-alert-event-tracking/
+- Shopify Review App SEO Migration Plan: https://klyna.dev/blog/shopify-review-app-seo-migration-plan/
+- WordPress Plugin Redirect Cleanup Workflow: https://klyna.dev/blog/wordpress-plugin-redirect-cleanup-workflow/
+- WordPress Plugin Speed Conflict Audit: https://klyna.dev/blog/wordpress-plugin-speed-conflict-audit/
+- Ecommerce Plugin Canonical Risk Map: https://klyna.dev/blog/ecommerce-plugin-canonical-risk-map/
+- llms.txt for Shopify Product Pages: https://klyna.dev/blog/llms-txt-shopify-product-pages/
+- AI Search Ready Shopify Collection Page: https://klyna.dev/blog/ai-search-ready-shopify-collection-page/
+- Shopify App Store Keyword Gap Workflow: https://klyna.dev/blog/shopify-app-store-keyword-gap-workflow/
