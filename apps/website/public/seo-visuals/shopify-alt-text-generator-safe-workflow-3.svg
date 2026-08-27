@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
+  <title id="title">Shopify alt text quality checks</title>
+  <desc id="desc">A quality checklist for reviewing generated Shopify product image alt text.</desc>
+  <rect width="1280" height="720" fill="#111827"/>
+  <rect x="92" y="82" width="1096" height="556" rx="28" fill="#f8fafc"/>
+  <text x="150" y="156" fill="#0f172a" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="800">Quality checks before applying</text>
+  <g font-family="Inter, Arial, sans-serif" font-size="22">
+    <rect x="160" y="238" width="420" height="92" rx="16" fill="#dcfce7"/>
+    <text x="198" y="294" fill="#166534" font-weight="800">Describes the visible product</text>
+    <rect x="160" y="360" width="420" height="92" rx="16" fill="#dbeafe"/>
+    <text x="198" y="416" fill="#1e3a8a" font-weight="800">Uses variant context carefully</text>
+    <rect x="160" y="482" width="420" height="92" rx="16" fill="#fef3c7"/>
+    <text x="198" y="538" fill="#92400e" font-weight="800">Avoids repeated SEO phrases</text>
+    <rect x="700" y="238" width="420" height="92" rx="16" fill="#fce7f3"/>
+    <text x="738" y="294" fill="#9d174d" font-weight="800">Skips decorative image noise</text>
+    <rect x="700" y="360" width="420" height="92" rx="16" fill="#ede9fe"/>
+    <text x="738" y="416" fill="#5b21b6" font-weight="800">Matches product-page truth</text>
+    <rect x="700" y="482" width="420" height="92" rx="16" fill="#e0f2fe"/>
+    <text x="738" y="538" fill="#075985" font-weight="800">Keeps a batch rollback note</text>
+  </g>
+</svg>

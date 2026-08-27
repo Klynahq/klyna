@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
+  <title id="title">Shopify alt text post publish QA loop</title>
+  <desc id="desc">A QA loop for checking pages after applying Shopify generated alt text.</desc>
+  <rect width="1280" height="720" fill="#0b1220"/>
+  <rect x="100" y="86" width="1080" height="548" rx="26" fill="#ffffff"/>
+  <text x="154" y="160" fill="#111827" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="800">Post-publish QA loop</text>
+  <g fill="none" stroke="#2563eb" stroke-width="6" stroke-linecap="round" stroke-dasharray="12 14">
+    <path d="M358 262 C480 178, 704 178, 826 262"/>
+    <path d="M920 360 C896 494, 754 552, 640 552"/>
+    <path d="M520 552 C394 532, 282 452, 280 338"/>
+  </g>
+  <g font-family="Inter, Arial, sans-serif">
+    <circle cx="310" cy="310" r="72" fill="#dbeafe"/>
+    <text x="268" y="318" fill="#1e3a8a" font-size="23" font-weight="800">Pages</text>
+    <circle cx="890" cy="310" r="72" fill="#dcfce7"/>
+    <text x="842" y="318" fill="#166534" font-size="23" font-weight="800">Images</text>
+    <circle cx="640" cy="552" r="72" fill="#fef3c7"/>
+    <text x="594" y="560" fill="#92400e" font-size="23" font-weight="800">GSC</text>
+    <text x="220" y="438" fill="#334155" font-size="22">Product and collection rendering</text>
+    <text x="746" y="438" fill="#334155" font-size="22">Image context and speed</text>
+    <text x="518" y="668" fill="#334155" font-size="22">Indexing and discovery signals</text>
+  </g>
+</svg>

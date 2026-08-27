@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
+  <title id="title">Shopify alt text intent map</title>
+  <desc id="desc">A visual map connecting Shopify alt text searches to merchant jobs and Klyna product fit.</desc>
+  <rect width="1280" height="720" fill="#0f172a"/>
+  <rect x="100" y="92" width="1080" height="536" rx="26" fill="#ffffff"/>
+  <text x="154" y="164" fill="#111827" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="800">Intent and product fit</text>
+  <g font-family="Inter, Arial, sans-serif">
+    <rect x="154" y="246" width="280" height="260" rx="18" fill="#ecfeff"/>
+    <text x="190" y="304" fill="#155e75" font-size="26" font-weight="800">Searcher job</text>
+    <text x="190" y="350" fill="#334155" font-size="20">Fix product images</text>
+    <text x="190" y="386" fill="#334155" font-size="20">Save review time</text>
+    <text x="190" y="422" fill="#334155" font-size="20">Avoid SEO mistakes</text>
+    <rect x="500" y="246" width="280" height="260" rx="18" fill="#f0fdf4"/>
+    <text x="536" y="304" fill="#166534" font-size="26" font-weight="800">Klyna fit</text>
+    <text x="536" y="350" fill="#334155" font-size="20">Alt text audit</text>
+    <text x="536" y="386" fill="#334155" font-size="20">AI suggestions</text>
+    <text x="536" y="422" fill="#334155" font-size="20">Bulk review path</text>
+    <rect x="846" y="246" width="280" height="260" rx="18" fill="#fff7ed"/>
+    <text x="882" y="304" fill="#9a3412" font-size="26" font-weight="800">Risk control</text>
+    <text x="882" y="350" fill="#334155" font-size="20">No stuffing</text>
+    <text x="882" y="386" fill="#334155" font-size="20">No false image claims</text>
+    <text x="882" y="422" fill="#334155" font-size="20">Rollback batches</text>
+  </g>
+</svg>

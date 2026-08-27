@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
+  <title id="title">Shopify alt text generator workflow map</title>
+  <desc id="desc">A four-step workflow for generating and reviewing Shopify image alt text.</desc>
+  <rect width="1280" height="720" fill="#08111f"/>
+  <rect x="92" y="80" width="1096" height="560" rx="28" fill="#f8fafc"/>
+  <text x="150" y="154" fill="#0f172a" font-family="Inter, Arial, sans-serif" font-size="46" font-weight="800">Shopify alt text generator workflow</text>
+  <text x="150" y="204" fill="#475569" font-family="Inter, Arial, sans-serif" font-size="24">Generate with context, review before applying, and recheck the storefront.</text>
+  <g font-family="Inter, Arial, sans-serif">
+    <rect x="150" y="288" width="210" height="172" rx="18" fill="#dbeafe"/>
+    <text x="178" y="342" fill="#1e3a8a" font-size="24" font-weight="800">Audit</text>
+    <text x="178" y="382" fill="#334155" font-size="18">Find images missing useful alt text.</text>
+    <rect x="398" y="288" width="210" height="172" rx="18" fill="#dcfce7"/>
+    <text x="426" y="342" fill="#166534" font-size="24" font-weight="800">Generate</text>
+    <text x="426" y="382" fill="#334155" font-size="18">Use product and image context.</text>
+    <rect x="646" y="288" width="210" height="172" rx="18" fill="#fef3c7"/>
+    <text x="674" y="342" fill="#92400e" font-size="24" font-weight="800">Review</text>
+    <text x="674" y="382" fill="#334155" font-size="18">Reject generic or stuffed output.</text>
+    <rect x="894" y="288" width="210" height="172" rx="18" fill="#ede9fe"/>
+    <text x="922" y="342" fill="#5b21b6" font-size="24" font-weight="800">Publish</text>
+    <text x="922" y="382" fill="#334155" font-size="18">Apply batches with QA notes.</text>
+  </g>
+</svg>
