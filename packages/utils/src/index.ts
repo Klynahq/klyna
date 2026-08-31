@@ -57,7 +57,7 @@ export const products: Product[] = [
       'Audit titles, descriptions, headings, images, links, schema, canonical tags, keywords, Core Web Vitals signals, and AI-search readiness from Shopify admin.',
     status: 'live',
     surface: 'shopify',
-    href: '/blog/shopify-seo-audit-tool-app-store-checklist',
+    href: '/shopify/seo',
     appStoreUrl: 'https://apps.shopify.com/klyna-seo-clean',
   },
 
@@ -68,10 +68,11 @@ export const products: Product[] = [
     tagline: 'Find old app code, duplicate pixels, and theme debris safely.',
     description:
       'Diagnostic-first cleanup assistant for Shopify themes. Scans sampled storefront pages for leftover app signatures, duplicate tracking, heavy script stacks, and cleanup risks before any theme edit is made.',
-    status: 'beta',
+    status: 'live',
     surface: 'shopify',
     href: '/shopify/cleanroom',
-    installNote: 'Public App Store app - submitted for review',
+    appStoreUrl: 'https://apps.shopify.com/klyna-cleanroom',
+    installNote: 'Public App Store app - diagnostic scan first, cleanup workflow guarded',
   },
   {
     slug: 'shopify-promo-qa',
@@ -101,10 +102,11 @@ export const products: Product[] = [
     tagline: 'Find catalog issues before Merchant Center rejects products.',
     description:
       'Feed readiness scanner for GTIN/barcode, SKU, brand, images, product metadata, and variant data. Designed as a fix queue for merchants who are not ready to replace their feed app.',
-    status: 'beta',
+    status: 'live',
     surface: 'shopify',
     href: '/shopify/feed-doctor',
-    installNote: 'Public App Store app - submitted for review',
+    appStoreUrl: 'https://apps.shopify.com/klyna-feed-doctor',
+    installNote: 'Public App Store app - feed diagnostics and variant-level exports',
   },
 
   // ─── Shopify Apps ─────────────────────────────────────────────────────────
@@ -116,7 +118,7 @@ export const products: Product[] = [
       'Build fixed and mix-and-match offers, add quantity-break tiers, show them through a theme app block, and apply savings with Shopify-native automatic discounts.',
     status: 'live',
     surface: 'shopify',
-    href: '/blog/shopify-bundle-app-guide',
+    href: '/shopify/bundles',
     appStoreUrl: 'https://apps.shopify.com/klyna-bundles',
   },
   {
@@ -160,7 +162,7 @@ export const products: Product[] = [
       'Show star and photo reviews, moderate submissions, apply spam controls, reply to customers, track rating trends, and add Product and AggregateRating markup.',
     status: 'live',
     surface: 'shopify',
-    href: '/blog/shopify-product-reviews-app-guide',
+    href: '/shopify/reviews',
     appStoreUrl: 'https://apps.shopify.com/klyna-reviews',
   },
   {
@@ -182,7 +184,7 @@ export const products: Product[] = [
       'Add a variant-level waitlist block, rank demand by item, send automatic email alerts when inventory returns, and filter, re-arm, or export subscribers.',
     status: 'live',
     surface: 'shopify',
-    href: '/blog/shopify-restock-alert-app-checklist',
+    href: '/shopify/back-in-stock',
     appStoreUrl: 'https://apps.shopify.com/klyna-back-in-stock',
   },
   {

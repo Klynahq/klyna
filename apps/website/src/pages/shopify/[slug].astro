@@ -1,4 +1,5 @@
 ---
+import JsonLd from '../../components/seo/JsonLd.astro';
 import { shopifyProductPages } from '../../data/shopify-app-pages';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
@@ -10,87 +11,169 @@ export function getStaticPaths() {
 }
 
 const { page } = Astro.props;
-const listingStatus = page.appStoreUrl ? 'Published' : 'In review';
-const listingStatusClass = page.appStoreUrl
-  ? 'border-[color:var(--color-success)]/40 text-[color:var(--color-success)] bg-[color:var(--color-success)]/10'
-  : 'border-[color:var(--color-warning)]/40 text-[color:var(--color-warning)] bg-[color:var(--color-warning)]/10';
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site).toString();
+const imageUrl = page.ogImage ? new URL(page.ogImage, Astro.site).toString() : undefined;
+const faqId = `${canonicalUrl}#faq`;
+const appId = `${canonicalUrl}#app`;
+
+const graph = [
+  {
+    '@type': 'SoftwareApplication',
+    '@id': appId,
+    name: page.name,
+    description: page.description,
+    operatingSystem: 'Shopify',
+    applicationCategory: 'BusinessApplication',
+    applicationSubCategory: page.category,
+    url: canonicalUrl,
+    ...(page.appStoreUrl ? { sameAs: [page.appStoreUrl] } : {}),
+    ...(imageUrl ? { image: [imageUrl] } : {}),
+    offers: {
+      '@type': 'Offer',
+      url: page.appStoreUrl ?? canonicalUrl,
+      priceCurrency: 'USD',
+      description: page.pricingNote,
+      availability: page.appStoreUrl ? 'https://schema.org/InStock' : 'https://schema.org/PreOrder',
+    },
+  },
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: new URL('/', Astro.site).toString() },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Products',
+        item: new URL('/products', Astro.site).toString(),
+      },
+      { '@type': 'ListItem', position: 3, name: page.name, item: canonicalUrl },
+    ],
+  },
+  {
+    '@type': 'FAQPage',
+    '@id': faqId,
+    mainEntity: page.faq.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.answer,
+      },
+    })),
+  },
+];
 ---
 
-<BaseLayout title={`${page.name} — Klyna`} description={page.description}>
-  <section class="relative overflow-hidden">
-    <div class="grid-bg absolute inset-0 opacity-35 pointer-events-none"></div>
-    <div class="relative max-w-7xl mx-auto px-6 pt-20 pb-16 md:pt-28">
-      <div class="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+<BaseLayout
+  title={`${page.name} for Shopify | Klyna`}
+  description={page.description}
+  ogImage={page.ogImage ?? '/favicon.svg'}
+  ogImageAlt={page.ogImageAlt}
+>
+  <Fragment slot="head">
+    <meta name="keywords" content={[page.primaryKeyword, ...page.secondaryKeywords].join(', ')} />
+    <JsonLd data={graph} />
+  </Fragment>
+
+  <section class="relative overflow-hidden border-b border-[color:var(--color-border)]">
+    <div class="grid-bg absolute inset-0 opacity-40 pointer-events-none"></div>
+    <div class="relative max-w-7xl mx-auto px-6 pt-16 pb-14 md:pt-24 md:pb-20">
+      <div class="grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
         <div>
-          <div class="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-accent)] mb-4">
-            {page.eyebrow}
+          <a href="/products" class="inline-flex items-center gap-2 text-sm text-[color:var(--color-text-muted)] hover:text-white transition-colors mb-8">
+            <span aria-hidden="true">←</span>
+            Products
+          </a>
+          <div class="mb-5 flex flex-wrap items-center gap-2">
+            <span class="rounded-full border border-[color:var(--color-accent)]/35 bg-[color:var(--color-accent-muted)] px-3 py-1 text-xs font-semibold text-[color:var(--color-accent-hover)]">
+              {page.statusLabel}
+            </span>
+            <span class="rounded-full border border-[color:var(--color-border)] bg-white/[0.03] px-3 py-1 text-xs text-[color:var(--color-text-muted)]">
+              {page.primaryKeyword}
+            </span>
           </div>
-          <h1 class="text-4xl md:text-6xl font-bold tracking-tight leading-tight mb-5">
-            {page.name}
-          </h1>
-          <p class="text-lg text-[color:var(--color-text-muted)] leading-relaxed max-w-2xl mb-8">
+          <h1 class="max-w-3xl text-4xl font-bold leading-[1.02] tracking-tight md:text-6xl">
             {page.hero}
+          </h1>
+          <p class="mt-6 max-w-2xl text-lg leading-8 text-[color:var(--color-text-muted)]">
+            {page.description}
           </p>
-          <div class="flex flex-wrap gap-3">
+          <div class="mt-8 flex flex-wrap gap-3">
             {page.appStoreUrl ? (
               <a
                 href={page.appStoreUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                class="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-[color:var(--color-accent)] hover:bg-[color:var(--color-accent-hover)] text-white font-medium transition-colors"
+                class="inline-flex min-h-12 items-center justify-center rounded-xl bg-[color:var(--color-accent)] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[color:var(--color-accent-hover)]"
               >
                 Install on Shopify
-                <span aria-hidden="true">→</span>
               </a>
             ) : (
               <a
-                href={page.guideUrl}
-                class="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-[color:var(--color-accent)] hover:bg-[color:var(--color-accent-hover)] text-white font-medium transition-colors"
+                href="/contact"
+                class="inline-flex min-h-12 items-center justify-center rounded-xl bg-[color:var(--color-accent)] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[color:var(--color-accent-hover)]"
               >
-                Read the launch guide
-                <span aria-hidden="true">→</span>
+                Ask about early access
               </a>
             )}
             <a
-              href={page.guideUrl}
-              class="inline-flex items-center gap-2 px-5 py-3 rounded-lg border border-[color:var(--color-border)] hover:border-[color:var(--color-accent)] text-[color:var(--color-text-muted)] hover:text-white transition-colors"
+              href="#workflow"
+              class="inline-flex min-h-12 items-center justify-center rounded-xl border border-[color:var(--color-border)] px-5 py-3 text-sm font-semibold text-[color:var(--color-text)] transition-colors hover:border-[color:var(--color-accent)]"
             >
-              Product guide
+              See workflow
             </a>
           </div>
         </div>
 
-        <div class="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] overflow-hidden shadow-2xl shadow-black/30">
-          <div class="flex items-center justify-between border-b border-[color:var(--color-border)] px-4 py-3">
-            <div class="flex gap-1.5">
-              <span class="w-2.5 h-2.5 rounded-full bg-[color:var(--color-danger)]"></span>
-              <span class="w-2.5 h-2.5 rounded-full bg-[color:var(--color-warning)]"></span>
-              <span class="w-2.5 h-2.5 rounded-full bg-[color:var(--color-success)]"></span>
-            </div>
-            <span class="text-xs font-mono text-[color:var(--color-text-dim)]">embedded admin</span>
-          </div>
-          <div class="p-5">
-            <div class="flex items-center justify-between gap-4 mb-5">
+        <div class="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] p-3 shadow-2xl shadow-black/40">
+          <div class="rounded-xl border border-[color:var(--color-border)] bg-[#09090d] p-4 md:p-5">
+            <div class="mb-5 flex items-center justify-between gap-4 border-b border-[color:var(--color-border)] pb-4">
               <div>
-                <p class="text-xs text-[color:var(--color-text-dim)] uppercase tracking-wider mb-1">{page.scoreLabel}</p>
-                <p class="text-4xl font-bold">86</p>
+                <p class="text-sm font-semibold text-white">{page.name}</p>
+                <p class="text-xs text-[color:var(--color-text-muted)]">{page.category}</p>
               </div>
-              <span class={`px-3 py-1 rounded-full border text-xs font-semibold ${listingStatusClass}`}>
-                {listingStatus}
+              <span class="rounded-full bg-[color:var(--color-success)]/10 px-3 py-1 text-xs font-semibold text-[color:var(--color-success)]">
+                Evidence first
               </span>
             </div>
-            <div class="grid grid-cols-3 gap-3 mb-5">
-              {page.metrics.map((metric) => (
-                <div class="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
-                  <p class="text-lg font-semibold">{metric.value}</p>
-                  <p class="text-[11px] text-[color:var(--color-text-muted)] leading-tight">{metric.label}</p>
+
+            {page.screenshotImage ? (
+              <img
+                src={page.screenshotImage}
+                alt={page.screenshotAlt ?? `${page.name} dashboard screenshot`}
+                class="aspect-[16/9] w-full rounded-lg border border-[color:var(--color-border)] object-cover"
+                loading="eager"
+              />
+            ) : (
+              <div class="aspect-[16/9] rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
+                <div class="grid h-full gap-3 md:grid-cols-[0.75fr_1.25fr]">
+                  <div class="space-y-2 border-r border-[color:var(--color-border)] pr-3">
+                    {page.workflow.map((step) => (
+                      <div class="rounded-lg bg-white/[0.035] px-3 py-2 text-xs text-[color:var(--color-text-muted)]">
+                        {step.title}
+                      </div>
+                    ))}
+                  </div>
+                  <div class="flex flex-col justify-between">
+                    <div>
+                      <p class="text-xs text-[color:var(--color-text-muted)]">{page.scoreLabel}</p>
+                      <p class="mt-1 text-4xl font-bold">{page.metrics[0]?.value}</p>
+                    </div>
+                    <div class="grid gap-2">
+                      {page.features.slice(0, 3).map(() => (
+                        <div class="h-2 rounded-full bg-[color:var(--color-accent)]/70"></div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              ))}
-            </div>
-            <div class="space-y-2">
-              {page.features.slice(0, 3).map((feature) => (
-                <div class="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2 text-sm text-[color:var(--color-text-muted)]">
-                  {feature}
+              </div>
+            )}
+
+            <div class="mt-4 grid grid-cols-3 gap-3">
+              {page.metrics.map((metric) => (
+                <div class="rounded-lg bg-white/[0.035] p-3">
+                  <p class="text-sm font-semibold text-white">{metric.value}</p>
+                  <p class="mt-1 text-[11px] leading-4 text-[color:var(--color-text-muted)]">{metric.label}</p>
                 </div>
               ))}
             </div>
@@ -100,18 +183,45 @@ const listingStatusClass = page.appStoreUrl
     </div>
   </section>
 
-  <section class="max-w-7xl mx-auto px-6 py-14">
-    <div class="grid gap-8 lg:grid-cols-3">
+  <section class="max-w-7xl mx-auto px-6 py-14 md:py-20">
+    <div class="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
       <div>
-        <div class="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-accent)] mb-3">
-          What it does
-        </div>
-        <h2 class="text-3xl font-bold tracking-tight">Built around a specific merchant pain.</h2>
+        <h2 class="text-3xl font-bold tracking-tight md:text-4xl">Short answer for merchants</h2>
+        <p class="mt-4 text-sm leading-6 text-[color:var(--color-text-muted)]">
+          Built for the exact query: <strong class="font-semibold text-white">{page.primaryKeyword}</strong>.
+        </p>
       </div>
-      <div class="lg:col-span-2 grid gap-4 md:grid-cols-2">
-        {page.features.map((feature) => (
-          <article class="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] p-5">
-            <p class="text-sm text-[color:var(--color-text-muted)] leading-relaxed">{feature}</p>
+      <div class="rounded-2xl border border-[color:var(--color-accent)]/25 bg-[color:var(--color-accent-muted)] p-6 md:p-7">
+        <p class="text-lg leading-8 text-white">{page.answer}</p>
+        <div class="mt-5 flex flex-wrap gap-2">
+          {page.secondaryKeywords.map((keyword) => (
+            <span class="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs text-[color:var(--color-text-muted)]">
+              {keyword}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-6 py-14" id="workflow">
+    <div class="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
+      <div>
+        <h2 class="text-3xl font-bold tracking-tight md:text-4xl">Issue-to-action workflow</h2>
+        <p class="mt-4 text-base leading-7 text-[color:var(--color-text-muted)]">
+          Each Klyna app is positioned around one merchant job: find evidence, decide safely, and act with fewer surprises.
+        </p>
+      </div>
+      <div class="grid gap-3">
+        {page.workflow.map((step, index) => (
+          <article class="grid gap-4 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] p-5 sm:grid-cols-[80px_1fr]">
+            <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-[color:var(--color-accent)] text-lg font-bold text-white">
+              {String(index + 1).padStart(2, '0')}
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold">{step.title}</h3>
+              <p class="mt-2 text-sm leading-6 text-[color:var(--color-text-muted)]">{step.body}</p>
+            </div>
           </article>
         ))}
       </div>
@@ -119,20 +229,97 @@ const listingStatusClass = page.appStoreUrl
   </section>
 
   <section class="max-w-7xl mx-auto px-6 py-14">
+    <div class="grid gap-5 md:grid-cols-2">
+      {page.features.map((feature) => (
+        <article class="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] p-6">
+          <h2 class="text-xl font-semibold">{feature.title}</h2>
+          <p class="mt-3 text-sm leading-6 text-[color:var(--color-text-muted)]">{feature.body}</p>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-6 py-14">
+    <div class="rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] p-6 md:p-8">
+      <div class="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+        <div>
+          <h2 class="text-3xl font-bold tracking-tight md:text-4xl">Why this matters</h2>
+          <p class="mt-4 text-base leading-7 text-[color:var(--color-text-muted)]">
+            The value is not another dashboard. It is a shorter path from store risk to a reviewable action.
+          </p>
+          <div class="mt-6 grid gap-3">
+            {page.proofPoints.map((point) => (
+              <div class="flex gap-3 rounded-xl bg-white/[0.035] p-4 text-sm leading-6 text-[color:var(--color-text-muted)]">
+                <span class="mt-2 h-2 w-2 shrink-0 rounded-full bg-[color:var(--color-success)]"></span>
+                <p>{point}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div class="rounded-2xl border border-[color:var(--color-border)] bg-[#09090d] p-5">
+          <p class="text-sm font-semibold text-white">Benefit map</p>
+          <div class="mt-5 space-y-4">
+            {page.useCases.map((item, index) => (
+              <div class="grid grid-cols-[1fr_auto] items-center gap-4">
+                <div>
+                  <p class="text-sm leading-6 text-[color:var(--color-text-muted)]">{item}</p>
+                  <div class="mt-2 h-2 rounded-full bg-white/10">
+                    <div
+                      class="h-full rounded-full bg-[color:var(--color-accent)]"
+                      style={`width: ${Math.max(42, 88 - index * 10)}%`}
+                    >
+                    </div>
+                  </div>
+                </div>
+                <span class="text-xs font-semibold text-[color:var(--color-accent-hover)]">Fit {index + 1}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-6 py-14">
     <div class="grid gap-8 lg:grid-cols-3">
       <div>
-        <div class="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-warning)] mb-3">
-          Best use cases
-        </div>
-        <h2 class="text-3xl font-bold tracking-tight">Where merchants feel the pain.</h2>
+        <h2 class="text-3xl font-bold tracking-tight">Positioning</h2>
+        <p class="mt-4 text-sm leading-6 text-[color:var(--color-text-muted)]">{page.pricingNote}</p>
       </div>
-      <div class="lg:col-span-2">
-        <div class="grid gap-3">
-          {page.useCases.map((item) => (
-            <div class="flex gap-3 border-b border-[color:var(--color-border)] pb-3">
-              <span class="mt-2 h-1.5 w-1.5 rounded-full bg-[color:var(--color-accent)] shrink-0"></span>
-              <p class="text-[color:var(--color-text-muted)]">{item}</p>
-            </div>
+      <div class="grid gap-4 lg:col-span-2 md:grid-cols-2">
+        {page.comparison.map((item) => (
+          <article class="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] p-6">
+            <h3 class="text-lg font-semibold">{item.title}</h3>
+            <p class="mt-3 text-sm leading-6 text-[color:var(--color-text-muted)]">{item.body}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-6 py-14">
+    <div class="grid gap-8 lg:grid-cols-[1fr_1fr]">
+      <div>
+        <h2 class="text-3xl font-bold tracking-tight">Operating limits</h2>
+        <div class="mt-5 grid gap-3">
+          {page.limits.map((item) => (
+            <p class="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] p-4 text-sm leading-6 text-[color:var(--color-text-muted)]">
+              {item}
+            </p>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h2 class="text-3xl font-bold tracking-tight">Related resources</h2>
+        <div class="mt-5 grid gap-3">
+          {page.relatedLinks.map((link) => (
+            <a
+              href={link.href}
+              class="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] p-4 text-sm font-semibold text-[color:var(--color-accent-hover)] transition-colors hover:border-[color:var(--color-accent)] hover:text-white"
+            >
+              {link.label}
+              <span aria-hidden="true"> →</span>
+            </a>
           ))}
         </div>
       </div>
@@ -140,13 +327,19 @@ const listingStatusClass = page.appStoreUrl
   </section>
 
   <section class="max-w-7xl mx-auto px-6 pt-10 pb-24">
-    <div class="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] p-6 md:p-8">
-      <div class="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-success)] mb-3">
-        Safety posture
+    <div class="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
+      <div>
+        <h2 class="text-3xl font-bold tracking-tight">FAQ</h2>
+        <p class="mt-4 text-sm leading-6 text-[color:var(--color-text-muted)]">
+          Direct answers for merchants comparing Shopify apps before install.
+        </p>
       </div>
-      <div class="grid gap-4 md:grid-cols-3">
-        {page.reviewNotes.map((note) => (
-          <p class="text-sm text-[color:var(--color-text-muted)] leading-relaxed">{note}</p>
+      <div class="grid gap-4">
+        {page.faq.map((item) => (
+          <article class="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] p-6">
+            <h3 class="text-lg font-semibold">{item.question}</h3>
+            <p class="mt-3 text-sm leading-6 text-[color:var(--color-text-muted)]">{item.answer}</p>
+          </article>
         ))}
       </div>
     </div>
