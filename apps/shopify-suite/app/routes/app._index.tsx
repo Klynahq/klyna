@@ -211,7 +211,7 @@ export default function Dashboard() {
               </div>
               {!hasActivePayment ? (
                 <Text as="p" tone="subdued">
-                  {monthlyScanCount} of {freeScanLimit} free checks used this month.
+                  Monthly usage: {monthlyScanCount} of {freeScanLimit} checks used.
                 </Text>
               ) : null}
             </div>
