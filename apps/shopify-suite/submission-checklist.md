@@ -35,7 +35,7 @@ pnpm --filter website build
 
 ## Current validation status
 
-Checked on 2026-07-19:
+Dev-store validation checked on 2026-07-19:
 
 - Dev-store embedded tests passed for Cleanroom, Promo QA, Redirect Guard, Pixel Doctor, and Feed Doctor.
 - Each app loaded inside Shopify admin, ran its primary diagnostic action, saved scan history, and opened its fix playbook.
@@ -46,7 +46,15 @@ Checked on 2026-07-19:
 - Scoped Shopify source lint passes:
   `pnpm exec biome check apps/shopify/app apps/shopify/prisma apps/shopify/*.toml apps/shopify/*.json apps/shopify/*.ts apps/shopify-suite/app apps/shopify-suite/prisma apps/shopify-suite/*.toml apps/shopify-suite/*.json apps/shopify-suite/*.ts apps/shopify-suite/*.md`
 - Shopify CLI config validation passes for all five suite TOMLs.
-- The five configured suite production URLs currently return Vercel `DEPLOYMENT_NOT_FOUND`; do not submit until those URLs are deployed and production-install tested.
+
+Production readiness rechecked on 2026-09-01:
+
+- Cleanroom, Promo QA, Redirect Guard, Pixel Doctor, and Feed Doctor production roots all return HTTP 200.
+- Promo QA and Pixel Doctor production pages resolve with the correct product identity.
+- `pnpm --filter shopify-suite typecheck` passes.
+- `pnpm --filter shopify-suite build` passes.
+- Promo QA and Pixel Doctor each have four authentic 1600x900 App Store screenshots, a 1920x1080 reviewer walkthrough, product-specific listing copy, pricing, and review guardrails.
+- The authenticated Shopify Partner dashboard remains the source of truth for reviewer feedback and final listing status. Recheck it immediately before submission.
 
 ## Dev-store test flow
 

@@ -36,6 +36,22 @@ Meta, Google, TikTok, Pinterest, Shopify Customer Events, app snippets, and hard
 - Flag possible duplicate event sources without replacing the merchant tracking stack.
 - Hand developers a focused evidence report for cleanup and verification.
 
+## App Store screenshots
+
+Use these 1600x900 images in this order:
+
+1. `assets/pixel-doctor/01-dashboard-overview.jpg`
+   Alt text: Pixel Doctor dashboard with tracking health score
+2. `assets/pixel-doctor/02-tracking-evidence.jpg`
+   Alt text: Tracking evidence for duplicate pixel risk
+3. `assets/pixel-doctor/03-scan-history.jpg`
+   Alt text: Tracking scan history for validation
+4. `assets/pixel-doctor/04-operating-guide.jpg`
+   Alt text: Safe pixel and consent tracking operating guide
+
+Reviewer walkthrough:
+`https://klyna.dev/review/pixel-doctor/klyna-pixel-doctor-review.mp4`
+
 ## Review guardrails
 
 Do not claim exact ad-platform truth without platform API access. The first version is a diagnostic layer, not a replacement tracking/CAPI provider.

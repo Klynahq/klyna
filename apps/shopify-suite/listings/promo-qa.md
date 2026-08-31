@@ -36,6 +36,22 @@ Merchants often discover discount conflicts only after customers reach checkout.
 - Turn current Shopify discount settings into a clear preflight checklist.
 - Keep evidence for campaign handoff without replacing Shopify discounts.
 
+## App Store screenshots
+
+Use these 1600x900 images in this order:
+
+1. `assets/promo-qa/01-dashboard-overview.jpg`
+   Alt text: Promo QA dashboard with discount campaign risk score
+2. `assets/promo-qa/02-campaign-evidence.jpg`
+   Alt text: Discount conflict findings with campaign evidence
+3. `assets/promo-qa/03-scan-history.jpg`
+   Alt text: Promotion scan history for launch validation
+4. `assets/promo-qa/04-operating-guide.jpg`
+   Alt text: Safe promotion operating guide for Shopify teams
+
+Reviewer walkthrough:
+`https://klyna.dev/review/promo-qa/klyna-promo-qa-review.mp4`
+
 ## Review guardrails
 
 Position this as campaign QA, not a tool that bypasses Shopify discount rules. Do not claim unsupported discount stacking.
