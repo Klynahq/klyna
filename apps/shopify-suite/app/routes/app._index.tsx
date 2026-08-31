@@ -206,7 +206,7 @@ export default function Dashboard() {
                 {hasActivePayment ? (
                   <Button onClick={() => downloadReport(product.name, report)}>Export CSV</Button>
                 ) : (
-                  <Button url={billingUrl}>Upgrade to Pro</Button>
+                  <Button url={billingUrl}>View plans</Button>
                 )}
               </div>
               {!hasActivePayment ? (
@@ -302,9 +302,9 @@ export default function Dashboard() {
               <Card>
                 <BlockStack gap="200">
                   <Text as="h2" variant="headingMd">
-                    Plan and reports
+                    Usage and reports
                   </Text>
-                  {hasActivePayment ? <Badge tone="success">Pro</Badge> : <Badge>Free</Badge>}
+                  {hasActivePayment ? <Badge tone="success">Unlimited</Badge> : <Badge>Core</Badge>}
                   <Text as="p" tone="subdued">
                     {product.paidValue}
                   </Text>

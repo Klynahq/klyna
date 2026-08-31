@@ -60,7 +60,7 @@ export const products: Record<ProductKey, ProductDefinition> = {
     listingPositioning:
       'Safe theme cleanup evidence for merchants who have installed too many apps.',
     paidValue:
-      'Pro adds unlimited debris scans, a 50-scan history, and CSV evidence exports for cleanup handoff.',
+      'Unlimited debris scans, a 50-scan history, and CSV evidence exports are available for cleanup handoff.',
     proFeatures: [
       'Unlimited manual debris scans',
       'Full history for up to 50 scans',
@@ -81,7 +81,7 @@ export const products: Record<ProductKey, ProductDefinition> = {
       'Review active discounts, expiry gaps, stacking risk, and cart scenarios before traffic lands.',
     listingPositioning: 'Preflight QA for Shopify promotions, not another discount builder.',
     paidValue:
-      'Pro adds unlimited promotion checks, a 50-scan history, and CSV launch-readiness reports.',
+      'Unlimited promotion checks, a 50-scan history, and CSV launch-readiness reports are available.',
     proFeatures: [
       'Unlimited promotion preflight checks',
       'Full history for up to 50 checks',
@@ -125,7 +125,7 @@ export const products: Record<ProductKey, ProductDefinition> = {
       'Find duplicate platform signatures and open the exact Shopify settings to clean the stack.',
     listingPositioning: 'A neutral pixel and consent debugger for stores with messy app stacks.',
     paidValue:
-      'Pro adds unlimited tracking inspections, a 50-scan history, and CSV evidence exports for implementation handoff.',
+      'Unlimited tracking inspections, a 50-scan history, and CSV evidence exports are available for implementation handoff.',
     proFeatures: [
       'Unlimited tracking-stack inspections',
       'Full history for up to 50 inspections',
@@ -147,7 +147,7 @@ export const products: Record<ProductKey, ProductDefinition> = {
     listingPositioning:
       'A feed diagnostics layer for merchants who are not ready to replace their feed app.',
     paidValue:
-      'Pro adds unlimited feed checks, a 50-scan history, and CSV evidence exports for catalog cleanup.',
+      'Unlimited feed checks, a 50-scan history, and CSV evidence exports are available for catalog cleanup.',
     proFeatures: [
       'Unlimited catalog feed-readiness checks',
       'Full history for up to 50 checks',
