@@ -4,6 +4,19 @@
   "installCommand": "corepack enable && pnpm install --frozen-lockfile",
   "buildCommand": "pnpm --filter website build && mkdir -p .vercel/output && cp -R apps/website/.vercel/output/. .vercel/output/",
   "ignoreCommand": "git diff --quiet HEAD^ HEAD -- apps/website packages vercel.json package.json pnpm-lock.yaml || exit 1",
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.klyna.dev"
+        }
+      ],
+      "destination": "https://klyna.dev/:path*",
+      "permanent": true
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

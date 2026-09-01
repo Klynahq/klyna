@@ -1,35 +1,69 @@
 ---
-title: Install the Shopify app
-description: Add the Klyna Shopify app to your store from the Shopify App Store listing or via a direct partner install link during the preview period.
+title: Install a Klyna Shopify app
+description: Choose a Klyna Shopify app, review its permissions, install from its official App Store listing, and complete the first safe check in Shopify admin.
 category: getting-started
-updated: 2026-06-10
+updated: 2026-09-02
 order: 3
 ---
 
-The Klyna Shopify app is an embedded app built on Remix and Polaris. It uses
-the same audit engine as the WordPress plugin.
+Klyna's Shopify tools solve different store problems. Start on the
+[products page](/products), choose the app that matches the job, and use the
+official Shopify App Store button shown on that product card. Apps that do not
+have a public listing are clearly treated as beta products instead of being
+presented as available installs.
+
+## Short answer
+
+To install a listed Klyna Shopify app, open its official Shopify App Store
+listing, select **Install**, choose the correct store, review the requested
+permissions, and approve only when the app and access match the job you expect
+it to perform.
 
 ## From the App Store
 
-1. Visit the Klyna listing on the Shopify App Store.
-2. Click **Add app**.
-3. Approve the requested scopes (read products, read content, write metafields).
-4. The app opens inside your Shopify admin under **Apps → Klyna**.
+1. Open the relevant Klyna product card on the [products page](/products).
+2. Select **Install on Shopify** to open that app's official listing.
+3. Sign in to Shopify and select the store where the app should be installed.
+4. Review the access request shown by Shopify. The exact permissions can differ by app.
+5. Approve the install only when the app name, developer, store, and access request are correct.
+6. Open the app from **Shopify admin → Apps** and follow its first-run screen.
 
-## During the preview
+## Before you approve access
 
-While the public listing is under review, store owners can install via a direct
-partner link. Email `support@klyna.dev` with your store's `myshopify.com`
-domain and we send a one-time install URL.
+Check these four things on Shopify's approval screen:
+
+- **Correct store:** confirm you are installing into the intended Shopify store.
+- **Correct app:** match the app name to the product page you just read.
+- **Requested access:** review every permission and why the app needs it.
+- **Support path:** keep the product guide and [Klyna Help](/help) available in case the first run does not complete.
+
+Read [Scopes and permissions](/help/shopify/scopes-and-permissions) for a plain-language explanation of Shopify app access. Shopify controls the final approval screen, so treat that screen as the current source of truth.
 
 ## First run
 
-The first time the app loads it indexes your products in the background. A
-progress bar appears at the top of the dashboard. Indexing 1,000 products takes
-roughly two minutes on a healthy store.
+The first useful result depends on the app:
+
+- SEO and feed tools may begin with a store scan or product-data check.
+- Redirect tools may ask for the paths or rules you want monitored.
+- storefront tools may require an app block or theme-editor step before they appear to shoppers.
+
+Do not assume a storefront change is live until you preview the theme and test it on mobile. Do not assume a scan result applies to every product until the app reports that its first run is complete.
+
+## If the app does not open
+
+1. Confirm the install appears under **Shopify admin → Apps**.
+2. Reload the admin once and reopen the app from the Apps list.
+3. If the embedded screen is blank, follow [Embedded app blank screen](/help/shopify/embedded-app-blank-screen).
+4. If Shopify reports an access issue, compare the approval screen with [Scopes and permissions](/help/shopify/scopes-and-permissions).
+5. Contact [Klyna support](/contact) with the app name, the step that failed, and the visible error message. Do not send store passwords, API secrets, customer exports, or payment data.
+
+## Uninstall and cleanup
+
+Use **Shopify admin → Settings → Apps and sales channels** to uninstall an app. Before removing a storefront app, note any theme block, pixel, feed, redirect, or product-data workflow that depends on it. After uninstalling, review the theme and affected workflow so an old block or configuration does not confuse shoppers.
 
 ## Permissions
 
-Klyna only ever requests the minimum scopes it needs. See
-[Scopes and permissions](/help/shopify/scopes-and-permissions) for the full
-list and what each one is used for.
+Review the live Shopify approval screen for the exact access requested by the
+specific app. Klyna's [Scopes and permissions](/help/shopify/scopes-and-permissions)
+guide explains why common Shopify access categories exist and what to check
+before approval.
