@@ -154,7 +154,6 @@ export default function Dashboard() {
   const isRunning = navigation.state !== 'idle';
   const historyUrl = useEmbeddedRoute('/app/history');
   const playbookUrl = useEmbeddedRoute('/app/playbook');
-  const billingUrl = useEmbeddedRoute('/app/billing');
   const freeChecksRemaining = Math.max(0, freeScanLimit - monthlyScanCount);
   const canRunScan = hasActivePayment || freeChecksRemaining > 0;
   const priorityFinding =
@@ -205,15 +204,8 @@ export default function Dashboard() {
                 <Button url={playbookUrl}>{`Open ${product.workspaceName}`}</Button>
                 {hasActivePayment ? (
                   <Button onClick={() => downloadReport(product.name, report)}>Export CSV</Button>
-                ) : (
-                  <Button url={billingUrl}>View plans</Button>
-                )}
+                ) : null}
               </div>
-              {!hasActivePayment ? (
-                <Text as="p" tone="subdued">
-                  Monthly usage: {monthlyScanCount} of {freeScanLimit} checks used.
-                </Text>
-              ) : null}
             </div>
             <div className="KlynaHealthPanel">
               <div
@@ -302,15 +294,12 @@ export default function Dashboard() {
               <Card>
                 <BlockStack gap="200">
                   <Text as="h2" variant="headingMd">
-                    Usage and reports
+                    Evidence workflow
                   </Text>
-                  {hasActivePayment ? <Badge tone="success">Unlimited</Badge> : <Badge>Core</Badge>}
                   <Text as="p" tone="subdued">
-                    {product.paidValue}
+                    {product.workspaceDescription}
                   </Text>
-                  <Button url={billingUrl}>
-                    {hasActivePayment ? 'Review plan' : 'Compare plans'}
-                  </Button>
+                  <Button url={playbookUrl}>{`Open ${product.workspaceName}`}</Button>
                 </BlockStack>
               </Card>
 
