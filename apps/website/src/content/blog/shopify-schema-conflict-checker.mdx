@@ -2,7 +2,7 @@
 title: "Shopify Schema Conflict Checker: Prevent Duplicate Product JSON-LD"
 description: "A Shopify schema conflict checker helps stores find duplicate Product JSON-LD, fake aggregate ratings, app overlap, and unsupported structured data."
 publishedAt: 2026-07-23
-updatedAt: 2026-07-23
+updatedAt: 2026-09-04
 author: "Klyna"
 tags: ["Shopify", "Schema", "Structured Data", "Klyna SEO"]
 category: "SEO"
@@ -74,3 +74,21 @@ No. Do not publish unsupported reviews or ratings.
 
 Klyna SEO for Shopify already targets schema, internal links, and audit workflows.
 
+## Find the source before fixing the markup
+
+Do not delete a JSON-LD block because it looks duplicated in a crawler report. First capture the product URL, rendered page source, and each `Product` node's name, offer, review, and `@id` values. Then identify whether the theme, an app embed, a review app, or a custom snippet produced each node. The right fix is often to configure one source of truth, not to add a third markup app.
+
+Google requires structured data to represent visible, current page content and does not guarantee a rich result even for valid markup. Its [general structured-data guidelines](https://developers.google.com/search/docs/appearance/structured-data/sd-policies) and [Product documentation](https://developers.google.com/search/docs/appearance/structured-data/product-snippet) are the test: a product page should have accurate product information, and ratings, price, availability, or offers must not be invented.
+
+| Finding | Investigate | Fix only after confirming |
+| --- | --- | --- |
+| Two Product nodes | Theme output and every app that emits product markup | Which node is complete and matches the visible product |
+| Stale price or availability | Variant selection, product data, and app cache | The live page and feed have the same current facts |
+| Review markup without visible reviews | Review widget placement and merchant policy | The review content is genuinely shown to shoppers |
+| Product markup on a collection | Template intent and markup source | Whether the page focuses on a single product |
+
+Validate the edited URL in the Rich Results Test, then inspect the live mobile product page before closing the ticket. Shopify's [theme app extension documentation](https://shopify.dev/docs/apps/build/online-store/theme-app-extensions) explains why app blocks and embeds are useful control points for merchant-managed storefront changes.
+
+Read the [Shopify schema markup checklist](/blog/shopify-schema-markup-checklist) for the full launch check and the [app conflict checker](/blog/shopify-app-conflict-checker) before changing another integration.
+
+> **CTA:** Use the [Klyna SEO app page](/shopify/seo) to explore the diagnostic workflow after the affected URL and markup source are known.

@@ -2,7 +2,7 @@
 title: "Shopify Alt Text Generator Safe Workflow"
 description: "Use a Shopify alt text generator safely with product context, image purpose, bulk review, rollback notes, and SEO QA before publishing."
 publishedAt: 2026-08-26
-updatedAt: 2026-08-26
+updatedAt: 2026-09-04
 author: "Klyna"
 tags: ["Shopify", "SEO", "Alt Text", "Apps"]
 category: "SEO"
@@ -88,3 +88,18 @@ Alt text helps search engines and assistive technologies understand images, but 
 ### What should I check after applying alt text?
 
 Check product pages, collection pages, image loading, structured data, canonical tags, and GSC signals for affected URLs. Keep a rollback note for the batch.
+
+## Make generated text a review queue
+
+Product context is what keeps a generator useful. Start with one product type and separate main images, variants, lifestyle images, and decorative assets. A reviewer should be able to explain why the description is accurate by looking at the image, not by trusting a product title alone.
+
+Shopify recommends brief, descriptive alt text and suggests 125 characters or fewer even though the field accepts longer text. Google says alt text, nearby page content, and image understanding work together, and warns against filling alt attributes with keywords. See [Shopify's alt-text instructions](https://help.shopify.com/en/manual/products/product-media/add-alt-text) and [Google's image SEO guidance](https://developers.google.com/search/docs/appearance/google-images).
+
+| Image role | Review prompt | Example outcome |
+| --- | --- | --- |
+| Main product image | What is the product, color, material, and visible view? | `Olive linen overshirt, front view` |
+| Variant image | What visibly distinguishes it from the parent image? | Add the visible color or pattern |
+| Lifestyle image | What product use or scene is actually shown? | Mention the setting only when it adds meaning |
+| Decorative image | Would a customer lose information without it? | Use empty alt text when it adds no meaning |
+
+Publish a small approved batch, open the affected product and collection pages on mobile, and retain the product handles and date in a rollback note. Continue with the [product image alt checklist](/blog/shopify-image-alt-seo-checklist) and [product page SEO audit](/blog/shopify-product-page-seo-audit) before expanding the batch. When the work is scoped, review the [Klyna SEO workflow](/shopify/seo).

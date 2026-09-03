@@ -2,7 +2,7 @@
 title: "Shopify schema markup checklist for product and collection pages"
 description: "A Shopify schema markup checklist for Product, BreadcrumbList, Organization, FAQ, and collection-page structured data without fake review or price claims."
 publishedAt: 2026-07-21
-updatedAt: 2026-07-21
+updatedAt: 2026-09-04
 author: "Klyna"
 category: "SEO"
 tags: ["shopify","schema","structured-data","product-seo"]
@@ -76,3 +76,26 @@ AI search systems need direct answers, clean entities, consistent links, and tru
 ### What should be logged after the fix?
 
 Log the affected URL, the change type, the reason, the validation result, the deployment, and the next measurement date. If the work touches backlink or authority signals, keep bad sources in a reject log and do not send outreach to spam, scraped, PBN, or link-selling sites.
+
+## Validate the markup against the page, not a score
+
+Run this launch sequence for the highest-value template first:
+
+1. Open the live product page and record the product name, price, availability, image, and visible review treatment.
+2. Run the URL through Google's Rich Results Test and compare each material value with the page a shopper sees.
+3. Check that the markup's canonical URL and breadcrumb path match the intended page hierarchy.
+4. Repeat for one variant and one collection page; a collection is not automatically a single-product page.
+5. Re-test after any theme, review-app, feed, or app-embed release.
+
+Google says markup must reflect the main content of the page and must not be hidden, misleading, or stale. It also distinguishes Product snippets from merchant listings and recommends applying product markup to pages focused on one product or its variants. Use the official [structured data policy](https://developers.google.com/search/docs/appearance/structured-data/sd-policies) and [Product structured-data guide](https://developers.google.com/search/docs/appearance/structured-data/product) as the source of truth.
+
+| Page type | Most important question | Do not assume |
+| --- | --- | --- |
+| Product | Are the product facts visible and current? | Valid markup guarantees a rich result |
+| Variant | Does the selected variant align with the offer data? | One parent offer describes every variant |
+| Collection | Is it an index of products rather than one product detail page? | Product markup belongs on every listing page |
+| Article | Do breadcrumbs and article details match the visible page? | FAQ markup will create a result feature |
+
+For a conflict investigation, use the [Shopify schema conflict checker](/blog/shopify-schema-conflict-checker). For product-page context, use the [product page SEO audit](/blog/shopify-product-page-seo-audit), then find the relevant Klyna workflow from [Products](/products).
+
+> **CTA:** Give a Klyna tool a specific validation task, URL, and success condition rather than asking it to add markup blindly.
