@@ -7,6 +7,7 @@ import vercel from '@astrojs/vercel';
 
 export default defineConfig({
   site: 'https://klyna.dev',
+  trailingSlash: 'never',
   // Hybrid: most pages prerender to static; the download tracker opts out
   // with `export const prerender = false` and runs as a Vercel function.
   output: 'static',

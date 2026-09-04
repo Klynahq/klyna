@@ -3,6 +3,14 @@ import readingTime from 'reading-time';
 
 export type Post = CollectionEntry<'blog'>;
 
+export function tagSlug(tag: string): string {
+  return tag
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 /** All published (non-draft) posts, newest first. */
 export async function getPublishedPosts(): Promise<Post[]> {
   const posts = await getCollection('blog', ({ data }) => !data.draft);
@@ -16,23 +24,26 @@ export async function getFeaturedPosts(): Promise<Post[]> {
 }
 
 /** All unique tags across published posts, sorted by post count desc. */
-export async function getAllTags(): Promise<Array<{ tag: string; count: number }>> {
+export async function getAllTags(): Promise<Array<{ tag: string; slug: string; count: number }>> {
   const posts = await getPublishedPosts();
-  const counts = new Map<string, number>();
+  const groups = new Map<string, { tag: string; count: number }>();
   for (const post of posts) {
     for (const tag of post.data.tags) {
-      counts.set(tag, (counts.get(tag) ?? 0) + 1);
+      const slug = tagSlug(tag);
+      const group = groups.get(slug);
+      groups.set(slug, { tag: group?.tag ?? tag, count: (group?.count ?? 0) + 1 });
     }
   }
-  return Array.from(counts.entries())
-    .map(([tag, count]) => ({ tag, count }))
+  return Array.from(groups.entries())
+    .map(([slug, { tag, count }]) => ({ tag, slug, count }))
     .sort((a, b) => b.count - a.count);
 }
 
 /** All published posts that include a given tag. */
 export async function getPostsByTag(tag: string): Promise<Post[]> {
   const posts = await getPublishedPosts();
-  return posts.filter((p) => p.data.tags.includes(tag));
+  const slug = tagSlug(tag);
+  return posts.filter((p) => p.data.tags.some((candidate) => tagSlug(candidate) === slug));
 }
 
 /** Format a date as "Jun 10, 2026". */

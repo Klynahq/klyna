@@ -4,10 +4,10 @@ import { getAllTags, getPostsByTag, formatDate } from '../../../utils/blog.ts';
 
 export async function getStaticPaths() {
   const tags = await getAllTags();
-  return tags.map(({ tag }) => ({ params: { tag } }));
+  return tags.map(({ tag, slug }) => ({ params: { tag: slug }, props: { tag } }));
 }
 
-const { tag } = Astro.params;
+const { tag } = Astro.props;
 const posts = await getPostsByTag(tag);
 ---
 
