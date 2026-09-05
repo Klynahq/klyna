@@ -18,7 +18,7 @@ export default defineConfig({
       changefreq: 'weekly',
       priority: 0.7,
       lastmod: new Date(),
-      filter: (page) => !page.endsWith('/downloads/') && !page.includes('/blog/tags/'),
+      filter: (page) => !/\/downloads\/?$/.test(page) && !page.includes('/blog/tags/'),
     }),
   ],
   vite: {
