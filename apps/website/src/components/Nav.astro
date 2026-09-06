@@ -105,14 +105,4 @@ const isActive = (href: string) =>
   </div>
 </header>
 
-<script>
-  (() => {
-    const btn = document.getElementById('mobile-nav-toggle');
-    const panel = document.getElementById('mobile-nav-panel');
-    if (!btn || !panel) return;
-    btn.addEventListener('click', () => {
-      const open = panel.classList.toggle('hidden');
-      btn.setAttribute('aria-expanded', String(!open));
-    });
-  })();
-</script>
+<script src="/assets/nav.js" defer></script>
