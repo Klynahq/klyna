@@ -72,7 +72,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <button
         type="submit"
         id="submit-btn"
-        class="w-full md:w-auto px-6 py-3 rounded-lg bg-[color:var(--color-accent)] hover:bg-[color:var(--color-accent-hover)] text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        class="w-full md:w-auto px-6 py-3 rounded-lg bg-[color:var(--color-accent-solid)] hover:bg-[color:var(--color-accent-solid-hover)] text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Send message
       </button>
@@ -106,24 +106,25 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       .
     </p>
 
-    <script is:inline>
+    <script>
       (() => {
-        const form = document.getElementById('contact-form');
+        const form = document.getElementById('contact-form') as HTMLFormElement | null;
         const success = document.getElementById('form-success');
         const errorBox = document.getElementById('form-error');
-        const submitBtn = document.getElementById('submit-btn');
+        const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement | null;
         const ticketIdEl = document.getElementById('ticket-id');
-        const msg = document.getElementById('message');
+        const msg = document.getElementById('message') as HTMLTextAreaElement | null;
         const count = document.getElementById('char-count');
-        if (!form || !success || !errorBox || !submitBtn || !msg || !count) return;
+        if (!form || !success || !errorBox || !submitBtn || !ticketIdEl || !msg || !count) return;
+        const formError = errorBox;
 
         msg.addEventListener('input', () => {
           count.textContent = String(msg.value.length);
         });
 
-        function showError(text) {
-          errorBox.textContent = text;
-          errorBox.classList.remove('hidden');
+        function showError(text: string) {
+          formError.textContent = text;
+          formError.classList.remove('hidden');
         }
 
         form.addEventListener('submit', async (e) => {

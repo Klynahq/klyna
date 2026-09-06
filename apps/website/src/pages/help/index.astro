@@ -101,14 +101,21 @@ const searchIndex = articles.map((a) => ({
 
   <script type="application/json" id="help-index" set:html={JSON.stringify(searchIndex)} />
 
-  <script is:inline>
+  <script>
     (() => {
-      const input = document.getElementById('help-search');
+      type HelpArticle = {
+        title: string;
+        description: string;
+        category: string;
+        url: string;
+      };
+
+      const input = document.getElementById('help-search') as HTMLInputElement | null;
       const results = document.getElementById('help-results');
       const cats = document.getElementById('help-categories');
       const raw = document.getElementById('help-index');
       if (!input || !results || !raw || !cats) return;
-      const data = JSON.parse(raw.textContent || '[]');
+      const data = JSON.parse(raw.textContent || '[]') as HelpArticle[];
       input.addEventListener('input', () => {
         const q = input.value.trim().toLowerCase();
         if (!q) {

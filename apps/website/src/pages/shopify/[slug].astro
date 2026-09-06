@@ -104,14 +104,14 @@ const graph = [
                 href={page.appStoreUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                class="inline-flex min-h-12 items-center justify-center rounded-xl bg-[color:var(--color-accent)] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[color:var(--color-accent-hover)]"
+                class="inline-flex min-h-12 items-center justify-center rounded-xl bg-[color:var(--color-accent-solid)] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[color:var(--color-accent-solid-hover)]"
               >
                 Install on Shopify
               </a>
             ) : (
               <a
                 href="/contact"
-                class="inline-flex min-h-12 items-center justify-center rounded-xl bg-[color:var(--color-accent)] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[color:var(--color-accent-hover)]"
+                class="inline-flex min-h-12 items-center justify-center rounded-xl bg-[color:var(--color-accent-solid)] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[color:var(--color-accent-solid-hover)]"
               >
                 Ask about early access
               </a>
@@ -215,7 +215,7 @@ const graph = [
       <div class="grid gap-3">
         {page.workflow.map((step, index) => (
           <article class="grid gap-4 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] p-5 sm:grid-cols-[80px_1fr]">
-            <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-[color:var(--color-accent)] text-lg font-bold text-white">
+            <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-[color:var(--color-accent-solid)] text-lg font-bold text-white">
               {String(index + 1).padStart(2, '0')}
             </div>
             <div>

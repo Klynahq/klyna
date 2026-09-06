@@ -5,8 +5,8 @@
  * Tailwind v4 picks these up automatically via @theme.
  * ------------------------------------------------------------- */
 @theme {
-  --font-sans: 'Geist', 'Inter', system-ui, -apple-system, sans-serif;
-  --font-mono: 'Geist Mono', 'JetBrains Mono', ui-monospace, monospace;
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
 
   --color-bg: #0b0b0f;
   --color-bg-elevated: #13131a;
@@ -15,11 +15,13 @@
 
   --color-text: #f4f4f5;
   --color-text-muted: #a1a1aa;
-  --color-text-dim: #71717a;
+  --color-text-dim: #92929d;
 
-  --color-accent: #7c5cff;
-  --color-accent-hover: #9277ff;
-  --color-accent-muted: #7c5cff20;
+  --color-accent: #9b85ff;
+  --color-accent-hover: #ad9cff;
+  --color-accent-solid: #6045d8;
+  --color-accent-solid-hover: #7358e8;
+  --color-accent-muted: #9b85ff20;
 
   --color-success: #34d399;
   --color-warning: #fbbf24;
