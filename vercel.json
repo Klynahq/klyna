@@ -6,6 +6,16 @@
   "ignoreCommand": "git diff --quiet HEAD^ HEAD -- apps/website packages vercel.json package.json pnpm-lock.yaml || exit 1",
   "redirects": [
     {
+      "source": "/blog/shopify-bundle-app-schema-safety/",
+      "destination": "/blog/shopify-bundle-app-schema-safety",
+      "permanent": true
+    },
+    {
+      "source": "/blog/shopify-restock-alert-event-tracking/",
+      "destination": "/blog/shopify-restock-alert-event-tracking",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "has": [
         {
