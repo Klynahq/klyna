@@ -1,7 +1,8 @@
 import { type LoaderFunctionArgs, json } from '@remix-run/node';
-import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
-import { quoteBundle, type DiscountType } from '../lib/pricing';
+import { type DiscountType, quoteBundle } from '../lib/pricing';
+import { recordUsageEvent } from '../lib/usage.server';
+import { authenticate } from '../shopify.server';
 
 // Public storefront data endpoint, served through the Shopify app proxy so the
 // theme app extension can fetch a product's bundle + FBT data without exposing
@@ -48,6 +49,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         })
       : Promise.resolve([]),
   ]);
+
+  await recordUsageEvent(shop, 'storefront_widget_loaded');
 
   const bundlePayload = bundles.map((b) => {
     const quote = quoteBundle(

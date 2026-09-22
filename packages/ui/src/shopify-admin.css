@@ -258,6 +258,128 @@
   color: #8a6400;
 }
 
+.KlynaAdmin .KlynaActivation {
+  overflow: hidden;
+  border: 1px solid var(--klyna-accent-border);
+  border-radius: 8px;
+  background: var(--klyna-surface);
+  box-shadow: 0 2px 8px rgb(49 31 128 / 8%);
+}
+
+.KlynaAdmin .KlynaActivation__intro {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 22px 24px;
+  background: var(--klyna-accent-soft);
+}
+
+.KlynaAdmin .KlynaActivation__intro h2 {
+  margin: 0;
+  color: var(--klyna-ink);
+  font-size: 18px;
+  font-weight: 730;
+  line-height: 1.35;
+}
+
+.KlynaAdmin .KlynaActivation__intro p {
+  max-width: 68ch;
+  margin: 6px 0 0;
+  color: #514869;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.KlynaAdmin .KlynaActivation__intro > strong {
+  flex: 0 0 auto;
+  color: #4b2fb7;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.KlynaAdmin .KlynaActivation__steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.KlynaAdmin .KlynaActivationStep {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  min-height: 70px;
+  padding: 14px 24px;
+  border-top: 1px solid var(--klyna-border);
+}
+
+.KlynaAdmin .KlynaActivationStep__state {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid var(--klyna-border-strong);
+  border-radius: 50%;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.KlynaAdmin .KlynaActivationStep.is-complete .KlynaActivationStep__state {
+  border-color: var(--klyna-data);
+  background: var(--klyna-data);
+}
+
+.KlynaAdmin .KlynaActivationStep__copy {
+  display: grid;
+  gap: 2px;
+}
+
+.KlynaAdmin .KlynaActivationStep__copy strong {
+  color: var(--klyna-ink);
+  font-size: 14px;
+}
+
+.KlynaAdmin .KlynaActivationStep__copy span {
+  color: var(--klyna-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.KlynaAdmin .KlynaBuilderProgress {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid var(--klyna-border);
+  border-radius: 8px;
+  background: var(--klyna-surface);
+}
+
+.KlynaAdmin .KlynaBuilderProgress span {
+  min-width: 0;
+  padding: 12px 16px;
+  border-inline-end: 1px solid var(--klyna-border);
+  color: var(--klyna-muted);
+  font-size: 13px;
+  font-weight: 650;
+  text-align: center;
+}
+
+.KlynaAdmin .KlynaBuilderProgress span:last-child {
+  border-inline-end: 0;
+}
+
+.KlynaAdmin .KlynaBuilderProgress .is-current {
+  background: var(--klyna-accent-soft);
+  color: #4b2fb7;
+}
+
+.KlynaAdmin .KlynaBuilderProgress .is-complete {
+  background: var(--klyna-data-soft);
+  color: var(--klyna-data);
+}
+
 .KlynaAdmin .KlynaSectionHeader {
   display: flex;
   gap: 16px;
@@ -362,25 +484,24 @@
 .KlynaAdmin .KlynaFinding {
   padding: 16px 18px;
   border: 1px solid var(--klyna-border);
-  border-inline-start: 3px solid var(--klyna-border-strong);
   border-radius: 8px;
   background: var(--klyna-surface);
 }
 
 .KlynaAdmin .KlynaFinding[data-severity="critical"] {
-  border-inline-start-color: #c70a24;
+  border-color: #e5b7bd;
 }
 
 .KlynaAdmin .KlynaFinding[data-severity="warning"] {
-  border-inline-start-color: #b98900;
+  border-color: #ddcc98;
 }
 
 .KlynaAdmin .KlynaFinding[data-severity="info"] {
-  border-inline-start-color: #2274a5;
+  border-color: #b7d5e6;
 }
 
 .KlynaAdmin .KlynaFinding[data-severity="success"] {
-  border-inline-start-color: #16845b;
+  border-color: #b8ded7;
 }
 
 .KlynaAdmin .KlynaDataRows {
@@ -523,6 +644,37 @@
 }
 
 @media (max-width: 760px) {
+  .KlynaAdmin .KlynaActivation__intro {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+    padding: 20px;
+  }
+
+  .KlynaAdmin .KlynaActivationStep {
+    grid-template-columns: 28px minmax(0, 1fr);
+    padding-inline: 20px;
+  }
+
+  .KlynaAdmin .KlynaActivationStep .KlynaButtonLink {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .KlynaAdmin .KlynaBuilderProgress {
+    grid-template-columns: 1fr;
+  }
+
+  .KlynaAdmin .KlynaBuilderProgress span {
+    border-inline-end: 0;
+    border-bottom: 1px solid var(--klyna-border);
+    text-align: start;
+  }
+
+  .KlynaAdmin .KlynaBuilderProgress span:last-child {
+    border-bottom: 0;
+  }
+
   .KlynaAdmin .KlynaDashboardLead {
     grid-template-columns: 1fr;
     padding: 20px;

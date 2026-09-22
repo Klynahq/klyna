@@ -25,6 +25,7 @@ import { useAuthenticatedAction } from '../lib/authenticated-action';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getPlanSelectionUrl, getShopPlan, planLimitMessage } from '../lib/plans.server';
 import { type DiscountType, quoteBundle } from '../lib/pricing';
+import { recordUsageEvent } from '../lib/usage.server';
 import { authenticate } from '../shopify.server';
 
 interface DraftItem {
@@ -48,18 +49,23 @@ function slugify(s: string): string {
 }
 
 export const loader = async ({ params, request }: LoaderFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
+  const { admin, session } = await authenticate.admin(request);
   const isNew = params.id === 'new';
   const plan = await getShopPlan(session.shop, request);
   const upgradeUrl = getPlanSelectionUrl(session.shop);
 
   if (isNew) {
-    const bundleCount = await prisma.bundle.count({ where: { shop: session.shop } });
+    const [bundleCount, starterProducts] = await Promise.all([
+      prisma.bundle.count({ where: { shop: session.shop } }),
+      withAdminSessionRecovery(session, () => searchProducts(admin, '', 12)).catch(() => []),
+      recordUsageEvent(session.shop, 'bundle_builder_opened'),
+    ]);
     return {
       isNew: true,
       plan,
       upgradeUrl,
       limitReached: bundleCount >= plan.maxBundles,
+      starterProducts,
       bundle: {
         id: 'new',
         title: '',
@@ -84,6 +90,7 @@ export const loader = async ({ params, request }: LoaderFunctionArgs) => {
     plan,
     upgradeUrl,
     limitReached: false,
+    starterProducts: [] as CatalogProduct[],
     bundle: {
       id: bundle.id,
       title: bundle.title,
@@ -114,6 +121,7 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
   if (intent === 'search') {
     const query = String(form.get('query') ?? '');
     const products = await withAdminSessionRecovery(session, () => searchProducts(admin, query));
+    await recordUsageEvent(shop, 'catalog_searched');
     return json({ products });
   }
 
@@ -231,11 +239,14 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
     return saved;
   });
 
+  await recordUsageEvent(shop, status === 'active' ? 'bundle_activated' : 'bundle_saved');
+
   return json({ ok: true, bundleId: bundle.id });
 };
 
 export default function BundleBuilder() {
-  const { isNew, bundle, plan, upgradeUrl, limitReached } = useLoaderData<typeof loader>();
+  const { isNew, bundle, starterProducts, plan, upgradeUrl, limitReached } =
+    useLoaderData<typeof loader>();
   const embeddedRoute = useEmbeddedRoute();
   const searchAction = useAuthenticatedAction<{ products: CatalogProduct[] }>();
   const saveAction = useAuthenticatedAction<{ ok: boolean; bundleId: string }>();
@@ -249,7 +260,9 @@ export default function BundleBuilder() {
   const [query, setQuery] = useState('');
 
   const saving = saveAction.loading;
-  const results = searchAction.data?.products ?? [];
+  const results = (searchAction.data?.products ?? starterProducts).filter(
+    (product): product is CatalogProduct => product !== null,
+  );
   const submitSearch = searchAction.submit;
 
   // Debounced product search.
@@ -334,6 +347,21 @@ export default function BundleBuilder() {
       ]}
     >
       <Layout>
+        {isNew && (
+          <Layout.Section>
+            <div className="KlynaBuilderProgress" aria-label="Bundle setup progress">
+              <span className={title.trim() ? 'is-complete' : 'is-current'}>Name the offer</span>
+              <span
+                className={items.length >= 2 ? 'is-complete' : title.trim() ? 'is-current' : ''}
+              >
+                Pick two products
+              </span>
+              <span className={items.length >= 2 ? 'is-current' : ''}>
+                Set savings and activate
+              </span>
+            </div>
+          </Layout.Section>
+        )}
         {saveAction.error && (
           <Layout.Section>
             <Banner tone="critical" title="Bundle could not be saved">
@@ -399,7 +427,7 @@ export default function BundleBuilder() {
                 </Text>
                 {items.length === 0 ? (
                   <Text as="p" tone="subdued">
-                    Search and add at least two products.
+                    Pick two products from your catalog below. You can search if you need another.
                   </Text>
                 ) : (
                   <BlockStack gap="200">

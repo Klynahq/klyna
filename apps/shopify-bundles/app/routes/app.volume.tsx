@@ -36,6 +36,7 @@ import {
   normalizeTiers,
   quoteVolume,
 } from '../lib/pricing';
+import { recordUsageEvent } from '../lib/usage.server';
 import { authenticate } from '../shopify.server';
 
 interface DraftTier {
@@ -225,6 +226,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         })),
       });
     });
+    await recordUsageEvent(shop, 'volume_discount_saved');
     return json({ ok: true });
   }
 

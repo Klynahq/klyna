@@ -202,3 +202,16 @@ model BundleSuggestion {
 
   @@index([shop, status])
 }
+
+// Privacy-safe product usage milestones. Events contain no customer or order
+// data and are deduplicated per shop, event, and UTC day.
+model UsageEvent {
+  id        String   @id @default(cuid())
+  shop      String
+  event     String
+  day       String
+  createdAt DateTime @default(now())
+
+  @@unique([shop, event, day])
+  @@index([shop, createdAt])
+}

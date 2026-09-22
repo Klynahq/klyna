@@ -21,6 +21,7 @@ import { useAuthenticatedAction } from '../lib/authenticated-action';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getPlanSelectionUrl, getShopPlan } from '../lib/plans.server';
 import { type DiscountType, quoteBundle } from '../lib/pricing';
+import { recordUsageEvent } from '../lib/usage.server';
 import { authenticate } from '../shopify.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -94,6 +95,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         where: { id },
         data: { status: next, discountGid },
       });
+      if (next === 'active') await recordUsageEvent(session.shop, 'bundle_activated');
       return json({ ok: true });
     }
   } catch (error) {

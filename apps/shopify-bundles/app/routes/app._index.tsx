@@ -19,6 +19,7 @@ import { getShopInfo } from '../lib/admin.server';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getPlanSelectionUrl, getShopPlan } from '../lib/plans.server';
 import { money } from '../lib/pricing';
+import { recordUsageEvent } from '../lib/usage.server';
 import { authenticate } from '../shopify.server';
 
 const WINDOW_DAYS = 30;
@@ -30,16 +31,19 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   const since = new Date(Date.now() - WINDOW_DAYS * 24 * 60 * 60 * 1000);
 
-  const [shopInfo, sales, activeBundles, draftBundles, volumeCount] = await Promise.all([
-    getShopInfo(admin).catch(() => null),
-    prisma.bundleSale.findMany({
-      where: { shop, soldAt: { gte: since } },
-      orderBy: { soldAt: 'desc' },
-    }),
-    prisma.bundle.count({ where: { shop, status: 'active' } }),
-    prisma.bundle.count({ where: { shop, status: 'draft' } }),
-    prisma.volumeTier.count({ where: { shop } }),
-  ]);
+  const [shopInfo, sales, activeBundles, draftBundles, volumeCount, storefrontUsage] =
+    await Promise.all([
+      getShopInfo(admin).catch(() => null),
+      prisma.bundleSale.findMany({
+        where: { shop, soldAt: { gte: since } },
+        orderBy: { soldAt: 'desc' },
+      }),
+      prisma.bundle.count({ where: { shop, status: 'active' } }),
+      prisma.bundle.count({ where: { shop, status: 'draft' } }),
+      prisma.volumeTier.count({ where: { shop } }),
+      prisma.usageEvent.count({ where: { shop, event: 'storefront_widget_loaded' } }),
+      recordUsageEvent(shop, 'dashboard_viewed'),
+    ]);
 
   const revenue = money(sales.reduce((s, r) => s + r.grossAmount, 0));
   const discounts = money(sales.reduce((s, r) => s + r.discountAmount, 0));
@@ -61,6 +65,11 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       fbt: money(bySource.fbt ?? 0),
     },
     counts: { activeBundles, draftBundles, volumeCount },
+    activation: {
+      offerCreated: activeBundles + draftBundles + volumeCount > 0,
+      offerActive: activeBundles + volumeCount > 0,
+      storefrontVerified: storefrontUsage > 0,
+    },
     plan,
     upgradeUrl: getPlanSelectionUrl(shop),
     hasData: sales.length > 0,
@@ -72,9 +81,10 @@ function fmt(amount: number, currency: string) {
 }
 
 export default function Dashboard() {
-  const { shop, currency, metrics, bySource, counts, plan, upgradeUrl, hasData } =
+  const { shop, currency, metrics, bySource, counts, activation, plan, upgradeUrl, hasData } =
     useLoaderData<typeof loader>();
   const embeddedRoute = useEmbeddedRoute();
+  const activationCount = Object.values(activation).filter(Boolean).length;
 
   const stats = [
     { label: 'Active bundles', value: String(counts.activeBundles) },
@@ -103,6 +113,62 @@ export default function Dashboard() {
   return (
     <Page title="Bundles overview" subtitle={`Klyna Bundles | ${shop}`}>
       <Layout>
+        {activationCount < 3 && (
+          <Layout.Section>
+            <section className="KlynaActivation" aria-labelledby="activation-title">
+              <div className="KlynaActivation__intro">
+                <div>
+                  <h2 id="activation-title">Launch your first bundle in about five minutes</h2>
+                  <p>
+                    Pick two products, choose the saving, then place the Klyna block on the matching
+                    product template.
+                  </p>
+                </div>
+                <strong>{activationCount} of 3 complete</strong>
+              </div>
+              <ol className="KlynaActivation__steps">
+                <ActivationStep
+                  index={1}
+                  complete={activation.offerCreated}
+                  label="Create an offer"
+                  detail="Choose products and preview the exact checkout saving."
+                  action={
+                    activation.offerCreated
+                      ? undefined
+                      : { label: 'Choose products', href: embeddedRoute('/app/bundles/new') }
+                  }
+                />
+                <ActivationStep
+                  index={2}
+                  complete={activation.offerActive}
+                  label="Activate the discount"
+                  detail="Klyna creates a native Shopify automatic discount."
+                  action={
+                    activation.offerCreated && !activation.offerActive
+                      ? { label: 'Review draft', href: embeddedRoute('/app/bundles') }
+                      : undefined
+                  }
+                />
+                <ActivationStep
+                  index={3}
+                  complete={activation.storefrontVerified}
+                  label="Show it on your product page"
+                  detail="Add the Klyna Bundles app block in the theme editor, then preview it."
+                  action={
+                    activation.offerActive && !activation.storefrontVerified
+                      ? {
+                          label: 'Open theme editor',
+                          href: `https://${shop}/admin/themes/current/editor?context=apps&template=product`,
+                          topLevel: true,
+                        }
+                      : undefined
+                  }
+                />
+              </ol>
+            </section>
+          </Layout.Section>
+        )}
+
         <Layout.Section>
           <div className="KlynaDashboardLead">
             <div className="KlynaDashboardLead__copy">
@@ -241,6 +307,41 @@ export default function Dashboard() {
         </Layout.Section>
       </Layout>
     </Page>
+  );
+}
+
+function ActivationStep({
+  index,
+  complete,
+  label,
+  detail,
+  action,
+}: {
+  index: number;
+  complete: boolean;
+  label: string;
+  detail: string;
+  action?: { label: string; href: string; topLevel?: boolean };
+}) {
+  return (
+    <li className={complete ? 'KlynaActivationStep is-complete' : 'KlynaActivationStep'}>
+      <span className="KlynaActivationStep__state" aria-hidden="true">
+        {index}
+      </span>
+      <span className="KlynaActivationStep__copy">
+        <strong>{label}</strong>
+        <span>{detail}</span>
+      </span>
+      {action && (
+        <a
+          className="KlynaButtonLink"
+          href={action.href}
+          target={action.topLevel ? '_top' : undefined}
+        >
+          {action.label}
+        </a>
+      )}
+    </li>
   );
 }
 

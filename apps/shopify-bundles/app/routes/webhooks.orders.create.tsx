@@ -1,6 +1,7 @@
-import { type ActionFunctionArgs } from '@remix-run/node';
-import { authenticate } from '../shopify.server';
+import type { ActionFunctionArgs } from '@remix-run/node';
 import prisma from '../db.server';
+import { recordUsageEvent } from '../lib/usage.server';
+import { authenticate } from '../shopify.server';
 
 // orders/create — attribute revenue to bundles, volume tiers, and FBT pairs so
 // the admin home analytics reflect real sales. We match the order's line items
@@ -83,7 +84,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         discount += Number(l.total_discount ?? 0);
         units += qty;
       }
-      sales.push({ bundleId: b.id, source: 'bundle', itemsSold: units, grossAmount: gross, discountAmount: discount });
+      sales.push({
+        bundleId: b.id,
+        source: 'bundle',
+        itemsSold: units,
+        grossAmount: gross,
+        discountAmount: discount,
+      });
     }
   }
 
@@ -126,7 +133,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       gross += Number(l.price ?? 0) * qty;
       units += qty;
     }
-    sales.push({ bundleId: null, source: 'fbt', itemsSold: units, grossAmount: gross, discountAmount: 0 });
+    sales.push({
+      bundleId: null,
+      source: 'fbt',
+      itemsSold: units,
+      grossAmount: gross,
+      discountAmount: 0,
+    });
   }
 
   if (sales.length > 0) {
@@ -142,6 +155,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         currency,
       })),
     });
+    await recordUsageEvent(shop, 'offer_sale_recorded');
   }
 
   return new Response();
