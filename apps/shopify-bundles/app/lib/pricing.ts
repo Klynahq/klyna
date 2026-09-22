@@ -28,14 +28,9 @@ export function subtotal(items: PricedItem[]): number {
  * "10% off"; a fixed_amount of 10 means "$10 off". The result is clamped to
  * never go below zero.
  */
-export function applyDiscount(
-  base: number,
-  type: DiscountType,
-  value: number,
-): number {
+export function applyDiscount(base: number, type: DiscountType, value: number): number {
   if (base <= 0 || value <= 0) return money(Math.max(0, base));
-  const discounted =
-    type === 'percentage' ? base * (1 - value / 100) : base - value;
+  const discounted = type === 'percentage' ? base * (1 - value / 100) : base - value;
   return money(Math.max(0, discounted));
 }
 
@@ -48,14 +43,22 @@ export interface BundleQuote {
 }
 
 /** Quote a fixed/mix-and-match bundle: subtotal, discounted total, savings. */
-export function quoteBundle(
-  items: PricedItem[],
-  type: DiscountType,
-  value: number,
-): BundleQuote {
+export function quoteBundle(items: PricedItem[], type: DiscountType, value: number): BundleQuote {
   const sub = subtotal(items);
-  const total = applyDiscount(sub, type, value);
-  const savings = money(sub - total);
+  // Shopify allocates percentage discounts to each cart line and rounds each
+  // allocation to the store currency before adding the savings together.
+  // Mirror that behavior so previews match checkout to the cent.
+  const calculatedSavings =
+    type === 'percentage' && value > 0
+      ? money(
+          items.reduce((sum, item) => {
+            const lineSubtotal = money(item.price * item.quantity);
+            return sum + money(lineSubtotal * (value / 100));
+          }, 0),
+        )
+      : money(sub - applyDiscount(sub, type, value));
+  const savings = money(Math.min(sub, calculatedSavings));
+  const total = money(sub - savings);
   const savingsPercent = sub > 0 ? Math.round((savings / sub) * 100) : 0;
   return { subtotal: sub, total, savings, savingsPercent };
 }

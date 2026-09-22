@@ -16,7 +16,7 @@
     "generate": "shopify app generate",
     "prisma:migrate": "prisma migrate deploy",
     "prisma:generate": "prisma generate",
-    "test:bundle-function": "vitest run app/lib/admin.server.test.ts extensions/klyna-bundle-discount/tests/bundle-discount.test.js",
+    "test:bundle-function": "vitest run app/lib/admin.server.test.ts app/lib/pricing.test.ts extensions/klyna-bundle-discount/tests/bundle-discount.test.js",
     "typecheck": "tsc --noEmit",
     "setup": "pnpm prisma:generate && pnpm prisma:migrate"
   },
