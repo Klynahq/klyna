@@ -20,7 +20,7 @@ import {
 import { useEffect, useState } from 'react';
 import prisma from '../db.server';
 import { withAdminSessionRecovery } from '../lib/admin-session-recovery.server';
-import { type CatalogProduct, searchProducts, syncAutomaticDiscount } from '../lib/admin.server';
+import { type CatalogProduct, searchProducts, syncBundleDiscount } from '../lib/admin.server';
 import { useAuthenticatedAction } from '../lib/authenticated-action';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getPlanSelectionUrl, getShopPlan, planLimitMessage } from '../lib/plans.server';
@@ -184,19 +184,21 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
   if (!isNew || status === 'active') {
     try {
       discountGid = await withAdminSessionRecovery(session, () =>
-        syncAutomaticDiscount(admin, {
+        syncBundleDiscount(admin, {
           discountGid,
           previousTitle: `Klyna Bundle · ${existingBundle?.title ?? title}`,
           active: status === 'active',
           discount: {
             title: discountTitle,
-            percentage: data.discountType === 'percentage' ? data.discountValue / 100 : null,
-            amount: data.discountType === 'fixed_amount' ? data.discountValue : null,
-            productGids: payload.items.map((it) => it.productGid),
-            minQuantity:
-              data.kind === 'mix_and_match'
-                ? Math.max(1, data.minItems)
-                : payload.items.reduce((sum, item) => sum + Math.max(1, item.quantity), 0),
+            kind: data.kind as 'fixed' | 'mix_and_match',
+            items: payload.items.map((item) => ({
+              productGid: item.productGid,
+              variantGid: item.variantGid,
+              quantity: Math.max(1, item.quantity),
+            })),
+            minItems: data.minItems,
+            discountType: data.discountType,
+            discountValue: data.discountValue,
           },
         }),
       );

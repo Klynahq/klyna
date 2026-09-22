@@ -90,6 +90,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     bundles: bundlePayload,
     fbt: fbt.map((f) => ({
       productGid: f.recommendedGid,
+      variantGid: null,
       title: f.recommendedTitle,
       imageUrl: f.recommendedImage,
       price: f.recommendedPrice,

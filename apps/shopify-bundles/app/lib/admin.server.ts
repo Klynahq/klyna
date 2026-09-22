@@ -220,6 +220,7 @@ export interface AutomaticDiscountRecord {
   id: string;
   title: string;
   status: 'ACTIVE' | 'EXPIRED' | 'SCHEDULED';
+  kind: 'basic' | 'app';
 }
 
 function automaticDiscountInput(input: AutomaticDiscountInput): Record<string, unknown> {
@@ -300,7 +301,11 @@ export async function getAutomaticDiscount(
   const data = await gql<{
     automaticDiscountNode: {
       id: string;
-      automaticDiscount: { title?: string; status?: AutomaticDiscountRecord['status'] };
+      automaticDiscount: {
+        __typename?: 'DiscountAutomaticBasic' | 'DiscountAutomaticApp';
+        title?: string;
+        status?: AutomaticDiscountRecord['status'];
+      };
     } | null;
   }>(
     admin,
@@ -309,7 +314,12 @@ export async function getAutomaticDiscount(
         automaticDiscountNode(id: $id) {
           id
           automaticDiscount {
+            __typename
             ... on DiscountAutomaticBasic {
+              title
+              status
+            }
+            ... on DiscountAutomaticApp {
               title
               status
             }
@@ -322,7 +332,8 @@ export async function getAutomaticDiscount(
   const node = data.automaticDiscountNode;
   const title = node?.automaticDiscount.title;
   const status = node?.automaticDiscount.status;
-  return node && title && status ? { id: node.id, title, status } : null;
+  const kind = node?.automaticDiscount.__typename === 'DiscountAutomaticApp' ? 'app' : 'basic';
+  return node && title && status ? { id: node.id, title, status, kind } : null;
 }
 
 /**
@@ -337,7 +348,11 @@ export async function findAutomaticDiscountsByTitle(
     automaticDiscountNodes: {
       nodes: {
         id: string;
-        automaticDiscount: { title?: string; status?: AutomaticDiscountRecord['status'] };
+        automaticDiscount: {
+          __typename?: 'DiscountAutomaticBasic' | 'DiscountAutomaticApp';
+          title?: string;
+          status?: AutomaticDiscountRecord['status'];
+        };
       }[];
       pageInfo: { hasNextPage: boolean; endCursor: string | null };
     };
@@ -357,7 +372,12 @@ export async function findAutomaticDiscountsByTitle(
             nodes {
               id
               automaticDiscount {
+                __typename
                 ... on DiscountAutomaticBasic {
+                  title
+                  status
+                }
+                ... on DiscountAutomaticApp {
                   title
                   status
                 }
@@ -373,7 +393,12 @@ export async function findAutomaticDiscountsByTitle(
       const nodeTitle = node.automaticDiscount.title;
       const status = node.automaticDiscount.status;
       if (nodeTitle === title && status) {
-        matches.push({ id: node.id, title: nodeTitle, status });
+        matches.push({
+          id: node.id,
+          title: nodeTitle,
+          status,
+          kind: node.automaticDiscount.__typename === 'DiscountAutomaticApp' ? 'app' : 'basic',
+        });
       }
     }
 
@@ -496,11 +521,163 @@ export async function syncAutomaticDiscount(
 
   if (!current) return createAutomaticDiscount(admin, input.discount);
 
+  if (current.kind !== 'basic') {
+    await deleteAutomaticDiscount(admin, current.id);
+    return createAutomaticDiscount(admin, input.discount);
+  }
+
   await updateAutomaticDiscount(admin, current.id, input.discount);
   const refreshed = await getAutomaticDiscount(admin, current.id);
   if (refreshed?.status !== 'ACTIVE') {
     await activateAutomaticDiscount(admin, current.id);
   }
+  return current.id;
+}
+
+export interface BundleDiscountInput {
+  title: string;
+  kind: 'fixed' | 'mix_and_match';
+  items: {
+    productGid: string;
+    variantGid: string | null;
+    quantity: number;
+  }[];
+  minItems: number;
+  discountType: 'percentage' | 'fixed_amount';
+  discountValue: number;
+}
+
+export interface SyncBundleDiscountInput {
+  discountGid: string | null;
+  previousTitle: string;
+  active: boolean;
+  discount: BundleDiscountInput;
+}
+
+const BUNDLE_DISCOUNT_FUNCTION_HANDLE = 'klyna-bundle-discount';
+const BUNDLE_CONFIG_KEY = 'function-configuration';
+
+function bundleDiscountInput(input: BundleDiscountInput): Record<string, unknown> {
+  return {
+    title: input.title,
+    functionHandle: BUNDLE_DISCOUNT_FUNCTION_HANDLE,
+    discountClasses: ['PRODUCT'],
+    startsAt: new Date().toISOString(),
+    endsAt: null,
+    combinesWith: {
+      orderDiscounts: false,
+      productDiscounts: false,
+      shippingDiscounts: false,
+    },
+    metafields: [
+      {
+        namespace: '$app',
+        key: BUNDLE_CONFIG_KEY,
+        type: 'json',
+        value: JSON.stringify({
+          kind: input.kind,
+          items: input.items.map((item) => ({
+            productGid: item.productGid,
+            variantGid: item.variantGid,
+            quantity: Math.max(1, Math.floor(item.quantity)),
+          })),
+          minItems: Math.max(1, Math.floor(input.minItems || 1)),
+          discountType: input.discountType,
+          discountValue: input.discountValue,
+          title: input.title,
+        }),
+      },
+    ],
+  };
+}
+
+async function createBundleDiscount(
+  admin: AdminClient,
+  input: BundleDiscountInput,
+): Promise<string> {
+  const data = await gql<{
+    discountAutomaticAppCreate: {
+      automaticAppDiscount: { discountId: string } | null;
+      userErrors: { message: string }[];
+    };
+  }>(
+    admin,
+    `#graphql
+      mutation CreateBundleDiscount($discount: DiscountAutomaticAppInput!) {
+        discountAutomaticAppCreate(automaticAppDiscount: $discount) {
+          automaticAppDiscount { discountId }
+          userErrors { field message }
+        }
+      }`,
+    { discount: bundleDiscountInput(input) },
+  );
+
+  const result = data.discountAutomaticAppCreate;
+  assertDiscountMutation('Bundle discount create', result);
+  const gid = result.automaticAppDiscount?.discountId;
+  if (!gid) throw new Error('Bundle discount create returned no node.');
+  return gid;
+}
+
+async function updateBundleDiscount(
+  admin: AdminClient,
+  id: string,
+  input: BundleDiscountInput,
+): Promise<void> {
+  const data = await gql<{
+    discountAutomaticAppUpdate: {
+      automaticAppDiscount: { discountId: string } | null;
+      userErrors: { message: string }[];
+    };
+  }>(
+    admin,
+    `#graphql
+      mutation UpdateBundleDiscount($id: ID!, $discount: DiscountAutomaticAppInput!) {
+        discountAutomaticAppUpdate(id: $id, automaticAppDiscount: $discount) {
+          automaticAppDiscount { discountId }
+          userErrors { field message }
+        }
+      }`,
+    { id, discount: bundleDiscountInput(input) },
+  );
+
+  assertDiscountMutation('Bundle discount update', data.discountAutomaticAppUpdate);
+}
+
+/**
+ * Synchronize a bundle with a Function-backed discount. Legacy native basic
+ * discounts are replaced because they cannot require one of every product in
+ * a fixed set or apply a fixed saving once across the whole set.
+ */
+export async function syncBundleDiscount(
+  admin: AdminClient,
+  input: SyncBundleDiscountInput,
+): Promise<string | null> {
+  const titleMatches = await findAutomaticDiscountsByTitle(admin, input.previousTitle);
+  let current = input.discountGid ? await getAutomaticDiscount(admin, input.discountGid) : null;
+  current ??= titleMatches[0] ?? null;
+
+  for (const duplicate of titleMatches) {
+    if (duplicate.id !== current?.id) await deleteAutomaticDiscount(admin, duplicate.id);
+  }
+
+  if (!input.active) {
+    if (current && current.status !== 'EXPIRED') {
+      await deactivateAutomaticDiscount(admin, current.id);
+    }
+    return current?.id ?? null;
+  }
+
+  if (!current) return createBundleDiscount(admin, input.discount);
+
+  if (current.kind !== 'app') {
+    await deleteAutomaticDiscount(admin, current.id);
+    return createBundleDiscount(admin, input.discount);
+  }
+
+  await updateBundleDiscount(admin, current.id, input.discount);
+  const refreshed = await getAutomaticDiscount(admin, current.id);
+  if (refreshed?.status !== 'ACTIVE') await activateAutomaticDiscount(admin, current.id);
   return current.id;
 }
 

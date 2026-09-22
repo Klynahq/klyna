@@ -16,7 +16,7 @@ import {
 } from '@shopify/polaris';
 import prisma from '../db.server';
 import { withAdminSessionRecovery } from '../lib/admin-session-recovery.server';
-import { removeAutomaticDiscount, syncAutomaticDiscount } from '../lib/admin.server';
+import { removeAutomaticDiscount, syncBundleDiscount } from '../lib/admin.server';
 import { useAuthenticatedAction } from '../lib/authenticated-action';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getPlanSelectionUrl, getShopPlan } from '../lib/plans.server';
@@ -75,19 +75,21 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     if (intent === 'toggle') {
       const next = bundle.status === 'active' ? 'paused' : 'active';
       const discountGid = await withAdminSessionRecovery(session, () =>
-        syncAutomaticDiscount(admin, {
+        syncBundleDiscount(admin, {
           discountGid: bundle.discountGid,
           previousTitle: `Klyna Bundle · ${bundle.title}`,
           active: next === 'active',
           discount: {
             title: `Klyna Bundle · ${bundle.title}`,
-            percentage: bundle.discountType === 'percentage' ? bundle.discountValue / 100 : null,
-            amount: bundle.discountType === 'fixed_amount' ? bundle.discountValue : null,
-            productGids: bundle.items.map((item) => item.productGid),
-            minQuantity:
-              bundle.kind === 'mix_and_match'
-                ? Math.max(1, bundle.minItems)
-                : bundle.items.reduce((sum, item) => sum + Math.max(1, item.quantity), 0),
+            kind: bundle.kind === 'mix_and_match' ? 'mix_and_match' : 'fixed',
+            items: bundle.items.map((item) => ({
+              productGid: item.productGid,
+              variantGid: item.variantGid,
+              quantity: Math.max(1, item.quantity),
+            })),
+            minItems: bundle.minItems,
+            discountType: bundle.discountType === 'fixed_amount' ? 'fixed_amount' : 'percentage',
+            discountValue: bundle.discountValue,
           },
         }),
       );

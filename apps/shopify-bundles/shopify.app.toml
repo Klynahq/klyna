@@ -20,6 +20,13 @@ embedded = true
 #   bundle automatic discounts.
 scopes = "read_products,read_discounts,write_discounts"
 
+[discount.metafields.app.function-configuration]
+type = "json"
+name = "Klyna bundle configuration"
+description = "Private product and quantity rules used by Klyna Bundles at checkout."
+access.admin = "merchant_read_write"
+access.storefront = "none"
+
 # App proxy - exposes the public storefront data endpoint at
 # https://<shop>/apps/klyna-bundles, forwarded to /api/storefront. The theme
 # app extension calls this to render bundle and volume-tier data on the product page.

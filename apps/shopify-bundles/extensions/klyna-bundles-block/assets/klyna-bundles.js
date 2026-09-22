@@ -40,11 +40,13 @@
     return parts[parts.length - 1] || null;
   }
 
-  function addToCart(variantIds) {
-    var items = variantIds
-      .filter(Boolean)
-      .map(function (id) {
-        return { id: Number(id), quantity: 1 };
+  function addToCart(cartItems) {
+    var items = cartItems
+      .filter(function (item) {
+        return item && item.id;
+      })
+      .map(function (item) {
+        return { id: Number(item.id), quantity: Math.max(1, Number(item.quantity) || 1) };
       });
     if (items.length === 0) return Promise.reject(new Error('No variants to add.'));
     return fetch('/cart/add.js', {
@@ -85,13 +87,22 @@
 
     var btn = el('button', 'klyna-btn', 'Add bundle to cart');
     btn.type = 'button';
+    var cartItems = bundle.items.map(function (it) {
+      return { id: idFromGid(it.variantGid), quantity: it.quantity };
+    });
+    var canAdd = cartItems.every(function (item) {
+      return Boolean(item.id);
+    });
+    if (!canAdd) {
+      btn.disabled = true;
+      btn.textContent = 'Bundle unavailable';
+      btn.title = 'A product option in this bundle is no longer available.';
+    }
     btn.addEventListener('click', function () {
+      if (!canAdd) return;
       btn.disabled = true;
       btn.textContent = 'Adding…';
-      var variantIds = bundle.items.map(function (it) {
-        return idFromGid(it.variantGid) || idFromGid(it.productGid);
-      });
-      addToCart(variantIds)
+      addToCart(cartItems)
         .then(function () {
           btn.textContent = 'Added ✓';
           document.dispatchEvent(new CustomEvent('klyna:bundle:added', { detail: bundle }));
@@ -121,10 +132,17 @@
       item.appendChild(el('span', 'klyna-fbt__price', money(p.price)));
       var add = el('button', 'klyna-btn klyna-btn--ghost', 'Add');
       add.type = 'button';
+      var variantId = idFromGid(p.variantGid);
+      if (!variantId) {
+        add.disabled = true;
+        add.textContent = 'Unavailable';
+        add.title = 'This recommendation needs a valid product option.';
+      }
       add.addEventListener('click', function (e) {
         e.preventDefault();
+        if (!variantId) return;
         add.disabled = true;
-        addToCart([idFromGid(p.productGid)]).then(function () {
+        addToCart([{ id: variantId, quantity: 1 }]).then(function () {
           add.textContent = '✓';
         }).catch(function () {
           add.disabled = false;
