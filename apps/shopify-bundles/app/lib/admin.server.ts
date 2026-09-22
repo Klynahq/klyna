@@ -73,7 +73,10 @@ interface ProductNode {
   variants: { nodes: ProductVariantNode[] };
 }
 
-export function toCatalogProduct(n: ProductNode): CatalogProduct {
+export function toCatalogProduct(
+  n: ProductNode,
+  publishedToOnlineStore = n.onlineStoreUrl !== null,
+): CatalogProduct {
   const firstVariant = n.variants.nodes[0] ?? null;
   const sellableVariant = n.tracksInventory
     ? (n.variants.nodes.find(
@@ -81,7 +84,7 @@ export function toCatalogProduct(n: ProductNode): CatalogProduct {
       ) ?? null)
     : firstVariant;
   const variant = sellableVariant ?? firstVariant;
-  const availabilityReason: CatalogProduct['availabilityReason'] = !n.onlineStoreUrl
+  const availabilityReason: CatalogProduct['availabilityReason'] = !publishedToOnlineStore
     ? 'unpublished'
     : !firstVariant
       ? 'no_variant'
@@ -116,22 +119,19 @@ export async function searchProducts(
           nodes { ${PRODUCT_FIELDS} }
         }
       }`,
-    { query: query ? `title:*${query}* OR sku:*${query}*` : '', first },
+    {
+      query: query
+        ? `(title:*${query}* OR sku:*${query}*) AND published_status:published`
+        : 'published_status:published',
+      first,
+    },
   );
-  return data.products.nodes.map(toCatalogProduct);
+  return data.products.nodes.map((product) => toCatalogProduct(product, true));
 }
 
 /** Fetch a single product by GID (used when hydrating a saved bundle). */
 export async function getProduct(admin: AdminClient, gid: string): Promise<CatalogProduct | null> {
-  const data = await gql<{ product: ProductNode | null }>(
-    admin,
-    `#graphql
-      query GetProduct($id: ID!) {
-        product(id: $id) { ${PRODUCT_FIELDS} }
-      }`,
-    { id: gid },
-  );
-  return data.product ? toCatalogProduct(data.product) : null;
+  return (await getProductsByIds(admin, [gid]))[0] ?? null;
 }
 
 /** Refresh several saved bundle products in one Admin API request. */
@@ -140,17 +140,30 @@ export async function getProductsByIds(
   gids: string[],
 ): Promise<CatalogProduct[]> {
   if (gids.length === 0) return [];
-  const data = await gql<{ nodes: Array<ProductNode | null> }>(
+  const uniqueGids = [...new Set(gids)];
+  const publishedQuery = `(${uniqueGids
+    .map((gid) => `id:${gid.split('/').at(-1)}`)
+    .join(' OR ')}) AND published_status:published`;
+  const data = await gql<{
+    nodes: Array<ProductNode | null>;
+    published: { nodes: Array<{ id: string }> };
+  }>(
     admin,
     `#graphql
-      query GetProductsByIds($ids: [ID!]!) {
+      query GetProductsByIds($ids: [ID!]!, $publishedQuery: String!, $first: Int!) {
         nodes(ids: $ids) {
           ... on Product { ${PRODUCT_FIELDS} }
         }
+        published: products(first: $first, query: $publishedQuery) {
+          nodes { id }
+        }
       }`,
-    { ids: [...new Set(gids)] },
+    { ids: uniqueGids, publishedQuery, first: uniqueGids.length },
   );
-  return data.nodes.filter((node): node is ProductNode => node !== null).map(toCatalogProduct);
+  const publishedGids = new Set(data.published.nodes.map((product) => product.id));
+  return data.nodes
+    .filter((node): node is ProductNode => node !== null)
+    .map((node) => toCatalogProduct(node, publishedGids.has(node.id)));
 }
 
 export interface ShopInfo {

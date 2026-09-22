@@ -33,6 +33,11 @@ describe('catalog product availability', () => {
     expect(result.availabilityReason).toBe('unpublished');
   });
 
+  it('uses an explicit Online Store publication result when provided', () => {
+    const result = toCatalogProduct(product({ onlineStoreUrl: null }), true);
+    expect(result.available).toBe(true);
+  });
+
   it('chooses an available variant instead of an out-of-stock first variant', () => {
     const result = toCatalogProduct(
       product({
