@@ -20,7 +20,12 @@ import {
 import { useEffect, useState } from 'react';
 import prisma from '../db.server';
 import { withAdminSessionRecovery } from '../lib/admin-session-recovery.server';
-import { type CatalogProduct, searchProducts, syncBundleDiscount } from '../lib/admin.server';
+import {
+  type CatalogProduct,
+  getProductsByIds,
+  searchProducts,
+  syncBundleDiscount,
+} from '../lib/admin.server';
 import { useAuthenticatedAction } from '../lib/authenticated-action';
 import { useEmbeddedRoute } from '../lib/embedded-routes';
 import { getPlanSelectionUrl, getShopPlan, planLimitMessage } from '../lib/plans.server';
@@ -35,7 +40,16 @@ interface DraftItem {
   imageUrl: string | null;
   price: number;
   quantity: number;
+  available: boolean;
+  availabilityReason: CatalogProduct['availabilityReason'];
 }
+
+const AVAILABILITY_LABEL: Record<CatalogProduct['availabilityReason'], string> = {
+  available: 'Ready for Online Store',
+  unpublished: 'Not published to Online Store',
+  out_of_stock: 'Out of stock',
+  no_variant: 'No purchasable variant',
+};
 
 function slugify(s: string): string {
   return (
@@ -85,6 +99,14 @@ export const loader = async ({ params, request }: LoaderFunctionArgs) => {
   });
   if (!bundle) throw new Response('Not found', { status: 404 });
 
+  const refreshedProducts = await withAdminSessionRecovery(session, () =>
+    getProductsByIds(
+      admin,
+      bundle.items.map((item) => item.productGid),
+    ),
+  ).catch(() => []);
+  const refreshedByGid = new Map(refreshedProducts.map((product) => [product.gid, product]));
+
   return {
     isNew: false,
     plan,
@@ -99,14 +121,19 @@ export const loader = async ({ params, request }: LoaderFunctionArgs) => {
       discountType: bundle.discountType as DiscountType,
       discountValue: bundle.discountValue,
       minItems: bundle.minItems,
-      items: bundle.items.map((it) => ({
-        productGid: it.productGid,
-        variantGid: it.variantGid,
-        title: it.title,
-        imageUrl: it.imageUrl,
-        price: it.price,
-        quantity: it.quantity,
-      })) as DraftItem[],
+      items: bundle.items.map((it) => {
+        const product = refreshedByGid.get(it.productGid);
+        return {
+          productGid: it.productGid,
+          variantGid: product?.variantGid ?? it.variantGid,
+          title: product?.title ?? it.title,
+          imageUrl: product?.imageUrl ?? it.imageUrl,
+          price: product?.price ?? it.price,
+          quantity: it.quantity,
+          available: product?.available ?? false,
+          availabilityReason: product?.availabilityReason ?? 'unpublished',
+        };
+      }) as DraftItem[],
     },
   };
 };
@@ -140,6 +167,44 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
   if (!title) return json({ ok: false, error: 'Give the bundle a title.' }, { status: 400 });
   if (payload.items.length < 2) {
     return json({ ok: false, error: 'A bundle needs at least two products.' }, { status: 400 });
+  }
+
+  const refreshedProducts = await withAdminSessionRecovery(session, () =>
+    getProductsByIds(
+      admin,
+      payload.items.map((item) => item.productGid),
+    ),
+  );
+  const refreshedByGid = new Map(refreshedProducts.map((product) => [product.gid, product]));
+  const normalizedItems = payload.items.map((item) => {
+    const product = refreshedByGid.get(item.productGid);
+    return product
+      ? {
+          productGid: product.gid,
+          variantGid: product.variantGid,
+          title: product.title,
+          imageUrl: product.imageUrl,
+          price: product.price,
+          quantity: Math.max(1, item.quantity),
+          available: product.available,
+          availabilityReason: product.availabilityReason,
+        }
+      : { ...item, available: false, availabilityReason: 'unpublished' as const };
+  });
+
+  if (payload.activate) {
+    const unavailable = normalizedItems.filter((item) => !item.available);
+    if (unavailable.length > 0) {
+      return json(
+        {
+          ok: false,
+          error: `Cannot activate yet: ${unavailable
+            .map((item) => `${item.title} (${AVAILABILITY_LABEL[item.availabilityReason]})`)
+            .join(', ')}. Publish the product and make a variant available first.`,
+        },
+        { status: 400 },
+      );
+    }
   }
 
   const isNew = params.id === 'new';
@@ -191,7 +256,7 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
           discount: {
             title: discountTitle,
             kind: data.kind as 'fixed' | 'mix_and_match',
-            items: payload.items.map((item) => ({
+            items: normalizedItems.map((item) => ({
               productGid: item.productGid,
               variantGid: item.variantGid,
               quantity: Math.max(1, item.quantity),
@@ -227,7 +292,7 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
 
     await tx.bundleItem.deleteMany({ where: { bundleId: saved.id } });
     await tx.bundleItem.createMany({
-      data: payload.items.map((it, i) => ({
+      data: normalizedItems.map((it, i) => ({
         bundleId: saved.id,
         productGid: it.productGid,
         variantGid: it.variantGid,
@@ -295,6 +360,8 @@ export default function BundleBuilder() {
         imageUrl: p.imageUrl,
         price: p.price,
         quantity: 1,
+        available: p.available,
+        availabilityReason: p.availabilityReason,
       },
     ]);
   };
@@ -312,6 +379,7 @@ export default function BundleBuilder() {
     discountType,
     Number(discountValue) || 0,
   );
+  const unavailableItems = items.filter((item) => !item.available);
 
   const save = async (activate: boolean) => {
     const payload = {
@@ -341,7 +409,7 @@ export default function BundleBuilder() {
       primaryAction={{
         content: 'Save & activate',
         loading: saving,
-        disabled: limitReached || items.length < 2 || !title.trim(),
+        disabled: limitReached || items.length < 2 || !title.trim() || unavailableItems.length > 0,
         onAction: () => save(true),
       }}
       secondaryActions={[
@@ -368,6 +436,23 @@ export default function BundleBuilder() {
           <Layout.Section>
             <Banner tone="critical" title="Bundle could not be saved">
               {saveAction.error}
+            </Banner>
+          </Layout.Section>
+        )}
+
+        {unavailableItems.length > 0 && (
+          <Layout.Section>
+            <Banner tone="warning" title="This bundle is not ready for the storefront">
+              <Text as="p" variant="bodyMd">
+                {unavailableItems
+                  .map(
+                    (item) =>
+                      `${item.title}: ${AVAILABILITY_LABEL[item.availabilityReason].toLowerCase()}`,
+                  )
+                  .join('. ')}
+                . You can save a draft, but activation stays blocked until every item can be bought
+                online.
+              </Text>
             </Banner>
           </Layout.Section>
         )}
@@ -456,6 +541,11 @@ export default function BundleBuilder() {
                             <Text as="span" variant="bodySm" tone="subdued">
                               {it.price.toFixed(2)} each
                             </Text>
+                            {!it.available && (
+                              <Badge tone="warning">
+                                {AVAILABILITY_LABEL[it.availabilityReason]}
+                              </Badge>
+                            )}
                           </BlockStack>
                         </InlineStack>
                         <InlineStack gap="200" blockAlign="center">
@@ -514,11 +604,20 @@ export default function BundleBuilder() {
                               alt={p.title}
                               size="small"
                             />
-                            <Text as="span" variant="bodyMd">
-                              {p.title}
-                            </Text>
+                            <BlockStack gap="0">
+                              <Text as="span" variant="bodyMd">
+                                {p.title}
+                              </Text>
+                              <Badge tone={p.available ? 'success' : 'warning'}>
+                                {AVAILABILITY_LABEL[p.availabilityReason]}
+                              </Badge>
+                            </BlockStack>
                           </InlineStack>
-                          <Button size="slim" disabled={added} onClick={() => addItem(p)}>
+                          <Button
+                            size="slim"
+                            disabled={added || !p.available}
+                            onClick={() => addItem(p)}
+                          >
                             {added ? 'Added' : 'Add'}
                           </Button>
                         </InlineStack>

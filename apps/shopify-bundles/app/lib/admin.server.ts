@@ -18,6 +18,9 @@ export interface CatalogProduct {
   imageUrl: string | null;
   price: number;
   variantGid: string | null;
+  onlineStoreUrl: string | null;
+  available: boolean;
+  availabilityReason: 'available' | 'unpublished' | 'out_of_stock' | 'no_variant';
 }
 
 /** Run a GraphQL operation and return the parsed `data` (throws on userErrors). */
@@ -38,28 +41,64 @@ const PRODUCT_FIELDS = `
   id
   title
   handle
+  onlineStoreUrl
+  tracksInventory
   featuredImage { url }
   priceRangeV2 { minVariantPrice { amount currencyCode } }
-  variants(first: 1) { nodes { id } }
+  variants(first: 50) {
+    nodes {
+      id
+      price
+      inventoryPolicy
+      sellableOnlineQuantity
+    }
+  }
 `;
+
+interface ProductVariantNode {
+  id: string;
+  price: string;
+  inventoryPolicy: 'CONTINUE' | 'DENY';
+  sellableOnlineQuantity: number;
+}
 
 interface ProductNode {
   id: string;
   title: string;
   handle: string;
+  onlineStoreUrl: string | null;
+  tracksInventory: boolean;
   featuredImage: { url: string } | null;
   priceRangeV2: { minVariantPrice: { amount: string; currencyCode: string } };
-  variants: { nodes: { id: string }[] };
+  variants: { nodes: ProductVariantNode[] };
 }
 
-function toCatalogProduct(n: ProductNode): CatalogProduct {
+export function toCatalogProduct(n: ProductNode): CatalogProduct {
+  const firstVariant = n.variants.nodes[0] ?? null;
+  const sellableVariant = n.tracksInventory
+    ? (n.variants.nodes.find(
+        (variant) => variant.sellableOnlineQuantity > 0 || variant.inventoryPolicy === 'CONTINUE',
+      ) ?? null)
+    : firstVariant;
+  const variant = sellableVariant ?? firstVariant;
+  const availabilityReason: CatalogProduct['availabilityReason'] = !n.onlineStoreUrl
+    ? 'unpublished'
+    : !firstVariant
+      ? 'no_variant'
+      : !sellableVariant
+        ? 'out_of_stock'
+        : 'available';
+
   return {
     gid: n.id,
     title: n.title,
     handle: n.handle,
     imageUrl: n.featuredImage?.url ?? null,
-    price: Number(n.priceRangeV2.minVariantPrice.amount),
-    variantGid: n.variants.nodes[0]?.id ?? null,
+    price: Number(variant?.price ?? n.priceRangeV2.minVariantPrice.amount),
+    variantGid: variant?.id ?? null,
+    onlineStoreUrl: n.onlineStoreUrl,
+    available: availabilityReason === 'available',
+    availabilityReason,
   };
 }
 
@@ -93,6 +132,25 @@ export async function getProduct(admin: AdminClient, gid: string): Promise<Catal
     { id: gid },
   );
   return data.product ? toCatalogProduct(data.product) : null;
+}
+
+/** Refresh several saved bundle products in one Admin API request. */
+export async function getProductsByIds(
+  admin: AdminClient,
+  gids: string[],
+): Promise<CatalogProduct[]> {
+  if (gids.length === 0) return [];
+  const data = await gql<{ nodes: Array<ProductNode | null> }>(
+    admin,
+    `#graphql
+      query GetProductsByIds($ids: [ID!]!) {
+        nodes(ids: $ids) {
+          ... on Product { ${PRODUCT_FIELDS} }
+        }
+      }`,
+    { ids: [...new Set(gids)] },
+  );
+  return data.nodes.filter((node): node is ProductNode => node !== null).map(toCatalogProduct);
 }
 
 export interface ShopInfo {
@@ -189,6 +247,9 @@ export async function fetchRecentOrderBaskets(
             imageUrl: p.featuredImage?.url ?? null,
             price: Number(p.priceRangeV2.minVariantPrice.amount),
             variantGid: null,
+            onlineStoreUrl: null,
+            available: false,
+            availabilityReason: 'no_variant',
           });
         }
       }
