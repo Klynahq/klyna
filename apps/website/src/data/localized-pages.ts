@@ -3,9 +3,9 @@ export type SupportedLocale = (typeof supportedLocales)[number];
 export type PilotPageKey = 'home' | 'products' | 'shopifySeo';
 
 export const pilotRoutes: Record<PilotPageKey, string> = {
-  home: '/',
-  products: '/products/',
-  shopifySeo: '/shopify/seo/',
+  home: '',
+  products: '/products',
+  shopifySeo: '/shopify/seo',
 };
 
 type Page = {
@@ -55,11 +55,12 @@ export const localizedPages: Record<SupportedLocale, LocaleContent> = {
 };
 
 export function localeAlternates(route: string) {
+  const englishPath = route || '/';
   return {
-    en: `https://klyna.dev${route}`,
+    en: `https://klyna.dev${englishPath}`,
     es: `https://klyna.dev/es${route}`,
     fr: `https://klyna.dev/fr${route}`,
     it: `https://klyna.dev/it${route}`,
-    'x-default': `https://klyna.dev${route}`,
+    'x-default': `https://klyna.dev${englishPath}`,
   };
 }

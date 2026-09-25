@@ -12,7 +12,7 @@ const latestPosts = (await getPublishedPosts()).slice(0, 3);
 const heroProducts = products.filter(p => p.status === 'beta' && p.surface === 'shopify').slice(0, 3);
 ---
 
-<BaseLayout alternates={localeAlternates('/')}>
+<BaseLayout alternates={localeAlternates('')}>
   <Hero />
 
   <section class="max-w-7xl mx-auto px-6 pb-12" data-strict-research-intent>

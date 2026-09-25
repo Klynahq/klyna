@@ -70,7 +70,7 @@ const graph = [
   description={page.description}
   ogImage={page.ogImage ?? '/favicon.svg'}
   ogImageAlt={page.ogImageAlt}
-  alternates={page.slug === 'seo' ? localeAlternates('/shopify/seo/') : undefined}
+  alternates={page.slug === 'seo' ? localeAlternates('/shopify/seo') : undefined}
 >
   <Fragment slot="head">
     <meta name="keywords" content={[page.primaryKeyword, ...page.secondaryKeywords].join(', ')} />

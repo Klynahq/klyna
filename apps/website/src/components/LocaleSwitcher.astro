@@ -7,17 +7,17 @@
   (() => {
     const root = document.querySelector('[data-language-switcher]');
     if (!(root instanceof HTMLElement)) return;
-    const routeMap = ['/', '/products/', '/shopify/seo/'];
+    const routeMap = ['', '/products', '/shopify/seo'];
     const match = location.pathname.match(/^\/(es|fr|it)(\/|$)/);
     const current = match?.[1] || 'en';
     let base = match ? location.pathname.replace(/^\/(es|fr|it)/, '') || '/' : location.pathname;
-    if (!base.endsWith('/')) base += '/';
+    base = base === '/' ? '' : base.replace(/\/+$/, '');
     if (!routeMap.includes(base)) { root.remove(); return; }
     const names = { en:'English', es:'Español', fr:'Français', it:'Italiano' };
     const button = root.querySelector('button');
     const menu = root.querySelector('.klyna-language-menu');
     if (!(button instanceof HTMLButtonElement) || !(menu instanceof HTMLElement)) return;
-    const href = (locale) => locale === 'en' ? base : `/${locale}${base}`;
+    const href = (locale) => locale === 'en' ? (base || '/') : `/${locale}${base}`;
     button.textContent = current.toUpperCase();
     menu.innerHTML = Object.entries(names).map(([locale,name]) => `<a href="${href(locale)}" data-locale="${locale}" ${locale===current?'aria-current="page"':''}><span>${name}</span><span>${locale.toUpperCase()}</span></a>`).join('');
     button.addEventListener('click', () => { const open = root.dataset.open !== 'true'; root.dataset.open = String(open); button.setAttribute('aria-expanded', String(open)); });
