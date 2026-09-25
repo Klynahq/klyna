@@ -5,13 +5,14 @@ import ProductCard from '../components/ProductCard.astro';
 import FeatureList from '../components/FeatureList.astro';
 import { products } from '@klyna/utils';
 import { getPublishedPosts, formatDate } from '../utils/blog.ts';
+import { localeAlternates } from '../data/localized-pages';
 
 const latestPosts = (await getPublishedPosts()).slice(0, 3);
 // Show the first 3 beta Shopify apps as hero products on the homepage
 const heroProducts = products.filter(p => p.status === 'beta' && p.surface === 'shopify').slice(0, 3);
 ---
 
-<BaseLayout>
+<BaseLayout alternates={localeAlternates('/')}>
   <Hero />
 
   <section class="max-w-7xl mx-auto px-6 pb-12" data-strict-research-intent>

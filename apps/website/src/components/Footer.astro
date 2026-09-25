@@ -1,4 +1,14 @@
 ---
+interface Props { locale?: string }
+const { locale = 'en' } = Astro.props;
+const prefix = ['es', 'fr', 'it'].includes(locale) ? `/${locale}` : '';
+const copy: Record<string, { intro:string; products:string; support:string }> = {
+  en: { intro:'Indie studio building open, modern tools for makers, creators, and growth-minded folks. Free where it can be. Honest where it matters.', products:'Products', support:'Support' },
+  es: { intro:'Estudio independiente que crea herramientas modernas y abiertas para tiendas, creadores y equipos de crecimiento.', products:'Productos', support:'Ayuda' },
+  fr: { intro:'Studio indépendant qui crée des outils modernes et ouverts pour les boutiques, créateurs et équipes de croissance.', products:'Produits', support:'Aide' },
+  it: { intro:'Studio indipendente che crea strumenti moderni e aperti per negozi, creator e team di crescita.', products:'Prodotti', support:'Aiuto' },
+};
+const text = copy[locale] ?? copy.en!;
 const year = new Date().getFullYear();
 ---
 
@@ -12,8 +22,7 @@ const year = new Date().getFullYear();
         <span>Klyna</span>
       </div>
       <p class="mt-3 text-[color:var(--color-text-muted)] text-sm max-w-md">
-        Indie studio building open, modern tools for makers, creators, and growth-minded folks.
-        Free where it can be. Honest where it matters.
+        {text.intro}
       </p>
     </div>
 
@@ -25,8 +34,8 @@ const year = new Date().getFullYear();
       </p>
       <ul class="space-y-2 text-sm">
         <li>
-          <a href="/products" class="text-[color:var(--color-text-muted)] hover:text-white">
-            Products
+          <a href={`${prefix}/products/`} class="text-[color:var(--color-text-muted)] hover:text-white">
+            {text.products}
           </a>
         </li>
         <li>
@@ -47,7 +56,7 @@ const year = new Date().getFullYear();
       <p
         class="text-xs uppercase tracking-wider text-[color:var(--color-text-dim)] font-medium mb-3"
       >
-        Support
+        {text.support}
       </p>
       <ul class="space-y-2 text-sm">
         <li>

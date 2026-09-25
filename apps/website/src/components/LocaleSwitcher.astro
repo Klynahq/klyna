@@ -1,0 +1,41 @@
+<div class="klyna-language" data-language-switcher data-open="false">
+  <button type="button" aria-label="Change language" aria-expanded="false">EN</button>
+  <div class="klyna-language-menu" aria-label="Language options"></div>
+</div>
+
+<script is:inline>
+  (() => {
+    const root = document.querySelector('[data-language-switcher]');
+    if (!(root instanceof HTMLElement)) return;
+    const routeMap = ['/', '/products/', '/shopify/seo/'];
+    const match = location.pathname.match(/^\/(es|fr|it)(\/|$)/);
+    const current = match?.[1] || 'en';
+    let base = match ? location.pathname.replace(/^\/(es|fr|it)/, '') || '/' : location.pathname;
+    if (!base.endsWith('/')) base += '/';
+    if (!routeMap.includes(base)) { root.remove(); return; }
+    const names = { en:'English', es:'Español', fr:'Français', it:'Italiano' };
+    const button = root.querySelector('button');
+    const menu = root.querySelector('.klyna-language-menu');
+    if (!(button instanceof HTMLButtonElement) || !(menu instanceof HTMLElement)) return;
+    const href = (locale) => locale === 'en' ? base : `/${locale}${base}`;
+    button.textContent = current.toUpperCase();
+    menu.innerHTML = Object.entries(names).map(([locale,name]) => `<a href="${href(locale)}" data-locale="${locale}" ${locale===current?'aria-current="page"':''}><span>${name}</span><span>${locale.toUpperCase()}</span></a>`).join('');
+    button.addEventListener('click', () => { const open = root.dataset.open !== 'true'; root.dataset.open = String(open); button.setAttribute('aria-expanded', String(open)); });
+    menu.querySelectorAll('[data-locale]').forEach((link) => {
+      if (!(link instanceof HTMLElement)) return;
+      link.addEventListener('click', () => {
+        try { localStorage.setItem('klyna-locale', link.dataset.locale || 'en'); } catch {}
+      });
+    });
+    let saved; try { saved = localStorage.getItem('klyna-locale'); } catch {}
+    const preferred = (navigator.languages?.[0] || navigator.language || '').slice(0,2).toLowerCase();
+    if (current === 'en' && !saved && ['es','fr','it'].includes(preferred)) {
+      const hint = document.createElement('div'); hint.className = 'klyna-language-hint'; hint.innerHTML = `View in <a href="${href(preferred)}">${names[preferred]}</a>`; root.append(hint);
+      hint.querySelector('a')?.addEventListener('click', () => { try { localStorage.setItem('klyna-locale', preferred); } catch {} });
+    }
+  })();
+</script>
+
+<style is:global>
+  .klyna-language{position:fixed;right:16px;bottom:16px;z-index:80}.klyna-language>button{min-width:48px;height:42px;border:1px solid var(--color-border);border-radius:6px;background:var(--color-text);color:var(--color-bg);font:inherit;font-weight:800;cursor:pointer}.klyna-language-menu{position:absolute;right:0;bottom:50px;display:none;width:190px;padding:8px;border:1px solid var(--color-border);border-radius:8px;background:var(--color-bg-elevated);box-shadow:0 18px 44px rgba(0,0,0,.35)}.klyna-language[data-open="true"] .klyna-language-menu{display:grid}.klyna-language-menu a{display:flex;justify-content:space-between;padding:10px;border-radius:5px;color:var(--color-text);font-size:.84rem}.klyna-language-menu a:hover,.klyna-language-menu a[aria-current="page"]{background:var(--color-surface)}.klyna-language-hint{position:absolute;right:0;bottom:51px;width:min(280px,calc(100vw - 32px));padding:14px;border:1px solid var(--color-border);border-radius:8px;background:var(--color-bg-elevated);box-shadow:0 18px 44px rgba(0,0,0,.35);color:var(--color-text-muted);font-size:.82rem}.klyna-language-hint a{color:var(--color-accent);font-weight:800}
+</style>

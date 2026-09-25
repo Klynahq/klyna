@@ -3,6 +3,7 @@ import '../styles/global.css';
 import Footer from '../components/Footer.astro';
 import Nav from '../components/Nav.astro';
 import SiteSchema from '../components/seo/SiteSchema.astro';
+import LocaleSwitcher from '../components/LocaleSwitcher.astro';
 
 interface Props {
   title?: string;
@@ -12,6 +13,8 @@ interface Props {
   ogImage?: string;
   ogImageAlt?: string;
   noIndex?: boolean;
+  lang?: string;
+  alternates?: Record<string, string>;
 }
 
 const {
@@ -22,6 +25,8 @@ const {
   ogImage = '/favicon.svg',
   ogImageAlt,
   noIndex = false,
+  lang = 'en',
+  alternates,
 } = Astro.props;
 
 const canonicalPath = Astro.url.pathname === '/' ? '/' : Astro.url.pathname.replace(/\/+$/, '');
@@ -45,7 +50,7 @@ const metaDescription = fitMeta(description, 155);
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={lang}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -55,6 +60,7 @@ const metaDescription = fitMeta(description, 155);
     <title>{metaTitle}</title>
     <meta name="description" content={metaDescription} />
     <link rel="canonical" href={canonicalURL} />
+    {alternates && Object.entries(alternates).map(([hrefLang, href]) => <link rel="alternate" hreflang={hrefLang} href={href} />)}
     {noIndex && <meta name="robots" content="noindex,nofollow" />}
 
     <meta property="og:type" content={ogType} />
@@ -85,10 +91,11 @@ const metaDescription = fitMeta(description, 155);
     <slot name="head" />
   </head>
   <body>
-    <Nav />
+    <Nav locale={lang} />
     <main>
       <slot />
     </main>
-    <Footer />
+    <Footer locale={lang} />
+    <LocaleSwitcher />
   </body>
 </html>

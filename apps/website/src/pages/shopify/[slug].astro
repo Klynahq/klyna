@@ -2,6 +2,7 @@
 import JsonLd from '../../components/seo/JsonLd.astro';
 import { shopifyProductPages } from '../../data/shopify-app-pages';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { localeAlternates } from '../../data/localized-pages';
 
 export function getStaticPaths() {
   return shopifyProductPages.map((page) => ({
@@ -69,6 +70,7 @@ const graph = [
   description={page.description}
   ogImage={page.ogImage ?? '/favicon.svg'}
   ogImageAlt={page.ogImageAlt}
+  alternates={page.slug === 'seo' ? localeAlternates('/shopify/seo/') : undefined}
 >
   <Fragment slot="head">
     <meta name="keywords" content={[page.primaryKeyword, ...page.secondaryKeywords].join(', ')} />

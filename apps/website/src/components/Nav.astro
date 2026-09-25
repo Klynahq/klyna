@@ -1,4 +1,14 @@
 ---
+interface Props { locale?: string }
+const { locale = 'en' } = Astro.props;
+const prefix = ['es', 'fr', 'it'].includes(locale) ? `/${locale}` : '';
+const labels: Record<string, string[]> = {
+  en: ['Home','Products','Downloads','Blog','Help','About','Contact'],
+  es: ['Inicio','Productos','Descargas','Blog','Ayuda','Acerca de','Contacto'],
+  fr: ['Accueil','Produits','Téléchargements','Blog','Aide','À propos','Contact'],
+  it: ['Home','Prodotti','Download','Blog','Aiuto','Chi siamo','Contatti'],
+};
+const activeLabels = labels[locale] ?? labels.en!;
 const links = [
   { href: '/', label: 'Home' },
   { href: '/products', label: 'Products' },
@@ -7,7 +17,10 @@ const links = [
   { href: '/help', label: 'Help' },
   { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' },
-];
+].map((link, index) => ({
+  href: index < 2 ? `${prefix}${link.href === '/' ? '/' : `${link.href}/`}` : link.href,
+  label: activeLabels[index] ?? link.label,
+}));
 
 const path = Astro.url.pathname;
 const isActive = (href: string) =>
@@ -18,7 +31,7 @@ const isActive = (href: string) =>
   class="sticky top-0 z-50 backdrop-blur-md bg-[color:var(--color-bg)]/70 border-b border-[color:var(--color-border)]/50"
 >
   <nav class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-    <a href="/" class="flex items-center gap-2 font-semibold tracking-tight text-lg">
+    <a href={`${prefix}/`} class="flex items-center gap-2 font-semibold tracking-tight text-lg">
       <span
         class="inline-block w-7 h-7 rounded-lg bg-gradient-to-br from-[color:var(--color-accent)] to-[#5b3df0] shadow-[0_0_24px_-4px_var(--color-accent)]"
       ></span>

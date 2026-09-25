@@ -1,0 +1,62 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { localeAlternates, localizedPages, pilotRoutes, supportedLocales, type PilotPageKey, type SupportedLocale } from '../../data/localized-pages';
+
+export function getStaticPaths() {
+  const entries: Array<{ key: PilotPageKey; path?: string }> = [
+    { key: 'home' },
+    { key: 'products', path: 'products' },
+    { key: 'shopifySeo', path: 'shopify/seo' },
+  ];
+  return supportedLocales.flatMap((locale) => entries.map((entry) => ({
+    params: { locale, path: entry.path },
+    props: { locale, key: entry.key },
+  })));
+}
+
+const { locale, key } = Astro.props as { locale: SupportedLocale; key: PilotPageKey };
+const common = localizedPages[locale];
+const page = common.pages[key];
+const route = pilotRoutes[key];
+const canonical = `https://klyna.dev/${locale}${route}`;
+const cards = page.cards;
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': key === 'shopifySeo' ? 'SoftwareApplication' : key === 'products' ? 'CollectionPage' : 'WebSite',
+  name: page.title,
+  url: canonical,
+  description: page.description,
+  inLanguage: locale,
+  ...(key === 'shopifySeo' ? { applicationCategory: 'BusinessApplication', operatingSystem: 'Shopify', softwareHelp: 'https://klyna.dev/help/' } : {}),
+};
+---
+
+<BaseLayout title={page.title} description={page.description} canonical={canonical} lang={locale} alternates={localeAlternates(route)}>
+  <Fragment slot="head"><script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} /></Fragment>
+
+  <section class="locale-hero max-w-7xl mx-auto px-6 pt-20 pb-14 md:pt-28 md:pb-20">
+    <div class="max-w-4xl">
+      <p class="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-accent)] mb-4">{page.eyebrow}</p>
+      <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold leading-[1.02] tracking-tight">{page.heading}</h1>
+      <p class="mt-6 max-w-3xl text-lg md:text-xl leading-relaxed text-[color:var(--color-text-muted)]">{page.lead}</p>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a href={`/${locale}/products/`} class="inline-flex min-h-12 items-center px-5 rounded-lg bg-[color:var(--color-accent)] text-white font-semibold hover:bg-[color:var(--color-accent-hover)]">{common.action}</a>
+        <a href={`/${locale}/shopify/seo/`} class="inline-flex min-h-12 items-center px-5 rounded-lg border border-[color:var(--color-border)] text-white font-semibold hover:border-[color:var(--color-accent)]">{common.seoLabel}</a>
+      </div>
+      <div class="mt-10 max-w-3xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] p-6 text-[color:var(--color-text-muted)] leading-relaxed">{page.answer}</div>
+    </div>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-6 py-16 border-t border-[color:var(--color-border)]/60">
+    <p class="text-xs font-semibold uppercase tracking-wider text-[color:var(--color-accent)] mb-3">Klyna</p>
+    <h2 class="max-w-3xl text-3xl md:text-5xl font-bold tracking-tight">{page.section}</h2>
+    <div class="mt-10 grid gap-4 md:grid-cols-3">
+      {cards.map((card) => (
+        <article class="border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] p-6">
+          <h3 class="text-xl font-semibold">{card.title}</h3>
+          <p class="mt-3 text-[color:var(--color-text-muted)] leading-relaxed">{card.text}</p>
+        </article>
+      ))}
+    </div>
+  </section>
+</BaseLayout>
