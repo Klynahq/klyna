@@ -7,7 +7,37 @@
   "redirects": [
     {
       "source": "/blog/shopify-bundle-app-schema-safety/",
-      "destination": "/blog/shopify-bundle-app-schema-safety",
+      "destination": "/blog/shopify-bundle-app-guide",
+      "permanent": true
+    },
+    {
+      "source": "/blog/shopify-bundle-app-schema-safety",
+      "destination": "/blog/shopify-bundle-app-guide",
+      "permanent": true
+    },
+    {
+      "source": "/blog/shopify-app-analytics-event-qa",
+      "destination": "/blog/shopify-pixel-qa-checklist",
+      "permanent": true
+    },
+    {
+      "source": "/blog/tags/Apps",
+      "destination": "/blog/tags/apps",
+      "permanent": true
+    },
+    {
+      "source": "/blog/tags/Shopify",
+      "destination": "/blog/tags/shopify",
+      "permanent": true
+    },
+    {
+      "source": "/blog/tags/GEO",
+      "destination": "/blog/tags/geo",
+      "permanent": true
+    },
+    {
+      "source": "/blog/tags/Troubleshooting",
+      "destination": "/blog/tags/troubleshooting",
       "permanent": true
     },
     {
